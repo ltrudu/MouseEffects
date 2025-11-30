@@ -9,7 +9,7 @@ namespace MouseEffects.App;
 /// <summary>
 /// Manages overlay windows for each monitor.
 /// </summary>
-public sealed class OverlayManager : IDisposable
+public sealed partial class OverlayManager : IDisposable
 {
     private readonly List<OverlayWindow> _overlays = [];
     private readonly D3D11GraphicsDevice _sharedDevice;
@@ -142,14 +142,16 @@ public sealed class OverlayManager : IDisposable
 
     private delegate bool MonitorEnumProc(nint hMonitor, nint hdcMonitor, nint lprcMonitor, nint dwData);
 
-    [DllImport("user32.dll")]
-    private static extern bool EnumDisplayMonitors(nint hdc, nint lprcClip, MonitorEnumProc lpfnEnum, nint dwData);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool EnumDisplayMonitors(nint hdc, nint lprcClip, MonitorEnumProc lpfnEnum, nint dwData);
 
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-    private static extern bool GetMonitorInfoW(nint hMonitor, ref MONITORINFO lpmi);
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetMonitorInfoW(nint hMonitor, ref MONITORINFO lpmi);
 
-    [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int nIndex);
+    [LibraryImport("user32.dll")]
+    private static partial int GetSystemMetrics(int nIndex);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MONITORINFO
