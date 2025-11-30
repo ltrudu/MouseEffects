@@ -32,6 +32,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Radial Dithering** | Bayer-pattern dithering effect around cursor |
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
 | **Water Ripple** | Expanding water ripples on click with realistic wave interference |
+| **Zoom** | Magnifying lens effect with circle or rectangle shape and hotkey support |
 
 ## Screenshots
 
@@ -126,7 +127,8 @@ MouseEffects/
 │   ├── MouseEffects.Effects.ColorBlindness/
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.TileVibration/
-│   └── MouseEffects.Effects.WaterRipple/
+│   ├── MouseEffects.Effects.WaterRipple/
+│   └── MouseEffects.Effects.Zoom/
 ├── packaging/                    # MSIX packaging files
 └── Wiki/                         # Documentation
 ```

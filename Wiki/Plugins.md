@@ -11,6 +11,7 @@ This document provides detailed information about each built-in effect plugin.
 - [Radial Dithering](#radial-dithering)
 - [Tile Vibration](#tile-vibration)
 - [Water Ripple](#water-ripple)
+- [Zoom](#zoom)
 
 ---
 
@@ -455,6 +456,85 @@ Each ripple simulates realistic wave behavior:
 
 - **Blend Mode**: Alpha (over screen capture)
 - **Shader**: Screen distortion with sine wave displacement
+
+---
+
+## Zoom
+
+**ID**: `zoom-effect`
+**Screen Capture**: Yes (Continuous)
+
+Creates a magnifying lens effect around your cursor with selectable circle or rectangle shape.
+
+### Features
+
+- Circle or rectangle zoom lens shape
+- Adjustable zoom factor (1.1x to 5.0x)
+- Configurable lens size and border
+- Hotkey support for quick adjustments
+- Real-time screen magnification
+- Smooth rounded corners on rectangle mode
+
+### Settings
+
+#### Shape
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `shapeType` | int | 0-1 | 0 | 0=Circle, 1=Rectangle |
+
+#### Zoom
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zoomFactor` | float | 1.1-5.0 | 1.5 | Magnification level |
+
+#### Circle Settings
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `radius` | float | 20-500 | 100 | Circle radius (px) |
+
+#### Rectangle Settings
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `width` | float | 40-800 | 200 | Rectangle width (px) |
+| `height` | float | 40-800 | 150 | Rectangle height (px) |
+| `syncSizes` | bool | - | false | Lock width/height for square |
+
+#### Border
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `borderWidth` | float | 0-10 | 2 | Border thickness (px) |
+| `borderColor` | Color4 | - | Blue (0.2,0.6,1,1) | Border color |
+
+#### Hotkeys
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `enableZoomHotkey` | bool | false | Enable Shift+Ctrl+Wheel for zoom |
+| `enableSizeHotkey` | bool | false | Enable Shift+Alt+Wheel for size |
+
+### Hotkey Controls
+
+When enabled, hotkeys allow quick adjustment without opening settings:
+
+| Hotkey | Action |
+|--------|--------|
+| **Shift+Ctrl+Mouse Wheel** | Adjust zoom factor by ±0.1 |
+| **Shift+Alt+Mouse Wheel** | Adjust size by ±5% |
+
+- Zoom hotkey adjusts the magnification level (1.1x to 5.0x)
+- Size hotkey adjusts radius (circle) or width+height (rectangle)
+- Changes are reflected in real-time in the settings panel
+- Settings are automatically saved
+
+### Rendering
+
+- **Blend Mode**: Alpha
+- **Shader**: Screen texture sampling with magnification
 
 ---
 
