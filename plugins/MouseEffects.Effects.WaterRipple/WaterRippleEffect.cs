@@ -75,9 +75,9 @@ public sealed class WaterRippleEffect : EffectBase
     public override EffectMetadata Metadata => _metadata;
 
     /// <summary>
-    /// This effect requires continuous screen capture to distort the screen.
+    /// This effect requires continuous screen capture only when there are active ripples.
     /// </summary>
-    public override bool RequiresContinuousScreenCapture => true;
+    public override bool RequiresContinuousScreenCapture => _activeRippleCount > 0;
 
     protected override void OnInitialize(IRenderContext context)
     {

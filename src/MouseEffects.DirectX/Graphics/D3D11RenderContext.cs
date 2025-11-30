@@ -83,6 +83,20 @@ public sealed class D3D11RenderContext : IRenderContext
         }
     }
 
+    /// <summary>
+    /// Gets the current screen capture FPS (frames actually captured per second).
+    /// </summary>
+    public double CaptureFps => _screenCapture.CaptureFps;
+
+    /// <summary>
+    /// Enable/disable capture FPS tracking. Only enable when FPS overlay is visible.
+    /// </summary>
+    public bool TrackCaptureFps
+    {
+        get => _screenCapture.TrackCaptureFps;
+        set => _screenCapture.TrackCaptureFps = value;
+    }
+
     public void UpdateViewportSize(int width, int height)
     {
         ViewportSize = new Vector2(width, height);

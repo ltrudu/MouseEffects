@@ -28,10 +28,21 @@ public sealed partial class ScreenCapture : IDisposable
     private bool _initialized;
     private bool _crossDeviceCopy;  // True if capture and render are different devices
 
+    // Capture FPS tracking (only when enabled)
+    private int _captureFrameCount;
+    private double _captureLastFpsTime;
+    private System.Diagnostics.Stopwatch? _captureStopwatch;
+
     public int Width { get; private set; }
     public int Height { get; private set; }
     public ID3D11ShaderResourceView? ShaderResourceView => _srv;
     public bool IsAvailable => _initialized && _srv != null;
+    public double CaptureFps { get; private set; }
+
+    /// <summary>
+    /// Enable/disable capture FPS tracking. Only enable when FPS overlay is visible.
+    /// </summary>
+    public bool TrackCaptureFps { get; set; }
 
     public ScreenCapture(D3D11GraphicsDevice device)
     {
@@ -246,6 +257,20 @@ public sealed partial class ScreenCapture : IDisposable
             {
                 // Frame acquired but no actual changes - skip expensive copy
                 return _srv != null;
+            }
+
+            // Track capture FPS only when enabled (overlay visible)
+            if (TrackCaptureFps)
+            {
+                _captureStopwatch ??= System.Diagnostics.Stopwatch.StartNew();
+                _captureFrameCount++;
+                var currentTime = _captureStopwatch.Elapsed.TotalSeconds;
+                if (currentTime - _captureLastFpsTime >= 1.0)
+                {
+                    CaptureFps = _captureFrameCount / (currentTime - _captureLastFpsTime);
+                    _captureFrameCount = 0;
+                    _captureLastFpsTime = currentTime;
+                }
             }
 
             // Copy the desktop texture to our captured texture

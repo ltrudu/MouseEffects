@@ -2,6 +2,7 @@ using System.Diagnostics;
 using MouseEffects.Core.Effects;
 using MouseEffects.Core.Input;
 using MouseEffects.Core.Time;
+using MouseEffects.DirectX.Graphics;
 
 namespace MouseEffects.App;
 
@@ -26,6 +27,21 @@ public sealed class GameLoop : IDisposable
 
     public bool IsRunning => _running;
     public double CurrentFps { get; private set; }
+    public double CaptureFps { get; private set; }
+
+    /// <summary>
+    /// Enable/disable capture FPS tracking. Only enable when FPS overlay is visible.
+    /// </summary>
+    public void SetTrackCaptureFps(bool enabled)
+    {
+        foreach (var overlay in _overlayManager.Overlays)
+        {
+            if (overlay.RenderContext is D3D11RenderContext d3dContext)
+            {
+                d3dContext.TrackCaptureFps = enabled;
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the target frame rate (30-120 fps).
@@ -143,6 +159,12 @@ public sealed class GameLoop : IDisposable
             overlay.BeginFrame();
             _effectManager.Render(renderContext);
             overlay.EndFrame();
+
+            // Update capture FPS from first overlay
+            if (renderContext is D3D11RenderContext d3dContext)
+            {
+                CaptureFps = d3dContext.CaptureFps;
+            }
         }
     }
 

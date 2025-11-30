@@ -69,7 +69,8 @@ public partial class FpsOverlayWindow : Window
         {
             var currentFps = gameLoop.CurrentFps;
             var targetFps = gameLoop.TargetFrameRate;
-            FpsText.Text = $"{currentFps:F1} / {targetFps} fps";
+            var captureFps = gameLoop.CaptureFps;
+            FpsText.Text = $"{currentFps:F1} / {targetFps} fps | Cap: {captureFps:F1}";
 
             // Color code based on performance
             var ratio = currentFps / targetFps;
@@ -89,11 +90,13 @@ public partial class FpsOverlayWindow : Window
     {
         base.Show();
         _updateTimer.Start();
+        Program.GameLoop?.SetTrackCaptureFps(true);
     }
 
     public new void Hide()
     {
         _updateTimer.Stop();
+        Program.GameLoop?.SetTrackCaptureFps(false);
         base.Hide();
     }
 
@@ -103,6 +106,7 @@ public partial class FpsOverlayWindow : Window
     {
         _forceClose = true;
         _updateTimer.Stop();
+        Program.GameLoop?.SetTrackCaptureFps(false);
         base.Close();
     }
 

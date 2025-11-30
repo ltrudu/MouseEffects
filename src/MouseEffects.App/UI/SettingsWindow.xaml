@@ -110,13 +110,21 @@
                                           Checked="ShowFpsOverlayCheckBox_Changed"
                                           Unchecked="ShowFpsOverlayCheckBox_Changed"/>
                             </StackPanel>
-                            <TextBlock x:Name="FpsCounterText" Grid.Column="1"
-                                       Text="-- / -- fps"
-                                       FontFamily="Consolas"
-                                       FontSize="14"
-                                       Foreground="#A6E3A1"
-                                       VerticalAlignment="Center"
-                                       Visibility="Collapsed"/>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock x:Name="FpsCounterText"
+                                           Text="-- / -- fps"
+                                           FontFamily="Consolas"
+                                           FontSize="14"
+                                           Foreground="#A6E3A1"
+                                           Visibility="Collapsed"/>
+                                <TextBlock x:Name="CaptureFpsText"
+                                           Text="Cap: -- fps"
+                                           FontFamily="Consolas"
+                                           FontSize="12"
+                                           Opacity="0.7"
+                                           Foreground="#A6E3A1"
+                                           Visibility="Collapsed"/>
+                            </StackPanel>
                         </Grid>
                     </StackPanel>
                 </Border>

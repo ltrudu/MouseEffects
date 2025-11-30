@@ -62,13 +62,16 @@ public partial class SettingsWindow : Window
     private void UpdateFpsCounterVisibility(bool show)
     {
         FpsCounterText.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        CaptureFpsText.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         if (show)
         {
             _fpsTimer.Start();
+            Program.GameLoop?.SetTrackCaptureFps(true);
         }
         else
         {
             _fpsTimer.Stop();
+            Program.GameLoop?.SetTrackCaptureFps(false);
         }
     }
 
@@ -79,7 +82,9 @@ public partial class SettingsWindow : Window
         {
             var currentFps = gameLoop.CurrentFps;
             var targetFps = gameLoop.TargetFrameRate;
+            var captureFps = gameLoop.CaptureFps;
             FpsCounterText.Text = $"{currentFps:F1} / {targetFps} fps";
+            CaptureFpsText.Text = $"Cap: {captureFps:F1} fps";
 
             // Color code: green if close to target, yellow if slightly below, red if way below
             var ratio = currentFps / targetFps;
