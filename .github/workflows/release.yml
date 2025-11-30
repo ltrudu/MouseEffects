@@ -71,7 +71,7 @@ jobs:
             --mainExe MouseEffects.App.exe `
             --outputDir ./releases `
             --packTitle "MouseEffects" `
-            --icon ./src/MouseEffects.App/Images/StoreLogo.png
+            --icon ./src/MouseEffects.App/MouseEffects.ico
 
       - name: List release artifacts
         shell: pwsh
