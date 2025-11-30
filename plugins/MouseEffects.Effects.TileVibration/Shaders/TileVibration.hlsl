@@ -72,12 +72,18 @@ float4 PSMain(PSInput input) : SV_TARGET
     float2 uv = input.TexCoord;
     float2 screenPos = uv * ViewportSize;
 
-    // Start with the original screen color
-    float4 result = ScreenTexture.Sample(LinearSampler, uv);
+    // Start with the original screen color (use SampleLevel to avoid gradient issues in loop)
+    float4 result = ScreenTexture.SampleLevel(LinearSampler, uv, 0);
+
+    // Track coverage for early-out optimization
+    float totalCoverage = 0.0;
 
     // Check each tile (tiles are sorted oldest first, so newer ones render on top)
     for (int i = 0; i < TileCount; i++)
     {
+        // Early-out: if pixel is fully covered, no need to process more tiles
+        if (totalCoverage >= 0.99)
+            break;
         TileData tile = Tiles[i];
 
         // Skip expired tiles
@@ -159,8 +165,8 @@ float4 PSMain(PSInput input) : SV_TARGET
             // Convert to UV for sampling
             float2 sampleUV = samplePos / ViewportSize;
 
-            // Sample the screen texture at the transformed position
-            float4 tileColor = ScreenTexture.Sample(LinearSampler, sampleUV);
+            // Sample the screen texture at the transformed position (SampleLevel for loop compatibility)
+            float4 tileColor = ScreenTexture.SampleLevel(LinearSampler, sampleUV, 0);
 
             // Calculate edge mask
             float mask = 1.0;
@@ -178,6 +184,9 @@ float4 PSMain(PSInput input) : SV_TARGET
 
             // Blend tile over result
             result = lerp(result, tileColor, mask);
+
+            // Update coverage for early-out (approximate coverage accumulation)
+            totalCoverage = totalCoverage + mask * (1.0 - totalCoverage);
         }
     }
 
