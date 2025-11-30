@@ -34,6 +34,7 @@ public sealed class ParticleTrailEffect : EffectBase
 
     // Particle state
     private readonly Particle[] _particles = new Particle[MaxParticles];
+    private readonly ParticleGPU[] _gpuParticles = new ParticleGPU[MaxParticles]; // Pooled to avoid allocation per frame
     private int _nextParticle;
     private Vector2 _lastMousePos;
     private float _spawnAccumulator;
@@ -177,12 +178,11 @@ public sealed class ParticleTrailEffect : EffectBase
         };
         context.UpdateBuffer(_frameDataBuffer!, frameData);
 
-        // Convert particles to GPU format
-        var gpuParticles = new ParticleGPU[MaxParticles];
+        // Convert particles to GPU format (using pooled array - no allocation)
         for (int i = 0; i < MaxParticles; i++)
         {
             ref var p = ref _particles[i];
-            gpuParticles[i] = new ParticleGPU
+            _gpuParticles[i] = new ParticleGPU
             {
                 Position = p.Position,
                 Velocity = p.Velocity,
@@ -193,7 +193,7 @@ public sealed class ParticleTrailEffect : EffectBase
                 Padding = 0
             };
         }
-        context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<ParticleGPU>)gpuParticles);
+        context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<ParticleGPU>)_gpuParticles);
 
         // Set shaders
         context.SetVertexShader(_vertexShader);
