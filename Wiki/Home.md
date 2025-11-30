@@ -12,6 +12,8 @@ Welcome to the MouseEffects documentation. This wiki provides comprehensive guid
 
 - [Architecture](Architecture.md) - Technical architecture and design patterns
 - [Building from Source](Building.md) - How to build the application
+- [GitHub Actions CI/CD](GitHub-Actions.md) - Automated builds and releases
+- [Workflow File Reference](Workflow-Reference.md) - Line-by-line release.yml explanation
 - [MSIX Packaging](MSIX-Packaging.md) - Creating MSIX distributable packages
 - [Velopack Packaging](Velopack-Packaging.md) - Creating portable installer with auto-updates
 - [Certificate Management](Certificates.md) - Code signing certificates

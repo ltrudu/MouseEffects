@@ -15,7 +15,6 @@
 [Rr]eleases/
 x64/
 x86/
-[Ww][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
@@ -23,6 +22,9 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+
+# Keep source code Win32 folders (P/Invoke definitions)
+!src/**/Win32/
 
 # Visual Studio cache/options directory
 .vs/
