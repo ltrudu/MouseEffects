@@ -1,15 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>MouseEffects.Effects.ScreenDistortion</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64;x86;ARM64</Platforms>
     <!-- Output to App's plugins directory -->
-    <OutputPath>..\..\src\MouseEffects.App\bin\$(Configuration)\$(TargetFramework)\plugins\</OutputPath>
+    <OutputPath>..\..\src\MouseEffects.App\bin\$(Platform)\$(Configuration)\$(TargetFramework)\plugins\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
 
