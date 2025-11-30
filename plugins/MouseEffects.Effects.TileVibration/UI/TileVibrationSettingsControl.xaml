@@ -1,0 +1,162 @@
+<UserControl x:Class="MouseEffects.Effects.TileVibration.UI.TileVibrationSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SubLabelStyle">
+            <Setter Property="Margin" Value="15,6,0,2"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="IndentedSliderStyle">
+            <Setter Property="Margin" Value="15,0,0,4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="8">
+        <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
+                      VerticalAlignment="Center"
+                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
+
+            <TextBlock Text="Tile Vibration" Grid.Column="1"
+                       FontWeight="Bold" FontSize="14"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+            <Button x:Name="FoldButton" Grid.Column="2"
+                    Content="&#x25BC;" Width="24" Height="24"
+                    Background="Transparent" BorderThickness="0"
+                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
+        </Grid>
+
+        <!-- Description (always visible) -->
+        <TextBlock Text="Creates vibrating screen tiles that follow the mouse cursor and shrink over time"
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+        <!-- Collapsible Content Panel -->
+        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+
+            <!-- Tile Lifespan -->
+            <TextBlock Text="Tile Lifespan (sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="LifespanSlider" Minimum="0.5" Maximum="10" Value="2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="LifespanSlider_ValueChanged"/>
+            <TextBlock x:Name="LifespanValue" Text="2.0" Opacity="0.7" FontSize="11"/>
+
+            <!-- Tile Size Section -->
+            <TextBlock Text="Tile Size" Style="{StaticResource LabelStyle}" FontSize="13"/>
+
+            <CheckBox x:Name="SyncSizeCheckBox" Content="Sync Width/Height (Square)"
+                      Margin="0,4,0,8" IsChecked="True"
+                      Checked="SyncSizeCheckBox_Changed" Unchecked="SyncSizeCheckBox_Changed"/>
+
+            <TextBlock Text="Max Width" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="MaxWidthSlider" Minimum="50" Maximum="300" Value="100"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="MaxWidthSlider_ValueChanged"/>
+            <TextBlock x:Name="MaxWidthValue" Text="100" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <TextBlock x:Name="MaxHeightLabel" Text="Max Height" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="MaxHeightSlider" Minimum="50" Maximum="300" Value="100"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="MaxHeightSlider_ValueChanged"/>
+            <TextBlock x:Name="MaxHeightValue" Text="100" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <TextBlock Text="Min Width" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="MinWidthSlider" Minimum="10" Maximum="100" Value="20"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="MinWidthSlider_ValueChanged"/>
+            <TextBlock x:Name="MinWidthValue" Text="20" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <TextBlock x:Name="MinHeightLabel" Text="Min Height" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="MinHeightSlider" Minimum="10" Maximum="100" Value="20"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="MinHeightSlider_ValueChanged"/>
+            <TextBlock x:Name="MinHeightValue" Text="20" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <!-- Edge Style -->
+            <TextBlock Text="Edge Style" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="EdgeStyleCombo" SelectedIndex="0" Margin="0,0,0,8"
+                      SelectionChanged="EdgeStyleCombo_SelectionChanged">
+                <ComboBoxItem Content="Sharp"/>
+                <ComboBoxItem Content="Soft"/>
+            </ComboBox>
+
+            <!-- Vibration Speed -->
+            <TextBlock Text="Vibration Speed" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="VibrationSpeedSlider" Minimum="0.1" Maximum="5" Value="1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="VibrationSpeedSlider_ValueChanged"/>
+            <TextBlock x:Name="VibrationSpeedValue" Text="1.0" Opacity="0.7" FontSize="11"/>
+
+            <!-- Displacement Section -->
+            <TextBlock Text="Displacement Vibration" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="DisplacementCheckBox" Content="Enabled"
+                      Margin="0,4,0,4" IsChecked="True"
+                      Checked="DisplacementCheckBox_Changed" Unchecked="DisplacementCheckBox_Changed"/>
+            <TextBlock Text="Max Displacement (px)" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="DisplacementMaxSlider" Minimum="1" Maximum="50" Value="10"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="DisplacementMaxSlider_ValueChanged"/>
+            <TextBlock x:Name="DisplacementMaxValue" Text="10" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <!-- Zoom Section -->
+            <TextBlock Text="Zoom Vibration" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="ZoomCheckBox" Content="Enabled"
+                      Margin="0,4,0,4" IsChecked="False"
+                      Checked="ZoomCheckBox_Changed" Unchecked="ZoomCheckBox_Changed"/>
+            <TextBlock Text="Min Zoom" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="ZoomMinSlider" Minimum="0.5" Maximum="1" Value="0.8"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="ZoomMinSlider_ValueChanged"/>
+            <TextBlock x:Name="ZoomMinValue" Text="0.80" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+            <TextBlock Text="Max Zoom" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="ZoomMaxSlider" Minimum="1" Maximum="2" Value="1.2"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="ZoomMaxSlider_ValueChanged"/>
+            <TextBlock x:Name="ZoomMaxValue" Text="1.20" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <!-- Rotation Section -->
+            <TextBlock Text="Rotation Vibration" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="RotationCheckBox" Content="Enabled"
+                      Margin="0,4,0,4" IsChecked="False"
+                      Checked="RotationCheckBox_Changed" Unchecked="RotationCheckBox_Changed"/>
+            <TextBlock Text="Amplitude (degrees)" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="RotationAmplitudeSlider" Minimum="1" Maximum="45" Value="15"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="RotationAmplitudeSlider_ValueChanged"/>
+            <TextBlock x:Name="RotationAmplitudeValue" Text="15" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <!-- Outline Section -->
+            <TextBlock Text="Outline" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="OutlineCheckBox" Content="Enabled"
+                      Margin="0,4,0,4" IsChecked="False"
+                      Checked="OutlineCheckBox_Changed" Unchecked="OutlineCheckBox_Changed"/>
+            <TextBlock Text="Size (px)" Style="{StaticResource SubLabelStyle}"/>
+            <Slider x:Name="OutlineSizeSlider" Minimum="1" Maximum="20" Value="2"
+                    Style="{StaticResource IndentedSliderStyle}" ValueChanged="OutlineSizeSlider_ValueChanged"/>
+            <TextBlock x:Name="OutlineSizeValue" Text="2" Opacity="0.7" FontSize="11" Margin="15,0,0,0"/>
+
+            <!-- Outline Color -->
+            <TextBlock Text="Outline Color" Style="{StaticResource SubLabelStyle}"/>
+            <Grid Margin="15,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border x:Name="OutlineColorPreview" Grid.Column="0"
+                        Width="24" Height="24" CornerRadius="4"
+                        Background="White" BorderBrush="Gray" BorderThickness="1"
+                        Margin="0,0,10,0"/>
+                <Button Grid.Column="1" Content="Pick Color"
+                        Click="OutlineColorButton_Click"
+                        Background="#45475A" Foreground="#CDD6F4" BorderThickness="0"
+                        Padding="10,4"/>
+            </Grid>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

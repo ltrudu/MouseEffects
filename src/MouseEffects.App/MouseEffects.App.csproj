@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MouseEffects.App</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ApplicationIcon></ApplicationIcon>
+    <RuntimeIdentifiers>win-x64;win-x86;win-arm64</RuntimeIdentifiers>
+    <Platforms>x64;x86;ARM64</Platforms>
+    <!-- Version for Velopack -->
+    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
+  </PropertyGroup>
+
+  <!-- MSIX Packaging Configuration -->
+  <PropertyGroup>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <WindowsPackageType>MSIX</WindowsPackageType>
+    <AppxPackageSigningEnabled>true</AppxPackageSigningEnabled>
+    <PackageCertificateThumbprint>89D2FDF5FBA592044142462E0735B1D3C9CE94FF</PackageCertificateThumbprint>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
+    <PackageReference Include="Velopack" Version="0.0.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MouseEffects.Core\MouseEffects.Core.csproj" />
+    <ProjectReference Include="..\MouseEffects.DirectX\MouseEffects.DirectX.csproj" />
+    <ProjectReference Include="..\MouseEffects.Overlay\MouseEffects.Overlay.csproj" />
+    <ProjectReference Include="..\MouseEffects.Input\MouseEffects.Input.csproj" />
+    <ProjectReference Include="..\MouseEffects.Plugins\MouseEffects.Plugins.csproj" />
+  </ItemGroup>
+
+  <!-- MSIX Assets -->
+  <ItemGroup>
+    <Content Include="Images\*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Package.appxmanifest" />
+  </ItemGroup>
+
+</Project>

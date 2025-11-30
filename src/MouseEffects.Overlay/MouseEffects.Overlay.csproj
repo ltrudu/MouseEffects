@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>MouseEffects.Overlay</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MouseEffects.Core\MouseEffects.Core.csproj" />
+    <ProjectReference Include="..\MouseEffects.DirectX\MouseEffects.DirectX.csproj" />
+  </ItemGroup>
+
+</Project>

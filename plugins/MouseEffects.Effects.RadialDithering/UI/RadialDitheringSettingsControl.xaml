@@ -1,0 +1,178 @@
+<UserControl x:Class="MouseEffects.Effects.RadialDithering.UI.RadialDitheringSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SectionStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="8">
+        <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
+                      VerticalAlignment="Center"
+                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
+
+            <TextBlock Text="Radial Dithering" Grid.Column="1"
+                       FontWeight="Bold" FontSize="14"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+            <Button x:Name="FoldButton" Grid.Column="2"
+                    Content="▼" Width="24" Height="24"
+                    Background="Transparent" BorderThickness="0"
+                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
+        </Grid>
+
+        <!-- Description (always visible) -->
+        <TextBlock Text="Creates a Bayer-pattern dithering effect in a circular area around the mouse cursor"
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+        <!-- Collapsible Content Panel -->
+        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+
+            <!-- Basic Settings -->
+            <TextBlock Text="Basic Settings" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Effect Radius (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="RadiusSlider" Minimum="0" Maximum="1920" Value="200"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_ValueChanged"/>
+            <TextBlock x:Name="RadiusValue" Text="200" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Dither Intensity" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="IntensitySlider" Minimum="0" Maximum="1" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="IntensitySlider_ValueChanged"/>
+            <TextBlock x:Name="IntensityValue" Text="0.5" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Alpha (Opacity)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="AlphaSlider" Minimum="0" Maximum="1" Value="1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="AlphaSlider_ValueChanged"/>
+            <TextBlock x:Name="AlphaValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Pattern Scale" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="PatternScaleSlider" Minimum="1" Maximum="8" Value="2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="PatternScaleSlider_ValueChanged"/>
+            <TextBlock x:Name="PatternScaleValue" Text="2" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Threshold" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ThresholdSlider" Minimum="-0.5" Maximum="0.5" Value="0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ThresholdSlider_ValueChanged"/>
+            <TextBlock x:Name="ThresholdValue" Text="0" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Edge Softness" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="1" Value="0.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_ValueChanged"/>
+            <TextBlock x:Name="EdgeSoftnessValue" Text="0.3" Opacity="0.7" FontSize="11"/>
+
+            <Separator Margin="0,12,0,8"/>
+
+            <!-- Falloff Settings -->
+            <TextBlock Text="Falloff Type" Style="{StaticResource SectionStyle}"/>
+
+            <ComboBox x:Name="FalloffTypeCombo" SelectionChanged="FalloffTypeCombo_SelectionChanged" Margin="0,0,0,8">
+                <ComboBoxItem Content="Linear" IsSelected="False"/>
+                <ComboBoxItem Content="Smooth" IsSelected="True"/>
+                <ComboBoxItem Content="Sharp" IsSelected="False"/>
+                <ComboBoxItem Content="Ring" IsSelected="False"/>
+            </ComboBox>
+
+            <TextBlock Text="Ring Width (for Ring falloff)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="RingWidthSlider" Minimum="0.05" Maximum="0.8" Value="0.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RingWidthSlider_ValueChanged"/>
+            <TextBlock x:Name="RingWidthValue" Text="0.3" Opacity="0.7" FontSize="11"/>
+
+            <Separator Margin="0,12,0,8"/>
+
+            <!-- Color Settings -->
+            <TextBlock Text="Dither Colors" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Primary Color (Visible Pixels)" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="Color1Preview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="White" Margin="0,0,8,0"/>
+                <Button x:Name="Color1PickerButton" Content="Pick Color..." Click="Color1PickerButton_Click"/>
+            </StackPanel>
+
+            <TextBlock Text="Secondary Color (Background)" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="Color2Preview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="Black" Margin="0,0,8,0"/>
+                <Button x:Name="Color2PickerButton" Content="Pick Color..." Click="Color2PickerButton_Click"/>
+            </StackPanel>
+
+            <TextBlock Text="Color Blend Mode" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="BlendModeCombo" SelectionChanged="BlendModeCombo_SelectionChanged" Margin="0,0,0,8">
+                <ComboBoxItem Content="Replace" IsSelected="True"/>
+                <ComboBoxItem Content="Multiply"/>
+                <ComboBoxItem Content="Screen"/>
+                <ComboBoxItem Content="Overlay"/>
+            </ComboBox>
+
+            <CheckBox x:Name="InvertPatternCheckBox" Content="Invert Pattern" Margin="0,8,0,0"
+                      IsChecked="False" Checked="InvertPatternCheckBox_Changed" Unchecked="InvertPatternCheckBox_Changed"/>
+
+            <Separator Margin="0,12,0,8"/>
+
+            <!-- Animation Settings -->
+            <TextBlock Text="Animation" Style="{StaticResource SectionStyle}"/>
+
+            <CheckBox x:Name="EnableAnimationCheckBox" Content="Enable Animation" Margin="0,0,0,8"
+                      IsChecked="False" Checked="EnableAnimationCheckBox_Changed" Unchecked="EnableAnimationCheckBox_Changed"/>
+
+            <TextBlock Text="Animation Speed" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="AnimationSpeedSlider" Minimum="0" Maximum="5" Value="1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="AnimationSpeedSlider_ValueChanged"/>
+            <TextBlock x:Name="AnimationSpeedValue" Text="1" Opacity="0.7" FontSize="11"/>
+
+            <Separator Margin="0,12,0,8"/>
+
+            <!-- Noise Settings -->
+            <TextBlock Text="Noise" Style="{StaticResource SectionStyle}"/>
+
+            <CheckBox x:Name="EnableNoiseCheckBox" Content="Enable Noise (reduces banding)" Margin="0,0,0,8"
+                      IsChecked="False" Checked="EnableNoiseCheckBox_Changed" Unchecked="EnableNoiseCheckBox_Changed"/>
+
+            <TextBlock Text="Noise Amount" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="NoiseAmountSlider" Minimum="0" Maximum="1" Value="0.2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="NoiseAmountSlider_ValueChanged"/>
+            <TextBlock x:Name="NoiseAmountValue" Text="0.2" Opacity="0.7" FontSize="11"/>
+
+            <Separator Margin="0,12,0,8"/>
+
+            <!-- Glow Settings -->
+            <TextBlock Text="Edge Glow" Style="{StaticResource SectionStyle}"/>
+
+            <CheckBox x:Name="EnableGlowCheckBox" Content="Enable Edge Glow" Margin="0,0,0,8"
+                      IsChecked="False" Checked="EnableGlowCheckBox_Changed" Unchecked="EnableGlowCheckBox_Changed"/>
+
+            <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="GlowIntensitySlider" Minimum="0" Maximum="1" Value="0.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_ValueChanged"/>
+            <TextBlock x:Name="GlowIntensityValue" Text="0.3" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Glow Color" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="GlowColorPreview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="#4C80FF" Margin="0,0,8,0"/>
+                <Button x:Name="GlowColorPickerButton" Content="Pick Color..." Click="GlowColorPickerButton_Click"/>
+            </StackPanel>
+        </StackPanel>
+    </StackPanel>
+</UserControl>
