@@ -15,9 +15,9 @@ struct RippleData
     float Amplitude;    // Current max amplitude (decays over lifetime)
     float Age;          // Time since spawn
     float Lifetime;     // Total lifetime
-    float WaveSpeed;    // Per-ripple wave speed
-    float Wavelength;   // Per-ripple wavelength
-    float Damping;      // Per-ripple damping
+    float WaveSpeed;      // Per-ripple wave speed
+    float InvWavelength;  // Precomputed: TWO_PI / wavelength (avoids division)
+    float Damping;        // Per-ripple damping
     float Padding1;
     float Padding2;
     float Padding3;
@@ -92,10 +92,9 @@ float4 PSMain(PSInput input) : SV_TARGET
         // Normalize direction
         float2 direction = dist > 0.001 ? toPixel / dist : float2(0, 0);
 
-        // Calculate wave phase based on distance from center (using per-ripple wavelength)
-        // Wave equation: sin(k*r - omega*t) where k = 2*PI/wavelength
-        float k = TWO_PI / ripple.Wavelength;
-        float phase = k * dist;
+        // Calculate wave phase based on distance from center
+        // Wave equation: sin(k*r) where k = 2*PI/wavelength (precomputed as InvWavelength)
+        float phase = ripple.InvWavelength * dist;
 
         // Sine wave for the ripple
         float wave = sin(phase);

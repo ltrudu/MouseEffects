@@ -274,6 +274,9 @@ public sealed class WaterRippleEffect : EffectBase
     {
         if (_vertexShader == null || _pixelShader == null) return;
 
+        // Early-out: skip entire render pass when no ripples active
+        if (_activeRippleCount == 0) return;
+
         var screenTexture = context.ScreenTexture;
         if (screenTexture == null) return;
 
@@ -298,7 +301,7 @@ public sealed class WaterRippleEffect : EffectBase
                     Age = ripple.Age,
                     Lifetime = ripple.Lifetime,
                     WaveSpeed = ripple.WaveSpeed,
-                    Wavelength = ripple.Wavelength,
+                    InvWavelength = MathF.Tau / ripple.Wavelength, // Precompute: 2*PI / wavelength
                     Damping = ripple.Damping,
                     Padding1 = 0,
                     Padding2 = 0,
@@ -308,13 +311,11 @@ public sealed class WaterRippleEffect : EffectBase
             }
         }
 
-        // Fill remaining with inactive
-        for (int i = activeCount; i < HardMaxRipples; i++)
+        // Only upload active ripples (partial buffer update)
+        if (activeCount > 0)
         {
-            _gpuRipples[i] = new RippleGPU { Amplitude = 0 };
+            context.UpdateBuffer(_rippleBuffer!, ((ReadOnlySpan<RippleGPU>)_gpuRipples).Slice(0, activeCount));
         }
-
-        context.UpdateBuffer(_rippleBuffer!, (ReadOnlySpan<RippleGPU>)_gpuRipples);
 
         // Update parameters
         var cbParams = new RippleParams
@@ -404,7 +405,7 @@ public sealed class WaterRippleEffect : EffectBase
         public float Age;           // Time since spawn
         public float Lifetime;      // Total lifetime
         public float WaveSpeed;     // Per-ripple wave speed
-        public float Wavelength;    // Per-ripple wavelength
+        public float InvWavelength; // Precomputed: TWO_PI / wavelength (avoids division in shader)
         public float Damping;       // Per-ripple damping
         public float Padding1;
         public float Padding2;
