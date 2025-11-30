@@ -11,7 +11,7 @@ using Velopack;
 
 namespace MouseEffects.App;
 
-static class Program
+static partial class Program
 {
     private static GameLoop? _gameLoop;
     private static OverlayManager? _overlayManager;
@@ -449,27 +449,27 @@ static class Program
         public int y;
     }
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool PeekMessageW(out MSG lpMsg, nint hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+    private static partial bool PeekMessageW(out MSG lpMsg, nint hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool TranslateMessage(ref MSG lpMsg);
+    private static partial bool TranslateMessage(ref MSG lpMsg);
 
-    [DllImport("user32.dll")]
-    private static extern nint DispatchMessageW(ref MSG lpMsg);
+    [LibraryImport("user32.dll")]
+    private static partial nint DispatchMessageW(ref MSG lpMsg);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
+    private static partial bool RegisterHotKey(nint hWnd, int id, uint fsModifiers, uint vk);
 
-    [DllImport("user32.dll")]
+    [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UnregisterHotKey(nint hWnd, int id);
+    private static partial bool UnregisterHotKey(nint hWnd, int id);
 
-    [DllImport("user32.dll")]
-    private static extern void PostQuitMessage(int nExitCode);
+    [LibraryImport("user32.dll")]
+    private static partial void PostQuitMessage(int nExitCode);
 
     #endregion
 }
