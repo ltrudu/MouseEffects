@@ -1,0 +1,173 @@
+<UserControl x:Class="MouseEffects.Effects.WaterRipple.UI.WaterRippleSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="8">
+        <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
+                      VerticalAlignment="Center"
+                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
+
+            <TextBlock Text="Water Ripple" Grid.Column="1"
+                       FontWeight="Bold" FontSize="14"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+            <Button x:Name="FoldButton" Grid.Column="2"
+                    Content="&#x25BC;" Width="24" Height="24"
+                    Background="Transparent" BorderThickness="0"
+                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
+        </Grid>
+
+        <!-- Description (always visible) -->
+        <TextBlock Text="Creates expanding water ripples on click that distort the screen with realistic wave interference"
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+        <!-- Collapsible Content Panel -->
+        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+
+            <!-- Max Ripples -->
+            <TextBlock Text="Max Ripples" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="MaxRipplesSlider" Minimum="1" Maximum="200" Value="50"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxRipplesSlider_ValueChanged"
+                    IsSnapToTickEnabled="True" TickFrequency="1"/>
+            <TextBlock x:Name="MaxRipplesValue" Text="50" Opacity="0.7" FontSize="11"/>
+
+            <!-- Ripple Lifespan -->
+            <TextBlock Text="Ripple Lifespan (sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="LifespanSlider" Minimum="0.5" Maximum="10" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="LifespanSlider_ValueChanged"/>
+            <TextBlock x:Name="LifespanValue" Text="3.0" Opacity="0.7" FontSize="11"/>
+
+            <!-- Wave Speed -->
+            <TextBlock Text="Wave Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="WaveSpeedSlider" Minimum="50" Maximum="1000" Value="200"
+                    Style="{StaticResource SliderStyle}" ValueChanged="WaveSpeedSlider_ValueChanged"/>
+            <TextBlock x:Name="WaveSpeedValue" Text="200" Opacity="0.7" FontSize="11"/>
+
+            <!-- Wavelength -->
+            <TextBlock Text="Wavelength (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="WavelengthSlider" Minimum="10" Maximum="100" Value="30"
+                    Style="{StaticResource SliderStyle}" ValueChanged="WavelengthSlider_ValueChanged"/>
+            <TextBlock x:Name="WavelengthValue" Text="30" Opacity="0.7" FontSize="11"/>
+
+            <!-- Damping -->
+            <TextBlock Text="Damping" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="DampingSlider" Minimum="0.1" Maximum="10" Value="2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="DampingSlider_ValueChanged"/>
+            <TextBlock x:Name="DampingValue" Text="2.0" Opacity="0.7" FontSize="11"/>
+
+            <!-- Click Triggers -->
+            <TextBlock Text="Click Trigger" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="LeftClickCheckBox" Content="Spawn on Left Click"
+                      Margin="0,4,0,4" IsChecked="True"
+                      Checked="LeftClickCheckBox_Changed" Unchecked="LeftClickCheckBox_Changed"/>
+            <CheckBox x:Name="RightClickCheckBox" Content="Spawn on Right Click"
+                      Margin="0,0,0,4" IsChecked="False"
+                      Checked="RightClickCheckBox_Changed" Unchecked="RightClickCheckBox_Changed"/>
+
+            <TextBlock Text="Click Min Amplitude (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="ClickMinAmplitudeSlider" Minimum="1" Maximum="100" Value="5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ClickMinAmplitudeSlider_ValueChanged"/>
+            <TextBlock x:Name="ClickMinAmplitudeValue" Text="5" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Click Max Amplitude (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="ClickMaxAmplitudeSlider" Minimum="5" Maximum="300" Value="20"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ClickMaxAmplitudeSlider_ValueChanged"/>
+            <TextBlock x:Name="ClickMaxAmplitudeValue" Text="20" Opacity="0.7" FontSize="11"/>
+
+            <!-- Mouse Movement Section -->
+            <TextBlock Text="Mouse Movement" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="SpawnOnMoveCheckBox" Content="Spawn on Mouse Move"
+                      Margin="0,4,0,4" IsChecked="False"
+                      Checked="SpawnOnMoveCheckBox_Changed" Unchecked="SpawnOnMoveCheckBox_Changed"/>
+
+            <TextBlock Text="Move Spawn Distance (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveSpawnDistanceSlider" Minimum="10" Maximum="200" Value="50"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveSpawnDistanceSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveSpawnDistanceValue" Text="50" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Move Min Amplitude (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveMinAmplitudeSlider" Minimum="1" Maximum="50" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveMinAmplitudeSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveMinAmplitudeValue" Text="3" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Move Max Amplitude (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveMaxAmplitudeSlider" Minimum="5" Maximum="100" Value="10"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveMaxAmplitudeSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveMaxAmplitudeValue" Text="10" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Move Ripple Lifespan (sec)" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveLifespanSlider" Minimum="0.5" Maximum="10" Value="2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveLifespanSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveLifespanValue" Text="2.0" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Move Wave Speed (px/sec)" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveWaveSpeedSlider" Minimum="50" Maximum="1000" Value="300"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveWaveSpeedSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveWaveSpeedValue" Text="300" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Move Wavelength (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveWavelengthSlider" Minimum="10" Maximum="100" Value="20"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveWavelengthSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveWavelengthValue" Text="20" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Move Damping" Margin="0,4,0,2"/>
+            <Slider x:Name="MoveDampingSlider" Minimum="0.1" Maximum="10" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveDampingSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveDampingValue" Text="3.0" Opacity="0.7" FontSize="11"/>
+
+            <!-- Grid Overlay Section -->
+            <TextBlock Text="Grid Overlay" Style="{StaticResource LabelStyle}" FontSize="13"/>
+            <CheckBox x:Name="GridCheckBox" Content="Show Grid"
+                      Margin="0,4,0,4" IsChecked="False"
+                      Checked="GridCheckBox_Changed" Unchecked="GridCheckBox_Changed"/>
+
+            <TextBlock Text="Grid Spacing (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="GridSpacingSlider" Minimum="10" Maximum="100" Value="30"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GridSpacingSlider_ValueChanged"/>
+            <TextBlock x:Name="GridSpacingValue" Text="30" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Grid Thickness (px)" Margin="0,4,0,2"/>
+            <Slider x:Name="GridThicknessSlider" Minimum="0.5" Maximum="5" Value="1.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GridThicknessSlider_ValueChanged"/>
+            <TextBlock x:Name="GridThicknessValue" Text="1.5" Opacity="0.7" FontSize="11"/>
+
+            <!-- Grid Color -->
+            <TextBlock Text="Grid Color" Margin="0,4,0,2"/>
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border x:Name="GridColorPreview" Grid.Column="0"
+                        Width="24" Height="24" CornerRadius="4"
+                        Background="#00FF80" BorderBrush="Gray" BorderThickness="1"
+                        Margin="0,0,10,0"/>
+                <Button Grid.Column="1" Content="Pick Color"
+                        Click="GridColorButton_Click"
+                        Background="#45475A" Foreground="#CDD6F4" BorderThickness="0"
+                        Padding="10,4"/>
+            </Grid>
+
+        </StackPanel>
+    </StackPanel>
+</UserControl>
