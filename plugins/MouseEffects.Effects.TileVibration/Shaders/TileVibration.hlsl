@@ -90,8 +90,13 @@ float4 PSMain(PSInput input) : SV_TARGET
         if (tile.Age >= 1.0)
             continue;
 
-        // Calculate distance from tile center
+        // Quick coarse bounds rejection - skip tiles clearly outside pixel range
         float2 toTile = screenPos - tile.Position;
+        float maxHalfDim = max(tile.Width, tile.Height) * 0.5 + OutlineSize;
+        if (abs(toTile.x) > maxHalfDim || abs(toTile.y) > maxHalfDim)
+            continue;
+
+        // Calculate half size for detailed checks
         float2 halfSize = float2(tile.Width, tile.Height) * 0.5;
 
         // Check if pixel is within tile bounds (using axis-aligned rectangle)
