@@ -239,6 +239,15 @@ public sealed partial class ScreenCapture : IDisposable
                 return _srv != null;
             }
 
+            // Optimization: Check if frame actually has updates
+            // TotalMetadataBufferSize > 0 means there are dirty regions or mouse updates
+            // AccumulatedFrames > 0 means actual frame content changed
+            if (frameInfo.TotalMetadataBufferSize == 0 && frameInfo.AccumulatedFrames == 0)
+            {
+                // Frame acquired but no actual changes - skip expensive copy
+                return _srv != null;
+            }
+
             // Copy the desktop texture to our captured texture
             using var desktopTexture = resource.QueryInterface<ID3D11Texture2D>();
 
@@ -256,19 +265,32 @@ public sealed partial class ScreenCapture : IDisposable
                     var destMapped = _renderDevice.Context.Map(_renderTexture, 0, MapMode.WriteDiscard);
                     try
                     {
-                        // Copy row by row to handle different row pitches
                         var srcPtr = mapped.DataPointer;
                         var dstPtr = destMapped.DataPointer;
                         var rowSize = Width * 4; // BGRA = 4 bytes per pixel
 
-                        for (int y = 0; y < Height; y++)
+                        // Optimization: bulk copy when row pitches match (common case)
+                        if (mapped.RowPitch == destMapped.RowPitch)
                         {
+                            // Single bulk copy - much faster than row-by-row
+                            var totalSize = (long)mapped.RowPitch * Height;
                             unsafe
                             {
-                                Buffer.MemoryCopy(
-                                    (void*)(srcPtr + y * (int)mapped.RowPitch),
-                                    (void*)(dstPtr + y * (int)destMapped.RowPitch),
-                                    rowSize, rowSize);
+                                Buffer.MemoryCopy((void*)srcPtr, (void*)dstPtr, totalSize, totalSize);
+                            }
+                        }
+                        else
+                        {
+                            // Row-by-row copy when pitches differ
+                            for (int y = 0; y < Height; y++)
+                            {
+                                unsafe
+                                {
+                                    Buffer.MemoryCopy(
+                                        (void*)(srcPtr + y * (int)mapped.RowPitch),
+                                        (void*)(dstPtr + y * (int)destMapped.RowPitch),
+                                        rowSize, rowSize);
+                                }
                             }
                         }
                     }
