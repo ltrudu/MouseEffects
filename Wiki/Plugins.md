@@ -10,6 +10,7 @@ This document provides detailed information about each built-in effect plugin.
 - [Color Blindness](#color-blindness)
 - [Radial Dithering](#radial-dithering)
 - [Tile Vibration](#tile-vibration)
+- [Water Ripple](#water-ripple)
 
 ---
 
@@ -369,6 +370,91 @@ Tiles spawn when the mouse moves beyond a threshold distance:
 
 - **Blend Mode**: Opaque
 - **Shader**: Screen texture sampling with transform
+
+---
+
+## Water Ripple
+
+**ID**: `water-ripple`
+**Screen Capture**: Yes (Dynamic - only when ripples active)
+
+Creates expanding water ripples on click that distort the screen with realistic wave interference. Supports separate wave parameters for click and mouse movement ripples.
+
+### Features
+
+- Up to 200 simultaneous ripples
+- Realistic wave physics with interference patterns
+- Click-triggered ripples with configurable buttons
+- Optional mouse movement ripple trails
+- Separate wave parameters for click vs. movement ripples
+- Grid overlay for distortion visualization
+- Dynamic screen capture (only captures when ripples exist)
+- Performance optimized with early-out when idle
+
+### Settings
+
+#### General
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `maxRipples` | int | 1-200 | 50 | Maximum simultaneous ripples |
+| `rippleLifespan` | float | 0.5-10 | 3.0 | Click ripple lifetime (seconds) |
+| `waveSpeed` | float | 50-1000 | 200 | Click ripple expansion speed (px/s) |
+| `wavelength` | float | 10-100 | 30 | Distance between wave peaks (px) |
+| `damping` | float | 0.1-10 | 2.0 | Wave energy decay rate |
+
+#### Click Triggers
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `spawnOnLeftClick` | bool | true | Create ripple on left click |
+| `spawnOnRightClick` | bool | false | Create ripple on right click |
+| `clickMinAmplitude` | float | 5 | Minimum click wave height (px) |
+| `clickMaxAmplitude` | float | 20 | Maximum click wave height (px) |
+
+#### Mouse Movement
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `spawnOnMove` | bool | - | false | Enable movement ripples |
+| `moveSpawnDistance` | float | 10-200 | 50 | Distance before new ripple (px) |
+| `moveMinAmplitude` | float | 1-50 | 3 | Minimum movement wave height (px) |
+| `moveMaxAmplitude` | float | 5-100 | 10 | Maximum movement wave height (px) |
+| `moveRippleLifespan` | float | 0.5-10 | 2.0 | Movement ripple lifetime (seconds) |
+| `moveWaveSpeed` | float | 50-1000 | 300 | Movement ripple expansion speed (px/s) |
+| `moveWavelength` | float | 10-100 | 20 | Movement wave peak distance (px) |
+| `moveDamping` | float | 0.1-10 | 3.0 | Movement wave decay rate |
+
+#### Grid Overlay
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `enableGrid` | bool | - | false | Show distortion grid |
+| `gridSpacing` | float | 10-100 | 30 | Grid line spacing (px) |
+| `gridThickness` | float | 0.5-5 | 1.5 | Grid line thickness (px) |
+| `gridColor` | Color4 | - | Green (0,1,0.5,0.8) | Grid line color |
+
+### Wave Physics
+
+Each ripple simulates realistic wave behavior:
+
+- **Expansion**: Ripples expand outward at `waveSpeed` pixels per second
+- **Amplitude Decay**: Wave height decreases with distance (`damping` factor)
+- **Interference**: Multiple overlapping ripples combine additively
+- **Lifetime Fade**: Ripples fade out smoothly over their lifespan
+
+### Performance Optimizations
+
+- **Dynamic Screen Capture**: Only captures screen when ripples exist
+- **Active Ripple Tracking**: Incremental count avoids O(n) operations
+- **Precomputed Wavelength**: Inverse wavelength calculated on CPU
+- **Early Exit**: Skips GPU operations when no active ripples
+- **Partial Buffer Upload**: Only uploads active ripple data
+
+### Rendering
+
+- **Blend Mode**: Alpha (over screen capture)
+- **Shader**: Screen distortion with sine wave displacement
 
 ---
 

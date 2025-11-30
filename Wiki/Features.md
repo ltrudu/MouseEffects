@@ -38,6 +38,8 @@ Some effects can capture and transform screen content:
 - **Hybrid GPU Support** - Works with laptops using integrated + discrete GPUs
 - **On-Demand Capture** - Only captures when effects need it
 - **Continuous Mode** - Real-time screen transformation for filter effects
+- **Dynamic Capture** - Effects can enable/disable capture dynamically based on state
+- **Capture FPS Tracking** - Monitor screen capture performance separately from render FPS
 
 ## System Tray Integration
 
@@ -82,7 +84,25 @@ The settings window provides complete control over all effects:
 
 - **GPU Selection** - Choose which graphics card to use
 - **Frame Rate** - Adjust target FPS (30-120)
-- **FPS Counter** - Display performance metrics
+- **FPS Counter** - Display performance metrics in settings window
+- **FPS Overlay** - On-screen performance display
+
+### Performance Monitoring
+
+Two FPS display options are available:
+
+#### Settings Window FPS Counter
+Shows performance metrics directly in the settings window:
+- **Render FPS**: Current render rate vs. target (e.g., "59.8 / 60 fps")
+- **Capture FPS**: Screen capture rate (e.g., "Cap: 54.2 fps")
+- Color-coded indicators: green (>95%), yellow (80-95%), red (<80%)
+
+#### On-Screen FPS Overlay
+A small overlay window displaying real-time performance:
+- Position: Top-left corner of primary monitor
+- Shows both render FPS and capture FPS
+- Can be toggled independently from settings window counter
+- Automatically enables capture FPS tracking when visible
 
 ### Effect Settings
 
@@ -106,6 +126,20 @@ Each effect has its own configuration panel:
 - **Lazy Initialization** - Resources created only when needed
 - **Automatic Cleanup** - GPU resources properly disposed
 - **Memory Efficient** - Structured buffers minimize memory usage
+
+### Dynamic Screen Capture Optimization
+
+Effects that use screen capture can implement dynamic capture mode:
+
+- **State-Based Capture**: Capture only runs when effect needs it (e.g., Water Ripple only captures when ripples are active)
+- **Automatic Switching**: Effects signal their capture needs via `RequiresContinuousScreenCapture`
+- **Major FPS Impact**: Disabling capture when idle can improve FPS from ~50 to ~120+ on some systems
+
+### Shader Optimizations
+
+- **Precomputed Values**: Expensive operations (division) computed on CPU where possible
+- **Early Exit**: Shaders skip processing when no active elements exist
+- **Partial Buffer Updates**: Only upload changed data to GPU
 
 ### Multi-GPU Support
 

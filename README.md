@@ -31,6 +31,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Color Blindness** | Simulates various color blindness conditions with RGB curves |
 | **Radial Dithering** | Bayer-pattern dithering effect around cursor |
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
+| **Water Ripple** | Expanding water ripples on click with realistic wave interference |
 
 ## Screenshots
 
@@ -124,7 +125,8 @@ MouseEffects/
 │   ├── MouseEffects.Effects.ScreenDistortion/
 │   ├── MouseEffects.Effects.ColorBlindness/
 │   ├── MouseEffects.Effects.RadialDithering/
-│   └── MouseEffects.Effects.TileVibration/
+│   ├── MouseEffects.Effects.TileVibration/
+│   └── MouseEffects.Effects.WaterRipple/
 ├── packaging/                    # MSIX packaging files
 └── Wiki/                         # Documentation
 ```
