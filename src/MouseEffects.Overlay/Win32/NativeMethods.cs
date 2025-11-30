@@ -114,6 +114,7 @@ internal static partial class NativeMethods
         public int y;
     }
 
+    // Note: WNDCLASSEX contains string fields that LibraryImport can't marshal automatically
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
     public static extern ushort RegisterClassExW(ref WNDCLASSEX lpwcx);
 
