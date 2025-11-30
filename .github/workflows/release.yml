@@ -15,6 +15,10 @@ env:
   DOTNET_VERSION: '8.0.x'
   PROJECT_PATH: 'src/MouseEffects.App/MouseEffects.App.csproj'
 
+# Required for creating releases
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -96,7 +100,7 @@ jobs:
           generate_release_notes: true
           files: |
             ./releases/MouseEffects-win-Setup.exe
-            ./releases/MouseEffects-${{ steps.version.outputs.VERSION }}-win-full.nupkg
+            ./releases/*.nupkg
             ./releases/RELEASES
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,7 +116,7 @@ jobs:
           generate_release_notes: true
           files: |
             ./releases/MouseEffects-win-Setup.exe
-            ./releases/MouseEffects-${{ steps.version.outputs.VERSION }}-win-full.nupkg
+            ./releases/*.nupkg
             ./releases/RELEASES
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
