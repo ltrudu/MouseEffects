@@ -179,30 +179,37 @@ jobs:
             --icon ./src/MouseEffects.App/MouseEffects.ico
 
       # ============================================================
-      # RENAME INSTALLERS FOR CLARITY
+      # RENAME ARTIFACTS FOR CLARITY
       # ============================================================
 
-      - name: Rename installers
+      - name: Rename artifacts
         shell: pwsh
         run: |
+          $version = "${{ steps.version.outputs.VERSION }}"
+
           # Rename setup files to include architecture
           Move-Item -Path "./releases/x64/MouseEffects-win-Setup.exe" -Destination "./releases/MouseEffects-x64-Setup.exe" -Force
           Move-Item -Path "./releases/x86/MouseEffects-win-Setup.exe" -Destination "./releases/MouseEffects-x86-Setup.exe" -Force
           Move-Item -Path "./releases/arm64/MouseEffects-win-Setup.exe" -Destination "./releases/MouseEffects-arm64-Setup.exe" -Force
 
-          # Copy nupkg and RELEASES files to main releases folder
-          Copy-Item -Path "./releases/x64/*.nupkg" -Destination "./releases/" -Force
-          Copy-Item -Path "./releases/x86/*.nupkg" -Destination "./releases/" -Force
-          Copy-Item -Path "./releases/arm64/*.nupkg" -Destination "./releases/" -Force
-
           # Rename nupkg files to include architecture
-          Get-ChildItem -Path "./releases/*.nupkg" | ForEach-Object {
-            $name = $_.Name
-            # Only rename if not already renamed
-            if ($name -notmatch "-(x64|x86|arm64)-") {
-              # Determine source folder by checking which subfolder it came from
-            }
+          Get-ChildItem -Path "./releases/x64/*.nupkg" | ForEach-Object {
+            $newName = $_.Name -replace "-full\.nupkg$", "-x64-full.nupkg"
+            Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
           }
+          Get-ChildItem -Path "./releases/x86/*.nupkg" | ForEach-Object {
+            $newName = $_.Name -replace "-full\.nupkg$", "-x86-full.nupkg"
+            Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
+          }
+          Get-ChildItem -Path "./releases/arm64/*.nupkg" | ForEach-Object {
+            $newName = $_.Name -replace "-full\.nupkg$", "-arm64-full.nupkg"
+            Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
+          }
+
+          # Rename RELEASES files to include architecture
+          Move-Item -Path "./releases/x64/RELEASES" -Destination "./releases/RELEASES-x64" -Force
+          Move-Item -Path "./releases/x86/RELEASES" -Destination "./releases/RELEASES-x86" -Force
+          Move-Item -Path "./releases/arm64/RELEASES" -Destination "./releases/RELEASES-arm64" -Force
 
       - name: List release artifacts
         shell: pwsh
@@ -222,8 +229,8 @@ jobs:
             ./releases/MouseEffects-x64-Setup.exe
             ./releases/MouseEffects-x86-Setup.exe
             ./releases/MouseEffects-arm64-Setup.exe
-            ./releases/**/*.nupkg
-            ./releases/**/RELEASES
+            ./releases/*.nupkg
+            ./releases/RELEASES-*
           retention-days: 30
 
       - name: Create GitHub Release
@@ -238,12 +245,12 @@ jobs:
             ./releases/MouseEffects-x64-Setup.exe
             ./releases/MouseEffects-x86-Setup.exe
             ./releases/MouseEffects-arm64-Setup.exe
-            ./releases/x64/*.nupkg
-            ./releases/x64/RELEASES
-            ./releases/x86/*.nupkg
-            ./releases/x86/RELEASES
-            ./releases/arm64/*.nupkg
-            ./releases/arm64/RELEASES
+            ./releases/*-x64-full.nupkg
+            ./releases/*-x86-full.nupkg
+            ./releases/*-arm64-full.nupkg
+            ./releases/RELEASES-x64
+            ./releases/RELEASES-x86
+            ./releases/RELEASES-arm64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -260,11 +267,11 @@ jobs:
             ./releases/MouseEffects-x64-Setup.exe
             ./releases/MouseEffects-x86-Setup.exe
             ./releases/MouseEffects-arm64-Setup.exe
-            ./releases/x64/*.nupkg
-            ./releases/x64/RELEASES
-            ./releases/x86/*.nupkg
-            ./releases/x86/RELEASES
-            ./releases/arm64/*.nupkg
-            ./releases/arm64/RELEASES
+            ./releases/*-x64-full.nupkg
+            ./releases/*-x86-full.nupkg
+            ./releases/*-arm64-full.nupkg
+            ./releases/RELEASES-x64
+            ./releases/RELEASES-x86
+            ./releases/RELEASES-arm64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
