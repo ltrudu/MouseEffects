@@ -51,10 +51,9 @@ jobs:
         run: dotnet restore
 
       # ============================================================
-      # BUILD AND PUBLISH FOR ALL PLATFORMS
+      # BUILD AND PUBLISH FOR x64
       # ============================================================
 
-      # ----- x64 -----
       - name: Build solution (x64)
         run: dotnet build --configuration Release --no-restore -p:Platform=x64
 
@@ -81,62 +80,8 @@ jobs:
             Write-Host "Warning: x64 plugins not found at $pluginsSource"
           }
 
-      # ----- x86 -----
-      - name: Build solution (x86)
-        run: dotnet build --configuration Release -p:Platform=x86
-
-      - name: Publish application (x86)
-        run: |
-          dotnet publish ${{ env.PROJECT_PATH }} `
-            --configuration Release `
-            --runtime win-x86 `
-            --self-contained true `
-            --output ./publish/win-x86 `
-            -p:PublishSingleFile=false `
-            -p:Version=${{ steps.version.outputs.VERSION }}
-
-      - name: Copy plugins (x86)
-        shell: pwsh
-        run: |
-          $pluginsSource = "./src/MouseEffects.App/bin/x86/Release/${{ env.TARGET_FRAMEWORK }}/plugins"
-          $pluginsDest = "./publish/win-x86/plugins"
-          if (Test-Path $pluginsSource) {
-            New-Item -ItemType Directory -Force -Path $pluginsDest | Out-Null
-            Copy-Item -Path "$pluginsSource\*" -Destination $pluginsDest -Recurse -Force
-            Write-Host "x86 plugins copied"
-          } else {
-            Write-Host "Warning: x86 plugins not found at $pluginsSource"
-          }
-
-      # ----- ARM64 -----
-      - name: Build solution (ARM64)
-        run: dotnet build --configuration Release -p:Platform=ARM64
-
-      - name: Publish application (ARM64)
-        run: |
-          dotnet publish ${{ env.PROJECT_PATH }} `
-            --configuration Release `
-            --runtime win-arm64 `
-            --self-contained true `
-            --output ./publish/win-arm64 `
-            -p:PublishSingleFile=false `
-            -p:Version=${{ steps.version.outputs.VERSION }}
-
-      - name: Copy plugins (ARM64)
-        shell: pwsh
-        run: |
-          $pluginsSource = "./src/MouseEffects.App/bin/ARM64/Release/${{ env.TARGET_FRAMEWORK }}/plugins"
-          $pluginsDest = "./publish/win-arm64/plugins"
-          if (Test-Path $pluginsSource) {
-            New-Item -ItemType Directory -Force -Path $pluginsDest | Out-Null
-            Copy-Item -Path "$pluginsSource\*" -Destination $pluginsDest -Recurse -Force
-            Write-Host "ARM64 plugins copied"
-          } else {
-            Write-Host "Warning: ARM64 plugins not found at $pluginsSource"
-          }
-
       # ============================================================
-      # CREATE VELOPACK PACKAGES
+      # CREATE VELOPACK PACKAGE
       # ============================================================
 
       - name: Install Velopack CLI
@@ -154,30 +99,6 @@ jobs:
             --packTitle "MouseEffects" `
             --icon ./src/MouseEffects.App/MouseEffects.ico
 
-      - name: Create Velopack release (x86)
-        shell: pwsh
-        run: |
-          vpk pack `
-            --packId MouseEffects `
-            --packVersion ${{ steps.version.outputs.VERSION }} `
-            --packDir ./publish/win-x86 `
-            --mainExe MouseEffects.App.exe `
-            --outputDir ./releases/x86 `
-            --packTitle "MouseEffects" `
-            --icon ./src/MouseEffects.App/MouseEffects.ico
-
-      - name: Create Velopack release (ARM64)
-        shell: pwsh
-        run: |
-          vpk pack `
-            --packId MouseEffects `
-            --packVersion ${{ steps.version.outputs.VERSION }} `
-            --packDir ./publish/win-arm64 `
-            --mainExe MouseEffects.App.exe `
-            --outputDir ./releases/arm64 `
-            --packTitle "MouseEffects" `
-            --icon ./src/MouseEffects.App/MouseEffects.ico
-
       # ============================================================
       # RENAME ARTIFACTS FOR CLARITY
       # ============================================================
@@ -187,29 +108,17 @@ jobs:
         run: |
           $version = "${{ steps.version.outputs.VERSION }}"
 
-          # Rename setup files to include architecture
+          # Rename setup file to include architecture
           Move-Item -Path "./releases/x64/MouseEffects-win-Setup.exe" -Destination "./releases/MouseEffects-x64-Setup.exe" -Force
-          Move-Item -Path "./releases/x86/MouseEffects-win-Setup.exe" -Destination "./releases/MouseEffects-x86-Setup.exe" -Force
-          Move-Item -Path "./releases/arm64/MouseEffects-win-Setup.exe" -Destination "./releases/MouseEffects-arm64-Setup.exe" -Force
 
           # Rename nupkg files to include architecture
           Get-ChildItem -Path "./releases/x64/*.nupkg" | ForEach-Object {
             $newName = $_.Name -replace "-full\.nupkg$", "-x64-full.nupkg"
             Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
           }
-          Get-ChildItem -Path "./releases/x86/*.nupkg" | ForEach-Object {
-            $newName = $_.Name -replace "-full\.nupkg$", "-x86-full.nupkg"
-            Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
-          }
-          Get-ChildItem -Path "./releases/arm64/*.nupkg" | ForEach-Object {
-            $newName = $_.Name -replace "-full\.nupkg$", "-arm64-full.nupkg"
-            Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
-          }
 
-          # Rename RELEASES files to include architecture
+          # Rename RELEASES file to include architecture
           Move-Item -Path "./releases/x64/RELEASES" -Destination "./releases/RELEASES-x64" -Force
-          Move-Item -Path "./releases/x86/RELEASES" -Destination "./releases/RELEASES-x86" -Force
-          Move-Item -Path "./releases/arm64/RELEASES" -Destination "./releases/RELEASES-arm64" -Force
 
       - name: List release artifacts
         shell: pwsh
@@ -227,8 +136,6 @@ jobs:
           name: MouseEffects-${{ steps.version.outputs.VERSION }}
           path: |
             ./releases/MouseEffects-x64-Setup.exe
-            ./releases/MouseEffects-x86-Setup.exe
-            ./releases/MouseEffects-arm64-Setup.exe
             ./releases/*.nupkg
             ./releases/RELEASES-*
           retention-days: 30
@@ -243,14 +150,8 @@ jobs:
           generate_release_notes: true
           files: |
             ./releases/MouseEffects-x64-Setup.exe
-            ./releases/MouseEffects-x86-Setup.exe
-            ./releases/MouseEffects-arm64-Setup.exe
             ./releases/*-x64-full.nupkg
-            ./releases/*-x86-full.nupkg
-            ./releases/*-arm64-full.nupkg
             ./releases/RELEASES-x64
-            ./releases/RELEASES-x86
-            ./releases/RELEASES-arm64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -265,13 +166,7 @@ jobs:
           generate_release_notes: true
           files: |
             ./releases/MouseEffects-x64-Setup.exe
-            ./releases/MouseEffects-x86-Setup.exe
-            ./releases/MouseEffects-arm64-Setup.exe
             ./releases/*-x64-full.nupkg
-            ./releases/*-x86-full.nupkg
-            ./releases/*-arm64-full.nupkg
             ./releases/RELEASES-x64
-            ./releases/RELEASES-x86
-            ./releases/RELEASES-arm64
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
