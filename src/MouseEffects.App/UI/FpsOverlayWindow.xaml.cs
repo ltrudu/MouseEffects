@@ -15,11 +15,23 @@ public partial class FpsOverlayWindow : Window
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const int GWL_EXSTYLE = -20;
 
-    [DllImport("user32.dll")]
-    private static extern int GetWindowLong(nint hwnd, int index);
+    // Use GetWindowLongPtrW on 64-bit, GetWindowLongW on 32-bit
+#if TARGET_64BIT
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
+    private static partial nint GetWindowLongPtr(nint hwnd, int index);
 
-    [DllImport("user32.dll")]
-    private static extern int SetWindowLong(nint hwnd, int index, int newStyle);
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtrW")]
+    private static partial nint SetWindowLongPtr(nint hwnd, int index, nint newStyle);
+#else
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW")]
+    private static partial int GetWindowLong32(nint hwnd, int index);
+
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongW")]
+    private static partial int SetWindowLong32(nint hwnd, int index, int newStyle);
+
+    private static nint GetWindowLongPtr(nint hwnd, int index) => GetWindowLong32(hwnd, index);
+    private static nint SetWindowLongPtr(nint hwnd, int index, nint newStyle) => SetWindowLong32(hwnd, index, (int)newStyle);
+#endif
 
     private readonly DispatcherTimer _updateTimer;
 
@@ -46,8 +58,8 @@ public partial class FpsOverlayWindow : Window
     {
         // Make window click-through
         var hwnd = new WindowInteropHelper(this).Handle;
-        var extendedStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-        SetWindowLong(hwnd, GWL_EXSTYLE, extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW);
+        var extendedStyle = (int)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+        SetWindowLongPtr(hwnd, GWL_EXSTYLE, (nint)(extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW));
     }
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
