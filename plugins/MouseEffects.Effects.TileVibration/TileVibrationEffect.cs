@@ -35,6 +35,7 @@ public sealed class TileVibrationEffect : EffectBase
 
     // Tile state (CPU-side)
     private readonly Tile[] _tiles = new Tile[MaxTiles];
+    private readonly TileGPU[] _gpuTiles = new TileGPU[MaxTiles]; // Pooled to avoid allocation per frame
     private int _nextTile;
     private Vector2 _lastTilePosition;
     private float _totalTime;
@@ -209,8 +210,7 @@ public sealed class TileVibrationEffect : EffectBase
         var screenTexture = context.ScreenTexture;
         if (screenTexture == null) return;
 
-        // Count active tiles and prepare GPU data
-        var gpuTiles = new TileGPU[MaxTiles];
+        // Count active tiles and prepare GPU data (using pooled array)
         int activeTileCount = 0;
 
         // Process tiles in order of age (oldest first, so newest renders on top)
@@ -230,7 +230,7 @@ public sealed class TileVibrationEffect : EffectBase
                 ? currentWidth
                 : MathF.Max(_minHeight, _maxHeight * (1 - normalizedAge) + _minHeight * normalizedAge);
 
-            gpuTiles[activeTileCount] = new TileGPU
+            _gpuTiles[activeTileCount] = new TileGPU
             {
                 Position = tile.Position,
                 Age = normalizedAge,
@@ -244,10 +244,10 @@ public sealed class TileVibrationEffect : EffectBase
         // Fill remaining slots with inactive tiles
         for (int i = activeTileCount; i < MaxTiles; i++)
         {
-            gpuTiles[i] = new TileGPU { Age = 2.0f }; // Age > 1 means expired
+            _gpuTiles[i] = new TileGPU { Age = 2.0f }; // Age > 1 means expired
         }
 
-        context.UpdateBuffer(_tileBuffer!, (ReadOnlySpan<TileGPU>)gpuTiles);
+        context.UpdateBuffer(_tileBuffer!, (ReadOnlySpan<TileGPU>)_gpuTiles);
 
         // Build vibration flags
         int vibrationFlags = 0;
