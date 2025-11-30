@@ -37,6 +37,7 @@ public sealed class WaterRippleEffect : EffectBase
     private readonly Ripple[] _ripples = new Ripple[HardMaxRipples];
     private readonly RippleGPU[] _gpuRipples = new RippleGPU[HardMaxRipples]; // Pooled
     private int _nextRipple;
+    private int _activeRippleCount; // Tracked incrementally to avoid O(n) counting
     private float _totalTime;
     private bool _wasLeftPressed;
     private bool _wasRightPressed;
@@ -199,6 +200,7 @@ public sealed class WaterRippleEffect : EffectBase
             if (ripple.Age >= ripple.Lifetime)
             {
                 ripple.IsActive = false;
+                _activeRippleCount--;
             }
         }
 
@@ -237,15 +239,18 @@ public sealed class WaterRippleEffect : EffectBase
     private void SpawnRipple(Vector2 position, float minAmplitude, float maxAmplitude,
         float lifespan, float waveSpeed, float wavelength, float damping)
     {
-        // Count active ripples
-        int activeCount = 0;
-        for (int i = 0; i < HardMaxRipples; i++)
+        // Use tracked count instead of O(n) loop
+        if (_activeRippleCount >= _maxRipples) return;
+
+        // Find next available slot (may need to skip active ones)
+        int attempts = 0;
+        while (_ripples[_nextRipple].IsActive && attempts < HardMaxRipples)
         {
-            if (_ripples[i].IsActive) activeCount++;
+            _nextRipple = (_nextRipple + 1) % HardMaxRipples;
+            attempts++;
         }
 
-        // Don't spawn if at max ripples
-        if (activeCount >= _maxRipples) return;
+        if (attempts >= HardMaxRipples) return; // All slots full (shouldn't happen if count is accurate)
 
         ref var ripple = ref _ripples[_nextRipple];
         _nextRipple = (_nextRipple + 1) % HardMaxRipples;
@@ -262,6 +267,7 @@ public sealed class WaterRippleEffect : EffectBase
         ripple.Wavelength = wavelength;
         ripple.Damping = damping;
         ripple.IsActive = true;
+        _activeRippleCount++;
     }
 
     protected override void OnRender(IRenderContext context)
