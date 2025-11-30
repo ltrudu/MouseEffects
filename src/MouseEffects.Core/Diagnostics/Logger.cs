@@ -1,14 +1,23 @@
+using System.Collections.Concurrent;
+
 namespace MouseEffects.Core.Diagnostics;
 
 /// <summary>
-/// Simple file logger for debugging.
+/// Simple file logger for debugging with queue-based async writing.
 /// </summary>
 public static class Logger
 {
-    private static readonly object _lock = new();
+    private static readonly ConcurrentQueue<string> _logQueue = new();
+    private static readonly Timer _flushTimer;
     private static string? _logPath;
 
     public static bool IsEnabled { get; set; } = true;
+
+    static Logger()
+    {
+        // Flush queue every 100ms to balance responsiveness and I/O efficiency
+        _flushTimer = new Timer(FlushQueue, null, 100, 100);
+    }
 
     public static void Initialize(string logPath)
     {
@@ -26,18 +35,7 @@ public static class Logger
         if (!IsEnabled || _logPath == null) return;
 
         var line = $"[{DateTime.Now:HH:mm:ss.fff}] [{source}] {message}";
-
-        lock (_lock)
-        {
-            try
-            {
-                File.AppendAllText(_logPath, line + Environment.NewLine);
-            }
-            catch
-            {
-                // Ignore logging errors
-            }
-        }
+        _logQueue.Enqueue(line);
 
         System.Diagnostics.Debug.WriteLine(line);
     }
@@ -48,5 +46,38 @@ public static class Logger
     {
         Log(source, $"ERROR: {ex.GetType().Name}: {ex.Message}");
         Log(source, $"StackTrace: {ex.StackTrace}");
+    }
+
+    /// <summary>
+    /// Forces immediate flush of queued log entries.
+    /// Call before app shutdown to ensure all logs are written.
+    /// </summary>
+    public static void Flush()
+    {
+        FlushQueue(null);
+    }
+
+    private static void FlushQueue(object? state)
+    {
+        if (_logPath == null || _logQueue.IsEmpty) return;
+
+        try
+        {
+            // Batch dequeue and write to minimize I/O operations
+            var lines = new List<string>();
+            while (_logQueue.TryDequeue(out var line))
+            {
+                lines.Add(line);
+            }
+
+            if (lines.Count > 0)
+            {
+                File.AppendAllLines(_logPath, lines);
+            }
+        }
+        catch
+        {
+            // Ignore logging errors
+        }
     }
 }
