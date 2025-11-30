@@ -14,7 +14,7 @@
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <Platforms>x64</Platforms>
     <!-- Version for Velopack (AssemblyVersion and FileVersion are derived automatically) -->
-    <Version>1.0.11</Version>
+    <Version>1.0.12</Version>
   </PropertyGroup>
 
   <!-- MSIX Packaging Configuration -->
