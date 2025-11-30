@@ -36,6 +36,7 @@ public sealed class TileVibrationEffect : EffectBase
     // Tile state (CPU-side)
     private readonly Tile[] _tiles = new Tile[MaxTiles];
     private readonly TileGPU[] _gpuTiles = new TileGPU[MaxTiles]; // Pooled to avoid allocation per frame
+    private readonly int[] _sortedIndices = new int[MaxTiles]; // Pooled for sorting active tiles
     private int _nextTile;
     private Vector2 _lastTilePosition;
     private float _totalTime;
@@ -210,17 +211,36 @@ public sealed class TileVibrationEffect : EffectBase
         var screenTexture = context.ScreenTexture;
         if (screenTexture == null) return;
 
-        // Count active tiles and prepare GPU data (using pooled array)
+        // Count active tiles and prepare GPU data (using pooled arrays - no allocations)
         int activeTileCount = 0;
 
-        // Process tiles in order of age (oldest first, so newest renders on top)
-        var sortedIndices = Enumerable.Range(0, MaxTiles)
-            .Where(i => _tiles[i].IsActive)
-            .OrderByDescending(i => _tiles[i].Age)
-            .ToArray();
-
-        foreach (var i in sortedIndices)
+        // Collect active tile indices (no allocation)
+        for (int i = 0; i < MaxTiles; i++)
         {
+            if (_tiles[i].IsActive)
+                _sortedIndices[activeTileCount++] = i;
+        }
+
+        // Sort by age descending (oldest first, so newest renders on top)
+        // Using insertion sort - efficient for small N, no allocations
+        for (int i = 1; i < activeTileCount; i++)
+        {
+            int key = _sortedIndices[i];
+            float keyAge = _tiles[key].Age;
+            int j = i - 1;
+            while (j >= 0 && _tiles[_sortedIndices[j]].Age < keyAge)
+            {
+                _sortedIndices[j + 1] = _sortedIndices[j];
+                j--;
+            }
+            _sortedIndices[j + 1] = key;
+        }
+
+        // Populate GPU tile data
+        int gpuTileIndex = 0;
+        for (int idx = 0; idx < activeTileCount; idx++)
+        {
+            int i = _sortedIndices[idx];
             ref var tile = ref _tiles[i];
             float normalizedAge = tile.Age / tile.Lifetime;
 
@@ -230,7 +250,7 @@ public sealed class TileVibrationEffect : EffectBase
                 ? currentWidth
                 : MathF.Max(_minHeight, _maxHeight * (1 - normalizedAge) + _minHeight * normalizedAge);
 
-            _gpuTiles[activeTileCount] = new TileGPU
+            _gpuTiles[gpuTileIndex] = new TileGPU
             {
                 Position = tile.Position,
                 Age = normalizedAge,
@@ -238,11 +258,11 @@ public sealed class TileVibrationEffect : EffectBase
                 Height = currentHeight,
                 RandomSeed = tile.RandomSeed
             };
-            activeTileCount++;
+            gpuTileIndex++;
         }
 
         // Fill remaining slots with inactive tiles
-        for (int i = activeTileCount; i < MaxTiles; i++)
+        for (int i = gpuTileIndex; i < MaxTiles; i++)
         {
             _gpuTiles[i] = new TileGPU { Age = 2.0f }; // Age > 1 means expired
         }
