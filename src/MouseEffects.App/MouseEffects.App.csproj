@@ -13,6 +13,7 @@
     <ApplicationIcon>MouseEffects.ico</ApplicationIcon>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <Platforms>x64</Platforms>
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <!-- Version for Velopack (AssemblyVersion and FileVersion are derived automatically) -->
     <Version>1.0.12</Version>
   </PropertyGroup>
@@ -30,6 +31,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
+    <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     <PackageReference Include="Velopack" Version="0.0.*" />
   </ItemGroup>
 
