@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.WaterR
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.Zoom", "plugins\MouseEffects.Effects.Zoom\MouseEffects.Effects.Zoom.csproj", "{3ECCE9F3-DD29-44E5-A70F-0AF9918AE294}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.Firework", "plugins\MouseEffects.Effects.Firework\MouseEffects.Effects.Firework.csproj", "{44C06F51-8991-4431-8E8D-19D6CAA291B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -213,6 +215,18 @@ Global
 		{3ECCE9F3-DD29-44E5-A70F-0AF9918AE294}.Release|x64.Build.0 = Release|x64
 		{3ECCE9F3-DD29-44E5-A70F-0AF9918AE294}.Release|x86.ActiveCfg = Release|x64
 		{3ECCE9F3-DD29-44E5-A70F-0AF9918AE294}.Release|x86.Build.0 = Release|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Debug|Any CPU.Build.0 = Debug|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Debug|x64.ActiveCfg = Debug|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Debug|x64.Build.0 = Debug|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Debug|x86.ActiveCfg = Debug|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Debug|x86.Build.0 = Debug|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Release|Any CPU.ActiveCfg = Release|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Release|Any CPU.Build.0 = Release|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Release|x64.ActiveCfg = Release|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Release|x64.Build.0 = Release|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Release|x86.ActiveCfg = Release|x64
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -232,6 +246,7 @@ Global
 		{2C5B11C8-620F-4E92-AFB3-919ABF5C0A1B} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{2ADD7A3D-88A8-44D5-87F8-F5C2F70DBF95} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{3ECCE9F3-DD29-44E5-A70F-0AF9918AE294} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
+		{44C06F51-8991-4431-8E8D-19D6CAA291B9} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FCD67D-F721-4679-A84D-FCEEF635AF00}

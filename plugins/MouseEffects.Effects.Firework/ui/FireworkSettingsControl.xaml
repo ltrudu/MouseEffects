@@ -1,0 +1,233 @@
+<UserControl x:Class="MouseEffects.Effects.Firework.UI.FireworkSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <Style x:Key="LabelStyle" TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,8,0,4" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+            <Style x:Key="SectionStyle" TargetType="TextBlock">
+                <Setter Property="Margin" Value="0,12,0,4" />
+                <Setter Property="FontWeight" Value="Bold" />
+                <Setter Property="FontSize" Value="13" />
+                <Setter Property="Foreground" Value="#89B4FA" />
+            </Style>
+            <Style x:Key="SliderStyle" TargetType="Slider">
+                <Setter Property="Margin" Value="0,0,0,4" />
+            </Style>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <CheckBox Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
+                      VerticalAlignment="Center" IsChecked="True"
+                      Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed" />
+            <TextBlock Text="Firework" Grid.Column="1" FontWeight="Bold" FontSize="14"
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0" />
+            <Button Name="FoldButton" Grid.Column="2" Content="▼" Width="24" Height="24"
+                    Background="Transparent" BorderThickness="0"
+                    ToolTip="Expand/Collapse settings" Click="FoldButton_Click" />
+        </Grid>
+
+        <TextBlock Text="Creates stunning firework explosions with colorful particles, trails, and sparkles"
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
+
+        <StackPanel Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+            <!-- General Section -->
+            <TextBlock Text="General" Style="{StaticResource SectionStyle}" />
+            <TextBlock Text="Max Fireworks" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="50" Value="20"
+                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
+                    TickFrequency="1" ValueChanged="MaxFireworksSlider_ValueChanged" />
+            <TextBlock Name="MaxFireworksValue" Text="20" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Particle Lifespan (sec)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="LifespanSlider" Minimum="0.5" Maximum="10" Value="2.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="LifespanSlider_ValueChanged" />
+            <TextBlock Name="LifespanValue" Text="2.5" Opacity="0.7" FontSize="11" />
+
+            <!-- Click Trigger Section -->
+            <TextBlock Text="Click Trigger" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="LeftClickCheckBox" Content="Spawn on Left Click" Margin="0,4,0,4"
+                      IsChecked="True" Checked="LeftClickCheckBox_Changed" Unchecked="LeftClickCheckBox_Changed" />
+            <CheckBox Name="RightClickCheckBox" Content="Spawn on Right Click" Margin="0,0,0,4"
+                      IsChecked="False" Checked="RightClickCheckBox_Changed" Unchecked="RightClickCheckBox_Changed" />
+
+            <TextBlock Text="Click Particle Count" Style="{StaticResource LabelStyle}" />
+            <Slider Name="ClickParticleCountSlider" Minimum="10" Maximum="500" Value="100"
+                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
+                    TickFrequency="10" ValueChanged="ClickParticleCountSlider_ValueChanged" />
+            <TextBlock Name="ClickParticleCountValue" Text="100" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Click Explosion Force" Style="{StaticResource LabelStyle}" />
+            <Slider Name="ClickForceSlider" Minimum="50" Maximum="1000" Value="300"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ClickForceSlider_ValueChanged" />
+            <TextBlock Name="ClickForceValue" Text="300" Opacity="0.7" FontSize="11" />
+
+            <!-- Movement Trigger Section -->
+            <TextBlock Text="Movement Trigger" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="SpawnOnMoveCheckBox" Content="Spawn on Mouse Move" Margin="0,4,0,4"
+                      IsChecked="False" Checked="SpawnOnMoveCheckBox_Changed" Unchecked="SpawnOnMoveCheckBox_Changed" />
+
+            <TextBlock Text="Move Spawn Distance (px)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MoveSpawnDistanceSlider" Minimum="20" Maximum="500" Value="100"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveSpawnDistanceSlider_ValueChanged" />
+            <TextBlock Name="MoveSpawnDistanceValue" Text="100" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Move Particle Count" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MoveParticleCountSlider" Minimum="5" Maximum="200" Value="30"
+                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
+                    TickFrequency="5" ValueChanged="MoveParticleCountSlider_ValueChanged" />
+            <TextBlock Name="MoveParticleCountValue" Text="30" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Move Explosion Force" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MoveForceSlider" Minimum="30" Maximum="500" Value="150"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MoveForceSlider_ValueChanged" />
+            <TextBlock Name="MoveForceValue" Text="150" Opacity="0.7" FontSize="11" />
+
+            <!-- Particle Appearance Section -->
+            <TextBlock Text="Particle Appearance" Style="{StaticResource SectionStyle}" />
+            <TextBlock Text="Min Particle Size" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MinSizeSlider" Minimum="1" Maximum="20" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinSizeSlider_ValueChanged" />
+            <TextBlock Name="MinSizeValue" Text="3.0" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Max Particle Size" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MaxSizeSlider" Minimum="2" Maximum="50" Value="8"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxSizeSlider_ValueChanged" />
+            <TextBlock Name="MaxSizeValue" Text="8.0" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}" />
+            <Slider Name="GlowSlider" Minimum="0" Maximum="2" Value="0.8"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GlowSlider_ValueChanged" />
+            <TextBlock Name="GlowValue" Text="0.8" Opacity="0.7" FontSize="11" />
+
+            <CheckBox Name="EnableTrailsCheckBox" Content="Enable Trails" Margin="0,8,0,4"
+                      IsChecked="True" Checked="EnableTrailsCheckBox_Changed" Unchecked="EnableTrailsCheckBox_Changed" />
+
+            <TextBlock Text="Trail Length" Style="{StaticResource LabelStyle}" />
+            <Slider Name="TrailLengthSlider" Minimum="0.1" Maximum="2" Value="0.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="TrailLengthSlider_ValueChanged" />
+            <TextBlock Name="TrailLengthValue" Text="0.3" Opacity="0.7" FontSize="11" />
+
+            <!-- Physics Section -->
+            <TextBlock Text="Physics" Style="{StaticResource SectionStyle}" />
+            <TextBlock Text="Gravity" Style="{StaticResource LabelStyle}" />
+            <Slider Name="GravitySlider" Minimum="0" Maximum="500" Value="150"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GravitySlider_ValueChanged" />
+            <TextBlock Name="GravityValue" Text="150" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Air Drag" Style="{StaticResource LabelStyle}" />
+            <Slider Name="DragSlider" Minimum="0.9" Maximum="1" Value="0.98"
+                    Style="{StaticResource SliderStyle}" ValueChanged="DragSlider_ValueChanged" />
+            <TextBlock Name="DragValue" Text="0.98" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Spread Angle (degrees)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="SpreadAngleSlider" Minimum="30" Maximum="360" Value="360"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SpreadAngleSlider_ValueChanged" />
+            <TextBlock Name="SpreadAngleValue" Text="360" Opacity="0.7" FontSize="11" />
+
+            <!-- Colors Section -->
+            <TextBlock Text="Colors" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="RainbowModeCheckBox" Content="Rainbow Mode" Margin="0,4,0,4"
+                      IsChecked="True" Checked="RainbowModeCheckBox_Changed" Unchecked="RainbowModeCheckBox_Changed" />
+
+            <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RainbowSpeedSlider" Minimum="0.1" Maximum="5" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_ValueChanged" />
+            <TextBlock Name="RainbowSpeedValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+            <CheckBox Name="RandomColorsCheckBox" Content="Use Random Colors" Margin="0,8,0,4"
+                      IsChecked="True" Checked="RandomColorsCheckBox_Changed" Unchecked="RandomColorsCheckBox_Changed" />
+
+            <TextBlock Text="Primary Color" Margin="0,8,0,2" />
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Name="PrimaryColorPreview" Grid.Column="0" Width="24" Height="24"
+                        CornerRadius="4" Background="#FF4D1A" BorderBrush="Gray"
+                        BorderThickness="1" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Content="Pick Color" Background="#45475A"
+                        Foreground="#CDD6F4" BorderThickness="0" Padding="10,4"
+                        Click="PrimaryColorButton_Click" />
+            </Grid>
+
+            <TextBlock Text="Secondary Color" Margin="0,8,0,2" />
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Name="SecondaryColorPreview" Grid.Column="0" Width="24" Height="24"
+                        CornerRadius="4" Background="#FFCC33" BorderBrush="Gray"
+                        BorderThickness="1" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Content="Pick Color" Background="#45475A"
+                        Foreground="#CDD6F4" BorderThickness="0" Padding="10,4"
+                        Click="SecondaryColorButton_Click" />
+            </Grid>
+
+            <!-- Sparkle Effect Section -->
+            <TextBlock Text="Sparkle Effect" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="EnableSparkleCheckBox" Content="Enable Sparkle" Margin="0,4,0,4"
+                      IsChecked="True" Checked="EnableSparkleCheckBox_Changed" Unchecked="EnableSparkleCheckBox_Changed" />
+
+            <TextBlock Text="Sparkle Intensity" Style="{StaticResource LabelStyle}" />
+            <Slider Name="SparkleIntensitySlider" Minimum="0" Maximum="2" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleIntensitySlider_ValueChanged" />
+            <TextBlock Name="SparkleIntensityValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Sparkle Frequency" Style="{StaticResource LabelStyle}" />
+            <Slider Name="SparkleFrequencySlider" Minimum="1" Maximum="50" Value="10"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleFrequencySlider_ValueChanged" />
+            <TextBlock Name="SparkleFrequencyValue" Text="10" Opacity="0.7" FontSize="11" />
+
+            <!-- Secondary Explosion Section -->
+            <TextBlock Text="Secondary Explosion" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="EnableSecondaryCheckBox" Content="Enable Secondary Explosion" Margin="0,4,0,4"
+                      IsChecked="True" Checked="EnableSecondaryCheckBox_Changed" Unchecked="EnableSecondaryCheckBox_Changed" />
+
+            <TextBlock Text="Secondary Delay (sec)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="SecondaryDelaySlider" Minimum="0.2" Maximum="3" Value="0.8"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SecondaryDelaySlider_ValueChanged" />
+            <TextBlock Name="SecondaryDelayValue" Text="0.8" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Secondary Particle Count" Style="{StaticResource LabelStyle}" />
+            <Slider Name="SecondaryCountSlider" Minimum="5" Maximum="100" Value="20"
+                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
+                    TickFrequency="5" ValueChanged="SecondaryCountSlider_ValueChanged" />
+            <TextBlock Name="SecondaryCountValue" Text="20" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Secondary Force" Style="{StaticResource LabelStyle}" />
+            <Slider Name="SecondaryForceSlider" Minimum="20" Maximum="300" Value="100"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SecondaryForceSlider_ValueChanged" />
+            <TextBlock Name="SecondaryForceValue" Text="100" Opacity="0.7" FontSize="11" />
+
+            <!-- Rocket Mode Section -->
+            <TextBlock Text="Rocket Mode" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="EnableRocketModeCheckBox" Content="Enable Rocket Mode" Margin="0,4,0,4"
+                      IsChecked="False" Checked="EnableRocketModeCheckBox_Changed" Unchecked="EnableRocketModeCheckBox_Changed" />
+
+            <TextBlock Text="Rocket Speed" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketSpeedSlider" Minimum="100" Maximum="1500" Value="500"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketSpeedSlider_ValueChanged" />
+            <TextBlock Name="RocketSpeedValue" Text="500" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Rocket Fuse Time (sec)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketFuseSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketFuseSlider_ValueChanged" />
+            <TextBlock Name="RocketFuseValue" Text="0.5" Opacity="0.7" FontSize="11" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>
