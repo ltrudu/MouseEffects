@@ -18,7 +18,7 @@
         </Style>
     </UserControl.Resources>
 
-    <StackPanel Margin="8">
+    <StackPanel Margin="0">
         <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
         <Grid>
             <Grid.ColumnDefinitions>
@@ -33,7 +33,7 @@
 
             <TextBlock Text="Radial Dithering" Grid.Column="1"
                        FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0"/>
 
             <Button x:Name="FoldButton" Grid.Column="2"
                     Content="▼" Width="24" Height="24"

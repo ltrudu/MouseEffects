@@ -86,40 +86,50 @@
                         </Grid>
 
                         <!-- FPS Counter -->
-                        <Grid Margin="0,15,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
+                        <StackPanel Margin="0,15,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
                                 <CheckBox x:Name="ShowFpsCheckBox"
+                                          Grid.Column="0"
                                           Content="Show FPS Counter"
                                           VerticalAlignment="Center"
                                           Checked="ShowFpsCheckBox_Changed"
                                           Unchecked="ShowFpsCheckBox_Changed"/>
-                                <CheckBox x:Name="ShowFpsOverlayCheckBox"
-                                          Content="Show FPS on screen"
-                                          VerticalAlignment="Center"
-                                          Margin="20,5,0,0"
-                                          Checked="ShowFpsOverlayCheckBox_Changed"
-                                          Unchecked="ShowFpsOverlayCheckBox_Changed"/>
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock x:Name="FpsCounterText"
+                                           Grid.Column="1"
                                            Text="-- / -- fps"
                                            FontFamily="Consolas"
                                            FontSize="14"
                                            Foreground="#A6E3A1"
+                                           VerticalAlignment="Center"
                                            Visibility="Collapsed"/>
+                            </Grid>
+                            <Grid Margin="0,5,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <CheckBox x:Name="ShowFpsOverlayCheckBox"
+                                          Grid.Column="0"
+                                          Content="Show FPS on screen"
+                                          VerticalAlignment="Center"
+                                          Margin="20,0,0,0"
+                                          Checked="ShowFpsOverlayCheckBox_Changed"
+                                          Unchecked="ShowFpsOverlayCheckBox_Changed"/>
                                 <TextBlock x:Name="CaptureFpsText"
+                                           Grid.Column="1"
                                            Text="Cap: -- fps"
                                            FontFamily="Consolas"
                                            FontSize="12"
                                            Opacity="0.7"
                                            Foreground="#A6E3A1"
+                                           VerticalAlignment="Center"
                                            Visibility="Collapsed"/>
-                            </StackPanel>
-                        </Grid>
+                            </Grid>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
