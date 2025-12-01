@@ -4,8 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              mc:Ignorable="d"
-             d:DesignHeight="250" d:DesignWidth="300"
-             Background="#1E1E1E">
+             d:DesignHeight="250" d:DesignWidth="300">
 
     <Grid Margin="8">
         <Grid.RowDefinitions>
@@ -32,12 +31,15 @@
             </ComboBox>
 
             <TextBlock x:Name="CoordinatesText" Grid.Column="2"
-                       Foreground="#808080" FontSize="11"
+                       Opacity="0.6" FontSize="11"
                        VerticalAlignment="Center"/>
         </Grid>
 
         <!-- Curve canvas -->
-        <Border Grid.Row="1" BorderBrush="#404040" BorderThickness="1" Background="#282828">
+        <Border Grid.Row="1" x:Name="CanvasBorder"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumLowBrush}"
+                BorderThickness="1"
+                Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}">
             <Canvas x:Name="CurveCanvas"
                     ClipToBounds="True"
                     MouseLeftButtonDown="CurveCanvas_MouseLeftButtonDown"
@@ -48,14 +50,20 @@
 
         <!-- Channel checkboxes -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,4">
-            <CheckBox x:Name="ShowRedCheck" Content="Red" Foreground="#FF6B6B"
+            <CheckBox x:Name="ShowRedCheck" Foreground="#FF6B6B"
                       IsChecked="True" Checked="ShowChannel_Changed" Unchecked="ShowChannel_Changed"
-                      Margin="0,0,16,0"/>
-            <CheckBox x:Name="ShowGreenCheck" Content="Green" Foreground="#6BFF6B"
+                      Margin="0,0,16,0">
+                <TextBlock Text="Red" Foreground="#FF6B6B"/>
+            </CheckBox>
+            <CheckBox x:Name="ShowGreenCheck" Foreground="#6BFF6B"
                       IsChecked="True" Checked="ShowChannel_Changed" Unchecked="ShowChannel_Changed"
-                      Margin="0,0,16,0"/>
-            <CheckBox x:Name="ShowBlueCheck" Content="Blue" Foreground="#6B6BFF"
-                      IsChecked="True" Checked="ShowChannel_Changed" Unchecked="ShowChannel_Changed"/>
+                      Margin="0,0,16,0">
+                <TextBlock Text="Green" Foreground="#6BFF6B"/>
+            </CheckBox>
+            <CheckBox x:Name="ShowBlueCheck" Foreground="#6B6BFF"
+                      IsChecked="True" Checked="ShowChannel_Changed" Unchecked="ShowChannel_Changed">
+                <TextBlock Text="Blue" Foreground="#6B9EFF"/>
+            </CheckBox>
         </StackPanel>
 
         <!-- Reset button and tip -->
@@ -66,7 +74,7 @@
             </Grid.ColumnDefinitions>
 
             <TextBlock Grid.Column="0" Text="Tip: Right-click to remove control points."
-                       Foreground="#606060" FontSize="10" VerticalAlignment="Center"/>
+                       Opacity="0.5" FontSize="10" VerticalAlignment="Center"/>
             <Button Grid.Column="1" x:Name="ResetButton" Content="Reset" Padding="12,4"
                     Click="ResetButton_Click"/>
         </Grid>

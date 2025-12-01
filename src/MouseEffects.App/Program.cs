@@ -36,8 +36,13 @@ static partial class Program
         Logger.Initialize(logPath);
         Logger.Log("Application starting...");
 
-        // Required for WPF
-        System.Windows.Application wpfApp = new();
+        // Load settings early so we can apply theme
+        _settings = AppSettings.Load();
+        Log($"Loaded settings - Theme: {_settings.Theme}, GPU: {_settings.SelectedGpuName ?? "auto"}");
+
+        // Create WPF Application with ModernWpf theming
+        var wpfApp = new App();
+        wpfApp.ApplyTheme(_settings.Theme);
 
         Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
         Application.EnableVisualStyles();
@@ -67,6 +72,10 @@ static partial class Program
     public static GameLoop? GameLoop => _gameLoop;
     public static UpdateService? UpdateService => _updateService;
 
+    // Track which consumers need capture FPS tracking
+    private static bool _settingsWindowNeedsCaptureFps;
+    private static bool _fpsOverlayNeedsCaptureFps;
+
     /// <summary>
     /// Show or hide the FPS overlay on screen.
     /// </summary>
@@ -86,13 +95,38 @@ static partial class Program
         }
     }
 
+    /// <summary>
+    /// Update capture FPS tracking state from the settings window.
+    /// </summary>
+    public static void SetSettingsWindowNeedsCaptureFps(bool needs)
+    {
+        _settingsWindowNeedsCaptureFps = needs;
+        UpdateCaptureFpsTracking();
+    }
+
+    /// <summary>
+    /// Update capture FPS tracking state from the FPS overlay.
+    /// </summary>
+    public static void SetFpsOverlayNeedsCaptureFps(bool needs)
+    {
+        _fpsOverlayNeedsCaptureFps = needs;
+        UpdateCaptureFpsTracking();
+    }
+
+    /// <summary>
+    /// Enable capture FPS tracking if any consumer needs it.
+    /// </summary>
+    private static void UpdateCaptureFpsTracking()
+    {
+        var needsTracking = _settingsWindowNeedsCaptureFps || _fpsOverlayNeedsCaptureFps;
+        _gameLoop?.SetTrackCaptureFps(needsTracking);
+    }
+
     private static void Initialize()
     {
         try
         {
-            // Load settings
-            Log("Loading settings...");
-            _settings = AppSettings.Load();
+            // Settings already loaded in Main() for early theme application
             Log($"Preferred GPU: {_settings.SelectedGpuName ?? "auto"}");
 
             Log("Creating OverlayManager...");

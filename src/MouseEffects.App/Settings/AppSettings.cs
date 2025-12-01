@@ -7,6 +7,19 @@ using MouseEffects.Core.Diagnostics;
 namespace MouseEffects.App.Settings;
 
 /// <summary>
+/// Theme options for the application.
+/// </summary>
+public enum AppTheme
+{
+    /// <summary>Follow Windows system theme.</summary>
+    System,
+    /// <summary>Always use light theme.</summary>
+    Light,
+    /// <summary>Always use dark theme.</summary>
+    Dark
+}
+
+/// <summary>
 /// Application settings with persistence.
 /// Contains only application-level settings (GPU selection).
 /// Plugin settings are stored in separate files per plugin via PluginSettings class.
@@ -27,6 +40,12 @@ public class AppSettings
     /// The name of the GPU to use for rendering. Null means auto-select.
     /// </summary>
     public string? SelectedGpuName { get; set; }
+
+    /// <summary>
+    /// Application theme. Default is System (follows Windows theme).
+    /// </summary>
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public AppTheme Theme { get; set; } = AppTheme.Dark;
 
     /// <summary>
     /// Target frame rate for rendering (30-120 fps). Default is 60.

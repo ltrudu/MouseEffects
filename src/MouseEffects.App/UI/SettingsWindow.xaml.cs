@@ -36,12 +36,50 @@ public partial class SettingsWindow : Window
         _fpsTimer.Tick += FpsTimer_Tick;
 
         InitializeComponent();
+        LoadThemeSetting();
         LoadGpuList();
         LoadFrameRateSetting();
         LoadFpsCounterSetting();
         LoadPluginSettings();
         LoadUpdateSettings();
         _isInitializing = false;
+    }
+
+    private void LoadThemeSetting()
+    {
+        var settings = Program.Settings;
+        ThemeSelector.SelectedIndex = settings.Theme switch
+        {
+            AppTheme.System => 0,
+            AppTheme.Light => 1,
+            AppTheme.Dark => 2,
+            _ => 0
+        };
+    }
+
+    private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var settings = Program.Settings;
+        var selectedItem = ThemeSelector.SelectedItem as ComboBoxItem;
+        var tag = selectedItem?.Tag?.ToString();
+
+        settings.Theme = tag switch
+        {
+            "System" => AppTheme.System,
+            "Light" => AppTheme.Light,
+            "Dark" => AppTheme.Dark,
+            _ => AppTheme.Dark
+        };
+
+        settings.Save();
+
+        // Apply theme immediately
+        if (System.Windows.Application.Current is App app)
+        {
+            app.ApplyTheme(settings.Theme);
+        }
     }
 
     private void LoadFrameRateSetting()
@@ -66,13 +104,13 @@ public partial class SettingsWindow : Window
         if (show)
         {
             _fpsTimer.Start();
-            Program.GameLoop?.SetTrackCaptureFps(true);
         }
         else
         {
             _fpsTimer.Stop();
-            Program.GameLoop?.SetTrackCaptureFps(false);
         }
+        // Use centralized tracking - don't disable if overlay still needs it
+        Program.SetSettingsWindowNeedsCaptureFps(show);
     }
 
     private void FpsTimer_Tick(object? sender, EventArgs e)
@@ -176,12 +214,12 @@ public partial class SettingsWindow : Window
     {
         var border = new Border
         {
-            Background = new System.Windows.Media.SolidColorBrush(
-                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#313244")),
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(15),
             Margin = new Thickness(0, 5, 0, 5)
         };
+        // Use dynamic resource for theme-aware background
+        border.SetResourceReference(Border.BackgroundProperty, "SystemControlBackgroundChromeMediumLowBrush");
 
         var mainStack = new StackPanel();
 

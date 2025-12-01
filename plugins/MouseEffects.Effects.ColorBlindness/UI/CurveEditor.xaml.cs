@@ -132,12 +132,52 @@ public partial class CurveEditor : System.Windows.Controls.UserControl
     {
         return channel switch
         {
-            0 => Colors.White,
+            0 => GetThemeAwareMasterColor(),
             1 => WpfColor.FromRgb(255, 107, 107),
             2 => WpfColor.FromRgb(107, 255, 107),
-            3 => WpfColor.FromRgb(107, 107, 255),
-            _ => Colors.White
+            3 => WpfColor.FromRgb(107, 158, 255),
+            _ => GetThemeAwareMasterColor()
         };
+    }
+
+    /// <summary>
+    /// Gets a master curve color that works with both light and dark themes.
+    /// </summary>
+    private WpfColor GetThemeAwareMasterColor()
+    {
+        // Check if we're in light theme by looking at the background
+        if (TryFindResource("SystemControlForegroundBaseHighBrush") is SolidColorBrush brush)
+        {
+            return brush.Color;
+        }
+        // Fallback to a neutral gray that works on both themes
+        return WpfColor.FromRgb(100, 100, 100);
+    }
+
+    /// <summary>
+    /// Gets a color for grid lines that adapts to the current theme.
+    /// </summary>
+    private WpfColor GetGridColor()
+    {
+        if (TryFindResource("SystemControlForegroundBaseMediumLowBrush") is SolidColorBrush brush)
+        {
+            var color = brush.Color;
+            return WpfColor.FromArgb(80, color.R, color.G, color.B);
+        }
+        return WpfColor.FromArgb(80, 128, 128, 128);
+    }
+
+    /// <summary>
+    /// Gets a color for the reference diagonal line that adapts to the current theme.
+    /// </summary>
+    private WpfColor GetReferenceLineColor()
+    {
+        if (TryFindResource("SystemControlForegroundBaseMediumBrush") is SolidColorBrush brush)
+        {
+            var color = brush.Color;
+            return WpfColor.FromArgb(100, color.R, color.G, color.B);
+        }
+        return WpfColor.FromArgb(100, 128, 128, 128);
     }
 
     private void RedrawCurves()
@@ -179,7 +219,7 @@ public partial class CurveEditor : System.Windows.Controls.UserControl
 
     private void DrawGrid(double width, double height)
     {
-        var gridBrush = new SolidColorBrush(WpfColor.FromRgb(64, 64, 64));
+        var gridBrush = new SolidColorBrush(GetGridColor());
 
         // Draw vertical and horizontal lines at 25% intervals
         for (int i = 1; i < 4; i++)
@@ -215,7 +255,7 @@ public partial class CurveEditor : System.Windows.Controls.UserControl
         {
             X1 = 0, Y1 = height,
             X2 = width, Y2 = 0,
-            Stroke = new SolidColorBrush(WpfColor.FromRgb(80, 80, 80)),
+            Stroke = new SolidColorBrush(GetReferenceLineColor()),
             StrokeThickness = 1,
             StrokeDashArray = new DoubleCollection { 2, 2 }
         };
@@ -264,7 +304,7 @@ public partial class CurveEditor : System.Windows.Controls.UserControl
                     Width = PointRadius * 2,
                     Height = PointRadius * 2,
                     Fill = new SolidColorBrush(color),
-                    Stroke = System.Windows.Media.Brushes.White,
+                    Stroke = new SolidColorBrush(GetThemeAwareMasterColor()),
                     StrokeThickness = 1
                 };
 

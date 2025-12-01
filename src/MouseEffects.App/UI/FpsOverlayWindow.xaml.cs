@@ -90,13 +90,15 @@ public partial class FpsOverlayWindow : Window
     {
         base.Show();
         _updateTimer.Start();
-        Program.GameLoop?.SetTrackCaptureFps(true);
+        // Use centralized tracking - don't disable if settings window still needs it
+        Program.SetFpsOverlayNeedsCaptureFps(true);
     }
 
     public new void Hide()
     {
         _updateTimer.Stop();
-        Program.GameLoop?.SetTrackCaptureFps(false);
+        // Use centralized tracking - don't disable if settings window still needs it
+        Program.SetFpsOverlayNeedsCaptureFps(false);
         base.Hide();
     }
 
@@ -106,7 +108,8 @@ public partial class FpsOverlayWindow : Window
     {
         _forceClose = true;
         _updateTimer.Stop();
-        Program.GameLoop?.SetTrackCaptureFps(false);
+        // Use centralized tracking - don't disable if settings window still needs it
+        Program.SetFpsOverlayNeedsCaptureFps(false);
         base.Close();
     }
 
