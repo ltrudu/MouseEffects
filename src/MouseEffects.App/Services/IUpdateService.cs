@@ -35,6 +35,7 @@ public class UpdateInfo
     public string CurrentVersion { get; init; } = string.Empty;
     public string NewVersion { get; init; } = string.Empty;
     public bool IsUpdateAvailable { get; init; }
+    public string? Message { get; init; }
 }
 
 /// <summary>

@@ -31,6 +31,8 @@ public class UpdateService : IUpdateService
         _updateManager = new UpdateManager(source);
         Logger.Log("UpdateService", $"Initialized with GitHub source: {GitHubRepoUrl}");
         Logger.Log("UpdateService", $"Current version: {CurrentVersion}");
+        Logger.Log("UpdateService", $"Is installed: {_updateManager.IsInstalled}");
+        Logger.Log("UpdateService", $"App ID: {_updateManager.AppId ?? "null"}");
     }
 
     public async Task<UpdateInfo?> CheckForUpdatesAsync()
@@ -39,14 +41,31 @@ public class UpdateService : IUpdateService
         {
             Logger.Log("UpdateService", "Checking for updates...");
 
+            if (!_updateManager.IsInstalled)
+            {
+                Logger.Log("UpdateService", "WARNING: App is not installed via Velopack. Updates only work when installed with the Setup.exe installer.");
+                return new UpdateInfo
+                {
+                    CurrentVersion = CurrentVersion,
+                    NewVersion = CurrentVersion,
+                    IsUpdateAvailable = false,
+                    Message = "Updates require installation via Setup.exe"
+                };
+            }
+
+            Logger.Log("UpdateService", $"Fetching updates from GitHub...");
             var newVersion = await _updateManager.CheckForUpdatesAsync();
 
             if (newVersion != null)
             {
+                var targetVersion = newVersion.TargetFullRelease.Version.ToString();
+                Logger.Log("UpdateService", $"GitHub returned version: {targetVersion}");
+                Logger.Log("UpdateService", $"Release count: {newVersion.DeltasToTarget?.Count ?? 0} deltas");
+
                 _pendingUpdate = new UpdateInfo
                 {
                     CurrentVersion = CurrentVersion,
-                    NewVersion = newVersion.TargetFullRelease.Version.ToString(),
+                    NewVersion = targetVersion,
                     IsUpdateAvailable = true
                 };
 
@@ -55,7 +74,7 @@ public class UpdateService : IUpdateService
                 return _pendingUpdate;
             }
 
-            Logger.Log("UpdateService", "No updates available");
+            Logger.Log("UpdateService", "CheckForUpdatesAsync returned null - no updates available or already up to date");
             return new UpdateInfo
             {
                 CurrentVersion = CurrentVersion,

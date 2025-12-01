@@ -117,8 +117,11 @@ jobs:
             Move-Item -Path $_.FullName -Destination "./releases/$newName" -Force
           }
 
-          # Rename RELEASES file to include architecture
-          Move-Item -Path "./releases/x64/RELEASES" -Destination "./releases/RELEASES-x64" -Force
+          # Update RELEASES file content to match renamed nupkg files, then rename the file
+          $releasesContent = Get-Content -Path "./releases/x64/RELEASES" -Raw
+          $updatedContent = $releasesContent -replace "-full\.nupkg", "-x64-full.nupkg"
+          Set-Content -Path "./releases/RELEASES-x64" -Value $updatedContent -NoNewline
+          Remove-Item -Path "./releases/x64/RELEASES" -Force
 
       - name: List release artifacts
         shell: pwsh
