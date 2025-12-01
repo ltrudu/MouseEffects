@@ -57,6 +57,12 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         if (_effect.Configuration.TryGet("filterType", out int filterType))
         {
             FilterTypeCombo.SelectedIndex = filterType;
+            InsideFilterTypeCombo.SelectedIndex = filterType;
+        }
+
+        if (_effect.Configuration.TryGet("outsideFilterType", out int outsideFilterType))
+        {
+            OutsideFilterTypeCombo.SelectedIndex = outsideFilterType;
         }
 
         if (_effect.Configuration.TryGet("intensity", out float intensity))
@@ -107,7 +113,18 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         config.Set("rectWidth", (float)RectWidthSlider.Value);
         config.Set("rectHeight", (float)RectHeightSlider.Value);
         config.Set("shapeMode", ShapeModeCombo.SelectedIndex);
-        config.Set("filterType", FilterTypeCombo.SelectedIndex);
+        // Use appropriate filter combo based on shape mode
+        int shapeMode = ShapeModeCombo.SelectedIndex;
+        if (shapeMode == 2) // Fullscreen
+        {
+            config.Set("filterType", FilterTypeCombo.SelectedIndex);
+            config.Set("outsideFilterType", 0); // Not used in fullscreen
+        }
+        else // Circle or Rectangle
+        {
+            config.Set("filterType", InsideFilterTypeCombo.SelectedIndex);
+            config.Set("outsideFilterType", OutsideFilterTypeCombo.SelectedIndex);
+        }
         config.Set("intensity", (float)IntensitySlider.Value);
         config.Set("colorBoost", (float)ColorBoostSlider.Value);
         config.Set("edgeSoftness", (float)EdgeSoftnessSlider.Value);
@@ -146,6 +163,14 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         // Hide edge softness for fullscreen mode
         if (EdgeSoftnessSlider != null)
             EdgeSoftnessSlider.IsEnabled = shapeMode != 2;
+
+        // Toggle filter panels based on shape mode
+        // Fullscreen: single filter dropdown
+        // Circle/Rectangle: inside + outside filter dropdowns
+        if (FullscreenFilterPanel != null)
+            FullscreenFilterPanel.Visibility = shapeMode == 2 ? Visibility.Visible : Visibility.Collapsed;
+        if (ShapeFilterPanel != null)
+            ShapeFilterPanel.Visibility = shapeMode != 2 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -157,7 +182,24 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
 
     private void ShapeModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateShapeSettings(ShapeModeCombo.SelectedIndex);
+        if (_isInitializing) return;
+
+        int newShapeMode = ShapeModeCombo.SelectedIndex;
+        int oldShapeMode = newShapeMode == 2 ? 0 : 2; // Guess previous mode for sync
+
+        // Sync filter values when switching between fullscreen and shape modes
+        if (newShapeMode == 2 && FilterTypeCombo != null && InsideFilterTypeCombo != null)
+        {
+            // Switching to fullscreen: copy inside filter to fullscreen filter
+            FilterTypeCombo.SelectedIndex = InsideFilterTypeCombo.SelectedIndex;
+        }
+        else if (newShapeMode != 2 && FilterTypeCombo != null && InsideFilterTypeCombo != null)
+        {
+            // Switching to shape mode: copy fullscreen filter to inside filter
+            InsideFilterTypeCombo.SelectedIndex = FilterTypeCombo.SelectedIndex;
+        }
+
+        UpdateShapeSettings(newShapeMode);
         UpdateConfiguration();
     }
 
@@ -190,6 +232,16 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
     }
 
     private void FilterTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void InsideFilterTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void OutsideFilterTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateConfiguration();
     }

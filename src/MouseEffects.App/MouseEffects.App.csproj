@@ -30,7 +30,6 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
-    <PackageReference Include="ModernWpfUI" Version="0.9.6" />
     <PackageReference Include="Velopack" Version="0.0.*" />
   </ItemGroup>
 
@@ -46,14 +45,6 @@
   <ItemGroup>
     <Content Include="Images\*.png" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Package.appxmanifest" />
-  </ItemGroup>
-
-  <!-- Prevent App.xaml from generating Main method - we use Program.cs -->
-  <ItemGroup>
-    <ApplicationDefinition Remove="App.xaml" />
-    <Page Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
   </ItemGroup>
 
 </Project>

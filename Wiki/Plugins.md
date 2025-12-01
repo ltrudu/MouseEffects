@@ -185,12 +185,13 @@ Creates lens/ripple distortion effects around your cursor that warp the screen.
 **ID**: `color-blindness`
 **Screen Capture**: Yes (Continuous)
 
-Simulates various color blindness conditions with customizable RGB curve adjustment.
+Simulates various color blindness conditions with customizable RGB curve adjustment. Supports separate filters for inside and outside the shape area.
 
 ### Features
 
-- Protanopia, Deuteranopia, Tritanopia, Achromatopsia simulation
+- Protanopia, Deuteranopia, Tritanopia, Grayscale, Inverted simulation
 - Circular, rectangular, or fullscreen application
+- **Dual filter mode**: Apply different filters inside and outside the shape
 - Editable RGB curves with Catmull-Rom interpolation
 - Real-time color transformation
 - Smooth edge transitions
@@ -209,17 +210,33 @@ Simulates various color blindness conditions with customizable RGB curve adjustm
 
 #### Filter
 
+When **Fullscreen** mode is selected, a single "Filter Type" dropdown is shown.
+
+When **Circle** or **Rectangle** mode is selected, two separate filter dropdowns appear:
+- **Inside Shape Filter Type**: Filter applied inside the shape (default: Grayscale)
+- **Outside Shape Filter Type**: Filter applied outside the shape (default: None)
+
 | Setting | Type | Range | Default | Description |
 |---------|------|-------|---------|-------------|
-| `filterType` | int | 0-3 | 1 | Color blindness type |
+| `filterType` | int | 0-6 | 4 | Inside shape filter (or fullscreen filter) |
+| `outsideFilterType` | int | 0-6 | 0 | Outside shape filter (shapes only) |
 | `intensity` | float | 0-1 | 1.0 | Filter strength |
 | `colorBoost` | float | 0-2 | 1.0 | Color saturation boost |
 
 **Filter Types**:
-- 0 = Protanopia (red-blind)
+- 0 = None (no filter / curves only)
 - 1 = Deuteranopia (green-blind)
-- 2 = Tritanopia (blue-blind)
-- 3 = Achromatopsia (complete color blindness)
+- 2 = Protanopia (red-blind)
+- 3 = Tritanopia (blue-blind)
+- 4 = Grayscale
+- 5 = Grayscale Inverted
+- 6 = Inverted
+
+### Use Cases
+
+- **Accessibility Testing**: View a portion of the screen in grayscale while keeping the rest in color
+- **Focus Mode**: Apply a filter outside the cursor area to reduce distractions
+- **Color Blindness Preview**: See how users with color blindness would perceive specific UI elements
 
 #### Curves
 

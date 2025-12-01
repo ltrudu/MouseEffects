@@ -16,13 +16,14 @@ cbuffer ColorBlindnessParams : register(b0)
     float RectWidth;            // Width for rectangular mode (pixels)
     float RectHeight;           // Height for rectangular mode (pixels)
     float ShapeMode;            // 0=circle, 1=rectangle, 2=fullscreen
-    float FilterType;           // 0=none, 1=deuteranopia, 2=protanopia, 3=tritanopia, 4=grayscale, 5=grayscale_inv, 6=inverted
+    float FilterType;           // Inside filter: 0=none, 1=deuteranopia, 2=protanopia, 3=tritanopia, 4=grayscale, 5=grayscale_inv, 6=inverted
+    float OutsideFilterType;    // Outside filter (for shape modes): same values as FilterType
     float Intensity;            // Filter intensity (0-1)
     float ColorBoost;           // Color saturation boost (0-2)
     float EdgeSoftness;         // Edge softness for shape modes (0-1)
     float EnableCurves;         // 1.0 = RGB curves enabled
     float CurveStrength;        // Strength of curve adjustment (0-1)
-    float4 Padding;             // Padding for alignment
+    float Padding;              // Padding for alignment
 };
 
 Texture2D<float4> ScreenTexture : register(t0);
@@ -199,26 +200,27 @@ float4 PSMain(PSInput input) : SV_TARGET
     // Calculate shape mask
     float mask = CalculateShapeMask(screenPos, MousePosition);
 
-    if (mask > 0.001)
+    // Apply RGB curves if enabled (applies to both inside and outside)
+    float3 curvedColor = color;
+    if (EnableCurves > 0.5)
     {
-        // Apply RGB curves if enabled
-        if (EnableCurves > 0.5)
-        {
-            color = ApplyCurves(color, CurveStrength);
-        }
-
-        // Apply color blindness filter
-        float3 filteredColor = ApplyColorBlindness(color, FilterType);
-
-        // Blend original with filtered based on intensity
-        filteredColor = lerp(color, filteredColor, Intensity);
-
-        // Apply color boost
-        filteredColor = ApplyColorBoost(filteredColor, ColorBoost);
-
-        // Apply mask for smooth edges
-        color = lerp(screenColor.rgb, filteredColor, mask);
+        curvedColor = ApplyCurves(color, CurveStrength);
     }
+
+    // Apply inside filter
+    float3 insideColor = curvedColor;
+    float3 insideFiltered = ApplyColorBlindness(curvedColor, FilterType);
+    insideFiltered = lerp(curvedColor, insideFiltered, Intensity);
+    insideFiltered = ApplyColorBoost(insideFiltered, ColorBoost);
+
+    // Apply outside filter
+    float3 outsideColor = curvedColor;
+    float3 outsideFiltered = ApplyColorBlindness(curvedColor, OutsideFilterType);
+    outsideFiltered = lerp(curvedColor, outsideFiltered, Intensity);
+    outsideFiltered = ApplyColorBoost(outsideFiltered, ColorBoost);
+
+    // Blend inside and outside based on mask
+    color = lerp(outsideFiltered, insideFiltered, mask);
 
     // Always output fully opaque - this covers the entire screen
     // with either the effect (where mask > 0) or the original screen content

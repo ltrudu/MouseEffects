@@ -84,8 +84,28 @@ The settings window provides complete control over all effects:
 
 - **GPU Selection** - Choose which graphics card to use
 - **Frame Rate** - Adjust target FPS (30-120)
+- **Theme** - Choose Light, Dark, or System theme
 - **FPS Counter** - Display performance metrics in settings window
 - **FPS Overlay** - On-screen performance display
+
+## UI Theming
+
+MouseEffects features modern UI theming powered by [ModernWPF](https://github.com/Kinnara/ModernWpf):
+
+### Theme Options
+
+| Theme | Description |
+|-------|-------------|
+| **System** | Follows Windows system theme automatically |
+| **Light** | Always use light theme |
+| **Dark** | Always use dark theme (default) |
+
+### Features
+
+- **Fluent Design** - Modern Windows 11 styling with smooth animations
+- **Automatic Updates** - Theme changes apply immediately without restart
+- **Consistent Look** - All windows and plugin settings use the same theme
+- **System Integration** - System mode follows Windows light/dark preference
 
 ### Performance Monitoring
 

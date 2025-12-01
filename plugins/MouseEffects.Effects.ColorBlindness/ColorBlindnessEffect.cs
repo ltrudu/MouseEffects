@@ -20,7 +20,8 @@ public sealed class ColorBlindnessEffect : EffectBase
     private const float DefaultRectWidth = 400.0f;
     private const float DefaultRectHeight = 300.0f;
     private const int DefaultShapeMode = 0; // Circle
-    private const int DefaultFilterType = 1; // Deuteranopia
+    private const int DefaultFilterType = 4; // Grayscale (inside shape default)
+    private const int DefaultOutsideFilterType = 0; // None (outside shape default)
     private const float DefaultIntensity = 1.0f;
     private const float DefaultColorBoost = 1.0f;
     private const float DefaultEdgeSoftness = 0.2f;
@@ -51,6 +52,7 @@ public sealed class ColorBlindnessEffect : EffectBase
     private float _rectHeight = DefaultRectHeight;
     private int _shapeMode = DefaultShapeMode;
     private int _filterType = DefaultFilterType;
+    private int _outsideFilterType = DefaultOutsideFilterType;
     private float _intensity = DefaultIntensity;
     private float _colorBoost = DefaultColorBoost;
     private float _edgeSoftness = DefaultEdgeSoftness;
@@ -222,6 +224,9 @@ public sealed class ColorBlindnessEffect : EffectBase
         if (Configuration.TryGet("filterType", out int filterType))
             _filterType = filterType;
 
+        if (Configuration.TryGet("outsideFilterType", out int outsideFilterType))
+            _outsideFilterType = outsideFilterType;
+
         if (Configuration.TryGet("intensity", out float intensity))
             _intensity = intensity;
 
@@ -279,6 +284,7 @@ public sealed class ColorBlindnessEffect : EffectBase
             RectHeight = _rectHeight,
             ShapeMode = _shapeMode,
             FilterType = _filterType,
+            OutsideFilterType = _outsideFilterType,
             Intensity = _intensity,
             ColorBoost = _colorBoost,
             EdgeSoftness = _edgeSoftness,
@@ -350,7 +356,7 @@ public sealed class ColorBlindnessEffect : EffectBase
 
     #region Shader Structures
 
-    [StructLayout(LayoutKind.Sequential, Size = 80)]
+    [StructLayout(LayoutKind.Sequential, Size = 64)]
     private struct ColorBlindnessParams
     {
         // Must match HLSL cbuffer layout exactly!
@@ -361,14 +367,13 @@ public sealed class ColorBlindnessEffect : EffectBase
         public float RectHeight;           // 4 bytes, offset 24
         public float ShapeMode;            // 4 bytes, offset 28
         public float FilterType;           // 4 bytes, offset 32
-        public float Intensity;            // 4 bytes, offset 36
-        public float ColorBoost;           // 4 bytes, offset 40
-        public float EdgeSoftness;         // 4 bytes, offset 44
-        public float EnableCurves;         // 4 bytes, offset 48
-        public float CurveStrength;        // 4 bytes, offset 52
-        private float _padding1;           // 4 bytes, offset 56
-        private float _padding2;           // 4 bytes, offset 60
-        public Vector4 Padding;            // 16 bytes, offset 64
+        public float OutsideFilterType;    // 4 bytes, offset 36
+        public float Intensity;            // 4 bytes, offset 40
+        public float ColorBoost;           // 4 bytes, offset 44
+        public float EdgeSoftness;         // 4 bytes, offset 48
+        public float EnableCurves;         // 4 bytes, offset 52
+        public float CurveStrength;        // 4 bytes, offset 56
+        private float _padding;            // 4 bytes, offset 60
     }
 
     #endregion

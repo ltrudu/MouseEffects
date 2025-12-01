@@ -32,7 +32,8 @@ public sealed class ColorBlindnessFactory : IEffectFactory
         config.Set("rectWidth", 400.0f);
         config.Set("rectHeight", 300.0f);
         config.Set("shapeMode", 0); // Circle
-        config.Set("filterType", 1); // Deuteranopia
+        config.Set("filterType", 4); // Grayscale (inside shape default)
+        config.Set("outsideFilterType", 0); // None (outside shape default)
         config.Set("intensity", 1.0f);
         config.Set("colorBoost", 1.0f);
         config.Set("edgeSoftness", 0.2f);
@@ -90,11 +91,20 @@ public sealed class ColorBlindnessFactory : IEffectFactory
                 new IntParameter
                 {
                     Key = "filterType",
-                    DisplayName = "Filter Type",
-                    Description = "Type of color blindness simulation: 0=None, 1=Deuteranopia, 2=Protanopia, 3=Tritanopia, 4=Grayscale, 5=Grayscale Inverted, 6=Inverted",
+                    DisplayName = "Inside Shape Filter Type",
+                    Description = "Filter applied inside the shape (circle/rectangle) or as the only filter in fullscreen mode: 0=None, 1=Deuteranopia, 2=Protanopia, 3=Tritanopia, 4=Grayscale, 5=Grayscale Inverted, 6=Inverted",
                     MinValue = 0,
                     MaxValue = 6,
-                    DefaultValue = 1
+                    DefaultValue = 4
+                },
+                new IntParameter
+                {
+                    Key = "outsideFilterType",
+                    DisplayName = "Outside Shape Filter Type",
+                    Description = "Filter applied outside the shape (circle/rectangle). Only used when shape mode is not fullscreen: 0=None, 1=Deuteranopia, 2=Protanopia, 3=Tritanopia, 4=Grayscale, 5=Grayscale Inverted, 6=Inverted",
+                    MinValue = 0,
+                    MaxValue = 6,
+                    DefaultValue = 0
                 },
                 new FloatParameter
                 {

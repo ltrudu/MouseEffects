@@ -20,6 +20,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 - **Low Resource Usage** - Optimized rendering pipeline
 - **System Tray Integration** - Runs quietly in the background
 - **Auto-Updates** - Automatic updates via GitHub Releases (Velopack)
+- **Modern UI Theming** - Light, Dark, or System theme with ModernWPF
 
 ## Built-in Effects
 
@@ -28,7 +29,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Particle Trail** | Colorful particles that follow your cursor with physics simulation |
 | **Laser Work** | Directional lasers shooting from cursor with collision detection |
 | **Screen Distortion** | Real-time lens/ripple distortion effect |
-| **Color Blindness** | Simulates various color blindness conditions with RGB curves |
+| **Color Blindness** | Simulates color blindness with separate inside/outside shape filters and RGB curves |
 | **Radial Dithering** | Bayer-pattern dithering effect around cursor |
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
 | **Water Ripple** | Expanding water ripples on click with realistic wave interference |

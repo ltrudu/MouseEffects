@@ -142,10 +142,35 @@ dotnet sln add "plugins\NewPlugin\NewPlugin.csproj" --solution-folder "plugins"
 Settings stored in: `%APPDATA%\MouseEffects\plugins\{plugin-id}.json`
 
 ## Current Branch
-ZOOM_EFFECT
+Update_ColorBlindness
 
 ## Documentation
 - README.md - Project overview, effects list, installation
 - Wiki/Plugins.md - Detailed plugin reference with all settings
+- Wiki/Features.md - Features overview including theming
 - Wiki/Plugin-Development.md - How to create plugins
 - Wiki/Plugin-ScreenCapture.md - Screen capture plugin guide
+
+## Recent Updates
+
+### UI Theming (ModernWPF)
+- Uses [ModernWPF](https://github.com/Kinnara/ModernWpf) for Fluent Design styling
+- Theme options: System, Light, Dark (default: Dark)
+- Settings in `AppSettings.cs`: `Theme` property with `AppTheme` enum
+- Applied via `App.ApplyTheme()` using `ThemeManager.Current.ApplicationTheme`
+
+### Color Blindness Plugin - Dual Filter Mode
+- **Inside/Outside Filters**: When shape mode is Circle or Rectangle, separate filters can be applied inside and outside the shape
+- **Fullscreen Mode**: Uses single filter (backward compatible)
+- **Default values**: Inside=Grayscale (4), Outside=None (0)
+- **UI behavior**:
+  - Fullscreen: Shows single "Filter Type" dropdown
+  - Circle/Rectangle: Shows "Inside Shape Filter Type" and "Outside Shape Filter Type" dropdowns
+- **Filter syncing**: When switching between fullscreen and shape modes, filters are synced
+
+### ColorBlindness Implementation Details
+- `ColorBlindnessEffect.cs`: Added `_outsideFilterType` field
+- `ColorBlindnessParams` struct: Added `OutsideFilterType` field (64 bytes total)
+- `ColorBlindness.hlsl`: Modified `PSMain` to apply different filters based on mask value
+- `ColorBlindnessSettingsControl.xaml`: Added `FullscreenFilterPanel` and `ShapeFilterPanel` with conditional visibility
+- Configuration keys: `filterType` (inside), `outsideFilterType` (outside)
