@@ -154,6 +154,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Vortice.Windows](https://github.com/amerkoleci/Vortice.Windows) - .NET bindings for DirectX
 - [SharpGen.Runtime](https://github.com/SharpGenTools/SharpGenTools) - COM interop generation
 - [Velopack](https://github.com/velopack/velopack) - Modern installer and auto-update framework
+- [ModernWpf](https://github.com/Kinnara/ModernWpf) - Fluent Design theme for WPF
 
 ---
 
