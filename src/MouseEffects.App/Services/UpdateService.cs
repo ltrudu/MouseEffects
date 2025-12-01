@@ -60,7 +60,7 @@ public class UpdateService : IUpdateService
             {
                 var targetVersion = newVersion.TargetFullRelease.Version.ToString();
                 Logger.Log("UpdateService", $"GitHub returned version: {targetVersion}");
-                Logger.Log("UpdateService", $"Release count: {newVersion.DeltasToTarget?.Count ?? 0} deltas");
+                Logger.Log("UpdateService", $"Update target: {targetVersion}");
 
                 _pendingUpdate = new UpdateInfo
                 {
