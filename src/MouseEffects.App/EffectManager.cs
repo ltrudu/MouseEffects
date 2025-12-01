@@ -14,8 +14,19 @@ public sealed class EffectManager : IDisposable
     private readonly Dictionary<string, IEffectFactory> _factories = new();
     private readonly IRenderContext _sharedContext;
     private bool _disposed;
+    private bool _globallyPaused;
 
     public IReadOnlyList<IEffect> Effects => _effects;
+
+    /// <summary>
+    /// Gets or sets whether all effects are globally paused.
+    /// This doesn't change individual effect enabled states.
+    /// </summary>
+    public bool IsGloballyPaused
+    {
+        get => _globallyPaused;
+        set => _globallyPaused = value;
+    }
 
     public EffectManager(IRenderContext sharedContext)
     {
@@ -76,6 +87,8 @@ public sealed class EffectManager : IDisposable
     /// </summary>
     public void Update(GameTime gameTime, MouseState mouseState)
     {
+        if (_globallyPaused) return;
+
         foreach (var effect in _effects)
         {
             if (effect.IsEnabled)
@@ -90,6 +103,8 @@ public sealed class EffectManager : IDisposable
     /// </summary>
     public void Render(IRenderContext context)
     {
+        if (_globallyPaused) return;
+
         foreach (var effect in _effects)
         {
             if (effect.IsEnabled)
@@ -104,6 +119,8 @@ public sealed class EffectManager : IDisposable
     /// </summary>
     public bool RequiresContinuousScreenCapture()
     {
+        if (_globallyPaused) return false;
+
         foreach (var effect in _effects)
         {
             if (effect.IsEnabled && effect.RequiresContinuousScreenCapture)

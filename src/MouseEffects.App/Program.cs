@@ -423,7 +423,10 @@ static partial class Program
     private static void OnEnabledChanged(bool enabled)
     {
         _effectsEnabled = enabled;
-        _effectManager?.SetAllEnabled(enabled);
+        if (_effectManager != null)
+        {
+            _effectManager.IsGloballyPaused = !enabled;
+        }
     }
 
     private static void OnEffectToggled(string effectId, bool enabled)
@@ -446,7 +449,10 @@ static partial class Program
     private static void ToggleEffects()
     {
         _effectsEnabled = !_effectsEnabled;
-        _effectManager?.SetAllEnabled(_effectsEnabled);
+        if (_effectManager != null)
+        {
+            _effectManager.IsGloballyPaused = !_effectsEnabled;
+        }
 
         if (_trayManager != null)
         {
