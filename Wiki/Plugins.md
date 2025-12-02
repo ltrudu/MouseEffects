@@ -12,6 +12,7 @@ This document provides detailed information about each built-in effect plugin.
 - [Tile Vibration](#tile-vibration)
 - [Water Ripple](#water-ripple)
 - [Zoom](#zoom)
+- [Firework](#firework)
 
 ---
 
@@ -552,6 +553,137 @@ When enabled, hotkeys allow quick adjustment without opening settings:
 
 - **Blend Mode**: Alpha
 - **Shader**: Screen texture sampling with magnification
+
+---
+
+## Firework
+
+**ID**: `firework`
+**Screen Capture**: No
+
+Creates stunning firework explosions with colorful particles, trails, rockets, and secondary explosions.
+
+### Features
+
+- GPU instanced rendering for up to 15,000 particles
+- Up to 200 simultaneous fireworks/rockets
+- Rocket mode with altitude-based explosions
+- Secondary explosions for multi-stage effects
+- Rainbow color cycling or custom colors
+- Particle trails with velocity-based stretching
+- Physics simulation with gravity and drag
+- Randomized particle counts per firework for variety
+
+### Settings
+
+#### General
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `maxParticles` | int | 1000-15000 | 5000 | Maximum particles in the system |
+| `maxFireworks` | int | 1-200 | 50 | Maximum simultaneous firework explosions |
+| `particleLifespan` | float | 0.5-10 | 2.5 | How long particles live (seconds) |
+| `minParticlesPerFirework` | int | 10-500 | 50 | Minimum particles per firework explosion |
+| `maxParticlesPerFirework` | int | 10-500 | 150 | Maximum particles per firework explosion |
+
+#### Click Trigger
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `spawnOnLeftClick` | bool | true | Create firework on left click |
+| `spawnOnRightClick` | bool | false | Create firework on right click |
+| `clickExplosionForce` | float | 300 | Initial velocity of particles (px/s) |
+
+#### Movement Trigger
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `spawnOnMove` | bool | - | false | Create fireworks as mouse moves |
+| `moveSpawnDistance` | float | 20-500 | 100 | Distance before spawning firework (px) |
+| `moveExplosionForce` | float | 30-500 | 150 | Initial velocity for movement explosions (px/s) |
+
+#### Particle Appearance
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `minParticleSize` | float | 1-20 | 3 | Minimum particle size (px) |
+| `maxParticleSize` | float | 2-50 | 8 | Maximum particle size (px) |
+| `glowIntensity` | float | 0-2 | 0.8 | Glow effect strength |
+| `enableTrails` | bool | - | true | Elongate particles in movement direction |
+| `trailLength` | float | 0.1-2 | 0.3 | Trail elongation amount |
+
+#### Physics
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `gravity` | float | 0-500 | 150 | Downward acceleration (px/s²) |
+| `drag` | float | 0.9-1.0 | 0.98 | Velocity damping (0.9=heavy, 1.0=none) |
+| `spreadAngle` | float | 30-360 | 360 | Angular spread of explosion (degrees) |
+
+#### Firework Colors
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `rainbowMode` | bool | - | true | Cycle through rainbow colors |
+| `rainbowSpeed` | float | 0.1-5 | 0.5 | Rainbow cycling speed |
+| `primaryColor` | Color4 | - | Orange (1,0.3,0.1) | Main firework color |
+| `secondaryColor` | Color4 | - | Yellow (1,0.8,0.2) | Secondary color for mixing |
+| `useRandomColors` | bool | - | true | Randomize colors per firework |
+
+#### Secondary Explosion
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `enableSecondaryExplosion` | bool | - | true | Particles explode into smaller particles |
+| `secondaryExplosionDelay` | float | 0.2-3 | 0.8 | Time before secondary explosion (seconds) |
+| `secondaryParticleCount` | int | 5-100 | 20 | Particles in secondary explosion |
+| `secondaryExplosionForce` | float | 20-300 | 100 | Force of secondary explosion (px/s) |
+
+#### Rocket Mode
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `enableRocketMode` | bool | - | false | Launch rockets that fly up and explode |
+| `rocketSpeed` | float | 100-1500 | 500 | Upward launch speed (px/s) |
+| `rocketMinAltitude` | float | 5-50% | 10% | Minimum explosion altitude (% from top) |
+| `rocketMaxAltitude` | float | 10-80% | 30% | Maximum explosion altitude (% from top) |
+| `rocketMaxFuseTime` | float | 0.5-5 | 3.0 | Maximum time before forced explosion (seconds) |
+| `rocketSize` | float | 5-50 | 12 | Rocket particle size (px) |
+
+#### Rocket Appearance
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `rocketRainbowMode` | bool | - | true | Cycle rocket colors through rainbow |
+| `rocketRainbowSpeed` | float | 0.1-5 | 0.5 | Rocket rainbow cycling speed |
+| `rocketPrimaryColor` | Color4 | - | Yellow (1,0.8,0.2) | Main rocket color |
+| `rocketSecondaryColor` | Color4 | - | Orange (1,0.4,0.1) | Secondary rocket color |
+| `rocketUseRandomColors` | bool | - | true | Randomize colors per rocket |
+
+### Rocket Explosion System
+
+Rockets use an altitude-based explosion system for realistic firework displays:
+
+1. **Target Altitude**: When a rocket spawns, it calculates a random target Y position within the altitude zone (between min and max altitude % from top of screen)
+2. **Position-Based Explosion**: Rocket explodes when it reaches the target Y position
+3. **Edge Case Handling**: If launched above the explosion zone, explodes after minimal travel
+4. **Safety Fallback**: Max fuse time forces explosion to prevent off-screen rockets
+
+This creates natural firework displays where all explosions occur in a consistent horizontal band across the screen.
+
+### Particle Count Randomization
+
+Each firework explosion spawns a random number of particles between `minParticlesPerFirework` and `maxParticlesPerFirework`. This creates variety in firework sizes while staying within the total particle budget (`maxParticles`).
+
+- Click-triggered fireworks use the full random range
+- Movement-triggered fireworks use 1/3 of the range (smaller explosions)
+- Rocket explosions also use the full random range
+
+### Rendering
+
+- **Blend Mode**: Additive (creates glow effect)
+- **Shader**: GPU instanced point sprites with trail stretching
+- **Performance**: Efficient structured buffers for thousands of particles
 
 ---
 

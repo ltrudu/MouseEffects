@@ -34,6 +34,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
 | **Water Ripple** | Expanding water ripples on click with realistic wave interference |
 | **Zoom** | Magnifying lens effect with circle or rectangle shape and hotkey support |
+| **Firework** | Stunning firework explosions with rockets, trails, and secondary explosions |
 
 ## Screenshots
 
@@ -129,7 +130,8 @@ MouseEffects/
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.TileVibration/
 │   ├── MouseEffects.Effects.WaterRipple/
-│   └── MouseEffects.Effects.Zoom/
+│   ├── MouseEffects.Effects.Zoom/
+│   └── MouseEffects.Effects.Firework/
 ├── packaging/                    # MSIX packaging files
 └── Wiki/                         # Documentation
 ```
