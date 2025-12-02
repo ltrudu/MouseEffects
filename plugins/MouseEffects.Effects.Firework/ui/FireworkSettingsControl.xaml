@@ -215,10 +215,20 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="RocketSpeedSlider_ValueChanged" />
             <TextBlock Name="RocketSpeedValue" Text="500" Opacity="0.7" FontSize="11" />
 
-            <TextBlock Text="Rocket Fuse Time (sec)" Style="{StaticResource LabelStyle}" />
-            <Slider Name="RocketFuseSlider" Minimum="0.1" Maximum="3" Value="1.0"
-                    Style="{StaticResource SliderStyle}" ValueChanged="RocketFuseSlider_ValueChanged" />
-            <TextBlock Name="RocketFuseValue" Text="1.0" Opacity="0.7" FontSize="11" />
+            <TextBlock Text="Min Explosion Altitude (%)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketMinAltitudeSlider" Minimum="0.05" Maximum="0.5" Value="0.1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketMinAltitudeSlider_ValueChanged" />
+            <TextBlock Name="RocketMinAltitudeValue" Text="10%" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Max Explosion Altitude (%)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketMaxAltitudeSlider" Minimum="0.1" Maximum="0.8" Value="0.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketMaxAltitudeSlider_ValueChanged" />
+            <TextBlock Name="RocketMaxAltitudeValue" Text="30%" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Max Fuse Time (sec)" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketMaxFuseTimeSlider" Minimum="0.5" Maximum="5" Value="3.0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketMaxFuseTimeSlider_ValueChanged" />
+            <TextBlock Name="RocketMaxFuseTimeValue" Text="3.0" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Rocket Size" Style="{StaticResource LabelStyle}" />
             <Slider Name="RocketSizeSlider" Minimum="5" Maximum="50" Value="12"

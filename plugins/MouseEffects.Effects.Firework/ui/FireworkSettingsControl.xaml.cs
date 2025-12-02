@@ -188,10 +188,22 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             RocketSpeedValue.Text = rocketSpeed.ToString("F0");
         }
 
-        if (_effect.Configuration.TryGet<float>("rocketFuseTime", out var fuseTime))
+        if (_effect.Configuration.TryGet<float>("rocketMinAltitude", out var minAlt))
         {
-            RocketFuseSlider.Value = fuseTime;
-            RocketFuseValue.Text = fuseTime.ToString("F1");
+            RocketMinAltitudeSlider.Value = minAlt;
+            RocketMinAltitudeValue.Text = $"{(int)(minAlt * 100)}%";
+        }
+
+        if (_effect.Configuration.TryGet<float>("rocketMaxAltitude", out var maxAlt))
+        {
+            RocketMaxAltitudeSlider.Value = maxAlt;
+            RocketMaxAltitudeValue.Text = $"{(int)(maxAlt * 100)}%";
+        }
+
+        if (_effect.Configuration.TryGet<float>("rocketMaxFuseTime", out var maxFuse))
+        {
+            RocketMaxFuseTimeSlider.Value = maxFuse;
+            RocketMaxFuseTimeValue.Text = maxFuse.ToString("F1");
         }
 
         if (_effect.Configuration.TryGet<float>("rocketSize", out var rocketSize))
@@ -260,7 +272,9 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("secondaryExplosionForce", (float)SecondaryForceSlider.Value);
         config.Set("enableRocketMode", EnableRocketModeCheckBox.IsChecked == true);
         config.Set("rocketSpeed", (float)RocketSpeedSlider.Value);
-        config.Set("rocketFuseTime", (float)RocketFuseSlider.Value);
+        config.Set("rocketMinAltitude", (float)RocketMinAltitudeSlider.Value);
+        config.Set("rocketMaxAltitude", (float)RocketMaxAltitudeSlider.Value);
+        config.Set("rocketMaxFuseTime", (float)RocketMaxFuseTimeSlider.Value);
         config.Set("rocketSize", (float)RocketSizeSlider.Value);
         config.Set("rocketRainbowMode", RocketRainbowModeCheckBox.IsChecked ?? true);
         config.Set("rocketRainbowSpeed", (float)RocketRainbowSpeedSlider.Value);
@@ -485,10 +499,24 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         UpdateConfiguration();
     }
 
-    private void RocketFuseSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void RocketMinAltitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (RocketFuseValue != null)
-            RocketFuseValue.Text = e.NewValue.ToString("F1");
+        if (RocketMinAltitudeValue != null)
+            RocketMinAltitudeValue.Text = $"{(int)(e.NewValue * 100)}%";
+        UpdateConfiguration();
+    }
+
+    private void RocketMaxAltitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RocketMaxAltitudeValue != null)
+            RocketMaxAltitudeValue.Text = $"{(int)(e.NewValue * 100)}%";
+        UpdateConfiguration();
+    }
+
+    private void RocketMaxFuseTimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RocketMaxFuseTimeValue != null)
+            RocketMaxFuseTimeValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
     }
 

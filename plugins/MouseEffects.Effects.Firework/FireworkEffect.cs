@@ -31,6 +31,7 @@ public sealed class FireworkEffect : EffectBase
         public Vector4 Color;
         public float Size;
         public float Age;
+        public float TargetY;
         public bool IsActive;
     }
 
@@ -92,6 +93,7 @@ public sealed class FireworkEffect : EffectBase
     private bool _wasRightPressed;
     private float _rainbowHue;
     private float _rocketRainbowHue;
+    private float _viewportHeight = 1080f;
 
     // Configuration values
     private int _maxParticles = 5000;
@@ -126,7 +128,9 @@ public sealed class FireworkEffect : EffectBase
     // Rocket settings
     private bool _enableRocketMode;
     private float _rocketSpeed = 500f;
-    private float _rocketFuseTime = 1.0f;
+    private float _rocketMinAltitude = 0.1f;
+    private float _rocketMaxAltitude = 0.3f;
+    private float _rocketMaxFuseTime = 3.0f;
     private float _rocketSize = 12f;
     private bool _rocketRainbowMode = true;
     private float _rocketRainbowSpeed = 0.5f;
@@ -262,8 +266,14 @@ public sealed class FireworkEffect : EffectBase
         if (Configuration.TryGet("rocketSpeed", out float rocketSpd))
             _rocketSpeed = rocketSpd;
 
-        if (Configuration.TryGet("rocketFuseTime", out float fuseTime))
-            _rocketFuseTime = fuseTime;
+        if (Configuration.TryGet("rocketMinAltitude", out float minAlt))
+            _rocketMinAltitude = minAlt;
+
+        if (Configuration.TryGet("rocketMaxAltitude", out float maxAlt))
+            _rocketMaxAltitude = maxAlt;
+
+        if (Configuration.TryGet("rocketMaxFuseTime", out float maxFuse))
+            _rocketMaxFuseTime = maxFuse;
 
         if (Configuration.TryGet("rocketSize", out float rocketSize))
             _rocketSize = rocketSize;
@@ -351,7 +361,13 @@ public sealed class FireworkEffect : EffectBase
             if (_enableTrails)
                 SpawnRocketTrail(rocket.Position, rocket.Color);
 
-            if (rocket.Age >= _rocketFuseTime)
+            // Check explosion conditions:
+            // 1. Reached target altitude (Y position)
+            // 2. OR exceeded max fuse time (safety fallback)
+            bool reachedTarget = rocket.Position.Y <= rocket.TargetY;
+            bool timedOut = rocket.Age >= _rocketMaxFuseTime;
+
+            if (reachedTarget || timedOut)
             {
                 int particleCount = Random.Shared.Next(_minParticlesPerFirework, _maxParticlesPerFirework + 1);
                 SpawnExplosion(rocket.Position, particleCount, _clickExplosionForce, rocket.Color, totalTime, isSecondary: false);
@@ -410,6 +426,20 @@ public sealed class FireworkEffect : EffectBase
                 rocket.Color = GetRocketColor();
                 rocket.Size = _rocketSize;
                 rocket.Age = 0f;
+
+                // Calculate target Y position based on altitude settings (% from top)
+                // Random value between minAltitude and maxAltitude
+                float altitudeRange = _rocketMaxAltitude - _rocketMinAltitude;
+                float randomAltitude = _rocketMinAltitude + Random.Shared.NextSingle() * altitudeRange;
+                rocket.TargetY = _viewportHeight * randomAltitude;
+
+                // If rocket is launched above the explosion zone, set minimal target
+                // so it explodes almost immediately
+                if (position.Y <= rocket.TargetY)
+                {
+                    rocket.TargetY = position.Y - 10f; // Explode after minimal travel
+                }
+
                 rocket.IsActive = true;
                 break;
             }
@@ -518,6 +548,9 @@ public sealed class FireworkEffect : EffectBase
         if (_vertexShader == null || _pixelShader == null)
             return;
 
+        // Store viewport height for rocket altitude calculations
+        _viewportHeight = context.ViewportSize.Y;
+
         // Count active rockets
         int activeRocketCount = 0;
         for (int i = 0; i < MaxRockets; i++)
@@ -567,8 +600,10 @@ public sealed class FireworkEffect : EffectBase
             ref FireworkRocket rocket = ref _rockets[i];
             if (!rocket.IsActive) continue;
 
-            float rocketLife = _rocketFuseTime - rocket.Age;
-            if (rocketLife <= 0) continue;
+            // Calculate life based on distance to target (for visual fade effect)
+            float distanceToTarget = rocket.Position.Y - rocket.TargetY;
+            float totalDistance = _viewportHeight * (_rocketMaxAltitude - _rocketMinAltitude);
+            float rocketLife = Math.Max(0.1f, distanceToTarget / Math.Max(1f, totalDistance));
 
             _gpuParticles[activeIndex] = new ParticleGPU
             {
@@ -577,7 +612,7 @@ public sealed class FireworkEffect : EffectBase
                 Color = rocket.Color,
                 Size = rocket.Size,
                 Life = rocketLife,
-                MaxLife = _rocketFuseTime
+                MaxLife = 1f
             };
             activeIndex++;
         }

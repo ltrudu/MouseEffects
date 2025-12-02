@@ -61,7 +61,9 @@ public sealed class FireworkFactory : IEffectFactory
         // Rocket
         config.Set("enableRocketMode", false);
         config.Set("rocketSpeed", 500f);
-        config.Set("rocketFuseTime", 1.0f);
+        config.Set("rocketMinAltitude", 0.1f);
+        config.Set("rocketMaxAltitude", 0.3f);
+        config.Set("rocketMaxFuseTime", 3.0f);
         config.Set("rocketSize", 12f);
         config.Set("rocketRainbowMode", true);
         config.Set("rocketRainbowSpeed", 0.5f);
@@ -354,12 +356,32 @@ public sealed class FireworkFactory : IEffectFactory
                 },
                 new FloatParameter
                 {
-                    Key = "rocketFuseTime",
-                    DisplayName = "Rocket Fuse Time",
-                    Description = "Time before rocket explodes (seconds)",
+                    Key = "rocketMinAltitude",
+                    DisplayName = "Min Explosion Altitude",
+                    Description = "Minimum altitude from top where rockets explode (% of screen)",
+                    MinValue = 0.05f,
+                    MaxValue = 0.5f,
+                    DefaultValue = 0.1f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "rocketMaxAltitude",
+                    DisplayName = "Max Explosion Altitude",
+                    Description = "Maximum altitude from top where rockets explode (% of screen)",
                     MinValue = 0.1f,
-                    MaxValue = 3f,
-                    DefaultValue = 1.0f,
+                    MaxValue = 0.8f,
+                    DefaultValue = 0.3f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "rocketMaxFuseTime",
+                    DisplayName = "Max Fuse Time",
+                    Description = "Maximum time before forced explosion (safety fallback)",
+                    MinValue = 0.5f,
+                    MaxValue = 5f,
+                    DefaultValue = 3.0f,
                     Step = 0.1f
                 },
                 new FloatParameter
