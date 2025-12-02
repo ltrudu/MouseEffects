@@ -39,17 +39,23 @@
                     ToolTip="Expand/Collapse settings" Click="FoldButton_Click" />
         </Grid>
 
-        <TextBlock Text="Creates stunning firework explosions with colorful particles, trails, and sparkles"
+        <TextBlock Text="Creates stunning firework explosions with colorful particles and trails"
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
 
         <StackPanel Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
             <!-- General Section -->
             <TextBlock Text="General" Style="{StaticResource SectionStyle}" />
+            <TextBlock Text="Max Particles" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MaxParticlesSlider" Minimum="1000" Maximum="15000" Value="5000"
+                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
+                    TickFrequency="500" ValueChanged="MaxParticlesSlider_ValueChanged" />
+            <TextBlock Name="MaxParticlesValue" Text="5000" Opacity="0.7" FontSize="11" />
+
             <TextBlock Text="Max Fireworks" Style="{StaticResource LabelStyle}" />
-            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="50" Value="20"
+            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="200" Value="50"
                     Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
                     TickFrequency="1" ValueChanged="MaxFireworksSlider_ValueChanged" />
-            <TextBlock Name="MaxFireworksValue" Text="20" Opacity="0.7" FontSize="11" />
+            <TextBlock Name="MaxFireworksValue" Text="50" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Particle Lifespan (sec)" Style="{StaticResource LabelStyle}" />
             <Slider Name="LifespanSlider" Minimum="0.5" Maximum="10" Value="2.5"
@@ -63,13 +69,19 @@
             <CheckBox Name="RightClickCheckBox" Content="Spawn on Right Click" Margin="0,0,0,4"
                       IsChecked="False" Checked="RightClickCheckBox_Changed" Unchecked="RightClickCheckBox_Changed" />
 
-            <TextBlock Text="Click Particle Count" Style="{StaticResource LabelStyle}" />
-            <Slider Name="ClickParticleCountSlider" Minimum="10" Maximum="500" Value="100"
+            <TextBlock Text="Min Particles/Firework" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MinParticlesPerFireworkSlider" Minimum="10" Maximum="500" Value="50"
                     Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
-                    TickFrequency="10" ValueChanged="ClickParticleCountSlider_ValueChanged" />
-            <TextBlock Name="ClickParticleCountValue" Text="100" Opacity="0.7" FontSize="11" />
+                    TickFrequency="10" ValueChanged="MinParticlesPerFireworkSlider_ValueChanged" />
+            <TextBlock Name="MinParticlesPerFireworkValue" Text="50" Opacity="0.7" FontSize="11" />
 
-            <TextBlock Text="Click Explosion Force" Style="{StaticResource LabelStyle}" />
+            <TextBlock Text="Max Particles/Firework" Style="{StaticResource LabelStyle}" />
+            <Slider Name="MaxParticlesPerFireworkSlider" Minimum="10" Maximum="500" Value="150"
+                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
+                    TickFrequency="10" ValueChanged="MaxParticlesPerFireworkSlider_ValueChanged" />
+            <TextBlock Name="MaxParticlesPerFireworkValue" Text="150" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Explosion Force" Style="{StaticResource LabelStyle}" />
             <Slider Name="ClickForceSlider" Minimum="50" Maximum="1000" Value="300"
                     Style="{StaticResource SliderStyle}" ValueChanged="ClickForceSlider_ValueChanged" />
             <TextBlock Name="ClickForceValue" Text="300" Opacity="0.7" FontSize="11" />
@@ -83,12 +95,6 @@
             <Slider Name="MoveSpawnDistanceSlider" Minimum="20" Maximum="500" Value="100"
                     Style="{StaticResource SliderStyle}" ValueChanged="MoveSpawnDistanceSlider_ValueChanged" />
             <TextBlock Name="MoveSpawnDistanceValue" Text="100" Opacity="0.7" FontSize="11" />
-
-            <TextBlock Text="Move Particle Count" Style="{StaticResource LabelStyle}" />
-            <Slider Name="MoveParticleCountSlider" Minimum="5" Maximum="200" Value="30"
-                    Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
-                    TickFrequency="5" ValueChanged="MoveParticleCountSlider_ValueChanged" />
-            <TextBlock Name="MoveParticleCountValue" Text="30" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Move Explosion Force" Style="{StaticResource LabelStyle}" />
             <Slider Name="MoveForceSlider" Minimum="30" Maximum="500" Value="150"
@@ -178,21 +184,6 @@
                         Click="SecondaryColorButton_Click" />
             </Grid>
 
-            <!-- Sparkle Effect Section -->
-            <TextBlock Text="Sparkle Effect" Style="{StaticResource SectionStyle}" />
-            <CheckBox Name="EnableSparkleCheckBox" Content="Enable Sparkle" Margin="0,4,0,4"
-                      IsChecked="True" Checked="EnableSparkleCheckBox_Changed" Unchecked="EnableSparkleCheckBox_Changed" />
-
-            <TextBlock Text="Sparkle Intensity" Style="{StaticResource LabelStyle}" />
-            <Slider Name="SparkleIntensitySlider" Minimum="0" Maximum="2" Value="0.5"
-                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleIntensitySlider_ValueChanged" />
-            <TextBlock Name="SparkleIntensityValue" Text="0.5" Opacity="0.7" FontSize="11" />
-
-            <TextBlock Text="Sparkle Frequency" Style="{StaticResource LabelStyle}" />
-            <Slider Name="SparkleFrequencySlider" Minimum="1" Maximum="50" Value="10"
-                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleFrequencySlider_ValueChanged" />
-            <TextBlock Name="SparkleFrequencyValue" Text="10" Opacity="0.7" FontSize="11" />
-
             <!-- Secondary Explosion Section -->
             <TextBlock Text="Secondary Explosion" Style="{StaticResource SectionStyle}" />
             <CheckBox Name="EnableSecondaryCheckBox" Content="Enable Secondary Explosion" Margin="0,4,0,4"
@@ -225,9 +216,55 @@
             <TextBlock Name="RocketSpeedValue" Text="500" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Rocket Fuse Time (sec)" Style="{StaticResource LabelStyle}" />
-            <Slider Name="RocketFuseSlider" Minimum="0.1" Maximum="3" Value="0.5"
+            <Slider Name="RocketFuseSlider" Minimum="0.1" Maximum="3" Value="1.0"
                     Style="{StaticResource SliderStyle}" ValueChanged="RocketFuseSlider_ValueChanged" />
-            <TextBlock Name="RocketFuseValue" Text="0.5" Opacity="0.7" FontSize="11" />
+            <TextBlock Name="RocketFuseValue" Text="1.0" Opacity="0.7" FontSize="11" />
+
+            <TextBlock Text="Rocket Size" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketSizeSlider" Minimum="5" Maximum="50" Value="12"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketSizeSlider_ValueChanged" />
+            <TextBlock Name="RocketSizeValue" Text="12" Opacity="0.7" FontSize="11" />
+
+            <!-- Rocket Appearance Section -->
+            <TextBlock Text="Rocket Appearance" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="RocketRainbowModeCheckBox" Content="Rocket Rainbow Mode" Margin="0,4,0,4"
+                      IsChecked="True" Checked="RocketRainbowModeCheckBox_Changed" Unchecked="RocketRainbowModeCheckBox_Changed" />
+
+            <TextBlock Text="Rocket Rainbow Speed" Style="{StaticResource LabelStyle}" />
+            <Slider Name="RocketRainbowSpeedSlider" Minimum="0.1" Maximum="5" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RocketRainbowSpeedSlider_ValueChanged" />
+            <TextBlock Name="RocketRainbowSpeedValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+            <CheckBox Name="RocketRandomColorsCheckBox" Content="Rocket Random Colors" Margin="0,8,0,4"
+                      IsChecked="True" Checked="RocketRandomColorsCheckBox_Changed" Unchecked="RocketRandomColorsCheckBox_Changed" />
+
+            <TextBlock Text="Rocket Primary Color" Margin="0,8,0,2" />
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Name="RocketPrimaryColorPreview" Grid.Column="0" Width="24" Height="24"
+                        CornerRadius="4" Background="#FFCC33" BorderBrush="Gray"
+                        BorderThickness="1" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Content="Pick Color" Background="#45475A"
+                        Foreground="#CDD6F4" BorderThickness="0" Padding="10,4"
+                        Click="RocketPrimaryColorButton_Click" />
+            </Grid>
+
+            <TextBlock Text="Rocket Secondary Color" Margin="0,8,0,2" />
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Name="RocketSecondaryColorPreview" Grid.Column="0" Width="24" Height="24"
+                        CornerRadius="4" Background="#FF661A" BorderBrush="Gray"
+                        BorderThickness="1" Margin="0,0,10,0" />
+                <Button Grid.Column="1" Content="Pick Color" Background="#45475A"
+                        Foreground="#CDD6F4" BorderThickness="0" Padding="10,4"
+                        Click="RocketSecondaryColorButton_Click" />
+            </Grid>
         </StackPanel>
     </StackPanel>
 </UserControl>

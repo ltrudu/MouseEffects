@@ -10,7 +10,7 @@ public sealed class FireworkFactory : IEffectFactory
     {
         Id = "firework",
         Name = "Firework",
-        Description = "Creates stunning firework explosions with colorful particles, trails, and sparkles",
+        Description = "Creates stunning firework explosions with colorful particles and trails",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
         Category = EffectCategory.Visual
@@ -24,15 +24,17 @@ public sealed class FireworkFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
-        config.Set("maxFireworks", 20);
+        // General
+        config.Set("maxParticles", 5000);
+        config.Set("maxFireworks", 50);
         config.Set("particleLifespan", 2.5f);
         config.Set("spawnOnLeftClick", true);
         config.Set("spawnOnRightClick", false);
-        config.Set("clickParticleCount", 100);
+        config.Set("minParticlesPerFirework", 50);
+        config.Set("maxParticlesPerFirework", 150);
         config.Set("clickExplosionForce", 300f);
         config.Set("spawnOnMove", false);
         config.Set("moveSpawnDistance", 100f);
-        config.Set("moveParticleCount", 30);
         config.Set("moveExplosionForce", 150f);
         config.Set("minParticleSize", 3f);
         config.Set("maxParticleSize", 8f);
@@ -42,21 +44,30 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("gravity", 150f);
         config.Set("drag", 0.98f);
         config.Set("spreadAngle", 360f);
+
+        // Firework colors
         config.Set("rainbowMode", true);
         config.Set("rainbowSpeed", 0.5f);
         config.Set("primaryColor", new Vector4(1f, 0.3f, 0.1f, 1f));
         config.Set("secondaryColor", new Vector4(1f, 0.8f, 0.2f, 1f));
         config.Set("useRandomColors", true);
-        config.Set("enableSparkle", true);
-        config.Set("sparkleIntensity", 0.5f);
-        config.Set("sparkleFrequency", 10f);
+
+        // Secondary explosion
         config.Set("enableSecondaryExplosion", true);
         config.Set("secondaryExplosionDelay", 0.8f);
         config.Set("secondaryParticleCount", 20);
         config.Set("secondaryExplosionForce", 100f);
+
+        // Rocket
         config.Set("enableRocketMode", false);
         config.Set("rocketSpeed", 500f);
         config.Set("rocketFuseTime", 1.0f);
+        config.Set("rocketSize", 12f);
+        config.Set("rocketRainbowMode", true);
+        config.Set("rocketRainbowSpeed", 0.5f);
+        config.Set("rocketPrimaryColor", new Vector4(1f, 0.8f, 0.2f, 1f));
+        config.Set("rocketSecondaryColor", new Vector4(1f, 0.4f, 0.1f, 1f));
+        config.Set("rocketUseRandomColors", true);
 
         return config;
     }
@@ -67,14 +78,24 @@ public sealed class FireworkFactory : IEffectFactory
         {
             Parameters =
             [
+                // General Section
+                new IntParameter
+                {
+                    Key = "maxParticles",
+                    DisplayName = "Max Particles",
+                    Description = "Maximum number of particles in the system",
+                    MinValue = 1000,
+                    MaxValue = 15000,
+                    DefaultValue = 5000
+                },
                 new IntParameter
                 {
                     Key = "maxFireworks",
                     DisplayName = "Max Fireworks",
                     Description = "Maximum number of simultaneous firework explosions",
                     MinValue = 1,
-                    MaxValue = 50,
-                    DefaultValue = 20
+                    MaxValue = 200,
+                    DefaultValue = 50
                 },
                 new FloatParameter
                 {
@@ -102,18 +123,27 @@ public sealed class FireworkFactory : IEffectFactory
                 },
                 new IntParameter
                 {
-                    Key = "clickParticleCount",
-                    DisplayName = "Click Particle Count",
-                    Description = "Number of particles per click explosion",
+                    Key = "minParticlesPerFirework",
+                    DisplayName = "Min Particles/Firework",
+                    Description = "Minimum number of particles per firework explosion",
                     MinValue = 10,
                     MaxValue = 500,
-                    DefaultValue = 100
+                    DefaultValue = 50
+                },
+                new IntParameter
+                {
+                    Key = "maxParticlesPerFirework",
+                    DisplayName = "Max Particles/Firework",
+                    Description = "Maximum number of particles per firework explosion",
+                    MinValue = 10,
+                    MaxValue = 500,
+                    DefaultValue = 150
                 },
                 new FloatParameter
                 {
                     Key = "clickExplosionForce",
-                    DisplayName = "Click Explosion Force",
-                    Description = "Initial velocity of particles on click (pixels/sec)",
+                    DisplayName = "Explosion Force",
+                    Description = "Initial velocity of particles (pixels/sec)",
                     MinValue = 50f,
                     MaxValue = 1000f,
                     DefaultValue = 300f,
@@ -135,15 +165,6 @@ public sealed class FireworkFactory : IEffectFactory
                     MaxValue = 500f,
                     DefaultValue = 100f,
                     Step = 10f
-                },
-                new IntParameter
-                {
-                    Key = "moveParticleCount",
-                    DisplayName = "Move Particle Count",
-                    Description = "Number of particles per movement explosion",
-                    MinValue = 5,
-                    MaxValue = 200,
-                    DefaultValue = 30
                 },
                 new FloatParameter
                 {
@@ -232,6 +253,8 @@ public sealed class FireworkFactory : IEffectFactory
                     DefaultValue = 360f,
                     Step = 15f
                 },
+
+                // Firework Colors Section
                 new BoolParameter
                 {
                     Key = "rainbowMode",
@@ -272,33 +295,8 @@ public sealed class FireworkFactory : IEffectFactory
                     Description = "Randomize colors for each firework",
                     DefaultValue = true
                 },
-                new BoolParameter
-                {
-                    Key = "enableSparkle",
-                    DisplayName = "Enable Sparkle",
-                    Description = "Add sparkling effect to particles",
-                    DefaultValue = true
-                },
-                new FloatParameter
-                {
-                    Key = "sparkleIntensity",
-                    DisplayName = "Sparkle Intensity",
-                    Description = "Brightness of sparkle effect",
-                    MinValue = 0f,
-                    MaxValue = 2f,
-                    DefaultValue = 0.5f,
-                    Step = 0.1f
-                },
-                new FloatParameter
-                {
-                    Key = "sparkleFrequency",
-                    DisplayName = "Sparkle Frequency",
-                    Description = "Speed of sparkle animation",
-                    MinValue = 1f,
-                    MaxValue = 50f,
-                    DefaultValue = 10f,
-                    Step = 1f
-                },
+
+                // Secondary Explosion Section
                 new BoolParameter
                 {
                     Key = "enableSecondaryExplosion",
@@ -335,6 +333,8 @@ public sealed class FireworkFactory : IEffectFactory
                     DefaultValue = 100f,
                     Step = 10f
                 },
+
+                // Rocket Mode Section
                 new BoolParameter
                 {
                     Key = "enableRocketMode",
@@ -361,6 +361,56 @@ public sealed class FireworkFactory : IEffectFactory
                     MaxValue = 3f,
                     DefaultValue = 1.0f,
                     Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "rocketSize",
+                    DisplayName = "Rocket Size",
+                    Description = "Size of the rocket particle",
+                    MinValue = 5f,
+                    MaxValue = 50f,
+                    DefaultValue = 12f,
+                    Step = 1f
+                },
+                new BoolParameter
+                {
+                    Key = "rocketRainbowMode",
+                    DisplayName = "Rocket Rainbow Mode",
+                    Description = "Cycle rocket colors through rainbow",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "rocketRainbowSpeed",
+                    DisplayName = "Rocket Rainbow Speed",
+                    Description = "Speed of rocket rainbow color cycling",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new ColorParameter
+                {
+                    Key = "rocketPrimaryColor",
+                    DisplayName = "Rocket Primary Color",
+                    Description = "Main rocket color (when not in rainbow mode)",
+                    DefaultValue = new Vector4(1f, 0.8f, 0.2f, 1f),
+                    SupportsAlpha = false
+                },
+                new ColorParameter
+                {
+                    Key = "rocketSecondaryColor",
+                    DisplayName = "Rocket Secondary Color",
+                    Description = "Secondary rocket color for mixing",
+                    DefaultValue = new Vector4(1f, 0.4f, 0.1f, 1f),
+                    SupportsAlpha = false
+                },
+                new BoolParameter
+                {
+                    Key = "rocketUseRandomColors",
+                    DisplayName = "Rocket Random Colors",
+                    Description = "Randomize colors for each rocket",
+                    DefaultValue = true
                 }
             ]
         };

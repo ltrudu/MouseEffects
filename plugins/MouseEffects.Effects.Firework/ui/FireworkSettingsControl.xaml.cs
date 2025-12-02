@@ -15,6 +15,8 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     private bool _isExpanded;
     private Vector4 _primaryColor = new(1f, 0.3f, 0.1f, 1f);
     private Vector4 _secondaryColor = new(1f, 0.8f, 0.2f, 1f);
+    private Vector4 _rocketPrimaryColor = new(1f, 0.8f, 0.2f, 1f);
+    private Vector4 _rocketSecondaryColor = new(1f, 0.4f, 0.1f, 1f);
 
     public event Action<string>? SettingsChanged;
 
@@ -29,6 +31,12 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     private void LoadConfiguration()
     {
         EnabledCheckBox.IsChecked = _effect.IsEnabled;
+
+        if (_effect.Configuration.TryGet<int>("maxParticles", out var maxPart))
+        {
+            MaxParticlesSlider.Value = maxPart;
+            MaxParticlesValue.Text = maxPart.ToString();
+        }
 
         if (_effect.Configuration.TryGet<int>("maxFireworks", out var maxFw))
         {
@@ -48,10 +56,16 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         if (_effect.Configuration.TryGet<bool>("spawnOnRightClick", out var rightClick))
             RightClickCheckBox.IsChecked = rightClick;
 
-        if (_effect.Configuration.TryGet<int>("clickParticleCount", out var clickCount))
+        if (_effect.Configuration.TryGet<int>("minParticlesPerFirework", out var minPartFw))
         {
-            ClickParticleCountSlider.Value = clickCount;
-            ClickParticleCountValue.Text = clickCount.ToString();
+            MinParticlesPerFireworkSlider.Value = minPartFw;
+            MinParticlesPerFireworkValue.Text = minPartFw.ToString();
+        }
+
+        if (_effect.Configuration.TryGet<int>("maxParticlesPerFirework", out var maxPartFw))
+        {
+            MaxParticlesPerFireworkSlider.Value = maxPartFw;
+            MaxParticlesPerFireworkValue.Text = maxPartFw.ToString();
         }
 
         if (_effect.Configuration.TryGet<float>("clickExplosionForce", out var clickForce))
@@ -67,12 +81,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         {
             MoveSpawnDistanceSlider.Value = moveDist;
             MoveSpawnDistanceValue.Text = moveDist.ToString("F0");
-        }
-
-        if (_effect.Configuration.TryGet<int>("moveParticleCount", out var moveCount))
-        {
-            MoveParticleCountSlider.Value = moveCount;
-            MoveParticleCountValue.Text = moveCount.ToString();
         }
 
         if (_effect.Configuration.TryGet<float>("moveExplosionForce", out var moveForce))
@@ -150,21 +158,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             UpdateSecondaryColorPreview();
         }
 
-        if (_effect.Configuration.TryGet<bool>("enableSparkle", out var sparkle))
-            EnableSparkleCheckBox.IsChecked = sparkle;
-
-        if (_effect.Configuration.TryGet<float>("sparkleIntensity", out var sparkleInt))
-        {
-            SparkleIntensitySlider.Value = sparkleInt;
-            SparkleIntensityValue.Text = sparkleInt.ToString("F1");
-        }
-
-        if (_effect.Configuration.TryGet<float>("sparkleFrequency", out var sparkleFreq))
-        {
-            SparkleFrequencySlider.Value = sparkleFreq;
-            SparkleFrequencyValue.Text = sparkleFreq.ToString("F0");
-        }
-
         if (_effect.Configuration.TryGet<bool>("enableSecondaryExplosion", out var secondaryExp))
             EnableSecondaryCheckBox.IsChecked = secondaryExp;
 
@@ -200,6 +193,36 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             RocketFuseSlider.Value = fuseTime;
             RocketFuseValue.Text = fuseTime.ToString("F1");
         }
+
+        if (_effect.Configuration.TryGet<float>("rocketSize", out var rocketSize))
+        {
+            RocketSizeSlider.Value = rocketSize;
+            RocketSizeValue.Text = rocketSize.ToString("F0");
+        }
+
+        if (_effect.Configuration.TryGet<bool>("rocketRainbowMode", out var rocketRainbow))
+            RocketRainbowModeCheckBox.IsChecked = rocketRainbow;
+
+        if (_effect.Configuration.TryGet<float>("rocketRainbowSpeed", out var rocketRainbowSpeed))
+        {
+            RocketRainbowSpeedSlider.Value = rocketRainbowSpeed;
+            RocketRainbowSpeedValue.Text = rocketRainbowSpeed.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<bool>("rocketUseRandomColors", out var rocketRandom))
+            RocketRandomColorsCheckBox.IsChecked = rocketRandom;
+
+        if (_effect.Configuration.TryGet<Vector4>("rocketPrimaryColor", out var rocketPrimary))
+        {
+            _rocketPrimaryColor = rocketPrimary;
+            UpdateRocketPrimaryColorPreview();
+        }
+
+        if (_effect.Configuration.TryGet<Vector4>("rocketSecondaryColor", out var rocketSecondary))
+        {
+            _rocketSecondaryColor = rocketSecondary;
+            UpdateRocketSecondaryColorPreview();
+        }
     }
 
     private void UpdateConfiguration()
@@ -207,15 +230,16 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         if (_isInitializing) return;
 
         var config = new EffectConfiguration();
+        config.Set("maxParticles", (int)MaxParticlesSlider.Value);
         config.Set("maxFireworks", (int)MaxFireworksSlider.Value);
         config.Set("particleLifespan", (float)LifespanSlider.Value);
         config.Set("spawnOnLeftClick", LeftClickCheckBox.IsChecked ?? true);
         config.Set("spawnOnRightClick", RightClickCheckBox.IsChecked == true);
-        config.Set("clickParticleCount", (int)ClickParticleCountSlider.Value);
+        config.Set("minParticlesPerFirework", (int)MinParticlesPerFireworkSlider.Value);
+        config.Set("maxParticlesPerFirework", (int)MaxParticlesPerFireworkSlider.Value);
         config.Set("clickExplosionForce", (float)ClickForceSlider.Value);
         config.Set("spawnOnMove", SpawnOnMoveCheckBox.IsChecked == true);
         config.Set("moveSpawnDistance", (float)MoveSpawnDistanceSlider.Value);
-        config.Set("moveParticleCount", (int)MoveParticleCountSlider.Value);
         config.Set("moveExplosionForce", (float)MoveForceSlider.Value);
         config.Set("minParticleSize", (float)MinSizeSlider.Value);
         config.Set("maxParticleSize", (float)MaxSizeSlider.Value);
@@ -230,9 +254,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("useRandomColors", RandomColorsCheckBox.IsChecked ?? true);
         config.Set("primaryColor", _primaryColor);
         config.Set("secondaryColor", _secondaryColor);
-        config.Set("enableSparkle", EnableSparkleCheckBox.IsChecked ?? true);
-        config.Set("sparkleIntensity", (float)SparkleIntensitySlider.Value);
-        config.Set("sparkleFrequency", (float)SparkleFrequencySlider.Value);
         config.Set("enableSecondaryExplosion", EnableSecondaryCheckBox.IsChecked ?? true);
         config.Set("secondaryExplosionDelay", (float)SecondaryDelaySlider.Value);
         config.Set("secondaryParticleCount", (int)SecondaryCountSlider.Value);
@@ -240,6 +261,12 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("enableRocketMode", EnableRocketModeCheckBox.IsChecked == true);
         config.Set("rocketSpeed", (float)RocketSpeedSlider.Value);
         config.Set("rocketFuseTime", (float)RocketFuseSlider.Value);
+        config.Set("rocketSize", (float)RocketSizeSlider.Value);
+        config.Set("rocketRainbowMode", RocketRainbowModeCheckBox.IsChecked ?? true);
+        config.Set("rocketRainbowSpeed", (float)RocketRainbowSpeedSlider.Value);
+        config.Set("rocketUseRandomColors", RocketRandomColorsCheckBox.IsChecked ?? true);
+        config.Set("rocketPrimaryColor", _rocketPrimaryColor);
+        config.Set("rocketSecondaryColor", _rocketSecondaryColor);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
@@ -259,6 +286,13 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 
+    private void MaxParticlesSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MaxParticlesValue != null)
+            MaxParticlesValue.Text = ((int)e.NewValue).ToString();
+        UpdateConfiguration();
+    }
+
     private void MaxFireworksSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (MaxFireworksValue != null)
@@ -276,10 +310,17 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     private void LeftClickCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
     private void RightClickCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
 
-    private void ClickParticleCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void MinParticlesPerFireworkSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (ClickParticleCountValue != null)
-            ClickParticleCountValue.Text = ((int)e.NewValue).ToString();
+        if (MinParticlesPerFireworkValue != null)
+            MinParticlesPerFireworkValue.Text = ((int)e.NewValue).ToString();
+        UpdateConfiguration();
+    }
+
+    private void MaxParticlesPerFireworkSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MaxParticlesPerFireworkValue != null)
+            MaxParticlesPerFireworkValue.Text = ((int)e.NewValue).ToString();
         UpdateConfiguration();
     }
 
@@ -296,13 +337,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     {
         if (MoveSpawnDistanceValue != null)
             MoveSpawnDistanceValue.Text = e.NewValue.ToString("F0");
-        UpdateConfiguration();
-    }
-
-    private void MoveParticleCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (MoveParticleCountValue != null)
-            MoveParticleCountValue.Text = ((int)e.NewValue).ToString();
         UpdateConfiguration();
     }
 
@@ -419,22 +453,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             System.Windows.Media.Color.FromArgb(255, (byte)(_secondaryColor.X * 255f), (byte)(_secondaryColor.Y * 255f), (byte)(_secondaryColor.Z * 255f)));
     }
 
-    private void EnableSparkleCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
-
-    private void SparkleIntensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (SparkleIntensityValue != null)
-            SparkleIntensityValue.Text = e.NewValue.ToString("F1");
-        UpdateConfiguration();
-    }
-
-    private void SparkleFrequencySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (SparkleFrequencyValue != null)
-            SparkleFrequencyValue.Text = e.NewValue.ToString("F0");
-        UpdateConfiguration();
-    }
-
     private void EnableSecondaryCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
 
     private void SecondaryDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -472,5 +490,67 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         if (RocketFuseValue != null)
             RocketFuseValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
+    }
+
+    private void RocketSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RocketSizeValue != null)
+            RocketSizeValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void RocketRainbowModeCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
+
+    private void RocketRainbowSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RocketRainbowSpeedValue != null)
+            RocketRainbowSpeedValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void RocketRandomColorsCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
+
+    private void RocketPrimaryColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new ColorDialog
+        {
+            Color = System.Drawing.Color.FromArgb(255, (int)(_rocketPrimaryColor.X * 255f), (int)(_rocketPrimaryColor.Y * 255f), (int)(_rocketPrimaryColor.Z * 255f)),
+            FullOpen = true
+        };
+
+        if (dialog.ShowDialog() == DialogResult.OK)
+        {
+            _rocketPrimaryColor = new Vector4(dialog.Color.R / 255f, dialog.Color.G / 255f, dialog.Color.B / 255f, 1f);
+            UpdateRocketPrimaryColorPreview();
+            UpdateConfiguration();
+        }
+    }
+
+    private void RocketSecondaryColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new ColorDialog
+        {
+            Color = System.Drawing.Color.FromArgb(255, (int)(_rocketSecondaryColor.X * 255f), (int)(_rocketSecondaryColor.Y * 255f), (int)(_rocketSecondaryColor.Z * 255f)),
+            FullOpen = true
+        };
+
+        if (dialog.ShowDialog() == DialogResult.OK)
+        {
+            _rocketSecondaryColor = new Vector4(dialog.Color.R / 255f, dialog.Color.G / 255f, dialog.Color.B / 255f, 1f);
+            UpdateRocketSecondaryColorPreview();
+            UpdateConfiguration();
+        }
+    }
+
+    private void UpdateRocketPrimaryColorPreview()
+    {
+        RocketPrimaryColorPreview.Background = new SolidColorBrush(
+            System.Windows.Media.Color.FromArgb(255, (byte)(_rocketPrimaryColor.X * 255f), (byte)(_rocketPrimaryColor.Y * 255f), (byte)(_rocketPrimaryColor.Z * 255f)));
+    }
+
+    private void UpdateRocketSecondaryColorPreview()
+    {
+        RocketSecondaryColorPreview.Background = new SolidColorBrush(
+            System.Windows.Media.Color.FromArgb(255, (byte)(_rocketSecondaryColor.X * 255f), (byte)(_rocketSecondaryColor.Y * 255f), (byte)(_rocketSecondaryColor.Z * 255f)));
     }
 }
