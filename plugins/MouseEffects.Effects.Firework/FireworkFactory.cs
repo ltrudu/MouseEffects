@@ -56,7 +56,7 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("secondaryExplosionForce", 100f);
         config.Set("enableRocketMode", false);
         config.Set("rocketSpeed", 500f);
-        config.Set("rocketFuseTime", 0.5f);
+        config.Set("rocketFuseTime", 1.0f);
 
         return config;
     }
@@ -359,7 +359,7 @@ public sealed class FireworkFactory : IEffectFactory
                     Description = "Time before rocket explodes (seconds)",
                     MinValue = 0.1f,
                     MaxValue = 3f,
-                    DefaultValue = 0.5f,
+                    DefaultValue = 1.0f,
                     Step = 0.1f
                 }
             ]

@@ -1,4 +1,4 @@
-// Firework particle shader with instancing, glow, trails, and sparkle effects
+// Firework particle shader with instancing, glow, and trail effects
 
 cbuffer FrameData : register(b0)
 {
@@ -7,8 +7,8 @@ cbuffer FrameData : register(b0)
     float GlowIntensity;
     float EnableTrails;
     float TrailLength;
-    float EnableSparkle;
-    float SparkleIntensity;
+    float EnableSparkle;    // Kept for compatibility but not used
+    float SparkleIntensity; // Kept for compatibility but not used
     float Padding;
     float Padding2;
     float Padding3;
@@ -33,9 +33,7 @@ struct VSOutput
     float4 Position : SV_POSITION;
     float4 Color : COLOR;
     float2 TexCoord : TEXCOORD0;
-    float2 Velocity : TEXCOORD1;
-    float LifeFactor : TEXCOORD2;
-    float SparklePhase : TEXCOORD3;
+    float LifeFactor : TEXCOORD1;
 };
 
 // Vertex shader for particle quads
@@ -50,9 +48,7 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
         output.Position = float4(0, 0, -2, 1); // Behind camera
         output.Color = float4(0, 0, 0, 0);
         output.TexCoord = float2(0, 0);
-        output.Velocity = float2(0, 0);
         output.LifeFactor = 0;
-        output.SparklePhase = 0;
         return output;
     }
 
@@ -84,9 +80,18 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
             float2 velDir = normalize(particle.Velocity);
             float elongation = min(speed * TrailLength * 0.01, 3.0);
 
-            // Elongate in velocity direction
-            float2 tangent = float2(-velDir.y, velDir.x);
-            offset = offset.x * tangent + offset.y * velDir * (1.0 + elongation);
+            // Create perpendicular vector (tangent) - use consistent orientation
+            float2 tangent = float2(velDir.y, -velDir.x);
+
+            // Scale the offset: X is width (tangent direction), Y is length (velocity direction)
+            // Stretch in the OPPOSITE direction of velocity (trail behind the particle)
+            float2 stretchedOffset;
+            stretchedOffset.x = offset.x; // Width stays the same
+            stretchedOffset.y = offset.y * (1.0 + elongation); // Elongate in Y
+
+            // Rotate to align with velocity direction
+            offset.x = stretchedOffset.x * tangent.x + stretchedOffset.y * (-velDir.x);
+            offset.y = stretchedOffset.x * tangent.y + stretchedOffset.y * (-velDir.y);
         }
     }
 
@@ -99,13 +104,11 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     output.Position = float4(ndcPos, 0, 1);
     output.Color = particle.Color;
     output.TexCoord = texCoord;
-    output.Velocity = particle.Velocity;
     output.LifeFactor = lifeFactor;
-    output.SparklePhase = particle.SparklePhase;
     return output;
 }
 
-// Pixel shader - renders particle with glow, sparkle, and color effects
+// Pixel shader - renders particle with glow effect
 float4 PSMain(VSOutput input) : SV_TARGET
 {
     // Distance from center
@@ -118,25 +121,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Add glow effect (outer ring)
     float glow = exp(-dist * dist * 2.0) * GlowIntensity;
 
-    // Add sparkle effect
-    float sparkle = 0.0;
-    if (EnableSparkle > 0.5)
-    {
-        // Create sparkling effect using sin waves
-        float sparkleT = input.SparklePhase + Time * 15.0;
-        sparkle = (sin(sparkleT) * 0.5 + 0.5) * SparkleIntensity;
-
-        // Make sparkles more pronounced near center
-        sparkle *= (1.0 - dist) * (1.0 - dist);
-
-        // Random-looking sparkle pattern
-        float sparkle2 = sin(sparkleT * 1.7 + 1.3) * 0.5 + 0.5;
-        float sparkle3 = sin(sparkleT * 2.3 + 2.7) * 0.5 + 0.5;
-        sparkle = max(sparkle, sparkle2 * 0.7) * SparkleIntensity;
-    }
-
     // Combine effects
-    float finalAlpha = (alpha + glow + sparkle) * input.LifeFactor;
+    float finalAlpha = (alpha + glow) * input.LifeFactor;
 
     // Color with intensity boost from glow
     float4 color = input.Color;
@@ -148,12 +134,6 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Add white hot core for bright particles
     float coreWhite = (1.0 - smoothstep(0.0, 0.3, dist)) * 0.3 * input.LifeFactor;
     color.rgb += float3(coreWhite, coreWhite, coreWhite);
-
-    // Apply sparkle brightness
-    if (sparkle > 0.5)
-    {
-        color.rgb += float3(sparkle * 0.3, sparkle * 0.3, sparkle * 0.3);
-    }
 
     color.a = finalAlpha;
 

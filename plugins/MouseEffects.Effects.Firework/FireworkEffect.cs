@@ -126,7 +126,7 @@ public sealed class FireworkEffect : EffectBase
     private float _secondaryExplosionForce = 100f;
     private bool _enableRocketMode;
     private float _rocketSpeed = 500f;
-    private float _rocketFuseTime = 0.5f;
+    private float _rocketFuseTime = 1.0f;
 
     public override EffectMetadata Metadata => _metadata;
 
@@ -476,7 +476,19 @@ public sealed class FireworkEffect : EffectBase
 
     protected override void OnRender(IRenderContext context)
     {
-        if (_vertexShader == null || _pixelShader == null || _activeParticleCount == 0)
+        if (_vertexShader == null || _pixelShader == null)
+            return;
+
+        // Count active rockets
+        int activeRocketCount = 0;
+        for (int i = 0; i < MaxFireworks; i++)
+        {
+            if (_rockets[i].IsActive)
+                activeRocketCount++;
+        }
+
+        // Early exit if nothing to render
+        if (_activeParticleCount == 0 && activeRocketCount == 0)
             return;
 
         float totalTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
@@ -495,6 +507,8 @@ public sealed class FireworkEffect : EffectBase
         context.UpdateBuffer(_frameDataBuffer!, frameData);
 
         int activeIndex = 0;
+
+        // Add regular particles to GPU buffer
         for (int i = 0; i < MaxParticles && activeIndex < MaxParticles; i++)
         {
             ref FireworkParticle p = ref _particles[i];
@@ -509,6 +523,29 @@ public sealed class FireworkEffect : EffectBase
                 Life = p.Life,
                 MaxLife = p.MaxLife,
                 SparklePhase = p.SparklePhase
+            };
+            activeIndex++;
+        }
+
+        // Add rockets to GPU buffer as bright, prominent particles
+        for (int i = 0; i < MaxFireworks && activeIndex < MaxParticles; i++)
+        {
+            ref FireworkRocket rocket = ref _rockets[i];
+            if (!rocket.IsActive) continue;
+
+            float rocketLife = _rocketFuseTime - rocket.Age;
+            if (rocketLife <= 0) continue;
+
+            // Render rocket as a very bright, large particle (white-hot core)
+            _gpuParticles[activeIndex] = new ParticleGPU
+            {
+                Position = rocket.Position,
+                Velocity = rocket.Velocity,
+                Color = new Vector4(1f, 1f, 0.8f, 1f), // Bright white-yellow for visibility
+                Size = _maxParticleSize, // Much larger for visibility
+                Life = rocketLife,
+                MaxLife = _rocketFuseTime,
+                SparklePhase = totalTime * 30f // Fast sparkle for burning fuse effect
             };
             activeIndex++;
         }
