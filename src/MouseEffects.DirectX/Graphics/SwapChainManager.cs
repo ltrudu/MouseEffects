@@ -1,3 +1,5 @@
+using System.Drawing;
+using System.Drawing.Imaging;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 using Vortice.Mathematics;
@@ -77,6 +79,79 @@ public sealed class SwapChainManager : IDisposable
     public void Present(bool vsync = true)
     {
         SwapChain.Present(vsync ? 1u : 0u, PresentFlags.None);
+    }
+
+    /// <summary>
+    /// Capture the current frame to a bitmap.
+    /// </summary>
+    public Bitmap? CaptureFrame()
+    {
+        try
+        {
+            using var backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
+
+            // Create a staging texture for CPU read
+            var stagingDesc = new Texture2DDescription
+            {
+                Width = (uint)Width,
+                Height = (uint)Height,
+                MipLevels = 1,
+                ArraySize = 1,
+                Format = Format.B8G8R8A8_UNorm,
+                SampleDescription = new SampleDescription(1, 0),
+                Usage = ResourceUsage.Staging,
+                BindFlags = BindFlags.None,
+                CPUAccessFlags = CpuAccessFlags.Read
+            };
+
+            using var stagingTexture = _graphicsDevice.Device.CreateTexture2D(stagingDesc);
+
+            // Copy back buffer to staging texture
+            _graphicsDevice.Context.CopyResource(stagingTexture, backBuffer);
+
+            // Map the staging texture
+            var mapped = _graphicsDevice.Context.Map(stagingTexture, 0, MapMode.Read, Vortice.Direct3D11.MapFlags.None);
+
+            try
+            {
+                // Create bitmap and copy data
+                var bitmap = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
+                var bitmapData = bitmap.LockBits(
+                    new Rectangle(0, 0, Width, Height),
+                    ImageLockMode.WriteOnly,
+                    PixelFormat.Format32bppArgb);
+
+                try
+                {
+                    // Copy row by row (handle different row pitches)
+                    int bytesPerRow = Width * 4;
+                    var buffer = new byte[bytesPerRow];
+                    for (int y = 0; y < Height; y++)
+                    {
+                        nint srcPtr = (nint)(mapped.DataPointer + y * mapped.RowPitch);
+                        nint dstPtr = bitmapData.Scan0 + y * bitmapData.Stride;
+
+                        // Copy from GPU memory to managed buffer, then to bitmap
+                        System.Runtime.InteropServices.Marshal.Copy(srcPtr, buffer, 0, bytesPerRow);
+                        System.Runtime.InteropServices.Marshal.Copy(buffer, 0, dstPtr, bytesPerRow);
+                    }
+                }
+                finally
+                {
+                    bitmap.UnlockBits(bitmapData);
+                }
+
+                return bitmap;
+            }
+            finally
+            {
+                _graphicsDevice.Context.Unmap(stagingTexture, 0);
+            }
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public void Dispose()

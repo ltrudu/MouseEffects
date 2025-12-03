@@ -1,6 +1,6 @@
 // Space Invaders shader with neon glow effects
 // Entity types: 0=particle, 1=rocket, 2=invader small (squid), 3=invader medium (crab), 4=invader big (octopus)
-// Entity types: 5-14=digits 0-9, 15=colon (:), 16-41=letters A-Z, 42=space, 50=background rect
+// Entity types: 5-14=digits 0-9, 15=colon (:), 16-41=letters A-Z, 42=space, 43=slash (/), 50=background rect
 
 cbuffer FrameData : register(b0)
 {
@@ -501,6 +501,19 @@ float DrawLetter(float2 uv, int letter)
     return result;
 }
 
+// Draw a forward slash (/)
+float DrawSlash(float2 uv)
+{
+    float2 p = uv * 2.0 - 1.0;
+    p.y = -p.y;
+
+    float w = 0.15; // segment width
+    // Diagonal line from bottom-left to top-right
+    float2 a = float2(-0.3, 0.7);
+    float2 b = float2(0.3, -0.7);
+    return DrawSegment(p, a, b, w);
+}
+
 // Draw a filled background rectangle with rounded corners
 float DrawBackground(float2 uv)
 {
@@ -619,6 +632,10 @@ float4 PSMain(VSOutput input) : SV_TARGET
     {
         int letter = (int)(entityType - 16.0);
         shape = DrawLetter(uv, letter);
+    }
+    else if (entityType >= 43.0 && entityType < 44.0) // Forward slash
+    {
+        shape = DrawSlash(uv);
     }
     else if (entityType >= 50.0 && entityType < 51.0) // Background rectangle
     {

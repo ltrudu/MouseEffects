@@ -532,6 +532,7 @@ static partial class Program
 
     /// <summary>
     /// Capture the entire screen (including overlay) to clipboard.
+    /// Blends overlay content with screen capture since overlay is excluded from normal capture.
     /// </summary>
     private static void CaptureScreenToClipboard()
     {
@@ -543,13 +544,39 @@ static partial class Program
             int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
             int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
-            // Create bitmap and capture
+            // Create bitmap and capture screen background
             using var bitmap = new System.Drawing.Bitmap(screenWidth, screenHeight);
             using var graphics = System.Drawing.Graphics.FromImage(bitmap);
 
             graphics.CopyFromScreen(screenLeft, screenTop, 0, 0, bitmap.Size);
 
-            // Copy to clipboard
+            // Blend overlay content on top of screen capture
+            if (_overlayManager != null)
+            {
+                foreach (var overlay in _overlayManager.Overlays)
+                {
+                    try
+                    {
+                        // Capture the DirectX content of this overlay
+                        using var overlayBitmap = overlay.CaptureFrame();
+                        if (overlayBitmap != null)
+                        {
+                            // Calculate position relative to virtual screen origin
+                            int destX = overlay.Bounds.X - screenLeft;
+                            int destY = overlay.Bounds.Y - screenTop;
+
+                            // Draw overlay content with alpha blending onto screen capture
+                            graphics.DrawImage(overlayBitmap, destX, destY, overlayBitmap.Width, overlayBitmap.Height);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log($"Failed to capture overlay: {ex.Message}");
+                    }
+                }
+            }
+
+            // Copy composited result to clipboard
             System.Windows.Forms.Clipboard.SetImage(bitmap);
 
             Log($"Screen captured to clipboard ({screenWidth}x{screenHeight})");

@@ -177,6 +177,15 @@ public sealed class OverlayWindow : IDisposable
         _renderContext.UpdateViewportSize(width, height);
     }
 
+    /// <summary>
+    /// Capture the current frame content to a bitmap.
+    /// Used for screen capture functionality to blend overlay with screen.
+    /// </summary>
+    public Bitmap? CaptureFrame()
+    {
+        return _swapChain.CaptureFrame();
+    }
+
     private nint WndProc(nint hwnd, uint msg, nint wParam, nint lParam)
     {
         switch (msg)
