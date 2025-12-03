@@ -133,6 +133,22 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Hotkeys -->
+                <Border Style="{StaticResource EffectCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Hotkeys" Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock Text="Keyboard shortcuts for quick actions"
+                                   Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
+                        <CheckBox x:Name="ScreenCaptureHotkeyCheckBox"
+                                  Content="Enable Screen Capture (Alt+Shift+S)"
+                                  ToolTip="Captures the screen with overlay and copies to clipboard"
+                                  Checked="ScreenCaptureHotkeyCheckBox_Changed"
+                                  Unchecked="ScreenCaptureHotkeyCheckBox_Changed"/>
+                        <TextBlock Text="Ctrl+Shift+M - Toggle effects on/off"
+                                   Opacity="0.5" FontSize="11" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Dynamic Plugin Settings Container -->
                 <StackPanel x:Name="PluginSettingsContainer"/>
 

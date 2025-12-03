@@ -40,6 +40,7 @@ public partial class SettingsWindow : Window
         LoadGpuList();
         LoadFrameRateSetting();
         LoadFpsCounterSetting();
+        LoadScreenCaptureHotkeySetting();
         LoadPluginSettings();
         LoadUpdateSettings();
         _isInitializing = false;
@@ -160,6 +161,26 @@ public partial class SettingsWindow : Window
         var settings = Program.Settings;
         settings.ShowFpsOverlay = show;
         settings.Save();
+    }
+
+    private void LoadScreenCaptureHotkeySetting()
+    {
+        var settings = Program.Settings;
+        ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
+    }
+
+    private void ScreenCaptureHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = ScreenCaptureHotkeyCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableScreenCaptureHotkey = enabled;
+        settings.Save();
+
+        // Update hotkey registration
+        Program.UpdateScreenCaptureHotkey(enabled);
     }
 
     private void LoadGpuList()

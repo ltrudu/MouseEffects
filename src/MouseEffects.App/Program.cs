@@ -200,6 +200,13 @@ static partial class Program
             var hotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, (uint)'M');
             Log($"Hotkey registration: {(hotkeyResult ? "SUCCESS" : "FAILED")}");
 
+            // Register screen capture hotkey (Alt+Shift+S) if enabled
+            if (_settings.EnableScreenCaptureHotkey)
+            {
+                var screenshotHotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID, MOD_ALT | MOD_SHIFT, (uint)'S');
+                Log($"Screenshot hotkey registration: {(screenshotHotkeyResult ? "SUCCESS" : "FAILED")}");
+            }
+
             // Initialize FPS overlay if enabled
             if (_settings.ShowFpsOverlay)
             {
@@ -275,6 +282,7 @@ static partial class Program
     private static void Shutdown()
     {
         UnregisterHotKey(nint.Zero, HOTKEY_ID);
+        UnregisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID);
 
         // Save all plugin settings before shutdown (each to its own file)
         Log("Saving plugin settings on shutdown...");
@@ -413,9 +421,16 @@ static partial class Program
                     return;
                 }
 
-                if (msg.message == WM_HOTKEY && msg.wParam == HOTKEY_ID)
+                if (msg.message == WM_HOTKEY)
                 {
-                    ToggleEffects();
+                    if (msg.wParam == HOTKEY_ID)
+                    {
+                        ToggleEffects();
+                    }
+                    else if (msg.wParam == HOTKEY_SCREENSHOT_ID)
+                    {
+                        CaptureScreenToClipboard();
+                    }
                 }
 
                 TranslateMessage(ref msg);
@@ -515,14 +530,71 @@ static partial class Program
         }
     }
 
+    /// <summary>
+    /// Capture the entire screen (including overlay) to clipboard.
+    /// </summary>
+    private static void CaptureScreenToClipboard()
+    {
+        try
+        {
+            // Get virtual screen bounds (all monitors)
+            int screenLeft = GetSystemMetrics(SM_XVIRTUALSCREEN);
+            int screenTop = GetSystemMetrics(SM_YVIRTUALSCREEN);
+            int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+            // Create bitmap and capture
+            using var bitmap = new System.Drawing.Bitmap(screenWidth, screenHeight);
+            using var graphics = System.Drawing.Graphics.FromImage(bitmap);
+
+            graphics.CopyFromScreen(screenLeft, screenTop, 0, 0, bitmap.Size);
+
+            // Copy to clipboard
+            System.Windows.Forms.Clipboard.SetImage(bitmap);
+
+            Log($"Screen captured to clipboard ({screenWidth}x{screenHeight})");
+            _trayManager?.ShowBalloon("MouseEffects", "Screen captured to clipboard!");
+        }
+        catch (Exception ex)
+        {
+            Log($"Screen capture failed: {ex.Message}");
+            _trayManager?.ShowBalloon("MouseEffects", "Screen capture failed!");
+        }
+    }
+
+    /// <summary>
+    /// Update the screen capture hotkey registration based on settings.
+    /// </summary>
+    public static void UpdateScreenCaptureHotkey(bool enabled)
+    {
+        if (enabled)
+        {
+            var result = RegisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID, MOD_ALT | MOD_SHIFT, (uint)'S');
+            Log($"Screenshot hotkey registration: {(result ? "SUCCESS" : "FAILED")}");
+        }
+        else
+        {
+            UnregisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID);
+            Log("Screenshot hotkey unregistered");
+        }
+    }
+
     #region Native Methods
 
     private const int HOTKEY_ID = 1;
+    private const int HOTKEY_SCREENSHOT_ID = 2;
+    private const uint MOD_ALT = 0x0001;
     private const uint MOD_CONTROL = 0x0002;
     private const uint MOD_SHIFT = 0x0004;
     private const uint PM_REMOVE = 0x0001;
     private const uint WM_QUIT = 0x0012;
     private const uint WM_HOTKEY = 0x0312;
+
+    // Screen metrics for multi-monitor support
+    private const int SM_XVIRTUALSCREEN = 76;
+    private const int SM_YVIRTUALSCREEN = 77;
+    private const int SM_CXVIRTUALSCREEN = 78;
+    private const int SM_CYVIRTUALSCREEN = 79;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct MSG
@@ -563,6 +635,9 @@ static partial class Program
 
     [LibraryImport("user32.dll")]
     private static partial void PostQuitMessage(int nExitCode);
+
+    [LibraryImport("user32.dll")]
+    private static partial int GetSystemMetrics(int nIndex);
 
     #endregion
 }

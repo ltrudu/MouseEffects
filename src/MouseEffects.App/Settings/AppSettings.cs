@@ -63,6 +63,12 @@ public class AppSettings
     /// </summary>
     public bool ShowFpsOverlay { get; set; } = false;
 
+    /// <summary>
+    /// Whether to enable the screen capture hotkey (ALT+SHIFT+S).
+    /// Captures the screen with overlay and copies to clipboard.
+    /// </summary>
+    public bool EnableScreenCaptureHotkey { get; set; } = true;
+
     // ═══════════════════════════════════════════════════
     // Update Settings
     // ═══════════════════════════════════════════════════
