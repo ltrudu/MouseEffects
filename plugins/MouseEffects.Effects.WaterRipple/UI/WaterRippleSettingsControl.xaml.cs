@@ -249,15 +249,43 @@ public partial class WaterRippleSettingsControl : System.Windows.Controls.UserCo
 
     private void ClickMinAmplitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 5;
+        var minVal = e.NewValue;
+        var maxVal = ClickMaxAmplitudeSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 1)
+        {
+            var newMax = Math.Min(minVal + minGap, ClickMaxAmplitudeSlider.Maximum);
+            ClickMaxAmplitudeSlider.Value = newMax;
+            ClickMaxAmplitudeValue.Text = newMax.ToString("F0");
+        }
+
         if (ClickMinAmplitudeValue != null)
-            ClickMinAmplitudeValue.Text = e.NewValue.ToString("F0");
+            ClickMinAmplitudeValue.Text = minVal.ToString("F0");
         UpdateConfiguration();
     }
 
     private void ClickMaxAmplitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 5;
+        var maxVal = e.NewValue;
+        var minVal = ClickMinAmplitudeSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 1)
+        {
+            var newMin = Math.Max(maxVal - minGap, ClickMinAmplitudeSlider.Minimum);
+            ClickMinAmplitudeSlider.Value = newMin;
+            ClickMinAmplitudeValue.Text = newMin.ToString("F0");
+        }
+
         if (ClickMaxAmplitudeValue != null)
-            ClickMaxAmplitudeValue.Text = e.NewValue.ToString("F0");
+            ClickMaxAmplitudeValue.Text = maxVal.ToString("F0");
         UpdateConfiguration();
     }
 
@@ -275,15 +303,43 @@ public partial class WaterRippleSettingsControl : System.Windows.Controls.UserCo
 
     private void MoveMinAmplitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 2;
+        var minVal = e.NewValue;
+        var maxVal = MoveMaxAmplitudeSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 1)
+        {
+            var newMax = Math.Min(minVal + minGap, MoveMaxAmplitudeSlider.Maximum);
+            MoveMaxAmplitudeSlider.Value = newMax;
+            MoveMaxAmplitudeValue.Text = newMax.ToString("F0");
+        }
+
         if (MoveMinAmplitudeValue != null)
-            MoveMinAmplitudeValue.Text = e.NewValue.ToString("F0");
+            MoveMinAmplitudeValue.Text = minVal.ToString("F0");
         UpdateConfiguration();
     }
 
     private void MoveMaxAmplitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 2;
+        var maxVal = e.NewValue;
+        var minVal = MoveMinAmplitudeSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 1)
+        {
+            var newMin = Math.Max(maxVal - minGap, MoveMinAmplitudeSlider.Minimum);
+            MoveMinAmplitudeSlider.Value = newMin;
+            MoveMinAmplitudeValue.Text = newMin.ToString("F0");
+        }
+
         if (MoveMaxAmplitudeValue != null)
-            MoveMaxAmplitudeValue.Text = e.NewValue.ToString("F0");
+            MoveMaxAmplitudeValue.Text = maxVal.ToString("F0");
         UpdateConfiguration();
     }
 

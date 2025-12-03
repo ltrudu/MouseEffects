@@ -371,6 +371,34 @@ static partial class Program
         }
     }
 
+    /// <summary>
+    /// Handle effect enabled from settings window.
+    /// Enforces single-plugin mode: only one effect can be enabled at a time.
+    /// Returns list of effect IDs that were disabled.
+    /// </summary>
+    public static List<string> HandleEffectEnabledFromSettings(string effectId)
+    {
+        if (_effectManager == null) return [];
+
+        // Effect was just enabled - disable all others
+        var disabledEffects = new List<string>();
+
+        foreach (var effect in _effectManager.Effects)
+        {
+            if (effect.Metadata.Id != effectId && effect.IsEnabled)
+            {
+                effect.IsEnabled = false;
+                disabledEffects.Add(effect.Metadata.Id);
+                SavePluginSettings(effect.Metadata.Id);
+            }
+        }
+
+        // Sync tray menu
+        SyncTrayWithEffects();
+
+        return disabledEffects;
+    }
+
     private static void RunMessageLoop()
     {
         var msg = new MSG();
@@ -433,17 +461,42 @@ static partial class Program
     {
         if (_effectManager == null) return;
 
-        var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == effectId);
-        if (effect != null)
+        List<string> changedEffects;
+
+        if (enabled)
         {
-            effect.IsEnabled = enabled;
-
-            // Save the plugin settings immediately to its own file
-            SavePluginSettings(effectId);
-
-            // Update the settings window checkbox if it's open
-            _settingsWindow?.RefreshEffectEnabledState(effectId, enabled);
+            // Enforce single-plugin mode: enable only this effect, disable all others
+            changedEffects = _effectManager.EnableExclusively(effectId);
         }
+        else
+        {
+            // Just disable this specific effect
+            var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == effectId);
+            if (effect != null && effect.IsEnabled)
+            {
+                effect.IsEnabled = false;
+                changedEffects = [effectId];
+            }
+            else
+            {
+                changedEffects = [];
+            }
+        }
+
+        // Save settings and update UI for all changed effects
+        foreach (var changedId in changedEffects)
+        {
+            SavePluginSettings(changedId);
+
+            var changedEffect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == changedId);
+            if (changedEffect != null)
+            {
+                _settingsWindow?.RefreshEffectEnabledState(changedId, changedEffect.IsEnabled);
+            }
+        }
+
+        // Sync the tray menu to reflect all effect states
+        SyncTrayWithEffects();
     }
 
     private static void ToggleEffects()

@@ -248,12 +248,83 @@ public partial class LaserWorkSettingsControl : UserControl
         UpdateConfiguration();
     }
 
-    private void SizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void MinLengthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (MinLengthValue != null) MinLengthValue.Text = MinLengthSlider.Value.ToString("F0");
-        if (MaxLengthValue != null) MaxLengthValue.Text = MaxLengthSlider.Value.ToString("F0");
-        if (MinWidthValue != null) MinWidthValue.Text = MinWidthSlider.Value.ToString("F1");
-        if (MaxWidthValue != null) MaxWidthValue.Text = MaxWidthSlider.Value.ToString("F1");
+        if (_isInitializing) return;
+
+        const double minGap = 10;
+        var minVal = e.NewValue;
+        var maxVal = MaxLengthSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 1)
+        {
+            var newMax = Math.Min(minVal + minGap, MaxLengthSlider.Maximum);
+            MaxLengthSlider.Value = newMax;
+            MaxLengthValue.Text = newMax.ToString("F0");
+        }
+
+        if (MinLengthValue != null) MinLengthValue.Text = minVal.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void MaxLengthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing) return;
+
+        const double minGap = 10;
+        var maxVal = e.NewValue;
+        var minVal = MinLengthSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 1)
+        {
+            var newMin = Math.Max(maxVal - minGap, MinLengthSlider.Minimum);
+            MinLengthSlider.Value = newMin;
+            MinLengthValue.Text = newMin.ToString("F0");
+        }
+
+        if (MaxLengthValue != null) MaxLengthValue.Text = maxVal.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void MinWidthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing) return;
+
+        const double minGap = 1;
+        var minVal = e.NewValue;
+        var maxVal = MaxWidthSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 0.1)
+        {
+            var newMax = Math.Min(minVal + minGap, MaxWidthSlider.Maximum);
+            MaxWidthSlider.Value = newMax;
+            MaxWidthValue.Text = newMax.ToString("F1");
+        }
+
+        if (MinWidthValue != null) MinWidthValue.Text = minVal.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void MaxWidthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing) return;
+
+        const double minGap = 1;
+        var maxVal = e.NewValue;
+        var minVal = MinWidthSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 0.1)
+        {
+            var newMin = Math.Max(maxVal - minGap, MinWidthSlider.Minimum);
+            MinWidthSlider.Value = newMin;
+            MinWidthValue.Text = newMin.ToString("F1");
+        }
+
+        if (MaxWidthValue != null) MaxWidthValue.Text = maxVal.ToString("F1");
         UpdateConfiguration();
     }
 
@@ -269,10 +340,43 @@ public partial class LaserWorkSettingsControl : UserControl
         UpdateConfiguration();
     }
 
-    private void AlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void MinAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (MinAlphaValue != null) MinAlphaValue.Text = MinAlphaSlider.Value.ToString("F2");
-        if (MaxAlphaValue != null) MaxAlphaValue.Text = MaxAlphaSlider.Value.ToString("F2");
+        if (_isInitializing) return;
+
+        const double minGap = 0.1;
+        var minVal = e.NewValue;
+        var maxVal = MaxAlphaSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 0.01)
+        {
+            var newMax = Math.Min(minVal + minGap, MaxAlphaSlider.Maximum);
+            MaxAlphaSlider.Value = newMax;
+            MaxAlphaValue.Text = newMax.ToString("F2");
+        }
+
+        if (MinAlphaValue != null) MinAlphaValue.Text = minVal.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void MaxAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing) return;
+
+        const double minGap = 0.1;
+        var maxVal = e.NewValue;
+        var minVal = MinAlphaSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 0.01)
+        {
+            var newMin = Math.Max(maxVal - minGap, MinAlphaSlider.Minimum);
+            MinAlphaSlider.Value = newMin;
+            MinAlphaValue.Text = newMin.ToString("F2");
+        }
+
+        if (MaxAlphaValue != null) MaxAlphaValue.Text = maxVal.ToString("F2");
         UpdateConfiguration();
     }
 

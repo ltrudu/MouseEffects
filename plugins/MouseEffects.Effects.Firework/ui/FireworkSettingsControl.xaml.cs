@@ -326,15 +326,43 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void MinParticlesPerFireworkSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const int minGap = 10;
+        var minVal = (int)e.NewValue;
+        var maxVal = (int)MaxParticlesPerFireworkSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 1)
+        {
+            var newMax = Math.Min(minVal + minGap, (int)MaxParticlesPerFireworkSlider.Maximum);
+            MaxParticlesPerFireworkSlider.Value = newMax;
+            MaxParticlesPerFireworkValue.Text = newMax.ToString();
+        }
+
         if (MinParticlesPerFireworkValue != null)
-            MinParticlesPerFireworkValue.Text = ((int)e.NewValue).ToString();
+            MinParticlesPerFireworkValue.Text = minVal.ToString();
         UpdateConfiguration();
     }
 
     private void MaxParticlesPerFireworkSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const int minGap = 10;
+        var maxVal = (int)e.NewValue;
+        var minVal = (int)MinParticlesPerFireworkSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 1)
+        {
+            var newMin = Math.Max(maxVal - minGap, (int)MinParticlesPerFireworkSlider.Minimum);
+            MinParticlesPerFireworkSlider.Value = newMin;
+            MinParticlesPerFireworkValue.Text = newMin.ToString();
+        }
+
         if (MaxParticlesPerFireworkValue != null)
-            MaxParticlesPerFireworkValue.Text = ((int)e.NewValue).ToString();
+            MaxParticlesPerFireworkValue.Text = maxVal.ToString();
         UpdateConfiguration();
     }
 
@@ -363,6 +391,20 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void MinSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 1.0;
+        var minVal = e.NewValue;
+        var maxVal = MaxSizeSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 0.1)
+        {
+            var newMax = Math.Min(minVal + minGap, MaxSizeSlider.Maximum);
+            MaxSizeSlider.Value = newMax;
+            MaxSizeValue.Text = newMax.ToString("F1");
+        }
+
         if (MinSizeValue != null)
             MinSizeValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
@@ -370,6 +412,20 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void MaxSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 1.0;
+        var maxVal = e.NewValue;
+        var minVal = MinSizeSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 0.1)
+        {
+            var newMin = Math.Max(maxVal - minGap, MinSizeSlider.Minimum);
+            MinSizeSlider.Value = newMin;
+            MinSizeValue.Text = newMin.ToString("F1");
+        }
+
         if (MaxSizeValue != null)
             MaxSizeValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
@@ -501,6 +557,20 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void RocketMinAltitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 0.05; // 5% minimum gap
+        var minVal = e.NewValue;
+        var maxVal = RocketMaxAltitudeSlider.Value;
+
+        // Ensure min < max with minimum gap
+        if (minVal >= maxVal - minGap + 0.01)
+        {
+            var newMax = Math.Min(minVal + minGap, RocketMaxAltitudeSlider.Maximum);
+            RocketMaxAltitudeSlider.Value = newMax;
+            RocketMaxAltitudeValue.Text = $"{(int)(newMax * 100)}%";
+        }
+
         if (RocketMinAltitudeValue != null)
             RocketMinAltitudeValue.Text = $"{(int)(e.NewValue * 100)}%";
         UpdateConfiguration();
@@ -508,6 +578,20 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void RocketMaxAltitudeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (_isInitializing) return;
+
+        const double minGap = 0.05; // 5% minimum gap
+        var maxVal = e.NewValue;
+        var minVal = RocketMinAltitudeSlider.Value;
+
+        // Ensure max > min with minimum gap
+        if (maxVal <= minVal + minGap - 0.01)
+        {
+            var newMin = Math.Max(maxVal - minGap, RocketMinAltitudeSlider.Minimum);
+            RocketMinAltitudeSlider.Value = newMin;
+            RocketMinAltitudeValue.Text = $"{(int)(newMin * 100)}%";
+        }
+
         if (RocketMaxAltitudeValue != null)
             RocketMaxAltitudeValue.Text = $"{(int)(e.NewValue * 100)}%";
         UpdateConfiguration();

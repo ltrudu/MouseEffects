@@ -142,6 +142,47 @@ public sealed class EffectManager : IDisposable
         }
     }
 
+    /// <summary>
+    /// Enable only the specified effect, disabling all others.
+    /// Returns list of effect IDs whose enabled state changed.
+    /// </summary>
+    public List<string> EnableExclusively(string effectId)
+    {
+        var changedEffects = new List<string>();
+
+        foreach (var effect in _effects)
+        {
+            bool shouldBeEnabled = effect.Metadata.Id == effectId;
+            if (effect.IsEnabled != shouldBeEnabled)
+            {
+                effect.IsEnabled = shouldBeEnabled;
+                changedEffects.Add(effect.Metadata.Id);
+            }
+        }
+
+        return changedEffects;
+    }
+
+    /// <summary>
+    /// Disable all effects.
+    /// Returns list of effect IDs whose enabled state changed.
+    /// </summary>
+    public List<string> DisableAll()
+    {
+        var changedEffects = new List<string>();
+
+        foreach (var effect in _effects)
+        {
+            if (effect.IsEnabled)
+            {
+                effect.IsEnabled = false;
+                changedEffects.Add(effect.Metadata.Id);
+            }
+        }
+
+        return changedEffects;
+    }
+
     public void Dispose()
     {
         if (_disposed) return;

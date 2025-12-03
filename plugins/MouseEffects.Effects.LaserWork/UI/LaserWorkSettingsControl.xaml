@@ -73,22 +73,22 @@
 
             <TextBlock Text="Min Length (px)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MinLengthSlider" Minimum="10" Maximum="200" Value="30"
-                    Style="{StaticResource SliderStyle}" ValueChanged="SizeSlider_ValueChanged"/>
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinLengthSlider_ValueChanged"/>
             <TextBlock x:Name="MinLengthValue" Text="30" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Max Length (px)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MaxLengthSlider" Minimum="10" Maximum="200" Value="70"
-                    Style="{StaticResource SliderStyle}" ValueChanged="SizeSlider_ValueChanged"/>
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxLengthSlider_ValueChanged"/>
             <TextBlock x:Name="MaxLengthValue" Text="70" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Min Width (px)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MinWidthSlider" Minimum="1" Maximum="20" Value="2"
-                    Style="{StaticResource SliderStyle}" ValueChanged="SizeSlider_ValueChanged"/>
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinWidthSlider_ValueChanged"/>
             <TextBlock x:Name="MinWidthValue" Text="2" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Max Width (px)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MaxWidthSlider" Minimum="1" Maximum="20" Value="6"
-                    Style="{StaticResource SliderStyle}" ValueChanged="SizeSlider_ValueChanged"/>
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxWidthSlider_ValueChanged"/>
             <TextBlock x:Name="MaxWidthValue" Text="6" Opacity="0.7" FontSize="11"/>
 
             <!-- Physics Settings -->
@@ -109,12 +109,12 @@
 
             <TextBlock Text="Max Alpha (start)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MaxAlphaSlider" Minimum="0" Maximum="1" Value="1"
-                    Style="{StaticResource SliderStyle}" ValueChanged="AlphaSlider_ValueChanged"/>
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxAlphaSlider_ValueChanged"/>
             <TextBlock x:Name="MaxAlphaValue" Text="1.0" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Min Alpha (end)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MinAlphaSlider" Minimum="0" Maximum="1" Value="0.1"
-                    Style="{StaticResource SliderStyle}" ValueChanged="AlphaSlider_ValueChanged"/>
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinAlphaSlider_ValueChanged"/>
             <TextBlock x:Name="MinAlphaValue" Text="0.1" Opacity="0.7" FontSize="11"/>
 
             <!-- Visual Effects -->

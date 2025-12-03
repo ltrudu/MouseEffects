@@ -307,8 +307,24 @@ public partial class SettingsWindow : Window
 
     private void OnPluginSettingsChanged(string effectId)
     {
-        // Save settings and sync tray
+        // Save settings for the changed effect
         Program.SavePluginSettings(effectId);
+
+        // Check if this effect was just enabled - enforce single-plugin mode
+        var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == effectId);
+        if (effect != null && effect.IsEnabled)
+        {
+            // Disable all other effects and get list of affected IDs
+            var disabledEffects = Program.HandleEffectEnabledFromSettings(effectId);
+
+            // Update checkboxes for disabled effects
+            foreach (var disabledId in disabledEffects)
+            {
+                RefreshEffectEnabledState(disabledId, false);
+            }
+        }
+
+        // Sync tray menu
         Program.SyncTrayWithEffects();
     }
 
