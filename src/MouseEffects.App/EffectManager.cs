@@ -115,6 +115,23 @@ public sealed class EffectManager : IDisposable
     }
 
     /// <summary>
+    /// Checks if any effect is currently enabled.
+    /// </summary>
+    public bool HasAnyEffectEnabled()
+    {
+        if (_globallyPaused) return false;
+
+        foreach (var effect in _effects)
+        {
+            if (effect.IsEnabled)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Checks if any enabled effect requires continuous screen capture.
     /// </summary>
     public bool RequiresContinuousScreenCapture()

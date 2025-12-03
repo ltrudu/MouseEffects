@@ -24,6 +24,7 @@ public sealed class GameLoop : IDisposable
     private double _previousTime;
     private bool _running;
     private bool _disposed;
+    private bool _wasAnyEffectEnabled;
 
     public bool IsRunning => _running;
     public double CurrentFps { get; private set; }
@@ -104,6 +105,33 @@ public sealed class GameLoop : IDisposable
         var frameTime = currentTime - _previousTime;
         _previousTime = currentTime;
 
+        // Check if any effect is enabled
+        var hasAnyEffectEnabled = _effectManager.HasAnyEffectEnabled();
+
+        // Handle transition from enabled to disabled - clear overlay once
+        if (!hasAnyEffectEnabled && _wasAnyEffectEnabled)
+        {
+            ClearOverlays();
+            _wasAnyEffectEnabled = false;
+        }
+
+        if (!hasAnyEffectEnabled)
+        {
+            // Reset FPS when no effects are active
+            CurrentFps = 0;
+            CaptureFps = 0;
+            _accumulator = 0;
+
+            // Still need to clear input state
+            if (_mouseInput is Input.GlobalMouseHook hook)
+            {
+                hook.EndFrame();
+            }
+            return;
+        }
+
+        _wasAnyEffectEnabled = true;
+
         // Clamp frame time to prevent spiral of death
         if (frameTime > MaxAccumulatedTime)
         {
@@ -138,33 +166,47 @@ public sealed class GameLoop : IDisposable
         Render();
 
         // Clear per-frame input state
-        if (_mouseInput is Input.GlobalMouseHook hook)
+        if (_mouseInput is Input.GlobalMouseHook hook2)
         {
-            hook.EndFrame();
+            hook2.EndFrame();
         }
     }
 
     private void Render()
     {
-        // Check if any effect needs continuous screen capture
-        var needsContinuousCapture = _effectManager.RequiresContinuousScreenCapture();
+        // Check if any effect needs screen capture
+        var needsScreenCapture = _effectManager.RequiresContinuousScreenCapture();
 
         foreach (var overlay in _overlayManager.Overlays)
         {
             var renderContext = overlay.RenderContext;
 
             // Set continuous capture mode based on effect requirements
-            renderContext.ContinuousCaptureMode = needsContinuousCapture;
+            renderContext.ContinuousCaptureMode = needsScreenCapture;
 
-            overlay.BeginFrame();
+            // Only capture screen if an effect needs it
+            overlay.BeginFrame(captureScreen: needsScreenCapture);
             _effectManager.Render(renderContext);
             overlay.EndFrame();
 
             // Update capture FPS from first overlay
             if (renderContext is D3D11RenderContext d3dContext)
             {
-                CaptureFps = d3dContext.CaptureFps;
+                CaptureFps = needsScreenCapture ? d3dContext.CaptureFps : 0;
             }
+        }
+    }
+
+    /// <summary>
+    /// Clear all overlays by rendering an empty transparent frame.
+    /// </summary>
+    private void ClearOverlays()
+    {
+        foreach (var overlay in _overlayManager.Overlays)
+        {
+            // BeginFrame clears to transparent, EndFrame presents
+            overlay.BeginFrame(captureScreen: false);
+            overlay.EndFrame();
         }
     }
 

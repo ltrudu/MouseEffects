@@ -152,10 +152,13 @@ public sealed class OverlayWindow : IDisposable
         );
     }
 
-    public void BeginFrame()
+    public void BeginFrame(bool captureScreen = true)
     {
-        // Capture screen before rendering effects that need it
-        _renderContext.CaptureScreen();
+        // Only capture screen if effects need it
+        if (captureScreen)
+        {
+            _renderContext.CaptureScreen();
+        }
         _swapChain.BeginFrame();
     }
 
