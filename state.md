@@ -174,3 +174,50 @@ Update_ColorBlindness
 - `ColorBlindness.hlsl`: Modified `PSMain` to apply different filters based on mask value
 - `ColorBlindnessSettingsControl.xaml`: Added `FullscreenFilterPanel` and `ShapeFilterPanel` with conditional visibility
 - Configuration keys: `filterType` (inside), `outsideFilterType` (outside)
+
+### Space Invaders - Game Over Mechanics
+- **Game over triggers**:
+  - Mouse cursor touches an invader → "TOUCHED"
+  - Invader reaches bottom of screen → "INVADED"
+- **Visual display**:
+  - Centered "GAME OVER" text with animated pulsing glow
+  - Pulsing intensity (0.6 to 1.0), subtle size breathing effect
+  - Color cycling with red base, wave animation per character
+  - Reason text displayed below in softer orange color
+- **Timer behavior**: Continues showing countdown time (doesn't change to "GAME OVER")
+- **Implementation**: `InvadersEffect.cs` - `TriggerGameOver()`, `CheckMouseCollision()`, game over rendering in `OnRender`
+
+### Plugin Hotkey Architecture (NEW)
+- **IHotkeyProvider interface** (`MouseEffects.Core/Effects/IHotkeyProvider.cs`):
+  - `IEnumerable<HotkeyDefinition> GetHotkeys()` - plugins return their hotkeys
+  - `HotkeyDefinition`: Id, DisplayName, Modifiers (Ctrl/Shift/Alt), Key, IsEnabled, Callback
+  - `HotkeyModifiers` enum: None, Ctrl, Shift, Alt (flags)
+  - `HotkeyKey` enum: A-Z, 0-9, F1-F12, arrows, etc.
+- **Main app integration** (`Program.cs`):
+  - `CheckPluginHotkeys()` polls all effects implementing `IHotkeyProvider`
+  - Uses `GetAsyncKeyState` for modifier and key detection
+  - Tracks pressed state to avoid repeat triggers
+- **Space Invaders reset hotkey**:
+  - Ctrl+Shift+I to reset game (when enabled)
+  - Checkbox in settings below RESET button
+  - Configuration key: `enableResetHotkey`
+
+### Plugin Default Settings Updated
+All plugin factories updated with user's preferred settings from `%APPDATA%\MouseEffects\plugins\`:
+- `InvadersFactory.cs`, `FireworkFactory.cs`, `WaterRippleFactory.cs`
+- `TileVibrationFactory.cs`, `ZoomEffectFactory.cs`, `LaserWorkFactory.cs`
+- `ColorBlindnessFactory.cs`, `ParticleTrailFactory.cs`
+
+### Shader Updates - InvadersShader.hlsl
+- Added missing letters for "GAME OVER" text rendering:
+  - Letter G (index 6): C-shape with middle right arm
+  - Letter H (index 7): Two verticals with middle horizontal
+  - Letter V (index 21): Two top verticals with diagonal to bottom center
+
+## Build Notes
+
+**IMPORTANT**: Always build with explicit x64 platform for Release:
+```bash
+dotnet build -c Release -p:Platform=x64
+```
+Without `-p:Platform=x64`, plugins may build to `bin\AnyCPU\` instead of `bin\x64\` and won't be found by the app.

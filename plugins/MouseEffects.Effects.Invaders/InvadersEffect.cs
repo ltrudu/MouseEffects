@@ -879,6 +879,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 if (c >= '0' && c <= '9') return 5f + (c - '0');
                 if (c == ':') return 15f;
                 if (c >= 'A' && c <= 'Z') return 16f + (c - 'A');
+                if (c == '/') return 43f; // Forward slash
                 if (c == ' ') return 42f;
                 return 42f; // space for unknown
             }
@@ -891,8 +892,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             // Calculate actual widths for each line to find the longest
             // Line 1: "SCORE" (5 chars at full scale) + margin + value (6 digits at full scale)
             float line1Width = 5 * labelWidth + _scoreOverlayMargin + 6 * digitWidth;
-            // Line 2: "NB POINTS PER MIN" (17 chars at 0.8x) + margin + value (6 digits at 0.8x)
-            float line2Width = 17 * labelWidth * 0.8f + _scoreOverlayMargin + 6 * digitWidth * 0.8f;
+            // Line 2: "POINTS/MIN" (10 chars at 0.8x) + margin + value (6 digits at 0.8x)
+            float line2Width = 10 * labelWidth * 0.8f + _scoreOverlayMargin + 6 * digitWidth * 0.8f;
             // Line 3: "COUNTDOWN" (9 chars at 0.8x) + margin + "READY" or "00:00" (5 chars at 0.7x)
             float line3Width = 9 * labelWidth * 0.8f + _scoreOverlayMargin + 5 * digitWidth * 0.7f;
 
@@ -923,9 +924,13 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 entityIndex++;
             }
 
-            // Line 1: "SCORE" label + value
+            // Calculate alignment positions
+            float leftEdge = bgLeftEdge + bgPadding + labelSize; // Left-aligned label start (position is center of char)
+            float rightEdge = bgLeftEdge + bgWidth - bgPadding; // Right edge for right-aligned values
+
+            // Line 1: "SCORE" label (left-aligned) + value (right-aligned)
             string label1 = "SCORE";
-            float labelX = startX;
+            float labelX = leftEdge;
             for (int i = 0; i < label1.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(label1[i]);
@@ -947,9 +952,10 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 labelX += labelWidth;
             }
 
-            // Score value after label + margin
-            float valueX = labelX + _scoreOverlayMargin;
+            // Score value (right-aligned)
             string scoreStr = _score.ToString();
+            float scoreWidth = scoreStr.Length * digitWidth;
+            float valueX = rightEdge - scoreWidth + digitWidth / 2; // Adjust for char center
             for (int i = 0; i < scoreStr.Length && entityIndex < totalEntities; i++)
             {
                 int digit = scoreStr[i] - '0';
@@ -969,10 +975,10 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 }
             }
 
-            // Line 2: "NB POINTS PER MIN" label + value
+            // Line 2: "POINTS/MIN" label (left-aligned) + value (right-aligned)
             currentY += lineHeight;
-            string label2 = "NB POINTS PER MIN";
-            labelX = startX;
+            string label2 = "POINTS/MIN";
+            labelX = leftEdge;
             for (int i = 0; i < label2.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(label2[i]);
@@ -993,10 +999,12 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 labelX += labelWidth * 0.8f;
             }
 
-            // PPM value after label + margin
-            valueX = labelX + _scoreOverlayMargin;
+            // PPM value (right-aligned)
             float ppm = _elapsedTime > 0 ? (_score / (_elapsedTime / 60f)) : 0f;
             string ppmStr = ((int)ppm).ToString();
+            float ppmDigitWidth = digitWidth * 0.8f;
+            float ppmWidth = ppmStr.Length * ppmDigitWidth;
+            valueX = rightEdge - ppmWidth + ppmDigitWidth / 2;
             for (int i = 0; i < ppmStr.Length && entityIndex < totalEntities; i++)
             {
                 int digit = ppmStr[i] - '0';
@@ -1004,7 +1012,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 {
                     _gpuEntities[entityIndex] = new EntityGPU
                     {
-                        Position = new Vector2(valueX + i * digitWidth * 0.8f, currentY),
+                        Position = new Vector2(valueX + i * ppmDigitWidth, currentY),
                         Velocity = Vector2.Zero,
                         Color = new Vector4(1f, 1f, 0f, 1f), // Yellow for PPM
                         Size = _scoreOverlaySize * 0.8f,
@@ -1016,10 +1024,10 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 }
             }
 
-            // Line 3: "COUNTDOWN" label + timer value (MM:SS)
+            // Line 3: "COUNTDOWN" label (left-aligned) + timer value (right-aligned)
             currentY += lineHeight;
             string label3 = "COUNTDOWN";
-            labelX = startX;
+            labelX = leftEdge;
             for (int i = 0; i < label3.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(label3[i]);
@@ -1040,8 +1048,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 labelX += labelWidth * 0.8f;
             }
 
-            // Timer value after label + margin (show "READY" when waiting for first hit)
-            valueX = labelX + _scoreOverlayMargin;
+            // Timer value (right-aligned) - show "READY" when waiting for first hit
             string timerStr;
             if (_waitingForFirstHit && _isGameActive)
             {
@@ -1055,14 +1062,16 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 int seconds = totalSeconds % 60;
                 timerStr = $"{minutes:D2}:{seconds:D2}";
             }
-            float timerX = valueX;
+            float timerDigitWidth = digitWidth * 0.7f;
+            float timerWidth = timerStr.Length * timerDigitWidth;
+            float timerX = rightEdge - timerWidth + timerDigitWidth / 2;
             for (int i = 0; i < timerStr.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(timerStr[i]);
 
                 _gpuEntities[entityIndex] = new EntityGPU
                 {
-                    Position = new Vector2(timerX, currentY),
+                    Position = new Vector2(timerX + i * timerDigitWidth, currentY),
                     Velocity = Vector2.Zero,
                     Color = new Vector4(0f, 0.8f, 1f, 1f), // Cyan for timer
                     Size = _scoreOverlaySize * 0.7f,
@@ -1071,7 +1080,6 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                     EntityType = entityType
                 };
                 entityIndex++;
-                timerX += digitWidth * 0.7f;
             }
 
             // Centered "GAME OVER" text with animated glow when game is over
