@@ -27,26 +27,26 @@ public sealed class InvadersFactory : IEffectFactory
         // Rocket settings
         config.Set("spawnOnLeftClick", true);
         config.Set("spawnOnRightClick", false);
-        config.Set("spawnOnMove", false);
+        config.Set("spawnOnMove", true);
         config.Set("moveSpawnDistance", 80f);
-        config.Set("rocketSpeed", 600f);
+        config.Set("rocketSpeed", 810f);
         config.Set("rocketSize", 8f);
         config.Set("rocketRainbowMode", true);
         config.Set("rocketRainbowSpeed", 0.5f);
         config.Set("rocketColor", new Vector4(0f, 1f, 0.5f, 1f));
 
         // Invader settings
-        config.Set("invaderSpawnRate", 1.5f);
-        config.Set("invaderMinSpeed", 50f);
-        config.Set("invaderMaxSpeed", 150f);
+        config.Set("invaderSpawnRate", 0.53f);
+        config.Set("invaderMinSpeed", 83f);
+        config.Set("invaderMaxSpeed", 406f);
         config.Set("invaderBigSize", 48f);
         config.Set("invaderMediumSizePercent", 0.5f);
         config.Set("invaderSmallSizePercent", 0.25f);
         config.Set("maxActiveInvaders", 20);
         config.Set("invaderDescentSpeed", 30f);
         config.Set("invaderSmallColor", new Vector4(1f, 0.2f, 0.8f, 1f));
-        config.Set("invaderMediumColor", new Vector4(0.2f, 0.8f, 1f, 1f));
-        config.Set("invaderBigColor", new Vector4(0.2f, 1f, 0.4f, 1f));
+        config.Set("invaderMediumColor", new Vector4(0.58f, 1f, 0.2f, 1f));
+        config.Set("invaderBigColor", new Vector4(0f, 0.25f, 0.5f, 1f));
 
         // Explosion settings
         config.Set("explosionParticleCount", 30);
@@ -70,15 +70,15 @@ public sealed class InvadersFactory : IEffectFactory
         // Score overlay
         config.Set("showScoreOverlay", true);
         config.Set("scoreOverlaySize", 32f);
-        config.Set("scoreOverlaySpacing", 1.5f);
+        config.Set("scoreOverlaySpacing", 1.3f);
         config.Set("scoreOverlayMargin", 20f);
         config.Set("scoreOverlayBgOpacity", 0.7f);
         config.Set("scoreOverlayColor", new Vector4(0f, 1f, 0f, 1f));
         config.Set("scoreOverlayX", 70f);
-        config.Set("scoreOverlayY", 50f);
+        config.Set("scoreOverlayY", 49f);
 
         // Timer
-        config.Set("timerDuration", 60f);
+        config.Set("timerDuration", 90f);
 
         return config;
     }
@@ -109,7 +109,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Key = "spawnOnMove",
                     DisplayName = "Spawn on Move",
                     Description = "Launch rockets while moving the mouse",
-                    DefaultValue = false
+                    DefaultValue = true
                 },
                 new FloatParameter
                 {
@@ -128,7 +128,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Speed of rockets (pixels/sec)",
                     MinValue = 200f,
                     MaxValue = 1500f,
-                    DefaultValue = 600f,
+                    DefaultValue = 810f,
                     Step = 50f
                 },
                 new FloatParameter
@@ -175,7 +175,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Seconds between invader spawns",
                     MinValue = 0.2f,
                     MaxValue = 5f,
-                    DefaultValue = 1.5f,
+                    DefaultValue = 0.53f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -185,7 +185,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Minimum horizontal speed of invaders (px/sec)",
                     MinValue = 10f,
                     MaxValue = 300f,
-                    DefaultValue = 50f,
+                    DefaultValue = 83f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -195,7 +195,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Maximum horizontal speed of invaders (px/sec)",
                     MinValue = 50f,
                     MaxValue = 500f,
-                    DefaultValue = 150f,
+                    DefaultValue = 406f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -260,7 +260,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Key = "invaderMediumColor",
                     DisplayName = "Medium Invader Color",
                     Description = "Color of medium (crab) invaders",
-                    DefaultValue = new Vector4(0.2f, 0.8f, 1f, 1f),
+                    DefaultValue = new Vector4(0.58f, 1f, 0.2f, 1f),
                     SupportsAlpha = false
                 },
                 new ColorParameter
@@ -268,7 +268,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Key = "invaderBigColor",
                     DisplayName = "Big Invader Color",
                     Description = "Color of big (octopus) invaders",
-                    DefaultValue = new Vector4(0.2f, 1f, 0.4f, 1f),
+                    DefaultValue = new Vector4(0f, 0.25f, 0.5f, 1f),
                     SupportsAlpha = false
                 },
 
@@ -424,9 +424,9 @@ public sealed class InvadersFactory : IEffectFactory
                     Key = "scoreOverlaySpacing",
                     DisplayName = "Digit Spacing",
                     Description = "Spacing between score digits (multiplier)",
-                    MinValue = 1.3f,
+                    MinValue = 1.0f,
                     MaxValue = 2.5f,
-                    DefaultValue = 1.5f,
+                    DefaultValue = 1.3f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -474,7 +474,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Vertical position of score (px from top)",
                     MinValue = 0f,
                     MaxValue = 500f,
-                    DefaultValue = 50f,
+                    DefaultValue = 49f,
                     Step = 10f
                 },
 
@@ -486,7 +486,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Duration of the game in seconds",
                     MinValue = 30f,
                     MaxValue = 300f,
-                    DefaultValue = 60f,
+                    DefaultValue = 90f,
                     Step = 15f
                 }
             ]

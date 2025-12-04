@@ -45,13 +45,10 @@ struct VSOutput
 };
 
 // Classic Space Invaders squid shape (small, 200 pts)
-float DrawSquid(float2 uv, float anim)
+// Returns float4: rgb = color tint, a = alpha
+float4 DrawSquidColored(float2 uv, float anim, float4 baseColor)
 {
-    // Normalized coords -1 to 1
     float2 p = uv * 2.0 - 1.0;
-
-    // Animation: tentacles wave
-    float wave = sin(anim) * 0.15;
 
     // Body (rounded rectangle)
     float2 bodySize = float2(0.6, 0.5);
@@ -63,13 +60,13 @@ float DrawSquid(float2 uv, float anim)
     float head = length(p - float2(0, -0.3)) - 0.35;
     head = smoothstep(0.05, 0.0, head);
 
-    // Eyes (two dots)
+    // Eyes (two dots) - bright cyan/white
     float eyeL = length(p - float2(-0.25, -0.15)) - 0.12;
     float eyeR = length(p - float2(0.25, -0.15)) - 0.12;
     float eyes = min(eyeL, eyeR);
     eyes = smoothstep(0.02, 0.0, eyes);
 
-    // Tentacles (bottom wavy lines)
+    // Tentacles (bottom wavy lines) - animated, different color
     float tentacles = 0.0;
     for (int i = -2; i <= 2; i++)
     {
@@ -80,11 +77,30 @@ float DrawSquid(float2 uv, float anim)
         tentacles = max(tentacles, smoothstep(0.03, 0.0, tent));
     }
 
-    return saturate(body + head + tentacles - eyes * 0.3);
+    // Combine with different colors
+    float bodyAlpha = saturate(body + head);
+    float totalAlpha = saturate(bodyAlpha + tentacles + eyes);
+
+    // Color mixing: body=base, tentacles=accent (shifted hue), eyes=bright
+    float3 bodyCol = baseColor.rgb;
+    float3 tentacleCol = baseColor.rgb * float3(0.5, 1.2, 1.5); // Cyan-ish tint
+    float3 eyeCol = float3(1.0, 1.0, 0.8); // Bright yellow-white
+
+    float3 finalCol = bodyCol * bodyAlpha + tentacleCol * tentacles + eyeCol * eyes;
+    finalCol = finalCol / max(totalAlpha, 0.001);
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Legacy wrapper for compatibility
+float DrawSquid(float2 uv, float anim)
+{
+    return DrawSquidColored(uv, anim, float4(1,1,1,1)).a;
 }
 
 // Classic Space Invaders crab shape (medium, 100 pts)
-float DrawCrab(float2 uv, float anim)
+// Returns float4: rgb = color tint, a = alpha
+float4 DrawCrabColored(float2 uv, float anim, float4 baseColor)
 {
     float2 p = uv * 2.0 - 1.0;
 
@@ -92,7 +108,7 @@ float DrawCrab(float2 uv, float anim)
     float body = length(p * float2(1.0, 1.3)) - 0.5;
     body = smoothstep(0.08, 0.0, body);
 
-    // Claws (animated)
+    // Claws (animated) - orange/red accent
     float clawAnim = sin(anim) * 0.2;
     float2 clawL = float2(-0.65, -0.1 + clawAnim);
     float2 clawR = float2(0.65, -0.1 - clawAnim);
@@ -101,13 +117,13 @@ float DrawCrab(float2 uv, float anim)
     float claws = min(clawLDist, clawRDist);
     claws = smoothstep(0.04, 0.0, claws);
 
-    // Eyes
+    // Eyes - bright
     float eyeL = length(p - float2(-0.2, -0.15)) - 0.1;
     float eyeR = length(p - float2(0.2, -0.15)) - 0.1;
     float eyes = min(eyeL, eyeR);
     eyes = smoothstep(0.02, 0.0, eyes);
 
-    // Legs
+    // Legs (animated) - slightly different color
     float legs = 0.0;
     for (int i = -1; i <= 1; i++)
     {
@@ -118,11 +134,30 @@ float DrawCrab(float2 uv, float anim)
         legs = max(legs, smoothstep(0.03, 0.0, leg));
     }
 
-    return saturate(body + claws + legs - eyes * 0.3);
+    // Combine with different colors
+    float totalAlpha = saturate(body + claws + legs + eyes);
+
+    // Color mixing: body=base, claws=orange accent, legs=lighter, eyes=bright
+    float3 bodyCol = baseColor.rgb;
+    float3 clawCol = baseColor.rgb * float3(1.5, 0.7, 0.3); // Orange-ish
+    float3 legCol = baseColor.rgb * float3(0.8, 1.3, 0.8); // Lighter green tint
+    float3 eyeCol = float3(1.0, 0.9, 0.5); // Yellow-white
+
+    float3 finalCol = bodyCol * body + clawCol * claws + legCol * legs + eyeCol * eyes;
+    finalCol = finalCol / max(totalAlpha, 0.001);
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Legacy wrapper
+float DrawCrab(float2 uv, float anim)
+{
+    return DrawCrabColored(uv, anim, float4(1,1,1,1)).a;
 }
 
 // Classic Space Invaders octopus shape (big, 50 pts)
-float DrawOctopus(float2 uv, float anim)
+// Returns float4: rgb = color tint, a = alpha
+float4 DrawOctopusColored(float2 uv, float anim, float4 baseColor)
 {
     float2 p = uv * 2.0 - 1.0;
 
@@ -130,18 +165,19 @@ float DrawOctopus(float2 uv, float anim)
     float body = length(p * float2(1.0, 0.9)) - 0.55;
     body = smoothstep(0.1, 0.0, body);
 
-    // Dome top
+    // Dome top - slightly brighter
     float dome = length(p - float2(0, -0.3)) - 0.4;
     dome = smoothstep(0.08, 0.0, dome);
 
-    // Eyes (larger, menacing)
+    // Eyes (larger, menacing) - red/orange glow
     float eyeL = length(p - float2(-0.22, -0.1)) - 0.12;
     float eyeR = length(p - float2(0.22, -0.1)) - 0.12;
     float eyes = min(eyeL, eyeR);
     eyes = smoothstep(0.02, 0.0, eyes);
 
-    // Tentacles (multiple, wavy)
+    // Tentacles (multiple, wavy) - gradient colors based on position
     float tentacles = 0.0;
+    float tentacleColorMix = 0.0;
     for (int i = -3; i <= 3; i++)
     {
         float xOff = i * 0.2;
@@ -150,10 +186,34 @@ float DrawOctopus(float2 uv, float anim)
         float tentX = xOff + cos(phase) * 0.05;
         float2 tentPos = float2(tentX, tentY);
         float tent = length(p - tentPos) - 0.07;
-        tentacles = max(tentacles, smoothstep(0.025, 0.0, tent));
+        float tentAlpha = smoothstep(0.025, 0.0, tent);
+        tentacles = max(tentacles, tentAlpha);
+        // Mix color based on tentacle index for variety
+        tentacleColorMix = max(tentacleColorMix, tentAlpha * (float(i + 3) / 6.0));
     }
 
-    return saturate(body + dome + tentacles - eyes * 0.3);
+    // Combine with different colors
+    float bodyAlpha = saturate(body + dome);
+    float totalAlpha = saturate(bodyAlpha + tentacles + eyes);
+
+    // Color mixing: body=base, dome=lighter, tentacles=purple/pink gradient, eyes=red
+    float3 bodyCol = baseColor.rgb;
+    float3 domeCol = baseColor.rgb * 1.3; // Brighter
+    float3 tentacleCol1 = baseColor.rgb * float3(1.3, 0.6, 1.4); // Purple tint
+    float3 tentacleCol2 = baseColor.rgb * float3(0.6, 1.2, 1.3); // Teal tint
+    float3 tentacleCol = lerp(tentacleCol1, tentacleCol2, tentacleColorMix);
+    float3 eyeCol = float3(1.0, 0.3, 0.2); // Red-orange glow
+
+    float3 finalCol = bodyCol * body + domeCol * dome + tentacleCol * tentacles + eyeCol * eyes;
+    finalCol = finalCol / max(totalAlpha, 0.001);
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Legacy wrapper
+float DrawOctopus(float2 uv, float anim)
+{
+    return DrawOctopusColored(uv, anim, float4(1,1,1,1)).a;
 }
 
 // Rocket shape (elongated with pointed tip)
@@ -598,6 +658,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float4 baseColor = input.Color;
 
     float shape = 0.0;
+    float4 coloredResult = float4(0, 0, 0, 0);
+    bool useColoredResult = false;
 
     if (entityType < 0.5) // Particle
     {
@@ -607,17 +669,23 @@ float4 PSMain(VSOutput input) : SV_TARGET
     {
         shape = DrawRocket(uv, float2(0, -1));
     }
-    else if (entityType < 2.5) // Small invader (squid)
+    else if (entityType < 2.5) // Small invader (squid) - multicolored
     {
-        shape = DrawSquid(uv, input.AnimPhase);
+        coloredResult = DrawSquidColored(uv, input.AnimPhase, baseColor);
+        shape = coloredResult.a;
+        useColoredResult = true;
     }
-    else if (entityType < 3.5) // Medium invader (crab)
+    else if (entityType < 3.5) // Medium invader (crab) - multicolored
     {
-        shape = DrawCrab(uv, input.AnimPhase);
+        coloredResult = DrawCrabColored(uv, input.AnimPhase, baseColor);
+        shape = coloredResult.a;
+        useColoredResult = true;
     }
-    else if (entityType < 4.5) // Big invader (octopus)
+    else if (entityType < 4.5) // Big invader (octopus) - multicolored
     {
-        shape = DrawOctopus(uv, input.AnimPhase);
+        coloredResult = DrawOctopusColored(uv, input.AnimPhase, baseColor);
+        shape = coloredResult.a;
+        useColoredResult = true;
     }
     else if (entityType >= 5.0 && entityType < 15.0) // Digits 0-9
     {
@@ -651,6 +719,12 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     if (shape < 0.01)
         discard;
+
+    // For multicolored invaders, use the colored result
+    if (useColoredResult)
+    {
+        baseColor.rgb = coloredResult.rgb;
+    }
 
     // Neon glow effect
     float2 center = uv - 0.5;

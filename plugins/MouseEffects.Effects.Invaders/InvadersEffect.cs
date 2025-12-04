@@ -172,7 +172,7 @@ public sealed class InvadersEffect : EffectBase
     private float _scoreOverlayY = 50f;
 
     // Timer and game state
-    private float _timerDuration = 60f; // Default 1 minute
+    private float _timerDuration = 90f; // Default 1.5 minute
     private float _elapsedTime;
     private bool _isGameActive;
     private bool _isGameEnded;
@@ -805,7 +805,7 @@ public sealed class InvadersEffect : EffectBase
             float digitWidth = _scoreOverlaySize * _scoreOverlaySpacing;
             float lineHeight = _scoreOverlaySize * 1.6f;
             float startX = _scoreOverlayX;
-            float startY = _scoreOverlayY;
+            float currentY = _scoreOverlayY;
             float labelSize = _scoreOverlaySize * 0.6f;
             float labelWidth = labelSize * _scoreOverlaySpacing;
 
@@ -815,37 +815,33 @@ public sealed class InvadersEffect : EffectBase
                 if (c >= '0' && c <= '9') return 5f + (c - '0');
                 if (c == ':') return 15f;
                 if (c >= 'A' && c <= 'Z') return 16f + (c - 'A');
-                if (c == '/') return 43f; // Forward slash
                 if (c == ' ') return 42f;
                 return 42f; // space for unknown
             }
 
             // Calculate background size based on actual content
+            // Line 1 "SCORE" uses full scale, Line 2/3 use 0.8x scale
+            // Character Position is CENTER, so text starts at (startX - labelSize)
             float bgPadding = _scoreOverlaySize * 0.5f;
-            float extraMargin = _scoreOverlaySize * 0.4f; // Margin on left and right of text
-            float verticalMargin = _scoreOverlaySize * 0.3f; // Extra vertical margin
 
             // Calculate actual widths for each line to find the longest
-            // Line 1: "SCORE" (5 chars at full scale) + gap + value (6 digits at full scale)
+            // Line 1: "SCORE" (5 chars at full scale) + margin + value (6 digits at full scale)
             float line1Width = 5 * labelWidth + _scoreOverlayMargin + 6 * digitWidth;
-            // Line 2: "POINTS/MIN" (10 chars at 0.8x) + gap + value (6 digits at 0.8x)
-            float line2Width = 10 * labelWidth * 0.8f + _scoreOverlayMargin + 6 * digitWidth * 0.8f;
-            // Line 3: "COUNTDOWN" (9 chars at 0.8x) + gap + "READY" or "00:00" (5 chars at 0.7x)
+            // Line 2: "NB POINTS PER MIN" (17 chars at 0.8x) + margin + value (6 digits at 0.8x)
+            float line2Width = 17 * labelWidth * 0.8f + _scoreOverlayMargin + 6 * digitWidth * 0.8f;
+            // Line 3: "COUNTDOWN" (9 chars at 0.8x) + margin + "READY" or "00:00" (5 chars at 0.7x)
             float line3Width = 9 * labelWidth * 0.8f + _scoreOverlayMargin + 5 * digitWidth * 0.7f;
 
             float contentWidth = Math.Max(line1Width, Math.Max(line2Width, line3Width));
-            float bgWidth = contentWidth + labelSize + bgPadding * 2 + extraMargin * 2;
-            float bgHeight = lineHeight * 3 + bgPadding * 2 + verticalMargin * 2;
+            float bgWidth = contentWidth + labelSize + bgPadding * 2; // +labelSize to account for first char center offset
+            float bgHeight = lineHeight * 3 + bgPadding * 2;
 
-            // Background positioning
-            float bgLeftEdge = startX - labelSize - bgPadding - extraMargin;
-            float bgTopEdge = startY - labelSize - bgPadding - verticalMargin;
-            float bgRightEdge = bgLeftEdge + bgWidth;
+            // Text position is CENTER of first char, so actual left edge is (startX - labelSize)
+            // Background left edge should be at (startX - labelSize - bgPadding)
+            float bgLeftEdge = startX - labelSize - bgPadding;
+            float bgTopEdge = currentY - labelSize - bgPadding;
             float bgCenterX = bgLeftEdge + bgWidth / 2;
             float bgCenterY = bgTopEdge + bgHeight / 2;
-
-            // Right edge for value alignment (with same margin as left side)
-            float valueRightEdge = bgRightEdge - bgPadding - extraMargin;
 
             // Render background first (entity type 50)
             if (_scoreOverlayBgOpacity > 0.01f && entityIndex < totalEntities)
@@ -853,25 +849,23 @@ public sealed class InvadersEffect : EffectBase
                 _gpuEntities[entityIndex] = new EntityGPU
                 {
                     Position = new Vector2(bgCenterX, bgCenterY),
-                    Velocity = new Vector2(bgWidth / 2f, bgHeight / 2f),
-                    Color = new Vector4(0.05f, 0.05f, 0.1f, _scoreOverlayBgOpacity),
+                    Velocity = new Vector2(bgWidth / 2f, bgHeight / 2f), // width/height encoded in velocity
+                    Color = new Vector4(0.05f, 0.05f, 0.1f, _scoreOverlayBgOpacity), // Dark blue-ish
                     Size = 1f,
                     Life = 1f,
                     MaxLife = 1f,
-                    EntityType = 50f
+                    EntityType = 50f // Background
                 };
                 entityIndex++;
             }
 
-            float currentY = startY;
-
-            // Line 1: "SCORE" label (left) + value (right-aligned)
+            // Line 1: "SCORE" label + value
             string label1 = "SCORE";
             float labelX = startX;
             for (int i = 0; i < label1.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(label1[i]);
-                if (entityType != 42f)
+                if (entityType != 42f) // Skip spaces
                 {
                     _gpuEntities[entityIndex] = new EntityGPU
                     {
@@ -889,10 +883,9 @@ public sealed class InvadersEffect : EffectBase
                 labelX += labelWidth;
             }
 
-            // Score value - right aligned
+            // Score value after label + margin
+            float valueX = labelX + _scoreOverlayMargin;
             string scoreStr = _score.ToString();
-            float scoreValueWidth = scoreStr.Length * digitWidth;
-            float scoreValueX = valueRightEdge - scoreValueWidth + _scoreOverlaySize; // +size to account for char center
             for (int i = 0; i < scoreStr.Length && entityIndex < totalEntities; i++)
             {
                 int digit = scoreStr[i] - '0';
@@ -900,7 +893,7 @@ public sealed class InvadersEffect : EffectBase
                 {
                     _gpuEntities[entityIndex] = new EntityGPU
                     {
-                        Position = new Vector2(scoreValueX + i * digitWidth, currentY),
+                        Position = new Vector2(valueX + i * digitWidth, currentY),
                         Velocity = Vector2.Zero,
                         Color = _scoreOverlayColor,
                         Size = _scoreOverlaySize,
@@ -912,20 +905,20 @@ public sealed class InvadersEffect : EffectBase
                 }
             }
 
-            // Line 2: "POINTS/MIN" label (left) + value (right-aligned)
+            // Line 2: "NB POINTS PER MIN" label + value
             currentY += lineHeight;
-            string label2 = "POINTS/MIN";
+            string label2 = "NB POINTS PER MIN";
             labelX = startX;
             for (int i = 0; i < label2.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(label2[i]);
-                if (entityType != 42f)
+                if (entityType != 42f) // Skip spaces but advance position
                 {
                     _gpuEntities[entityIndex] = new EntityGPU
                     {
                         Position = new Vector2(labelX, currentY),
                         Velocity = Vector2.Zero,
-                        Color = new Vector4(1f, 1f, 0f, 0.7f),
+                        Color = new Vector4(1f, 1f, 0f, 0.7f), // Yellow dimmed
                         Size = labelSize * 0.8f,
                         Life = 1f,
                         MaxLife = 1f,
@@ -936,12 +929,10 @@ public sealed class InvadersEffect : EffectBase
                 labelX += labelWidth * 0.8f;
             }
 
-            // PPM value - right aligned
+            // PPM value after label + margin
+            valueX = labelX + _scoreOverlayMargin;
             float ppm = _elapsedTime > 0 ? (_score / (_elapsedTime / 60f)) : 0f;
             string ppmStr = ((int)ppm).ToString();
-            float ppmCharWidth = digitWidth * 0.8f;
-            float ppmValueWidth = ppmStr.Length * ppmCharWidth;
-            float ppmValueX = valueRightEdge - ppmValueWidth + _scoreOverlaySize * 0.8f;
             for (int i = 0; i < ppmStr.Length && entityIndex < totalEntities; i++)
             {
                 int digit = ppmStr[i] - '0';
@@ -949,9 +940,9 @@ public sealed class InvadersEffect : EffectBase
                 {
                     _gpuEntities[entityIndex] = new EntityGPU
                     {
-                        Position = new Vector2(ppmValueX + i * ppmCharWidth, currentY),
+                        Position = new Vector2(valueX + i * digitWidth * 0.8f, currentY),
                         Velocity = Vector2.Zero,
-                        Color = new Vector4(1f, 1f, 0f, 1f),
+                        Color = new Vector4(1f, 1f, 0f, 1f), // Yellow for PPM
                         Size = _scoreOverlaySize * 0.8f,
                         Life = 1f,
                         MaxLife = 1f,
@@ -961,7 +952,7 @@ public sealed class InvadersEffect : EffectBase
                 }
             }
 
-            // Line 3: "COUNTDOWN" label (left) + timer value (right-aligned)
+            // Line 3: "COUNTDOWN" label + timer value (MM:SS)
             currentY += lineHeight;
             string label3 = "COUNTDOWN";
             labelX = startX;
@@ -974,7 +965,7 @@ public sealed class InvadersEffect : EffectBase
                     {
                         Position = new Vector2(labelX, currentY),
                         Velocity = Vector2.Zero,
-                        Color = new Vector4(0f, 0.8f, 1f, 0.7f),
+                        Color = new Vector4(0f, 0.8f, 1f, 0.7f), // Cyan dimmed
                         Size = labelSize * 0.8f,
                         Life = 1f,
                         MaxLife = 1f,
@@ -985,7 +976,8 @@ public sealed class InvadersEffect : EffectBase
                 labelX += labelWidth * 0.8f;
             }
 
-            // Timer value - right aligned
+            // Timer value after label + margin (show "READY" when waiting for first hit)
+            valueX = labelX + _scoreOverlayMargin;
             string timerStr;
             if (_waitingForFirstHit && _isGameActive)
             {
@@ -999,23 +991,23 @@ public sealed class InvadersEffect : EffectBase
                 int seconds = totalSeconds % 60;
                 timerStr = $"{minutes:D2}:{seconds:D2}";
             }
-            float timerCharWidth = digitWidth * 0.7f;
-            float timerValueWidth = timerStr.Length * timerCharWidth;
-            float timerValueX = valueRightEdge - timerValueWidth + _scoreOverlaySize * 0.7f;
+            float timerX = valueX;
             for (int i = 0; i < timerStr.Length && entityIndex < totalEntities; i++)
             {
                 float entityType = CharToEntityType(timerStr[i]);
+
                 _gpuEntities[entityIndex] = new EntityGPU
                 {
-                    Position = new Vector2(timerValueX + i * timerCharWidth, currentY),
+                    Position = new Vector2(timerX, currentY),
                     Velocity = Vector2.Zero,
-                    Color = new Vector4(0f, 0.8f, 1f, 1f),
+                    Color = new Vector4(0f, 0.8f, 1f, 1f), // Cyan for timer
                     Size = _scoreOverlaySize * 0.7f,
                     Life = 1f,
                     MaxLife = 1f,
                     EntityType = entityType
                 };
                 entityIndex++;
+                timerX += digitWidth * 0.7f;
             }
         }
 
