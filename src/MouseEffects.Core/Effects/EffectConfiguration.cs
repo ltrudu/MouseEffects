@@ -12,8 +12,8 @@ public class EffectConfiguration
     /// <summary>Get a configuration value.</summary>
     public T Get<T>(string key, T defaultValue = default!)
     {
-        if (_values.TryGetValue(key, out var value) && value is T typedValue)
-            return typedValue;
+        if (TryGet<T>(key, out var value))
+            return value;
         return defaultValue;
     }
 
@@ -26,10 +26,43 @@ public class EffectConfiguration
     /// <summary>Try to get a configuration value.</summary>
     public bool TryGet<T>(string key, out T value)
     {
-        if (_values.TryGetValue(key, out var obj) && obj is T typedValue)
+        if (_values.TryGetValue(key, out var obj))
         {
-            value = typedValue;
-            return true;
+            // Direct type match
+            if (obj is T typedValue)
+            {
+                value = typedValue;
+                return true;
+            }
+
+            // Handle numeric type conversions (JSON may deserialize as int instead of float)
+            if (typeof(T) == typeof(float) && obj is IConvertible)
+            {
+                try
+                {
+                    value = (T)(object)Convert.ToSingle(obj);
+                    return true;
+                }
+                catch { }
+            }
+            else if (typeof(T) == typeof(double) && obj is IConvertible)
+            {
+                try
+                {
+                    value = (T)(object)Convert.ToDouble(obj);
+                    return true;
+                }
+                catch { }
+            }
+            else if (typeof(T) == typeof(int) && obj is IConvertible)
+            {
+                try
+                {
+                    value = (T)(object)Convert.ToInt32(obj);
+                    return true;
+                }
+                catch { }
+            }
         }
         value = default!;
         return false;

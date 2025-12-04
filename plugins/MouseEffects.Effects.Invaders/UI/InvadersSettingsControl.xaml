@@ -67,7 +67,7 @@
                             <TextBlock Text="TIME: " FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
                             <TextBlock x:Name="TimerDisplay" Text="00:00" FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
                             <TextBlock Text=" / " Foreground="#FF00CCFF" FontSize="12"/>
-                            <TextBlock x:Name="TimerDurationDisplay" Text="01:00" Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock x:Name="TimerDurationDisplay" Text="01:30" Foreground="#FF00CCFF" FontSize="12"/>
                         </StackPanel>
                     </StackPanel>
                     <Button x:Name="ResetButton" Grid.Column="1" Content="RESET"
@@ -309,10 +309,10 @@
             <TextBlock Text="TIMER SETTINGS" Style="{StaticResource SectionStyle}"/>
 
             <TextBlock Text="Game Duration (seconds)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="TimerDurationSlider" Minimum="30" Maximum="300" Value="60"
+            <Slider x:Name="TimerDurationSlider" Minimum="30" Maximum="300" Value="90"
                     Style="{StaticResource SliderStyle}" ValueChanged="TimerDurationSlider_ValueChanged"
                     IsSnapToTickEnabled="True" TickFrequency="15"/>
-            <TextBlock x:Name="TimerDurationValue" Text="1:00" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="TimerDurationValue" Text="1:30" Opacity="0.7" FontSize="11"/>
 
         </StackPanel>
     </StackPanel>

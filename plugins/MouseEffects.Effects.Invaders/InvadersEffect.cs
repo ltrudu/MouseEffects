@@ -1,6 +1,7 @@
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using MouseEffects.Core.Effects;
 using MouseEffects.Core.Input;
 using MouseEffects.Core.Rendering;
@@ -12,6 +13,19 @@ namespace MouseEffects.Effects.Invaders;
 
 public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 {
+    // High score entry for leaderboard
+    public struct HighScoreEntry
+    {
+        public int PointsPerMinute { get; set; }
+        public string Date { get; set; }
+
+        public HighScoreEntry(int ppm, string date)
+        {
+            PointsPerMinute = ppm;
+            Date = date;
+        }
+    }
+
     // Invader types matching classic Space Invaders
     private enum InvaderType
     {
@@ -86,7 +100,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private const int MaxInvaders = 100;
     private const int MaxRockets = 50;
     private const int MaxExplosionParticles = 2000;
-    private const int MaxOverlayChars = 80; // Labels + Score + PPM + Timer display
+    private const int MaxOverlayChars = 200; // Labels + Score + PPM + Timer + High Scores display
 
     private static readonly EffectMetadata _metadata = new()
     {
@@ -183,6 +197,11 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     // Reset hotkey
     private bool _enableResetHotkey;
 
+    // High scores
+    private List<HighScoreEntry> _highScores = new();
+    private int _newHighScoreIndex = -1; // Index of just-added score, -1 if none
+    private bool _highScoresSaved;
+
     private float _rainbowHue;
 
     public override EffectMetadata Metadata => _metadata;
@@ -197,6 +216,13 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     public bool WaitingForFirstHit => _waitingForFirstHit;
     public float PointsPerMinute => _elapsedTime > 0 ? (_score / (_elapsedTime / 60f)) : 0f;
     public bool EnableResetHotkey => _enableResetHotkey;
+    public IReadOnlyList<HighScoreEntry> HighScores => _highScores;
+    public int NewHighScoreIndex => _newHighScoreIndex;
+
+    /// <summary>
+    /// Event raised when high scores are updated and should be saved.
+    /// </summary>
+    public event Action<string>? HighScoresChanged;
 
     public IEnumerable<HotkeyDefinition> GetHotkeys()
     {
@@ -220,6 +246,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         _isGameOver = false;
         _gameOverReason = "";
         _waitingForFirstHit = true; // Timer starts on first kill
+        _newHighScoreIndex = -1;
+        _highScoresSaved = false;
 
         // Clear all invaders
         for (int i = 0; i < MaxInvaders; i++)
@@ -374,6 +402,36 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         // Reset hotkey
         if (Configuration.TryGet("enableResetHotkey", out bool resetHotkey))
             _enableResetHotkey = resetHotkey;
+
+        // High scores
+        if (Configuration.TryGet("highScoresJson", out string? highScoresJson) && !string.IsNullOrEmpty(highScoresJson))
+        {
+            try
+            {
+                var loaded = JsonSerializer.Deserialize<List<HighScoreEntry>>(highScoresJson);
+                if (loaded != null && loaded.Count > 0)
+                {
+                    _highScores = loaded;
+                }
+            }
+            catch
+            {
+                // Invalid JSON, use defaults
+            }
+        }
+
+        // Initialize with defaults if empty
+        if (_highScores.Count == 0)
+        {
+            _highScores = new List<HighScoreEntry>
+            {
+                new(2000, "04/12/2025"),
+                new(1500, "04/12/2025"),
+                new(1000, "04/12/2025"),
+                new(500, "04/12/2025"),
+                new(200, "04/12/2025")
+            };
+        }
     }
 
     private void TriggerGameOver(string reason)
@@ -386,6 +444,62 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         // Clear all rockets but keep invaders visible for the "death" moment
         for (int i = 0; i < MaxRockets; i++)
             _rockets[i].IsActive = false;
+    }
+
+    private void CheckAndUpdateHighScores()
+    {
+        if (_highScoresSaved) return;
+        _highScoresSaved = true;
+
+        int currentPpm = (int)PointsPerMinute;
+        string today = DateTime.Now.ToString("dd/MM/yyyy");
+
+        // Find insertion position (list is sorted descending)
+        int insertIndex = -1;
+        for (int i = 0; i < _highScores.Count; i++)
+        {
+            if (currentPpm > _highScores[i].PointsPerMinute)
+            {
+                insertIndex = i;
+                break;
+            }
+        }
+
+        // If better than at least one score, or list has less than 5 entries
+        if (insertIndex >= 0)
+        {
+            _highScores.Insert(insertIndex, new HighScoreEntry(currentPpm, today));
+            // Keep only top 5
+            while (_highScores.Count > 5)
+                _highScores.RemoveAt(_highScores.Count - 1);
+            _newHighScoreIndex = insertIndex;
+
+            // Serialize and notify for save
+            string json = JsonSerializer.Serialize(_highScores);
+            HighScoresChanged?.Invoke(json);
+        }
+        else if (_highScores.Count < 5)
+        {
+            // List not full, add at the end
+            _highScores.Add(new HighScoreEntry(currentPpm, today));
+            _newHighScoreIndex = _highScores.Count - 1;
+
+            // Serialize and notify for save
+            string json = JsonSerializer.Serialize(_highScores);
+            HighScoresChanged?.Invoke(json);
+        }
+        else
+        {
+            _newHighScoreIndex = -1;
+        }
+    }
+
+    /// <summary>
+    /// Gets the current high scores as JSON for saving.
+    /// </summary>
+    public string GetHighScoresJson()
+    {
+        return JsonSerializer.Serialize(_highScores);
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -415,6 +529,9 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                     _invaders[i].IsActive = false;
                 for (int i = 0; i < MaxRockets; i++)
                     _rockets[i].IsActive = false;
+
+                // Check and update high scores (only on win, not game over)
+                CheckAndUpdateHighScores();
             }
         }
 
@@ -1156,6 +1273,166 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                         };
                         entityIndex++;
                     }
+                }
+            }
+
+            // Display high scores when game ends with win (timer finished, not game over)
+            if (_isGameEnded && !_isGameOver && _highScores.Count > 0)
+            {
+                float hsTime = totalTime * 2f; // Animation speed
+                float hsTitleSize = _scoreOverlaySize * 1.8f;
+                float hsEntrySize = _scoreOverlaySize * 1.0f;
+                float hsCharWidth = hsEntrySize * _scoreOverlaySpacing;
+                float hsCenterX = _viewportWidth / 2f;
+                float hsCenterY = _viewportHeight / 2f;
+
+                // "HIGH SCORES" title - neon cyan
+                string hsTitle = "HIGH SCORES";
+                float hsTitleCharWidth = hsTitleSize * _scoreOverlaySpacing;
+                float hsTitleWidth = hsTitle.Length * hsTitleCharWidth;
+                float hsTitleStartX = hsCenterX - hsTitleWidth / 2f + hsTitleCharWidth / 2f;
+                float hsTitleY = hsCenterY - hsEntrySize * 5f;
+
+                // Pulsing glow for title
+                float titlePulse = 0.7f + 0.3f * MathF.Sin(hsTime);
+                Vector4 titleColor = new(0f, 0.9f, 1f, titlePulse); // Neon cyan
+
+                for (int i = 0; i < hsTitle.Length && entityIndex < totalEntities; i++)
+                {
+                    float entityType = CharToEntityType(hsTitle[i]);
+                    if (entityType != 42f)
+                    {
+                        _gpuEntities[entityIndex] = new EntityGPU
+                        {
+                            Position = new Vector2(hsTitleStartX + i * hsTitleCharWidth, hsTitleY),
+                            Velocity = Vector2.Zero,
+                            Color = titleColor,
+                            Size = hsTitleSize,
+                            Life = titlePulse,
+                            MaxLife = 1f,
+                            EntityType = entityType
+                        };
+                        entityIndex++;
+                    }
+                }
+
+                // Display each high score entry (with top margin from title)
+                float entryY = hsCenterY - hsEntrySize * 1.5f;
+                float entryLineHeight = hsEntrySize * 2.5f;
+
+                for (int scoreIdx = 0; scoreIdx < _highScores.Count && scoreIdx < 5; scoreIdx++)
+                {
+                    var entry = _highScores[scoreIdx];
+                    bool isNewScore = scoreIdx == _newHighScoreIndex;
+
+                    // Format: "1. 2000  04/12/2025"
+                    string rankStr = $"{scoreIdx + 1}.";
+                    string entryPpmStr = entry.PointsPerMinute.ToString();
+                    string dateStr = entry.Date;
+
+                    // Calculate colors
+                    Vector4 entryColor;
+                    float entrySizeMult = 1f;
+
+                    if (isNewScore)
+                    {
+                        // Rainbow cycling for new high score
+                        float hue = (hsTime * 0.5f + scoreIdx * 0.1f) % 1f;
+                        entryColor = HueToRgb(hue);
+                        float rainbowPulse = 0.8f + 0.2f * MathF.Sin(hsTime * 4f);
+                        entryColor.W = rainbowPulse;
+                        entrySizeMult = 1f + 0.05f * MathF.Sin(hsTime * 3f); // Subtle breathing
+                    }
+                    else
+                    {
+                        // Neon blue for old scores
+                        float bluePulse = 0.6f + 0.2f * MathF.Sin(hsTime + scoreIdx);
+                        entryColor = new Vector4(0.2f, 0.5f, 1f, bluePulse);
+                    }
+
+                    float actualEntrySize = hsEntrySize * entrySizeMult;
+                    float actualCharWidth = actualEntrySize * _scoreOverlaySpacing;
+
+                    // Calculate total width for centering
+                    // Rank (3 chars) + space + PPM (up to 5 chars) + 2 spaces + date (10 chars)
+                    float totalWidth = (rankStr.Length + 1 + entryPpmStr.Length + 2 + dateStr.Length) * actualCharWidth;
+                    float entryStartX = hsCenterX - totalWidth / 2f + actualCharWidth / 2f;
+                    float charX = entryStartX;
+
+                    // Render rank
+                    for (int i = 0; i < rankStr.Length && entityIndex < totalEntities; i++)
+                    {
+                        float entityType = CharToEntityType(rankStr[i]);
+                        if (entityType != 42f)
+                        {
+                            float charOffset = isNewScore ? MathF.Sin(hsTime * 2f + i * 0.3f) * 2f : 0f;
+                            _gpuEntities[entityIndex] = new EntityGPU
+                            {
+                                Position = new Vector2(charX, entryY + charOffset),
+                                Velocity = Vector2.Zero,
+                                Color = entryColor,
+                                Size = actualEntrySize,
+                                Life = entryColor.W,
+                                MaxLife = 1f,
+                                EntityType = entityType
+                            };
+                            entityIndex++;
+                        }
+                        charX += actualCharWidth;
+                    }
+
+                    // Space after rank
+                    charX += actualCharWidth;
+
+                    // Render PPM
+                    for (int i = 0; i < entryPpmStr.Length && entityIndex < totalEntities; i++)
+                    {
+                        float entityType = CharToEntityType(entryPpmStr[i]);
+                        if (entityType != 42f)
+                        {
+                            float charOffset = isNewScore ? MathF.Sin(hsTime * 2f + (rankStr.Length + 1 + i) * 0.3f) * 2f : 0f;
+                            _gpuEntities[entityIndex] = new EntityGPU
+                            {
+                                Position = new Vector2(charX, entryY + charOffset),
+                                Velocity = Vector2.Zero,
+                                Color = entryColor,
+                                Size = actualEntrySize,
+                                Life = entryColor.W,
+                                MaxLife = 1f,
+                                EntityType = entityType
+                            };
+                            entityIndex++;
+                        }
+                        charX += actualCharWidth;
+                    }
+
+                    // Two spaces before date
+                    charX += actualCharWidth * 2;
+
+                    // Render date
+                    for (int i = 0; i < dateStr.Length && entityIndex < totalEntities; i++)
+                    {
+                        float entityType = CharToEntityType(dateStr[i]);
+                        if (entityType != 42f)
+                        {
+                            float charOffset = isNewScore ? MathF.Sin(hsTime * 2f + (rankStr.Length + 1 + entryPpmStr.Length + 2 + i) * 0.3f) * 2f : 0f;
+                            _gpuEntities[entityIndex] = new EntityGPU
+                            {
+                                Position = new Vector2(charX, entryY + charOffset),
+                                Velocity = Vector2.Zero,
+                                Color = entryColor * 0.7f, // Slightly dimmer date
+                                Size = actualEntrySize * 0.85f,
+                                Life = entryColor.W * 0.7f,
+                                MaxLife = 1f,
+                                EntityType = entityType
+                            };
+                            _gpuEntities[entityIndex].Color.W = entryColor.W * 0.8f;
+                            entityIndex++;
+                        }
+                        charX += actualCharWidth * 0.85f;
+                    }
+
+                    entryY += entryLineHeight;
                 }
             }
         }

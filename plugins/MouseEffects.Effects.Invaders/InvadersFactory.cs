@@ -83,6 +83,9 @@ public sealed class InvadersFactory : IEffectFactory
         // Reset hotkey
         config.Set("enableResetHotkey", false);
 
+        // Default high scores (stored as JSON, not shown in settings UI)
+        config.Set("highScoresJson", "[{\"PointsPerMinute\":2000,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":1500,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":1000,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":500,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":200,\"Date\":\"04/12/2025\"}]");
+
         return config;
     }
 

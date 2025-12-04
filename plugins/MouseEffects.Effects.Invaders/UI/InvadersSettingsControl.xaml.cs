@@ -30,6 +30,12 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
         LoadConfiguration();
         _isInitializing = false;
 
+        // Subscribe to high scores change event
+        if (_effect is InvadersEffect invadersEffect)
+        {
+            invadersEffect.HighScoresChanged += OnHighScoresChanged;
+        }
+
         // Set up score polling timer
         _scoreTimer = new DispatcherTimer
         {
@@ -38,7 +44,100 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
         _scoreTimer.Tick += ScoreTimer_Tick;
         _scoreTimer.Start();
 
-        Unloaded += (s, e) => _scoreTimer.Stop();
+        Unloaded += (s, e) =>
+        {
+            _scoreTimer.Stop();
+            if (_effect is InvadersEffect ie)
+            {
+                ie.HighScoresChanged -= OnHighScoresChanged;
+            }
+        };
+    }
+
+    private void OnHighScoresChanged(string highScoresJson)
+    {
+        // Save high scores to configuration
+        Dispatcher.BeginInvoke(() =>
+        {
+            var config = new EffectConfiguration();
+
+            // Copy all current settings
+            CopyCurrentSettingsToConfig(config);
+
+            // Update high scores
+            config.Set("highScoresJson", highScoresJson);
+
+            _effect.Configure(config);
+            SettingsChanged?.Invoke(_effect.Metadata.Id);
+        });
+    }
+
+    private void CopyCurrentSettingsToConfig(EffectConfiguration config)
+    {
+        // Rocket settings
+        config.Set("spawnOnLeftClick", LeftClickCheckBox.IsChecked ?? true);
+        config.Set("spawnOnRightClick", RightClickCheckBox.IsChecked ?? false);
+        config.Set("spawnOnMove", SpawnOnMoveCheckBox.IsChecked ?? false);
+        config.Set("moveSpawnDistance", (float)MoveSpawnDistanceSlider.Value);
+        config.Set("rocketSpeed", (float)RocketSpeedSlider.Value);
+        config.Set("rocketSize", (float)RocketSizeSlider.Value);
+        config.Set("rocketRainbowMode", RocketRainbowCheckBox.IsChecked ?? true);
+        config.Set("rocketColor", _rocketColor);
+
+        // Invader settings
+        config.Set("invaderSpawnRate", (float)SpawnRateSlider.Value);
+        config.Set("invaderMinSpeed", (float)InvaderMinSpeedSlider.Value);
+        config.Set("invaderMaxSpeed", (float)InvaderMaxSpeedSlider.Value);
+        config.Set("invaderBigSize", (float)BigSizeSlider.Value);
+        config.Set("invaderMediumSizePercent", (float)MediumSizeSlider.Value);
+        config.Set("invaderSmallSizePercent", (float)SmallSizeSlider.Value);
+        config.Set("maxActiveInvaders", (int)MaxInvadersSlider.Value);
+        config.Set("invaderDescentSpeed", (float)DescentSpeedSlider.Value);
+        config.Set("invaderSmallColor", _invaderSmallColor);
+        config.Set("invaderMediumColor", _invaderMediumColor);
+        config.Set("invaderBigColor", _invaderBigColor);
+
+        // Explosion settings
+        config.Set("explosionParticleCount", (int)ExplosionParticlesSlider.Value);
+        config.Set("explosionForce", (float)ExplosionForceSlider.Value);
+        config.Set("explosionLifespan", (float)ExplosionLifespanSlider.Value);
+        config.Set("explosionParticleSize", (float)ExplosionSizeSlider.Value);
+
+        // Visual settings
+        config.Set("glowIntensity", (float)GlowSlider.Value);
+        config.Set("neonIntensity", (float)NeonSlider.Value);
+        config.Set("enableTrails", EnableTrailsCheckBox.IsChecked ?? true);
+        config.Set("animSpeed", (float)AnimSpeedSlider.Value);
+
+        // Scoring
+        if (int.TryParse(ScoreSmallTextBox.Text, out int scoreS))
+            config.Set("scoreSmall", scoreS);
+        if (int.TryParse(ScoreMediumTextBox.Text, out int scoreM))
+            config.Set("scoreMedium", scoreM);
+        if (int.TryParse(ScoreBigTextBox.Text, out int scoreB))
+            config.Set("scoreBig", scoreB);
+
+        // Score overlay
+        config.Set("showScoreOverlay", ShowScoreOverlayCheckBox.IsChecked ?? true);
+        config.Set("scoreOverlaySize", (float)ScoreOverlaySizeSlider.Value);
+        config.Set("scoreOverlaySpacing", (float)ScoreOverlaySpacingSlider.Value);
+        config.Set("scoreOverlayMargin", (float)ScoreOverlayMarginSlider.Value);
+        config.Set("scoreOverlayBgOpacity", (float)ScoreOverlayBgOpacitySlider.Value);
+        config.Set("scoreOverlayColor", _scoreOverlayColor);
+        config.Set("scoreOverlayX", (float)ScoreOverlayXSlider.Value);
+        config.Set("scoreOverlayY", (float)ScoreOverlayYSlider.Value);
+
+        // Timer duration
+        config.Set("timerDuration", (float)TimerDurationSlider.Value);
+
+        // Reset hotkey
+        config.Set("enableResetHotkey", EnableResetHotkeyCheckBox.IsChecked ?? false);
+
+        // Preserve existing high scores
+        if (_effect is InvadersEffect ie)
+        {
+            config.Set("highScoresJson", ie.GetHighScoresJson());
+        }
     }
 
     private void ScoreTimer_Tick(object? sender, EventArgs e)
@@ -257,12 +356,20 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
             ScoreOverlayYValue.Text = overlayY.ToString("F0");
         }
 
-        // Timer duration
+        // Timer duration - fallback to effect's current value if not in config
         if (_effect.Configuration.TryGet("timerDuration", out float timerDur))
         {
             TimerDurationSlider.Value = timerDur;
             int minutes = (int)timerDur / 60;
             int seconds = (int)timerDur % 60;
+            TimerDurationValue.Text = $"{minutes}:{seconds:D2}";
+        }
+        else if (_effect is InvadersEffect ie)
+        {
+            float duration = ie.TimerDuration;
+            TimerDurationSlider.Value = duration;
+            int minutes = (int)duration / 60;
+            int seconds = (int)duration % 60;
             TimerDurationValue.Text = $"{minutes}:{seconds:D2}";
         }
 
@@ -276,65 +383,7 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
         if (_isInitializing) return;
 
         var config = new EffectConfiguration();
-
-        // Rocket settings
-        config.Set("spawnOnLeftClick", LeftClickCheckBox.IsChecked ?? true);
-        config.Set("spawnOnRightClick", RightClickCheckBox.IsChecked ?? false);
-        config.Set("spawnOnMove", SpawnOnMoveCheckBox.IsChecked ?? false);
-        config.Set("moveSpawnDistance", (float)MoveSpawnDistanceSlider.Value);
-        config.Set("rocketSpeed", (float)RocketSpeedSlider.Value);
-        config.Set("rocketSize", (float)RocketSizeSlider.Value);
-        config.Set("rocketRainbowMode", RocketRainbowCheckBox.IsChecked ?? true);
-        config.Set("rocketColor", _rocketColor);
-
-        // Invader settings
-        config.Set("invaderSpawnRate", (float)SpawnRateSlider.Value);
-        config.Set("invaderMinSpeed", (float)InvaderMinSpeedSlider.Value);
-        config.Set("invaderMaxSpeed", (float)InvaderMaxSpeedSlider.Value);
-        config.Set("invaderBigSize", (float)BigSizeSlider.Value);
-        config.Set("invaderMediumSizePercent", (float)MediumSizeSlider.Value);
-        config.Set("invaderSmallSizePercent", (float)SmallSizeSlider.Value);
-        config.Set("maxActiveInvaders", (int)MaxInvadersSlider.Value);
-        config.Set("invaderDescentSpeed", (float)DescentSpeedSlider.Value);
-        config.Set("invaderSmallColor", _invaderSmallColor);
-        config.Set("invaderMediumColor", _invaderMediumColor);
-        config.Set("invaderBigColor", _invaderBigColor);
-
-        // Explosion settings
-        config.Set("explosionParticleCount", (int)ExplosionParticlesSlider.Value);
-        config.Set("explosionForce", (float)ExplosionForceSlider.Value);
-        config.Set("explosionLifespan", (float)ExplosionLifespanSlider.Value);
-        config.Set("explosionParticleSize", (float)ExplosionSizeSlider.Value);
-
-        // Visual settings
-        config.Set("glowIntensity", (float)GlowSlider.Value);
-        config.Set("neonIntensity", (float)NeonSlider.Value);
-        config.Set("enableTrails", EnableTrailsCheckBox.IsChecked ?? true);
-        config.Set("animSpeed", (float)AnimSpeedSlider.Value);
-
-        // Scoring
-        if (int.TryParse(ScoreSmallTextBox.Text, out int scoreS))
-            config.Set("scoreSmall", scoreS);
-        if (int.TryParse(ScoreMediumTextBox.Text, out int scoreM))
-            config.Set("scoreMedium", scoreM);
-        if (int.TryParse(ScoreBigTextBox.Text, out int scoreB))
-            config.Set("scoreBig", scoreB);
-
-        // Score overlay
-        config.Set("showScoreOverlay", ShowScoreOverlayCheckBox.IsChecked ?? true);
-        config.Set("scoreOverlaySize", (float)ScoreOverlaySizeSlider.Value);
-        config.Set("scoreOverlaySpacing", (float)ScoreOverlaySpacingSlider.Value);
-        config.Set("scoreOverlayMargin", (float)ScoreOverlayMarginSlider.Value);
-        config.Set("scoreOverlayBgOpacity", (float)ScoreOverlayBgOpacitySlider.Value);
-        config.Set("scoreOverlayColor", _scoreOverlayColor);
-        config.Set("scoreOverlayX", (float)ScoreOverlayXSlider.Value);
-        config.Set("scoreOverlayY", (float)ScoreOverlayYSlider.Value);
-
-        // Timer duration
-        config.Set("timerDuration", (float)TimerDurationSlider.Value);
-
-        // Reset hotkey
-        config.Set("enableResetHotkey", EnableResetHotkeyCheckBox.IsChecked ?? false);
+        CopyCurrentSettingsToConfig(config);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
