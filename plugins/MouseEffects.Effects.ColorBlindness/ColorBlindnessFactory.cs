@@ -31,8 +31,8 @@ public sealed class ColorBlindnessFactory : IEffectFactory
         config.Set("radius", 300.0f);
         config.Set("rectWidth", 400.0f);
         config.Set("rectHeight", 300.0f);
-        config.Set("shapeMode", 0); // Circle
-        config.Set("filterType", 4); // Grayscale (inside shape default)
+        config.Set("shapeMode", 2); // Fullscreen
+        config.Set("filterType", 0); // None (inside shape default)
         config.Set("outsideFilterType", 0); // None (outside shape default)
         config.Set("intensity", 1.0f);
         config.Set("colorBoost", 1.0f);

@@ -26,22 +26,22 @@ public sealed class TileVibrationFactory : IEffectFactory
     public EffectConfiguration GetDefaultConfiguration()
     {
         var config = new EffectConfiguration();
-        config.Set("tileLifespan", 2.0f);
-        config.Set("maxWidth", 100f);
-        config.Set("maxHeight", 100f);
-        config.Set("minWidth", 20f);
-        config.Set("minHeight", 20f);
+        config.Set("tileLifespan", 0.74f);
+        config.Set("maxWidth", 81.96f);
+        config.Set("maxHeight", 81.96f);
+        config.Set("minWidth", 22.63f);
+        config.Set("minHeight", 22.63f);
         config.Set("syncWidthHeight", true);
-        config.Set("edgeStyle", 0); // Sharp
-        config.Set("vibrationSpeed", 1.0f);
-        config.Set("displacementEnabled", true);
+        config.Set("edgeStyle", 1); // Soft
+        config.Set("vibrationSpeed", 0.588f);
+        config.Set("displacementEnabled", false);
         config.Set("displacementMax", 10f);
-        config.Set("zoomEnabled", false);
+        config.Set("zoomEnabled", true);
         config.Set("zoomMin", 0.8f);
-        config.Set("zoomMax", 1.2f);
+        config.Set("zoomMax", 1.916f);
         config.Set("rotationEnabled", false);
         config.Set("rotationAmplitude", 15f);
-        config.Set("outlineEnabled", false);
+        config.Set("outlineEnabled", true);
         config.Set("outlineColor", new Vector4(1f, 1f, 1f, 1f));
         config.Set("outlineSize", 2f);
         return config;

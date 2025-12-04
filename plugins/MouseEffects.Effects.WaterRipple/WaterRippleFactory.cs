@@ -27,29 +27,29 @@ public sealed class WaterRippleFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
         // General settings
-        config.Set("maxRipples", 50);
-        config.Set("rippleLifespan", 3.0f);
-        config.Set("waveSpeed", 200f);
-        config.Set("wavelength", 30f);
-        config.Set("damping", 2.0f);
+        config.Set("maxRipples", 100);
+        config.Set("rippleLifespan", 4.1f);
+        config.Set("waveSpeed", 887f);
+        config.Set("wavelength", 92f);
+        config.Set("damping", 5.1f);
         // Click settings
         config.Set("spawnOnLeftClick", true);
         config.Set("spawnOnRightClick", false);
-        config.Set("clickMinAmplitude", 5f);
-        config.Set("clickMaxAmplitude", 20f);
+        config.Set("clickMinAmplitude", 71f);
+        config.Set("clickMaxAmplitude", 269f);
         // Mouse move settings
-        config.Set("spawnOnMove", false);
-        config.Set("moveSpawnDistance", 50f);
-        config.Set("moveMinAmplitude", 3f);
-        config.Set("moveMaxAmplitude", 10f);
+        config.Set("spawnOnMove", true);
+        config.Set("moveSpawnDistance", 27f);
+        config.Set("moveMinAmplitude", 4f);
+        config.Set("moveMaxAmplitude", 33f);
         config.Set("moveRippleLifespan", 2.0f);
         config.Set("moveWaveSpeed", 300f);
-        config.Set("moveWavelength", 20f);
+        config.Set("moveWavelength", 30f);
         config.Set("moveDamping", 3.0f);
         // Grid settings
         config.Set("enableGrid", false);
-        config.Set("gridSpacing", 30f);
-        config.Set("gridThickness", 1.5f);
+        config.Set("gridSpacing", 20f);
+        config.Set("gridThickness", 2.0f);
         config.Set("gridColor", new Vector4(0.0f, 1.0f, 0.5f, 0.8f));
         return config;
     }

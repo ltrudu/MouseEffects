@@ -31,15 +31,15 @@ public sealed class LaserWorkFactory : IEffectFactory
         config.Set("lasersPerSecond", 20f);
 
         // Size settings (random between min and max)
-        config.Set("minLaserLength", 30f);
-        config.Set("maxLaserLength", 70f);
+        config.Set("minLaserLength", 80.47f);
+        config.Set("maxLaserLength", 153.23f);
         config.Set("minLaserWidth", 2f);
         config.Set("maxLaserWidth", 6f);
-        config.Set("autoShrink", false);
+        config.Set("autoShrink", true);
 
         // Physics settings
         config.Set("laserSpeed", 400f);
-        config.Set("laserLifespan", 3f);
+        config.Set("laserLifespan", 7.44f);
 
         // Alpha settings
         config.Set("minAlpha", 0.1f);
@@ -50,7 +50,7 @@ public sealed class LaserWorkFactory : IEffectFactory
         config.Set("laserColor", new Vector4(1f, 0.2f, 0.2f, 1f)); // Red by default
 
         // Rainbow settings
-        config.Set("rainbowMode", false);
+        config.Set("rainbowMode", true);
         config.Set("rainbowSpeed", 1f);
 
         // Direction toggles
@@ -60,7 +60,7 @@ public sealed class LaserWorkFactory : IEffectFactory
         config.Set("shootRight", true);
 
         // Collision explosion settings
-        config.Set("enableCollisionExplosion", false);
+        config.Set("enableCollisionExplosion", true);
         config.Set("explosionLaserCount", 8f);
         config.Set("explosionLifespanMultiplier", 0.5f);
         config.Set("explosionLasersCanCollide", false);

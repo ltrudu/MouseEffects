@@ -29,15 +29,15 @@ public sealed class ZoomEffectFactory : IEffectFactory
     public EffectConfiguration GetDefaultConfiguration()
     {
         var config = new EffectConfiguration();
-        config.Set("zoomFactor", 1.5f);
-        config.Set("radius", 100.0f);
-        config.Set("width", 200.0f);
-        config.Set("height", 150.0f);
-        config.Set("shapeType", 0); // 0 = Circle, 1 = Rectangle
+        config.Set("zoomFactor", 3.4f);
+        config.Set("radius", 230.2f);
+        config.Set("width", 367.42f);
+        config.Set("height", 369.94f);
+        config.Set("shapeType", 1); // 0 = Circle, 1 = Rectangle
         config.Set("syncSizes", false);
-        config.Set("borderWidth", 2.0f);
+        config.Set("borderWidth", 3.73f);
         config.Set("borderColor", new Vector4(0.2f, 0.6f, 1.0f, 1.0f));
-        config.Set("enableZoomHotkey", false);
+        config.Set("enableZoomHotkey", true);
         config.Set("enableSizeHotkey", false);
         return config;
     }

@@ -26,7 +26,7 @@ public sealed class ParticleTrailFactory : IEffectFactory
     public EffectConfiguration GetDefaultConfiguration()
     {
         var config = new EffectConfiguration();
-        config.Set("emissionRate", 100f);
+        config.Set("emissionRate", 500f);
         config.Set("particleLifetime", 1.5f);
         config.Set("particleSize", 8f);
         config.Set("spreadAngle", 0.5f);

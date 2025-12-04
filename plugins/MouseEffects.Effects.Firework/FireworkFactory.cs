@@ -25,24 +25,24 @@ public sealed class FireworkFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // General
-        config.Set("maxParticles", 5000);
-        config.Set("maxFireworks", 50);
-        config.Set("particleLifespan", 2.5f);
+        config.Set("maxParticles", 5500);
+        config.Set("maxFireworks", 15);
+        config.Set("particleLifespan", 3.3f);
         config.Set("spawnOnLeftClick", true);
-        config.Set("spawnOnRightClick", false);
-        config.Set("minParticlesPerFirework", 50);
-        config.Set("maxParticlesPerFirework", 150);
-        config.Set("clickExplosionForce", 300f);
-        config.Set("spawnOnMove", false);
-        config.Set("moveSpawnDistance", 100f);
-        config.Set("moveExplosionForce", 150f);
-        config.Set("minParticleSize", 3f);
-        config.Set("maxParticleSize", 8f);
-        config.Set("glowIntensity", 0.8f);
+        config.Set("spawnOnRightClick", true);
+        config.Set("minParticlesPerFirework", 20);
+        config.Set("maxParticlesPerFirework", 40);
+        config.Set("clickExplosionForce", 359f);
+        config.Set("spawnOnMove", true);
+        config.Set("moveSpawnDistance", 101f);
+        config.Set("moveExplosionForce", 289f);
+        config.Set("minParticleSize", 3.6f);
+        config.Set("maxParticleSize", 12f);
+        config.Set("glowIntensity", 0.13f);
         config.Set("enableTrails", true);
-        config.Set("trailLength", 0.3f);
-        config.Set("gravity", 150f);
-        config.Set("drag", 0.98f);
+        config.Set("trailLength", 1.36f);
+        config.Set("gravity", 33f);
+        config.Set("drag", 0.983f);
         config.Set("spreadAngle", 360f);
 
         // Firework colors
@@ -54,17 +54,17 @@ public sealed class FireworkFactory : IEffectFactory
 
         // Secondary explosion
         config.Set("enableSecondaryExplosion", true);
-        config.Set("secondaryExplosionDelay", 0.8f);
-        config.Set("secondaryParticleCount", 20);
+        config.Set("secondaryExplosionDelay", 0.82f);
+        config.Set("secondaryParticleCount", 40);
         config.Set("secondaryExplosionForce", 100f);
 
         // Rocket
-        config.Set("enableRocketMode", false);
-        config.Set("rocketSpeed", 500f);
+        config.Set("enableRocketMode", true);
+        config.Set("rocketSpeed", 354f);
         config.Set("rocketMinAltitude", 0.1f);
         config.Set("rocketMaxAltitude", 0.3f);
         config.Set("rocketMaxFuseTime", 3.0f);
-        config.Set("rocketSize", 12f);
+        config.Set("rocketSize", 8f);
         config.Set("rocketRainbowMode", true);
         config.Set("rocketRainbowSpeed", 0.5f);
         config.Set("rocketPrimaryColor", new Vector4(1f, 0.8f, 0.2f, 1f));
