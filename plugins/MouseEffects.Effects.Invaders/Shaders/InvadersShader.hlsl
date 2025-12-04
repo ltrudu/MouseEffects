@@ -471,6 +471,23 @@ float DrawLetter(float2 uv, int letter)
         result = max(result, DrawSegment(p, ltop1, ltop2, w));
         result = max(result, DrawSegment(p, lbot1, lbot2, w));
     }
+    else if (letter == 6) // G
+    {
+        result = max(result, DrawSegment(p, top1, top2, w));
+        result = max(result, DrawSegment(p, bot1, bot2, w));
+        result = max(result, DrawSegment(p, ltop1, ltop2, w));
+        result = max(result, DrawSegment(p, lbot1, lbot2, w));
+        result = max(result, DrawSegment(p, rbot1, rbot2, w));
+        result = max(result, DrawSegment(p, mid2, float2(0.5, 0.0), w)); // middle right arm
+    }
+    else if (letter == 7) // H
+    {
+        result = max(result, DrawSegment(p, ltop1, ltop2, w));
+        result = max(result, DrawSegment(p, lbot1, lbot2, w));
+        result = max(result, DrawSegment(p, rtop1, rtop2, w));
+        result = max(result, DrawSegment(p, rbot1, rbot2, w));
+        result = max(result, DrawSegment(p, mid1, mid2, w));
+    }
     else if (letter == 8) // I
     {
         result = max(result, DrawSegment(p, top1, top2, w));
@@ -540,6 +557,13 @@ float DrawLetter(float2 uv, int letter)
         result = max(result, DrawSegment(p, lbot1, lbot2, w));
         result = max(result, DrawSegment(p, rtop1, rtop2, w));
         result = max(result, DrawSegment(p, rbot1, rbot2, w));
+    }
+    else if (letter == 21) // V
+    {
+        result = max(result, DrawSegment(p, ltop1, ltop2, w));
+        result = max(result, DrawSegment(p, rtop1, rtop2, w));
+        result = max(result, DrawSegment(p, lbot1, float2(0, 0.7), w)); // left diagonal to bottom
+        result = max(result, DrawSegment(p, rbot1, float2(0, 0.7), w)); // right diagonal to bottom
     }
     else if (letter == 22) // W
     {

@@ -64,6 +64,12 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
                 TimerDisplay.Text = $"{minutes:D2}:{seconds:D2}";
             }
 
+            // Change timer color to red when game over
+            TimerDisplay.Foreground = new SolidColorBrush(
+                invadersEffect.IsGameOver
+                    ? System.Windows.Media.Color.FromRgb(255, 80, 80)
+                    : System.Windows.Media.Color.FromRgb(0, 204, 255));
+
             // Update timer duration display
             float duration = invadersEffect.TimerDuration;
             int durMinutes = (int)duration / 60;
@@ -259,6 +265,10 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
             int seconds = (int)timerDur % 60;
             TimerDurationValue.Text = $"{minutes}:{seconds:D2}";
         }
+
+        // Reset hotkey
+        if (_effect.Configuration.TryGet("enableResetHotkey", out bool resetHotkey))
+            EnableResetHotkeyCheckBox.IsChecked = resetHotkey;
     }
 
     private void UpdateConfiguration()
@@ -322,6 +332,9 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
 
         // Timer duration
         config.Set("timerDuration", (float)TimerDurationSlider.Value);
+
+        // Reset hotkey
+        config.Set("enableResetHotkey", EnableResetHotkeyCheckBox.IsChecked ?? false);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);

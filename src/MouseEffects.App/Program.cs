@@ -24,6 +24,7 @@ static partial class Program
     private static AppSettings _settings = new();
     private static bool _effectsEnabled = true;
     private static UpdateService? _updateService;
+    private static readonly HashSet<string> _pressedHotkeys = new();
 
     [STAThread]
     static void Main()
@@ -440,9 +441,76 @@ static partial class Program
             // Run one iteration of game loop
             _gameLoop?.Tick();
 
+            // Check plugin hotkeys
+            CheckPluginHotkeys();
+
             // Small sleep to prevent 100% CPU usage
             Thread.Sleep(1);
         }
+    }
+
+    /// <summary>
+    /// Check for plugin-defined hotkeys and execute their callbacks.
+    /// </summary>
+    private static void CheckPluginHotkeys()
+    {
+        if (_effectManager == null) return;
+
+        foreach (var effect in _effectManager.Effects)
+        {
+            if (effect is not IHotkeyProvider hotkeyProvider) continue;
+
+            foreach (var hotkey in hotkeyProvider.GetHotkeys())
+            {
+                if (!hotkey.IsEnabled) continue;
+
+                string hotkeyId = $"{effect.Metadata.Id}:{hotkey.Id}";
+                bool isPressed = IsHotkeyPressed(hotkey);
+
+                if (isPressed && !_pressedHotkeys.Contains(hotkeyId))
+                {
+                    // Hotkey just pressed - invoke callback
+                    _pressedHotkeys.Add(hotkeyId);
+                    try
+                    {
+                        hotkey.Callback?.Invoke();
+                        Log($"Hotkey triggered: {hotkeyId}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error("PluginHotkey", ex);
+                    }
+                }
+                else if (!isPressed && _pressedHotkeys.Contains(hotkeyId))
+                {
+                    // Hotkey released
+                    _pressedHotkeys.Remove(hotkeyId);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Check if a hotkey combination is currently pressed.
+    /// </summary>
+    private static bool IsHotkeyPressed(HotkeyDefinition hotkey)
+    {
+        // Check modifiers
+        bool ctrlRequired = hotkey.Modifiers.HasFlag(HotkeyModifiers.Ctrl);
+        bool shiftRequired = hotkey.Modifiers.HasFlag(HotkeyModifiers.Shift);
+        bool altRequired = hotkey.Modifiers.HasFlag(HotkeyModifiers.Alt);
+
+        bool ctrlPressed = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0;
+        bool shiftPressed = (GetAsyncKeyState(VK_SHIFT) & 0x8000) != 0;
+        bool altPressed = (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+
+        if (ctrlRequired != ctrlPressed) return false;
+        if (shiftRequired != shiftPressed) return false;
+        if (altRequired != altPressed) return false;
+
+        // Check main key
+        int vk = (int)hotkey.Key;
+        return (GetAsyncKeyState(vk) & 0x8000) != 0;
     }
 
     private static void OnSettingsRequested()
@@ -617,6 +685,11 @@ static partial class Program
     private const uint WM_QUIT = 0x0012;
     private const uint WM_HOTKEY = 0x0312;
 
+    // Virtual key codes for GetAsyncKeyState
+    private const int VK_CONTROL = 0x11;
+    private const int VK_SHIFT = 0x10;
+    private const int VK_MENU = 0x12; // Alt key
+
     // Screen metrics for multi-monitor support
     private const int SM_XVIRTUALSCREEN = 76;
     private const int SM_YVIRTUALSCREEN = 77;
@@ -665,6 +738,9 @@ static partial class Program
 
     [LibraryImport("user32.dll")]
     private static partial int GetSystemMetrics(int nIndex);
+
+    [LibraryImport("user32.dll")]
+    private static partial short GetAsyncKeyState(int vKey);
 
     #endregion
 }

@@ -80,6 +80,9 @@ public sealed class InvadersFactory : IEffectFactory
         // Timer
         config.Set("timerDuration", 90f);
 
+        // Reset hotkey
+        config.Set("enableResetHotkey", false);
+
         return config;
     }
 
@@ -488,6 +491,15 @@ public sealed class InvadersFactory : IEffectFactory
                     MaxValue = 300f,
                     DefaultValue = 90f,
                     Step = 15f
+                },
+
+                // ========== HOTKEYS ==========
+                new BoolParameter
+                {
+                    Key = "enableResetHotkey",
+                    DisplayName = "Reset Hotkey (Ctrl+Shift+I)",
+                    Description = "Enable Ctrl+Shift+I to reset and restart the game",
+                    DefaultValue = false
                 }
             ]
         };

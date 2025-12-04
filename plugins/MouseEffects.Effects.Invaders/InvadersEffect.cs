@@ -10,7 +10,7 @@ using MouseButtons = MouseEffects.Core.Input.MouseButtons;
 
 namespace MouseEffects.Effects.Invaders;
 
-public sealed class InvadersEffect : EffectBase
+public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 {
     // Invader types matching classic Space Invaders
     private enum InvaderType
@@ -177,6 +177,11 @@ public sealed class InvadersEffect : EffectBase
     private bool _isGameActive;
     private bool _isGameEnded;
     private bool _waitingForFirstHit = true; // Timer starts on first kill
+    private bool _isGameOver; // True if ended due to collision (not timer)
+    private string _gameOverReason = "";
+
+    // Reset hotkey
+    private bool _enableResetHotkey;
 
     private float _rainbowHue;
 
@@ -187,8 +192,24 @@ public sealed class InvadersEffect : EffectBase
     public float TimerDuration => _timerDuration;
     public bool IsGameActive => _isGameActive;
     public bool IsGameEnded => _isGameEnded;
+    public bool IsGameOver => _isGameOver;
+    public string GameOverReason => _gameOverReason;
     public bool WaitingForFirstHit => _waitingForFirstHit;
     public float PointsPerMinute => _elapsedTime > 0 ? (_score / (_elapsedTime / 60f)) : 0f;
+    public bool EnableResetHotkey => _enableResetHotkey;
+
+    public IEnumerable<HotkeyDefinition> GetHotkeys()
+    {
+        yield return new HotkeyDefinition
+        {
+            Id = "reset",
+            DisplayName = "Reset Game",
+            Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Shift,
+            Key = HotkeyKey.I,
+            IsEnabled = _enableResetHotkey && IsEnabled,
+            Callback = ResetGame
+        };
+    }
 
     public void ResetGame()
     {
@@ -196,6 +217,8 @@ public sealed class InvadersEffect : EffectBase
         _elapsedTime = 0f;
         _isGameActive = true;
         _isGameEnded = false;
+        _isGameOver = false;
+        _gameOverReason = "";
         _waitingForFirstHit = true; // Timer starts on first kill
 
         // Clear all invaders
@@ -347,6 +370,22 @@ public sealed class InvadersEffect : EffectBase
         // Timer
         if (Configuration.TryGet("timerDuration", out float timerDur))
             _timerDuration = timerDur;
+
+        // Reset hotkey
+        if (Configuration.TryGet("enableResetHotkey", out bool resetHotkey))
+            _enableResetHotkey = resetHotkey;
+    }
+
+    private void TriggerGameOver(string reason)
+    {
+        _isGameOver = true;
+        _isGameEnded = true;
+        _isGameActive = false;
+        _gameOverReason = reason;
+
+        // Clear all rockets but keep invaders visible for the "death" moment
+        for (int i = 0; i < MaxRockets; i++)
+            _rockets[i].IsActive = false;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -390,6 +429,7 @@ public sealed class InvadersEffect : EffectBase
         UpdateInvaders(dt);
         UpdateRockets(dt);
         CheckCollisions();
+        CheckMouseCollision(mouseState.Position);
 
         // Handle input for rocket spawning (only when game is active)
         if (_isGameActive)
@@ -457,10 +497,34 @@ public sealed class InvadersEffect : EffectBase
                 inv.Position.X = Math.Clamp(inv.Position.X, halfSize, _viewportWidth - halfSize);
             }
 
-            // Deactivate if off bottom of screen
-            if (inv.Position.Y > _viewportHeight + inv.Size)
+            // Game over if invader reaches bottom of screen
+            if (inv.Position.Y > _viewportHeight - inv.Size / 2f)
             {
-                inv.IsActive = false;
+                TriggerGameOver("INVADED");
+                return;
+            }
+        }
+    }
+
+    private void CheckMouseCollision(Vector2 mousePos)
+    {
+        if (!_isGameActive || _isGameEnded) return;
+
+        for (int i = 0; i < MaxInvaders; i++)
+        {
+            ref Invader inv = ref _invaders[i];
+            if (!inv.IsActive) continue;
+
+            // Simple circle collision between mouse and invader
+            float collisionDist = inv.Size / 2f;
+            float actualDist = Vector2.Distance(mousePos, inv.Position);
+
+            if (actualDist < collisionDist)
+            {
+                // Create explosion at mouse position
+                SpawnExplosion(mousePos, new Vector4(1f, 0.2f, 0.2f, 1f), inv.Size);
+                TriggerGameOver("TOUCHED");
+                return;
             }
         }
     }
@@ -1008,6 +1072,83 @@ public sealed class InvadersEffect : EffectBase
                 };
                 entityIndex++;
                 timerX += digitWidth * 0.7f;
+            }
+
+            // Centered "GAME OVER" text with animated glow when game is over
+            if (_isGameOver)
+            {
+                string gameOverText = "GAME OVER";
+                float gameOverSize = _scoreOverlaySize * 2.5f; // Large text
+                float goCharWidth = gameOverSize * _scoreOverlaySpacing;
+                float goTotalWidth = gameOverText.Length * goCharWidth;
+                float goCenterX = _viewportWidth / 2f;
+                float goCenterY = _viewportHeight / 2f;
+                float goStartX = goCenterX - goTotalWidth / 2f + goCharWidth / 2f;
+
+                // Animated glow effect - pulsing intensity
+                float pulseTime = _elapsedTime * 3f; // Speed of pulsing
+                float glowPulse = 0.6f + 0.4f * MathF.Sin(pulseTime); // Oscillate between 0.6 and 1.0
+                float sizePulse = 1f + 0.05f * MathF.Sin(pulseTime * 1.5f); // Subtle size breathing
+
+                // Color cycling with red base
+                float colorShift = MathF.Sin(pulseTime * 0.7f) * 0.15f;
+                Vector4 gameOverColor = new(
+                    1f,
+                    0.15f + colorShift,
+                    0.1f + colorShift * 0.5f,
+                    glowPulse
+                );
+
+                for (int i = 0; i < gameOverText.Length && entityIndex < totalEntities; i++)
+                {
+                    float entityType = CharToEntityType(gameOverText[i]);
+                    if (entityType != 42f) // Not space
+                    {
+                        // Add slight wave animation to each character
+                        float charOffset = MathF.Sin(pulseTime + i * 0.5f) * 3f;
+
+                        _gpuEntities[entityIndex] = new EntityGPU
+                        {
+                            Position = new Vector2(goStartX + i * goCharWidth, goCenterY + charOffset),
+                            Velocity = Vector2.Zero,
+                            Color = gameOverColor,
+                            Size = gameOverSize * sizePulse,
+                            Life = glowPulse, // Use life for glow intensity in shader
+                            MaxLife = 1f,
+                            EntityType = entityType
+                        };
+                        entityIndex++;
+                    }
+                }
+
+                // Add reason text below "GAME OVER"
+                string reasonText = _gameOverReason;
+                float reasonSize = _scoreOverlaySize * 1.2f;
+                float reasonCharWidth = reasonSize * _scoreOverlaySpacing;
+                float reasonTotalWidth = reasonText.Length * reasonCharWidth;
+                float reasonStartX = goCenterX - reasonTotalWidth / 2f + reasonCharWidth / 2f;
+                float reasonY = goCenterY + gameOverSize * 1.5f;
+
+                Vector4 reasonColor = new(1f, 0.5f, 0.3f, glowPulse * 0.8f);
+
+                for (int i = 0; i < reasonText.Length && entityIndex < totalEntities; i++)
+                {
+                    float entityType = CharToEntityType(reasonText[i]);
+                    if (entityType != 42f)
+                    {
+                        _gpuEntities[entityIndex] = new EntityGPU
+                        {
+                            Position = new Vector2(reasonStartX + i * reasonCharWidth, reasonY),
+                            Velocity = Vector2.Zero,
+                            Color = reasonColor,
+                            Size = reasonSize,
+                            Life = glowPulse * 0.8f,
+                            MaxLife = 1f,
+                            EntityType = entityType
+                        };
+                        entityIndex++;
+                    }
+                }
             }
         }
 

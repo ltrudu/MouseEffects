@@ -48,32 +48,38 @@
 
         <!-- Score Display -->
         <Border Background="#22FFFFFF" CornerRadius="4" Padding="8" Margin="0,8,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="SCORE: " FontWeight="Bold" Foreground="#FF00FF00"/>
-                        <TextBlock x:Name="ScoreDisplay" Text="0" FontWeight="Bold" Foreground="#FFFFFF00" FontSize="16"/>
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="SCORE: " FontWeight="Bold" Foreground="#FF00FF00"/>
+                            <TextBlock x:Name="ScoreDisplay" Text="0" FontWeight="Bold" Foreground="#FFFFFF00" FontSize="16"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="PPM: " FontWeight="Bold" Foreground="#FFFFCC00" FontSize="12"/>
+                            <TextBlock x:Name="PpmDisplay" Text="0" FontWeight="Bold" Foreground="#FFFFCC00" FontSize="12"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="TIME: " FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock x:Name="TimerDisplay" Text="00:00" FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock Text=" / " Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock x:Name="TimerDurationDisplay" Text="01:00" Foreground="#FF00CCFF" FontSize="12"/>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="PPM: " FontWeight="Bold" Foreground="#FFFFCC00" FontSize="12"/>
-                        <TextBlock x:Name="PpmDisplay" Text="0" FontWeight="Bold" Foreground="#FFFFCC00" FontSize="12"/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="TIME: " FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
-                        <TextBlock x:Name="TimerDisplay" Text="00:00" FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
-                        <TextBlock Text=" / " Foreground="#FF00CCFF" FontSize="12"/>
-                        <TextBlock x:Name="TimerDurationDisplay" Text="01:00" Foreground="#FF00CCFF" FontSize="12"/>
-                    </StackPanel>
-                </StackPanel>
-                <Button x:Name="ResetButton" Grid.Column="1" Content="RESET"
-                        VerticalAlignment="Center" Padding="12,6"
-                        Background="#FF2266" Foreground="White" FontWeight="Bold"
-                        Click="ResetButton_Click" ToolTip="Reset score and start timer"/>
-            </Grid>
+                    <Button x:Name="ResetButton" Grid.Column="1" Content="RESET"
+                            VerticalAlignment="Center" Padding="12,6"
+                            Background="#FF2266" Foreground="White" FontWeight="Bold"
+                            Click="ResetButton_Click" ToolTip="Reset score and start timer"/>
+                </Grid>
+                <CheckBox x:Name="EnableResetHotkeyCheckBox" Content="Reset Hotkey (Ctrl+Shift+I)"
+                          Margin="0,8,0,0" FontSize="11"
+                          IsChecked="False" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                          ToolTip="Enable Ctrl+Shift+I to reset and restart the game"/>
+            </StackPanel>
         </Border>
 
         <!-- Collapsible Content Panel -->
