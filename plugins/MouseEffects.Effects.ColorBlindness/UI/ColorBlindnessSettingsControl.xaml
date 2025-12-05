@@ -17,6 +17,12 @@
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
+        <Style TargetType="TextBlock" x:Key="ZoneHeaderStyle">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="Foreground" Value="#FF3399FF"/>
+        </Style>
     </UserControl.Resources>
 
     <StackPanel Margin="0">
@@ -43,24 +49,28 @@
         </Grid>
 
         <!-- Description (always visible) -->
-        <TextBlock Text="Corrects colors for color vision deficiency. Choose LMS (scientific) or RGB Matrix (customizable) mode."
+        <TextBlock Text="Corrects colors for color vision deficiency. Supports multiple layout modes with up to 4 zones."
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
         <!-- Collapsible Content Panel -->
         <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
 
-            <!-- Shape Mode -->
-            <TextBlock Text="Application Mode" Style="{StaticResource SectionStyle}"/>
+            <!-- Layout Mode -->
+            <TextBlock Text="Layout Mode" Style="{StaticResource SectionStyle}"/>
 
-            <TextBlock Text="Shape" Style="{StaticResource LabelStyle}"/>
-            <ComboBox x:Name="ShapeModeCombo" SelectionChanged="ShapeModeCombo_SelectionChanged" Margin="0,0,0,8">
-                <ComboBoxItem Content="Circle (around cursor)" IsSelected="True"/>
+            <ComboBox x:Name="LayoutModeCombo" SelectionChanged="LayoutModeCombo_SelectionChanged" Margin="0,0,0,8">
+                <ComboBoxItem Content="Fullscreen" IsSelected="True"/>
+                <ComboBoxItem Content="Circle (around cursor)"/>
                 <ComboBoxItem Content="Rectangle (around cursor)"/>
-                <ComboBoxItem Content="Fullscreen"/>
+                <ComboBoxItem Content="Split Vertical (Left | Right)"/>
+                <ComboBoxItem Content="Split Horizontal (Top | Bottom)"/>
+                <ComboBoxItem Content="Quadrants (4 sections)"/>
             </ComboBox>
 
+            <!-- Layout-Specific Settings -->
+
             <!-- Circle settings -->
-            <StackPanel x:Name="CircleSettings">
+            <StackPanel x:Name="CircleSettings" Visibility="Collapsed">
                 <TextBlock Text="Radius (px)" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="RadiusSlider" Minimum="50" Maximum="1920" Value="300"
                         Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_ValueChanged"/>
@@ -80,26 +90,71 @@
                 <TextBlock x:Name="RectHeightValue" Text="300" Opacity="0.7" FontSize="11"/>
             </StackPanel>
 
-            <TextBlock Text="Edge Softness" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="1" Value="0.2"
-                    Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_ValueChanged"/>
-            <TextBlock x:Name="EdgeSoftnessValue" Text="0.20" Opacity="0.7" FontSize="11"/>
+            <!-- Split Vertical settings -->
+            <StackPanel x:Name="SplitVerticalSettings" Visibility="Collapsed">
+                <TextBlock Text="Split Position" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="SplitPositionSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionSlider_ValueChanged"/>
+                <TextBlock x:Name="SplitPositionValue" Text="50%" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Split Horizontal settings -->
+            <StackPanel x:Name="SplitHorizontalSettings" Visibility="Collapsed">
+                <TextBlock Text="Split Position" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="SplitPositionHSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionHSlider_ValueChanged"/>
+                <TextBlock x:Name="SplitPositionHValue" Text="50%" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Quadrants settings -->
+            <StackPanel x:Name="QuadrantSettings" Visibility="Collapsed">
+                <TextBlock Text="Horizontal Split" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="QuadSplitHSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="QuadSplitHSlider_ValueChanged"/>
+                <TextBlock x:Name="QuadSplitHValue" Text="50%" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Vertical Split" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="QuadSplitVSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="QuadSplitVSlider_ValueChanged"/>
+                <TextBlock x:Name="QuadSplitVValue" Text="50%" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Edge Softness (shown for all modes except Fullscreen) -->
+            <StackPanel x:Name="EdgeSoftnessPanel" Visibility="Collapsed">
+                <TextBlock Text="Edge Softness" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="1" Value="0.2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_ValueChanged"/>
+                <TextBlock x:Name="EdgeSoftnessValue" Text="0.20" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Comparison Mode (shown for Split and Quadrant modes) -->
+            <StackPanel x:Name="ComparisonModePanel" Visibility="Collapsed" Margin="0,8,0,0">
+                <CheckBox x:Name="ComparisonModeCheckBox" Content="Comparison Mode (copy screen to all zones)"
+                          Checked="ComparisonModeCheckBox_Changed" Unchecked="ComparisonModeCheckBox_Changed"/>
+                <CheckBox x:Name="EnableComparisonHotkeyCheckBox" Content="Enable hotkey (Alt+Shift+C)"
+                          IsChecked="True" Margin="20,4,0,0"
+                          Checked="EnableComparisonHotkeyCheckBox_Changed" Unchecked="EnableComparisonHotkeyCheckBox_Changed"/>
+            </StackPanel>
 
             <Separator Margin="0,12,0,8"/>
 
-            <!-- Correction Method Selection -->
-            <TextBlock Text="Correction Method" Style="{StaticResource SectionStyle}"/>
-            <ComboBox x:Name="CorrectionMethodCombo" SelectionChanged="CorrectionMethodCombo_SelectionChanged" Margin="0,0,0,8">
-                <ComboBoxItem Content="LMS Correction (scientific)" IsSelected="True"/>
-                <ComboBoxItem Content="RGB Matrix (customizable)"/>
-            </ComboBox>
+            <!-- Zone Settings -->
+            <TextBlock Text="Zone Settings" Style="{StaticResource SectionStyle}"/>
 
-            <!-- ============== LMS CORRECTION PANEL ============== -->
-            <StackPanel x:Name="LMSSettingsPanel">
-                <!-- Single filter for Fullscreen mode -->
-                <StackPanel x:Name="LMSFullscreenPanel" Visibility="Collapsed">
-                    <TextBlock Text="Correction Type" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="LMSFilterTypeCombo" SelectionChanged="LMSFilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
+            <!-- Zone 0 -->
+            <StackPanel x:Name="Zone0Panel">
+                <TextBlock x:Name="Zone0Header" Text="Screen" Style="{StaticResource ZoneHeaderStyle}"/>
+
+                <TextBlock Text="Correction Method" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="Zone0CorrectionModeCombo" SelectionChanged="Zone0CorrectionModeCombo_SelectionChanged" Margin="0,0,0,8">
+                    <ComboBoxItem Content="LMS Correction (scientific)" IsSelected="True"/>
+                    <ComboBoxItem Content="RGB Matrix (customizable)"/>
+                </ComboBox>
+
+                <!-- LMS Settings -->
+                <StackPanel x:Name="Zone0LMSPanel">
+                    <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone0LMSFilterCombo" SelectionChanged="Zone0LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="None" IsSelected="True"/>
                         <ComboBoxItem Content="Protanopia (red-blind)"/>
                         <ComboBoxItem Content="Protanomaly (red-weak)"/>
@@ -114,126 +169,95 @@
                     </ComboBox>
                 </StackPanel>
 
-                <!-- Dual filters for Shape modes (Circle/Rectangle) -->
-                <StackPanel x:Name="LMSShapePanel">
-                    <TextBlock Text="Inside Shape" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="LMSInsideFilterTypeCombo" SelectionChanged="LMSInsideFilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
-                        <ComboBoxItem Content="None" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia (red-blind)"/>
-                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
-                        <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
-                        <ComboBoxItem Content="Achromatomaly (weak color)"/>
+                <!-- RGB Settings -->
+                <StackPanel x:Name="Zone0RGBPanel" Visibility="Collapsed">
+                    <TextBlock Text="Load Preset" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone0RGBPresetCombo" SelectionChanged="Zone0RGBPresetCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Normal Vision (Identity)" IsSelected="True"/>
+                        <ComboBoxItem Content="Protanopia"/>
+                        <ComboBoxItem Content="Protanomaly"/>
+                        <ComboBoxItem Content="Deuteranopia"/>
+                        <ComboBoxItem Content="Deuteranomaly"/>
+                        <ComboBoxItem Content="Tritanopia"/>
+                        <ComboBoxItem Content="Tritanomaly"/>
+                        <ComboBoxItem Content="Achromatopsia"/>
+                        <ComboBoxItem Content="Achromatomaly"/>
                         <ComboBoxItem Content="Grayscale"/>
-                        <ComboBoxItem Content="Inverted Grayscale"/>
+                        <ComboBoxItem Content="Sepia"/>
                     </ComboBox>
 
-                    <TextBlock Text="Outside Shape" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="LMSOutsideFilterTypeCombo" SelectionChanged="LMSOutsideFilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
-                        <ComboBoxItem Content="None" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia (red-blind)"/>
-                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
-                        <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
-                        <ComboBoxItem Content="Achromatomaly (weak color)"/>
-                        <ComboBoxItem Content="Grayscale"/>
-                        <ComboBoxItem Content="Inverted Grayscale"/>
-                    </ComboBox>
+                    <TextBlock Text="Color Matrix" Opacity="0.7" FontSize="11"/>
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="R" Foreground="#FFCC6666" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone0MatrixR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone0MatrixR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone0MatrixR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                    </Grid>
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="G" Foreground="#FF66CC66" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone0MatrixG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone0MatrixG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone0MatrixG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                    </Grid>
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="B" Foreground="#FF6666CC" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone0MatrixB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone0MatrixB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone0MatrixB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="Zone0Matrix_TextChanged"/>
+                    </Grid>
+                    <Button Content="Reset Matrix" Margin="0,4,0,0" Click="Zone0ResetMatrix_Click"/>
                 </StackPanel>
             </StackPanel>
 
-            <!-- ============== RGB MATRIX PANEL ============== -->
-            <StackPanel x:Name="RGBSettingsPanel" Visibility="Collapsed">
-                <!-- Single matrix for Fullscreen mode -->
-                <StackPanel x:Name="RGBFullscreenPanel" Visibility="Collapsed">
-                    <TextBlock Text="Load Preset" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="RGBPresetCombo" SelectionChanged="RGBPresetCombo_SelectionChanged" Margin="0,0,0,8">
-                        <ComboBoxItem Content="Normal Vision (Identity)" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia"/>
-                        <ComboBoxItem Content="Protanomaly"/>
-                        <ComboBoxItem Content="Deuteranopia"/>
-                        <ComboBoxItem Content="Deuteranomaly"/>
-                        <ComboBoxItem Content="Tritanopia"/>
-                        <ComboBoxItem Content="Tritanomaly"/>
-                        <ComboBoxItem Content="Achromatopsia"/>
-                        <ComboBoxItem Content="Achromatomaly"/>
+            <!-- Zone 1 -->
+            <StackPanel x:Name="Zone1Panel" Visibility="Collapsed" Margin="0,8,0,0">
+                <Separator Margin="0,4,0,8"/>
+                <TextBlock x:Name="Zone1Header" Text="Zone 1" Style="{StaticResource ZoneHeaderStyle}"/>
+
+                <TextBlock Text="Correction Method" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="Zone1CorrectionModeCombo" SelectionChanged="Zone1CorrectionModeCombo_SelectionChanged" Margin="0,0,0,8">
+                    <ComboBoxItem Content="LMS Correction (scientific)" IsSelected="True"/>
+                    <ComboBoxItem Content="RGB Matrix (customizable)"/>
+                </ComboBox>
+
+                <StackPanel x:Name="Zone1LMSPanel">
+                    <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone1LMSFilterCombo" SelectionChanged="Zone1LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="None" IsSelected="True"/>
+                        <ComboBoxItem Content="Protanopia (red-blind)"/>
+                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
+                        <ComboBoxItem Content="Achromatomaly (weak color)"/>
                         <ComboBoxItem Content="Grayscale"/>
-                        <ComboBoxItem Content="Sepia"/>
+                        <ComboBoxItem Content="Inverted Grayscale"/>
                     </ComboBox>
-
-                    <!-- Matrix Editor (always visible) -->
-                    <TextBlock Text="Color Matrix (3x3)" Style="{StaticResource LabelStyle}"/>
-                    <TextBlock Text="Each row defines how R, G, B input maps to output" Opacity="0.6" FontSize="10" Margin="0,0,0,4"/>
-
-                    <!-- Matrix Header -->
-                    <Grid Margin="0,4,0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="1" Text="R in" HorizontalAlignment="Center" Opacity="0.7" FontSize="11"/>
-                        <TextBlock Grid.Column="2" Text="G in" HorizontalAlignment="Center" Opacity="0.7" FontSize="11"/>
-                        <TextBlock Grid.Column="3" Text="B in" HorizontalAlignment="Center" Opacity="0.7" FontSize="11"/>
-                    </Grid>
-
-                    <!-- Red Output Row -->
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="R out" VerticalAlignment="Center" Foreground="#FFCC6666" FontWeight="SemiBold"/>
-                        <TextBox x:Name="InsideMatrixR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                        <TextBox x:Name="InsideMatrixR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                        <TextBox x:Name="InsideMatrixR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                    </Grid>
-
-                    <!-- Green Output Row -->
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="G out" VerticalAlignment="Center" Foreground="#FF66CC66" FontWeight="SemiBold"/>
-                        <TextBox x:Name="InsideMatrixG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                        <TextBox x:Name="InsideMatrixG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                        <TextBox x:Name="InsideMatrixG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                    </Grid>
-
-                    <!-- Blue Output Row -->
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="B out" VerticalAlignment="Center" Foreground="#FF6666CC" FontWeight="SemiBold"/>
-                        <TextBox x:Name="InsideMatrixB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                        <TextBox x:Name="InsideMatrixB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                        <TextBox x:Name="InsideMatrixB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="InsideMatrix_TextChanged"/>
-                    </Grid>
-
-                    <Button x:Name="ResetInsideMatrixButton" Content="Reset to Identity" Margin="0,8,0,0" Click="ResetInsideMatrixButton_Click"/>
                 </StackPanel>
 
-                <!-- Dual matrix for Shape modes (Circle/Rectangle) -->
-                <StackPanel x:Name="RGBShapePanel">
-                    <!-- Inside Matrix -->
-                    <TextBlock Text="Inside Shape - Load Preset" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="RGBInsidePresetCombo" SelectionChanged="RGBInsidePresetCombo_SelectionChanged" Margin="0,0,0,8">
+                <StackPanel x:Name="Zone1RGBPanel" Visibility="Collapsed">
+                    <TextBlock Text="Load Preset" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone1RGBPresetCombo" SelectionChanged="Zone1RGBPresetCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="Normal Vision (Identity)" IsSelected="True"/>
                         <ComboBoxItem Content="Protanopia"/>
                         <ComboBoxItem Content="Protanomaly"/>
@@ -247,62 +271,78 @@
                         <ComboBoxItem Content="Sepia"/>
                     </ComboBox>
 
-                    <!-- Inside Matrix Editor (always visible) -->
-                    <TextBlock Text="Inside Matrix (3x3)" Opacity="0.7" FontSize="11" Margin="0,0,0,4"/>
-                    <Grid Margin="0,4,0,2">
+                    <TextBlock Text="Color Matrix" Opacity="0.7" FontSize="11"/>
+                    <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="1" Text="R" HorizontalAlignment="Center" Opacity="0.7" FontSize="10"/>
-                        <TextBlock Grid.Column="2" Text="G" HorizontalAlignment="Center" Opacity="0.7" FontSize="10"/>
-                        <TextBlock Grid.Column="3" Text="B" HorizontalAlignment="Center" Opacity="0.7" FontSize="10"/>
+                        <TextBlock Grid.Column="0" Text="R" Foreground="#FFCC6666" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone1MatrixR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone1MatrixR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone1MatrixR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
                     </Grid>
                     <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="R" VerticalAlignment="Center" Foreground="#FFCC6666"/>
-                        <TextBox x:Name="ShapeInsideR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeInsideR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeInsideR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
+                        <TextBlock Grid.Column="0" Text="G" Foreground="#FF66CC66" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone1MatrixG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone1MatrixG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone1MatrixG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
                     </Grid>
                     <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="G" VerticalAlignment="Center" Foreground="#FF66CC66"/>
-                        <TextBox x:Name="ShapeInsideG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeInsideG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeInsideG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
+                        <TextBlock Grid.Column="0" Text="B" Foreground="#FF6666CC" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone1MatrixB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone1MatrixB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone1MatrixB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="Zone1Matrix_TextChanged"/>
                     </Grid>
-                    <Grid Margin="0,2">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="B" VerticalAlignment="Center" Foreground="#FF6666CC"/>
-                        <TextBox x:Name="ShapeInsideB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeInsideB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeInsideB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="ShapeInsideMatrix_TextChanged"/>
-                    </Grid>
-                    <Button Content="Reset Inside" Margin="0,4,0,0" Click="ResetShapeInsideMatrixButton_Click"/>
+                    <Button Content="Reset Matrix" Margin="0,4,0,0" Click="Zone1ResetMatrix_Click"/>
+                </StackPanel>
+            </StackPanel>
 
-                    <Separator Margin="0,8,0,8"/>
+            <!-- Zone 2 -->
+            <StackPanel x:Name="Zone2Panel" Visibility="Collapsed" Margin="0,8,0,0">
+                <Separator Margin="0,4,0,8"/>
+                <TextBlock x:Name="Zone2Header" Text="Zone 2" Style="{StaticResource ZoneHeaderStyle}"/>
 
-                    <!-- Outside Matrix -->
-                    <TextBlock Text="Outside Shape - Load Preset" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="RGBOutsidePresetCombo" SelectionChanged="RGBOutsidePresetCombo_SelectionChanged" Margin="0,0,0,8">
+                <TextBlock Text="Correction Method" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="Zone2CorrectionModeCombo" SelectionChanged="Zone2CorrectionModeCombo_SelectionChanged" Margin="0,0,0,8">
+                    <ComboBoxItem Content="LMS Correction (scientific)" IsSelected="True"/>
+                    <ComboBoxItem Content="RGB Matrix (customizable)"/>
+                </ComboBox>
+
+                <StackPanel x:Name="Zone2LMSPanel">
+                    <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone2LMSFilterCombo" SelectionChanged="Zone2LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="None" IsSelected="True"/>
+                        <ComboBoxItem Content="Protanopia (red-blind)"/>
+                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
+                        <ComboBoxItem Content="Achromatomaly (weak color)"/>
+                        <ComboBoxItem Content="Grayscale"/>
+                        <ComboBoxItem Content="Inverted Grayscale"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel x:Name="Zone2RGBPanel" Visibility="Collapsed">
+                    <TextBlock Text="Load Preset" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone2RGBPresetCombo" SelectionChanged="Zone2RGBPresetCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="Normal Vision (Identity)" IsSelected="True"/>
                         <ComboBoxItem Content="Protanopia"/>
                         <ComboBoxItem Content="Protanomaly"/>
@@ -316,56 +356,129 @@
                         <ComboBoxItem Content="Sepia"/>
                     </ComboBox>
 
-                    <!-- Outside Matrix Editor (always visible) -->
-                    <TextBlock Text="Outside Matrix (3x3)" Opacity="0.7" FontSize="11" Margin="0,0,0,4"/>
-                    <Grid Margin="0,4,0,2">
+                    <TextBlock Text="Color Matrix" Opacity="0.7" FontSize="11"/>
+                    <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="1" Text="R" HorizontalAlignment="Center" Opacity="0.7" FontSize="10"/>
-                        <TextBlock Grid.Column="2" Text="G" HorizontalAlignment="Center" Opacity="0.7" FontSize="10"/>
-                        <TextBlock Grid.Column="3" Text="B" HorizontalAlignment="Center" Opacity="0.7" FontSize="10"/>
+                        <TextBlock Grid.Column="0" Text="R" Foreground="#FFCC6666" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone2MatrixR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone2MatrixR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone2MatrixR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
                     </Grid>
                     <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="R" VerticalAlignment="Center" Foreground="#FFCC6666"/>
-                        <TextBox x:Name="ShapeOutsideR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeOutsideR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeOutsideR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
+                        <TextBlock Grid.Column="0" Text="G" Foreground="#FF66CC66" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone2MatrixG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone2MatrixG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone2MatrixG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
                     </Grid>
                     <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="G" VerticalAlignment="Center" Foreground="#FF66CC66"/>
-                        <TextBox x:Name="ShapeOutsideG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeOutsideG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeOutsideG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
+                        <TextBlock Grid.Column="0" Text="B" Foreground="#FF6666CC" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone2MatrixB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone2MatrixB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone2MatrixB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="Zone2Matrix_TextChanged"/>
+                    </Grid>
+                    <Button Content="Reset Matrix" Margin="0,4,0,0" Click="Zone2ResetMatrix_Click"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Zone 3 -->
+            <StackPanel x:Name="Zone3Panel" Visibility="Collapsed" Margin="0,8,0,0">
+                <Separator Margin="0,4,0,8"/>
+                <TextBlock x:Name="Zone3Header" Text="Zone 3" Style="{StaticResource ZoneHeaderStyle}"/>
+
+                <TextBlock Text="Correction Method" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="Zone3CorrectionModeCombo" SelectionChanged="Zone3CorrectionModeCombo_SelectionChanged" Margin="0,0,0,8">
+                    <ComboBoxItem Content="LMS Correction (scientific)" IsSelected="True"/>
+                    <ComboBoxItem Content="RGB Matrix (customizable)"/>
+                </ComboBox>
+
+                <StackPanel x:Name="Zone3LMSPanel">
+                    <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone3LMSFilterCombo" SelectionChanged="Zone3LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="None" IsSelected="True"/>
+                        <ComboBoxItem Content="Protanopia (red-blind)"/>
+                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
+                        <ComboBoxItem Content="Achromatomaly (weak color)"/>
+                        <ComboBoxItem Content="Grayscale"/>
+                        <ComboBoxItem Content="Inverted Grayscale"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel x:Name="Zone3RGBPanel" Visibility="Collapsed">
+                    <TextBlock Text="Load Preset" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone3RGBPresetCombo" SelectionChanged="Zone3RGBPresetCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Normal Vision (Identity)" IsSelected="True"/>
+                        <ComboBoxItem Content="Protanopia"/>
+                        <ComboBoxItem Content="Protanomaly"/>
+                        <ComboBoxItem Content="Deuteranopia"/>
+                        <ComboBoxItem Content="Deuteranomaly"/>
+                        <ComboBoxItem Content="Tritanopia"/>
+                        <ComboBoxItem Content="Tritanomaly"/>
+                        <ComboBoxItem Content="Achromatopsia"/>
+                        <ComboBoxItem Content="Achromatomaly"/>
+                        <ComboBoxItem Content="Grayscale"/>
+                        <ComboBoxItem Content="Sepia"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Color Matrix" Opacity="0.7" FontSize="11"/>
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="R" Foreground="#FFCC6666" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone3MatrixR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone3MatrixR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone3MatrixR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
                     </Grid>
                     <Grid Margin="0,2">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="30"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="B" VerticalAlignment="Center" Foreground="#FF6666CC"/>
-                        <TextBox x:Name="ShapeOutsideB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeOutsideB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
-                        <TextBox x:Name="ShapeOutsideB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="ShapeOutsideMatrix_TextChanged"/>
+                        <TextBlock Grid.Column="0" Text="G" Foreground="#FF66CC66" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone3MatrixG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone3MatrixG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone3MatrixG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
                     </Grid>
-                    <Button Content="Reset Outside" Margin="0,4,0,0" Click="ResetShapeOutsideMatrixButton_Click"/>
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="30"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="B" Foreground="#FF6666CC" VerticalAlignment="Center"/>
+                        <TextBox x:Name="Zone3MatrixB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone3MatrixB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                        <TextBox x:Name="Zone3MatrixB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="Zone3Matrix_TextChanged"/>
+                    </Grid>
+                    <Button Content="Reset Matrix" Margin="0,4,0,0" Click="Zone3ResetMatrix_Click"/>
                 </StackPanel>
             </StackPanel>
 

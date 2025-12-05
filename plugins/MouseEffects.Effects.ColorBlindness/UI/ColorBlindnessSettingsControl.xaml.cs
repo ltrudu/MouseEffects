@@ -1,11 +1,17 @@
 using System.Globalization;
+using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using MouseEffects.Core.Effects;
+using ComboBox = System.Windows.Controls.ComboBox;
+using TextBox = System.Windows.Controls.TextBox;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using UserControl = System.Windows.Controls.UserControl;
 
 namespace MouseEffects.Effects.ColorBlindness.UI;
 
-public partial class ColorBlindnessSettingsControl : System.Windows.Controls.UserControl
+public partial class ColorBlindnessSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private readonly ColorBlindnessEffect? _colorBlindnessEffect;
@@ -18,33 +24,31 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
     public event Action<string>? SettingsChanged;
 
     // RGB Matrix presets (3x3 matrices stored as 9 floats: R0,R1,R2, G0,G1,G2, B0,B1,B2)
-    // Preset indices match combo box order (0=Normal, 1=Protanopia, etc.)
     private static readonly Dictionary<int, float[]> MatrixPresets = new()
     {
-        // 0: Normal Vision (Identity)
-        [0] = [1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f],
-        // 1: Protanopia (simulation matrix - for custom experimentation)
-        [1] = [0.567f, 0.433f, 0f, 0.558f, 0.442f, 0f, 0f, 0.242f, 0.758f],
-        // 2: Protanomaly
-        [2] = [0.817f, 0.183f, 0f, 0.333f, 0.667f, 0f, 0f, 0.125f, 0.875f],
-        // 3: Deuteranopia
-        [3] = [0.625f, 0.375f, 0f, 0.7f, 0.3f, 0f, 0f, 0.3f, 0.7f],
-        // 4: Deuteranomaly
-        [4] = [0.8f, 0.2f, 0f, 0.258f, 0.742f, 0f, 0f, 0.142f, 0.858f],
-        // 5: Tritanopia
-        [5] = [0.95f, 0.05f, 0f, 0f, 0.433f, 0.567f, 0f, 0.475f, 0.525f],
-        // 6: Tritanomaly
-        [6] = [0.967f, 0.033f, 0f, 0f, 0.733f, 0.267f, 0f, 0.183f, 0.817f],
-        // 7: Achromatopsia (grayscale)
-        [7] = [0.299f, 0.587f, 0.114f, 0.299f, 0.587f, 0.114f, 0.299f, 0.587f, 0.114f],
-        // 8: Achromatomaly
-        [8] = [0.618f, 0.320f, 0.062f, 0.163f, 0.775f, 0.062f, 0.163f, 0.320f, 0.516f],
-        // 9: Grayscale (luminance)
-        [9] = [0.2126f, 0.7152f, 0.0722f, 0.2126f, 0.7152f, 0.0722f, 0.2126f, 0.7152f, 0.0722f],
-        // 10: Sepia
-        [10] = [0.393f, 0.769f, 0.189f, 0.349f, 0.686f, 0.168f, 0.272f, 0.534f, 0.131f]
-        // 11: Custom Matrix - no preset, uses current values
+        [0] = [1f, 0f, 0f, 0f, 1f, 0f, 0f, 0f, 1f],           // Normal Vision (Identity)
+        [1] = [0.567f, 0.433f, 0f, 0.558f, 0.442f, 0f, 0f, 0.242f, 0.758f], // Protanopia
+        [2] = [0.817f, 0.183f, 0f, 0.333f, 0.667f, 0f, 0f, 0.125f, 0.875f], // Protanomaly
+        [3] = [0.625f, 0.375f, 0f, 0.7f, 0.3f, 0f, 0f, 0.3f, 0.7f],         // Deuteranopia
+        [4] = [0.8f, 0.2f, 0f, 0.258f, 0.742f, 0f, 0f, 0.142f, 0.858f],     // Deuteranomaly
+        [5] = [0.95f, 0.05f, 0f, 0f, 0.433f, 0.567f, 0f, 0.475f, 0.525f],   // Tritanopia
+        [6] = [0.967f, 0.033f, 0f, 0f, 0.733f, 0.267f, 0f, 0.183f, 0.817f], // Tritanomaly
+        [7] = [0.299f, 0.587f, 0.114f, 0.299f, 0.587f, 0.114f, 0.299f, 0.587f, 0.114f], // Achromatopsia
+        [8] = [0.618f, 0.320f, 0.062f, 0.163f, 0.775f, 0.062f, 0.163f, 0.320f, 0.516f], // Achromatomaly
+        [9] = [0.2126f, 0.7152f, 0.0722f, 0.2126f, 0.7152f, 0.0722f, 0.2126f, 0.7152f, 0.0722f], // Grayscale
+        [10] = [0.393f, 0.769f, 0.189f, 0.349f, 0.686f, 0.168f, 0.272f, 0.534f, 0.131f] // Sepia
     };
+
+    // Zone names by layout mode
+    private static readonly string[][] ZoneNames =
+    [
+        ["Screen"],                                           // Fullscreen
+        ["Inside Circle", "Outside Circle"],                  // Circle
+        ["Inside Rectangle", "Outside Rectangle"],            // Rectangle
+        ["Left Side", "Right Side"],                          // Split Vertical
+        ["Top Half", "Bottom Half"],                          // Split Horizontal
+        ["Top-Left", "Top-Right", "Bottom-Left", "Bottom-Right"] // Quadrants
+    ];
 
     public ColorBlindnessSettingsControl(IEffect effect)
     {
@@ -52,13 +56,37 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         _effect = effect;
         _colorBlindnessEffect = effect as ColorBlindnessEffect;
 
+        // Subscribe to comparison mode changes from hotkey
+        if (_colorBlindnessEffect != null)
+        {
+            _colorBlindnessEffect.ComparisonModeChanged += OnComparisonModeChangedFromHotkey;
+        }
+
         LoadConfiguration();
         _isInitializing = false;
+    }
+
+    private void OnComparisonModeChangedFromHotkey(bool isEnabled)
+    {
+        // Update UI from hotkey toggle - must run on UI thread
+        Dispatcher.Invoke(() =>
+        {
+            _isInitializing = true;
+            ComparisonModeCheckBox.IsChecked = isEnabled;
+            _isInitializing = false;
+
+            // Save the change
+            UpdateConfiguration();
+        });
     }
 
     private void LoadConfiguration()
     {
         EnabledCheckBox.IsChecked = _effect.IsEnabled;
+
+        // Layout mode
+        if (_effect.Configuration.TryGet("layoutMode", out int layoutMode))
+            LayoutModeCombo.SelectedIndex = layoutMode;
 
         // Shape settings
         if (_effect.Configuration.TryGet("radius", out float radius))
@@ -79,10 +107,19 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
             RectHeightValue.Text = rectHeight.ToString("F0");
         }
 
-        if (_effect.Configuration.TryGet("shapeMode", out int shapeMode))
+        // Split positions
+        if (_effect.Configuration.TryGet("splitPosition", out float splitPosition))
         {
-            ShapeModeCombo.SelectedIndex = shapeMode;
-            UpdateShapeSettings(shapeMode);
+            SplitPositionSlider.Value = splitPosition;
+            SplitPositionHSlider.Value = splitPosition;
+            QuadSplitHSlider.Value = splitPosition;
+            UpdateSplitPositionLabels();
+        }
+
+        if (_effect.Configuration.TryGet("splitPositionV", out float splitPositionV))
+        {
+            QuadSplitVSlider.Value = splitPositionV;
+            QuadSplitVValue.Text = $"{(splitPositionV * 100):F0}%";
         }
 
         if (_effect.Configuration.TryGet("edgeSoftness", out float edgeSoftness))
@@ -91,61 +128,34 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
             EdgeSoftnessValue.Text = edgeSoftness.ToString("F2");
         }
 
-        // Correction method (0=LMS, 1=RGB)
-        if (_effect.Configuration.TryGet("correctionMode", out int correctionMode))
-        {
-            CorrectionMethodCombo.SelectedIndex = correctionMode;
-            UpdateCorrectionMethodPanels(correctionMode);
-        }
-        else
-        {
-            UpdateCorrectionMethodPanels(0); // Default to LMS
-        }
+        // Comparison mode
+        if (_effect.Configuration.TryGet("comparisonMode", out bool comparisonMode))
+            ComparisonModeCheckBox.IsChecked = comparisonMode;
 
-        // LMS filter types
-        if (_effect.Configuration.TryGet("lmsFilterType", out int lmsFilterType))
-        {
-            LMSFilterTypeCombo.SelectedIndex = lmsFilterType;
-            LMSInsideFilterTypeCombo.SelectedIndex = lmsFilterType;
-        }
+        // Comparison hotkey
+        if (_effect.Configuration.TryGet("enableComparisonHotkey", out bool enableComparisonHotkey))
+            EnableComparisonHotkeyCheckBox.IsChecked = enableComparisonHotkey;
 
-        if (_effect.Configuration.TryGet("lmsOutsideFilterType", out int lmsOutsideFilterType))
-        {
-            LMSOutsideFilterTypeCombo.SelectedIndex = lmsOutsideFilterType;
-        }
+        // Load zone settings
+        LoadZoneSettings(0, Zone0CorrectionModeCombo, Zone0LMSFilterCombo, Zone0RGBPresetCombo,
+            Zone0MatrixR0, Zone0MatrixR1, Zone0MatrixR2,
+            Zone0MatrixG0, Zone0MatrixG1, Zone0MatrixG2,
+            Zone0MatrixB0, Zone0MatrixB1, Zone0MatrixB2);
 
-        // Load inside matrix values (fullscreen and shape inside share these)
-        LoadMatrixValue("insideMatrixR0", InsideMatrixR0, 1f);
-        LoadMatrixValue("insideMatrixR1", InsideMatrixR1, 0f);
-        LoadMatrixValue("insideMatrixR2", InsideMatrixR2, 0f);
-        LoadMatrixValue("insideMatrixG0", InsideMatrixG0, 0f);
-        LoadMatrixValue("insideMatrixG1", InsideMatrixG1, 1f);
-        LoadMatrixValue("insideMatrixG2", InsideMatrixG2, 0f);
-        LoadMatrixValue("insideMatrixB0", InsideMatrixB0, 0f);
-        LoadMatrixValue("insideMatrixB1", InsideMatrixB1, 0f);
-        LoadMatrixValue("insideMatrixB2", InsideMatrixB2, 1f);
+        LoadZoneSettings(1, Zone1CorrectionModeCombo, Zone1LMSFilterCombo, Zone1RGBPresetCombo,
+            Zone1MatrixR0, Zone1MatrixR1, Zone1MatrixR2,
+            Zone1MatrixG0, Zone1MatrixG1, Zone1MatrixG2,
+            Zone1MatrixB0, Zone1MatrixB1, Zone1MatrixB2);
 
-        // Also set shape inside matrix textboxes to same values
-        ShapeInsideR0.Text = InsideMatrixR0.Text;
-        ShapeInsideR1.Text = InsideMatrixR1.Text;
-        ShapeInsideR2.Text = InsideMatrixR2.Text;
-        ShapeInsideG0.Text = InsideMatrixG0.Text;
-        ShapeInsideG1.Text = InsideMatrixG1.Text;
-        ShapeInsideG2.Text = InsideMatrixG2.Text;
-        ShapeInsideB0.Text = InsideMatrixB0.Text;
-        ShapeInsideB1.Text = InsideMatrixB1.Text;
-        ShapeInsideB2.Text = InsideMatrixB2.Text;
+        LoadZoneSettings(2, Zone2CorrectionModeCombo, Zone2LMSFilterCombo, Zone2RGBPresetCombo,
+            Zone2MatrixR0, Zone2MatrixR1, Zone2MatrixR2,
+            Zone2MatrixG0, Zone2MatrixG1, Zone2MatrixG2,
+            Zone2MatrixB0, Zone2MatrixB1, Zone2MatrixB2);
 
-        // Load outside matrix values
-        LoadMatrixValue("outsideMatrixR0", ShapeOutsideR0, 1f);
-        LoadMatrixValue("outsideMatrixR1", ShapeOutsideR1, 0f);
-        LoadMatrixValue("outsideMatrixR2", ShapeOutsideR2, 0f);
-        LoadMatrixValue("outsideMatrixG0", ShapeOutsideG0, 0f);
-        LoadMatrixValue("outsideMatrixG1", ShapeOutsideG1, 1f);
-        LoadMatrixValue("outsideMatrixG2", ShapeOutsideG2, 0f);
-        LoadMatrixValue("outsideMatrixB0", ShapeOutsideB0, 0f);
-        LoadMatrixValue("outsideMatrixB1", ShapeOutsideB1, 0f);
-        LoadMatrixValue("outsideMatrixB2", ShapeOutsideB2, 1f);
+        LoadZoneSettings(3, Zone3CorrectionModeCombo, Zone3LMSFilterCombo, Zone3RGBPresetCombo,
+            Zone3MatrixR0, Zone3MatrixR1, Zone3MatrixR2,
+            Zone3MatrixG0, Zone3MatrixG1, Zone3MatrixG2,
+            Zone3MatrixB0, Zone3MatrixB1, Zone3MatrixB2);
 
         // Adjustment settings
         if (_effect.Configuration.TryGet("intensity", out float intensity))
@@ -162,9 +172,7 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
 
         // Curves
         if (_effect.Configuration.TryGet("enableCurves", out bool enableCurves))
-        {
             EnableCurvesCheckBox.IsChecked = enableCurves;
-        }
 
         if (_effect.Configuration.TryGet("curveStrength", out float curveStrength))
         {
@@ -172,7 +180,6 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
             CurveStrengthValue.Text = curveStrength.ToString("F2");
         }
 
-        // Load curves
         if (_colorBlindnessEffect != null)
         {
             CurveEditorControl.MasterCurve = _colorBlindnessEffect.MasterCurve;
@@ -180,9 +187,40 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
             CurveEditorControl.GreenCurve = _colorBlindnessEffect.GreenCurve;
             CurveEditorControl.BlueCurve = _colorBlindnessEffect.BlueCurve;
         }
+
+        // Update UI based on layout mode
+        UpdateLayoutModeUI(LayoutModeCombo.SelectedIndex);
     }
 
-    private void LoadMatrixValue(string key, System.Windows.Controls.TextBox textBox, float defaultValue)
+    private void LoadZoneSettings(int zoneIndex, ComboBox correctionModeCombo, ComboBox lmsFilterCombo,
+        ComboBox rgbPresetCombo, TextBox r0, TextBox r1, TextBox r2,
+        TextBox g0, TextBox g1, TextBox g2, TextBox b0, TextBox b1, TextBox b2)
+    {
+        string prefix = $"zone{zoneIndex}_";
+
+        if (_effect.Configuration.TryGet($"{prefix}correctionMode", out int correctionMode))
+        {
+            correctionModeCombo.SelectedIndex = correctionMode;
+        }
+
+        if (_effect.Configuration.TryGet($"{prefix}lmsFilterType", out int lmsFilterType))
+        {
+            lmsFilterCombo.SelectedIndex = lmsFilterType;
+        }
+
+        // Load matrix values
+        LoadMatrixValue($"{prefix}matrixR0", r0, 1f);
+        LoadMatrixValue($"{prefix}matrixR1", r1, 0f);
+        LoadMatrixValue($"{prefix}matrixR2", r2, 0f);
+        LoadMatrixValue($"{prefix}matrixG0", g0, 0f);
+        LoadMatrixValue($"{prefix}matrixG1", g1, 1f);
+        LoadMatrixValue($"{prefix}matrixG2", g2, 0f);
+        LoadMatrixValue($"{prefix}matrixB0", b0, 0f);
+        LoadMatrixValue($"{prefix}matrixB1", b1, 0f);
+        LoadMatrixValue($"{prefix}matrixB2", b2, 1f);
+    }
+
+    private void LoadMatrixValue(string key, TextBox textBox, float defaultValue)
     {
         if (_effect.Configuration.TryGet(key, out float value))
             textBox.Text = value.ToString("F3", CultureInfo.InvariantCulture);
@@ -196,66 +234,54 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
 
         var config = new EffectConfiguration();
 
+        // Layout mode
+        int layoutMode = LayoutModeCombo.SelectedIndex;
+        config.Set("layoutMode", layoutMode);
+
         // Shape settings
         config.Set("radius", (float)RadiusSlider.Value);
         config.Set("rectWidth", (float)RectWidthSlider.Value);
         config.Set("rectHeight", (float)RectHeightSlider.Value);
-        config.Set("shapeMode", ShapeModeCombo.SelectedIndex);
+
+        // Split positions (use appropriate slider based on layout mode)
+        float splitPosition = layoutMode switch
+        {
+            3 => (float)SplitPositionSlider.Value,    // Split Vertical
+            4 => (float)SplitPositionHSlider.Value,   // Split Horizontal
+            5 => (float)QuadSplitHSlider.Value,       // Quadrants
+            _ => 0.5f
+        };
+        config.Set("splitPosition", splitPosition);
+        config.Set("splitPositionV", (float)QuadSplitVSlider.Value);
+
         config.Set("edgeSoftness", (float)EdgeSoftnessSlider.Value);
+        config.Set("comparisonMode", ComparisonModeCheckBox.IsChecked ?? false);
+        config.Set("enableComparisonHotkey", EnableComparisonHotkeyCheckBox.IsChecked ?? true);
 
-        // Correction mode (0=LMS, 1=RGB)
-        int correctionMode = CorrectionMethodCombo.SelectedIndex;
-        config.Set("correctionMode", correctionMode);
+        // Zone settings
+        SaveZoneSettings(config, 0,
+            Zone0CorrectionModeCombo, Zone0LMSFilterCombo,
+            Zone0MatrixR0, Zone0MatrixR1, Zone0MatrixR2,
+            Zone0MatrixG0, Zone0MatrixG1, Zone0MatrixG2,
+            Zone0MatrixB0, Zone0MatrixB1, Zone0MatrixB2);
 
-        // LMS filter types
-        int shapeMode = ShapeModeCombo.SelectedIndex;
-        if (shapeMode == 2) // Fullscreen
-        {
-            config.Set("lmsFilterType", LMSFilterTypeCombo.SelectedIndex);
-            config.Set("lmsOutsideFilterType", 0); // Not used in fullscreen
-        }
-        else // Circle or Rectangle
-        {
-            config.Set("lmsFilterType", LMSInsideFilterTypeCombo.SelectedIndex);
-            config.Set("lmsOutsideFilterType", LMSOutsideFilterTypeCombo.SelectedIndex);
-        }
+        SaveZoneSettings(config, 1,
+            Zone1CorrectionModeCombo, Zone1LMSFilterCombo,
+            Zone1MatrixR0, Zone1MatrixR1, Zone1MatrixR2,
+            Zone1MatrixG0, Zone1MatrixG1, Zone1MatrixG2,
+            Zone1MatrixB0, Zone1MatrixB1, Zone1MatrixB2);
 
-        // Inside matrix values (from fullscreen or shape inside based on current mode)
-        if (shapeMode == 2)
-        {
-            config.Set("insideMatrixR0", ParseFloat(InsideMatrixR0.Text, 1f));
-            config.Set("insideMatrixR1", ParseFloat(InsideMatrixR1.Text, 0f));
-            config.Set("insideMatrixR2", ParseFloat(InsideMatrixR2.Text, 0f));
-            config.Set("insideMatrixG0", ParseFloat(InsideMatrixG0.Text, 0f));
-            config.Set("insideMatrixG1", ParseFloat(InsideMatrixG1.Text, 1f));
-            config.Set("insideMatrixG2", ParseFloat(InsideMatrixG2.Text, 0f));
-            config.Set("insideMatrixB0", ParseFloat(InsideMatrixB0.Text, 0f));
-            config.Set("insideMatrixB1", ParseFloat(InsideMatrixB1.Text, 0f));
-            config.Set("insideMatrixB2", ParseFloat(InsideMatrixB2.Text, 1f));
-        }
-        else
-        {
-            config.Set("insideMatrixR0", ParseFloat(ShapeInsideR0.Text, 1f));
-            config.Set("insideMatrixR1", ParseFloat(ShapeInsideR1.Text, 0f));
-            config.Set("insideMatrixR2", ParseFloat(ShapeInsideR2.Text, 0f));
-            config.Set("insideMatrixG0", ParseFloat(ShapeInsideG0.Text, 0f));
-            config.Set("insideMatrixG1", ParseFloat(ShapeInsideG1.Text, 1f));
-            config.Set("insideMatrixG2", ParseFloat(ShapeInsideG2.Text, 0f));
-            config.Set("insideMatrixB0", ParseFloat(ShapeInsideB0.Text, 0f));
-            config.Set("insideMatrixB1", ParseFloat(ShapeInsideB1.Text, 0f));
-            config.Set("insideMatrixB2", ParseFloat(ShapeInsideB2.Text, 1f));
-        }
+        SaveZoneSettings(config, 2,
+            Zone2CorrectionModeCombo, Zone2LMSFilterCombo,
+            Zone2MatrixR0, Zone2MatrixR1, Zone2MatrixR2,
+            Zone2MatrixG0, Zone2MatrixG1, Zone2MatrixG2,
+            Zone2MatrixB0, Zone2MatrixB1, Zone2MatrixB2);
 
-        // Outside matrix values
-        config.Set("outsideMatrixR0", ParseFloat(ShapeOutsideR0.Text, 1f));
-        config.Set("outsideMatrixR1", ParseFloat(ShapeOutsideR1.Text, 0f));
-        config.Set("outsideMatrixR2", ParseFloat(ShapeOutsideR2.Text, 0f));
-        config.Set("outsideMatrixG0", ParseFloat(ShapeOutsideG0.Text, 0f));
-        config.Set("outsideMatrixG1", ParseFloat(ShapeOutsideG1.Text, 1f));
-        config.Set("outsideMatrixG2", ParseFloat(ShapeOutsideG2.Text, 0f));
-        config.Set("outsideMatrixB0", ParseFloat(ShapeOutsideB0.Text, 0f));
-        config.Set("outsideMatrixB1", ParseFloat(ShapeOutsideB1.Text, 0f));
-        config.Set("outsideMatrixB2", ParseFloat(ShapeOutsideB2.Text, 1f));
+        SaveZoneSettings(config, 3,
+            Zone3CorrectionModeCombo, Zone3LMSFilterCombo,
+            Zone3MatrixR0, Zone3MatrixR1, Zone3MatrixR2,
+            Zone3MatrixG0, Zone3MatrixG1, Zone3MatrixG2,
+            Zone3MatrixB0, Zone3MatrixB1, Zone3MatrixB2);
 
         // Adjustment settings
         config.Set("intensity", (float)IntensitySlider.Value);
@@ -284,6 +310,28 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
+    private void SaveZoneSettings(EffectConfiguration config, int zoneIndex,
+        ComboBox correctionModeCombo, ComboBox lmsFilterCombo,
+        TextBox r0, TextBox r1, TextBox r2,
+        TextBox g0, TextBox g1, TextBox g2,
+        TextBox b0, TextBox b1, TextBox b2)
+    {
+        string prefix = $"zone{zoneIndex}_";
+
+        config.Set($"{prefix}correctionMode", correctionModeCombo.SelectedIndex);
+        config.Set($"{prefix}lmsFilterType", lmsFilterCombo.SelectedIndex);
+
+        config.Set($"{prefix}matrixR0", ParseFloat(r0.Text, 1f));
+        config.Set($"{prefix}matrixR1", ParseFloat(r1.Text, 0f));
+        config.Set($"{prefix}matrixR2", ParseFloat(r2.Text, 0f));
+        config.Set($"{prefix}matrixG0", ParseFloat(g0.Text, 0f));
+        config.Set($"{prefix}matrixG1", ParseFloat(g1.Text, 1f));
+        config.Set($"{prefix}matrixG2", ParseFloat(g2.Text, 0f));
+        config.Set($"{prefix}matrixB0", ParseFloat(b0.Text, 0f));
+        config.Set($"{prefix}matrixB1", ParseFloat(b1.Text, 0f));
+        config.Set($"{prefix}matrixB2", ParseFloat(b2.Text, 1f));
+    }
+
     private static float ParseFloat(string text, float defaultValue)
     {
         if (float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out float value))
@@ -293,44 +341,68 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         return defaultValue;
     }
 
-    private void UpdateShapeSettings(int shapeMode)
+    private void UpdateLayoutModeUI(int layoutMode)
     {
-        // Shape size controls
-        if (CircleSettings != null)
-            CircleSettings.Visibility = shapeMode == 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (RectangleSettings != null)
-            RectangleSettings.Visibility = shapeMode == 1 ? Visibility.Visible : Visibility.Collapsed;
+        // Hide all layout-specific settings
+        CircleSettings.Visibility = Visibility.Collapsed;
+        RectangleSettings.Visibility = Visibility.Collapsed;
+        SplitVerticalSettings.Visibility = Visibility.Collapsed;
+        SplitHorizontalSettings.Visibility = Visibility.Collapsed;
+        QuadrantSettings.Visibility = Visibility.Collapsed;
 
-        // Hide edge softness for fullscreen mode
-        if (EdgeSoftnessSlider != null)
-            EdgeSoftnessSlider.IsEnabled = shapeMode != 2;
+        // Show layout-specific settings
+        switch (layoutMode)
+        {
+            case 1: CircleSettings.Visibility = Visibility.Visible; break;
+            case 2: RectangleSettings.Visibility = Visibility.Visible; break;
+            case 3: SplitVerticalSettings.Visibility = Visibility.Visible; break;
+            case 4: SplitHorizontalSettings.Visibility = Visibility.Visible; break;
+            case 5: QuadrantSettings.Visibility = Visibility.Visible; break;
+        }
 
-        // Update LMS panels
-        if (LMSFullscreenPanel != null)
-            LMSFullscreenPanel.Visibility = shapeMode == 2 ? Visibility.Visible : Visibility.Collapsed;
-        if (LMSShapePanel != null)
-            LMSShapePanel.Visibility = shapeMode != 2 ? Visibility.Visible : Visibility.Collapsed;
+        // Edge softness (hidden for fullscreen)
+        EdgeSoftnessPanel.Visibility = layoutMode == 0 ? Visibility.Collapsed : Visibility.Visible;
 
-        // Update RGB panels
-        if (RGBFullscreenPanel != null)
-            RGBFullscreenPanel.Visibility = shapeMode == 2 ? Visibility.Visible : Visibility.Collapsed;
-        if (RGBShapePanel != null)
-            RGBShapePanel.Visibility = shapeMode != 2 ? Visibility.Visible : Visibility.Collapsed;
+        // Comparison mode (only for split and quadrant modes)
+        ComparisonModePanel.Visibility = layoutMode >= 3 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Update zone visibility and headers
+        int zoneCount = layoutMode switch
+        {
+            0 => 1, // Fullscreen
+            1 => 2, // Circle
+            2 => 2, // Rectangle
+            3 => 2, // Split Vertical
+            4 => 2, // Split Horizontal
+            5 => 4, // Quadrants
+            _ => 1
+        };
+
+        // Update zone panels
+        Zone0Panel.Visibility = Visibility.Visible; // Always visible
+        Zone1Panel.Visibility = zoneCount >= 2 ? Visibility.Visible : Visibility.Collapsed;
+        Zone2Panel.Visibility = zoneCount >= 3 ? Visibility.Visible : Visibility.Collapsed;
+        Zone3Panel.Visibility = zoneCount >= 4 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Update zone headers
+        var names = ZoneNames[layoutMode];
+        Zone0Header.Text = names.Length > 0 ? names[0] : "Zone 0";
+        Zone1Header.Text = names.Length > 1 ? names[1] : "Zone 1";
+        Zone2Header.Text = names.Length > 2 ? names[2] : "Zone 2";
+        Zone3Header.Text = names.Length > 3 ? names[3] : "Zone 3";
     }
 
-    private void UpdateCorrectionMethodPanels(int correctionMode)
+    private void UpdateZoneCorrectionModeUI(int zoneIndex, int correctionMode,
+        StackPanel lmsPanel, StackPanel rgbPanel)
     {
-        // 0 = LMS Correction, 1 = RGB Matrix
-        if (LMSSettingsPanel != null)
-            LMSSettingsPanel.Visibility = correctionMode == 0 ? Visibility.Visible : Visibility.Collapsed;
-        if (RGBSettingsPanel != null)
-            RGBSettingsPanel.Visibility = correctionMode == 1 ? Visibility.Visible : Visibility.Collapsed;
+        lmsPanel.Visibility = correctionMode == 0 ? Visibility.Visible : Visibility.Collapsed;
+        rgbPanel.Visibility = correctionMode == 1 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void SetMatrixTextBoxesFromPreset(int presetIndex,
-        System.Windows.Controls.TextBox r0, System.Windows.Controls.TextBox r1, System.Windows.Controls.TextBox r2,
-        System.Windows.Controls.TextBox g0, System.Windows.Controls.TextBox g1, System.Windows.Controls.TextBox g2,
-        System.Windows.Controls.TextBox b0, System.Windows.Controls.TextBox b1, System.Windows.Controls.TextBox b2)
+    private void SetMatrixFromPreset(int presetIndex,
+        TextBox r0, TextBox r1, TextBox r2,
+        TextBox g0, TextBox g1, TextBox g2,
+        TextBox b0, TextBox b1, TextBox b2)
     {
         if (!MatrixPresets.TryGetValue(presetIndex, out var preset))
             return;
@@ -350,6 +422,13 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         UpdateConfiguration();
     }
 
+    private void UpdateSplitPositionLabels()
+    {
+        SplitPositionValue.Text = $"{(SplitPositionSlider.Value * 100):F0}%";
+        SplitPositionHValue.Text = $"{(SplitPositionHSlider.Value * 100):F0}%";
+        QuadSplitHValue.Text = $"{(QuadSplitHSlider.Value * 100):F0}%";
+    }
+
     #region Event Handlers
 
     private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -366,196 +445,235 @@ public partial class ColorBlindnessSettingsControl : System.Windows.Controls.Use
         FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 
-    private void ShapeModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void LayoutModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isInitializing) return;
 
-        int newShapeMode = ShapeModeCombo.SelectedIndex;
-
-        // Sync LMS filter values when switching between fullscreen and shape modes
-        if (newShapeMode == 2)
-        {
-            // Switching to fullscreen: copy inside filter to fullscreen filter
-            if (LMSFilterTypeCombo != null && LMSInsideFilterTypeCombo != null)
-                LMSFilterTypeCombo.SelectedIndex = LMSInsideFilterTypeCombo.SelectedIndex;
-            if (RGBPresetCombo != null && RGBInsidePresetCombo != null)
-                RGBPresetCombo.SelectedIndex = RGBInsidePresetCombo.SelectedIndex;
-        }
-        else
-        {
-            // Switching to shape mode: copy fullscreen filter to inside filter
-            if (LMSFilterTypeCombo != null && LMSInsideFilterTypeCombo != null)
-                LMSInsideFilterTypeCombo.SelectedIndex = LMSFilterTypeCombo.SelectedIndex;
-            if (RGBPresetCombo != null && RGBInsidePresetCombo != null)
-                RGBInsidePresetCombo.SelectedIndex = RGBPresetCombo.SelectedIndex;
-        }
-
-        UpdateShapeSettings(newShapeMode);
+        int layoutMode = LayoutModeCombo.SelectedIndex;
+        UpdateLayoutModeUI(layoutMode);
         UpdateConfiguration();
     }
 
+    private void ComparisonModeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void EnableComparisonHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    // Slider value changed handlers
     private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (RadiusValue != null)
-            RadiusValue.Text = e.NewValue.ToString("F0");
+        if (RadiusValue != null) RadiusValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
     }
 
     private void RectWidthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (RectWidthValue != null)
-            RectWidthValue.Text = e.NewValue.ToString("F0");
+        if (RectWidthValue != null) RectWidthValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
     }
 
     private void RectHeightSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (RectHeightValue != null)
-            RectHeightValue.Text = e.NewValue.ToString("F0");
+        if (RectHeightValue != null) RectHeightValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void SplitPositionSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (SplitPositionValue != null) SplitPositionValue.Text = $"{(e.NewValue * 100):F0}%";
+        UpdateConfiguration();
+    }
+
+    private void SplitPositionHSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (SplitPositionHValue != null) SplitPositionHValue.Text = $"{(e.NewValue * 100):F0}%";
+        UpdateConfiguration();
+    }
+
+    private void QuadSplitHSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (QuadSplitHValue != null) QuadSplitHValue.Text = $"{(e.NewValue * 100):F0}%";
+        UpdateConfiguration();
+    }
+
+    private void QuadSplitVSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (QuadSplitVValue != null) QuadSplitVValue.Text = $"{(e.NewValue * 100):F0}%";
         UpdateConfiguration();
     }
 
     private void EdgeSoftnessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (EdgeSoftnessValue != null)
-            EdgeSoftnessValue.Text = e.NewValue.ToString("F2");
+        if (EdgeSoftnessValue != null) EdgeSoftnessValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 
-    private void CorrectionMethodCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isInitializing) return;
-
-        int correctionMode = CorrectionMethodCombo.SelectedIndex;
-        UpdateCorrectionMethodPanels(correctionMode);
-        UpdateConfiguration();
-    }
-
-    // LMS Filter Type handlers
-    private void LMSFilterTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        UpdateConfiguration();
-    }
-
-    private void LMSInsideFilterTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        UpdateConfiguration();
-    }
-
-    private void LMSOutsideFilterTypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        UpdateConfiguration();
-    }
-
-    // RGB Preset handlers - just load preset values into matrix
-    private void RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isInitializing) return;
-
-        int selectedIndex = RGBPresetCombo.SelectedIndex;
-        if (MatrixPresets.ContainsKey(selectedIndex))
-        {
-            SetMatrixTextBoxesFromPreset(selectedIndex,
-                InsideMatrixR0, InsideMatrixR1, InsideMatrixR2,
-                InsideMatrixG0, InsideMatrixG1, InsideMatrixG2,
-                InsideMatrixB0, InsideMatrixB1, InsideMatrixB2);
-        }
-    }
-
-    private void RGBInsidePresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isInitializing) return;
-
-        int selectedIndex = RGBInsidePresetCombo.SelectedIndex;
-        if (MatrixPresets.ContainsKey(selectedIndex))
-        {
-            SetMatrixTextBoxesFromPreset(selectedIndex,
-                ShapeInsideR0, ShapeInsideR1, ShapeInsideR2,
-                ShapeInsideG0, ShapeInsideG1, ShapeInsideG2,
-                ShapeInsideB0, ShapeInsideB1, ShapeInsideB2);
-        }
-    }
-
-    private void RGBOutsidePresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_isInitializing) return;
-
-        int selectedIndex = RGBOutsidePresetCombo.SelectedIndex;
-        if (MatrixPresets.ContainsKey(selectedIndex))
-        {
-            SetMatrixTextBoxesFromPreset(selectedIndex,
-                ShapeOutsideR0, ShapeOutsideR1, ShapeOutsideR2,
-                ShapeOutsideG0, ShapeOutsideG1, ShapeOutsideG2,
-                ShapeOutsideB0, ShapeOutsideB1, ShapeOutsideB2);
-        }
-    }
-
-    // Matrix text changed handlers
-    private void InsideMatrix_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        UpdateConfiguration();
-    }
-
-    private void ShapeInsideMatrix_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        UpdateConfiguration();
-    }
-
-    private void ShapeOutsideMatrix_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        UpdateConfiguration();
-    }
-
-    // Reset buttons - reset matrix to identity
-    private void ResetInsideMatrixButton_Click(object sender, RoutedEventArgs e)
-    {
-        SetMatrixTextBoxesFromPreset(0, // Identity matrix
-            InsideMatrixR0, InsideMatrixR1, InsideMatrixR2,
-            InsideMatrixG0, InsideMatrixG1, InsideMatrixG2,
-            InsideMatrixB0, InsideMatrixB1, InsideMatrixB2);
-    }
-
-    private void ResetShapeInsideMatrixButton_Click(object sender, RoutedEventArgs e)
-    {
-        SetMatrixTextBoxesFromPreset(0, // Identity matrix
-            ShapeInsideR0, ShapeInsideR1, ShapeInsideR2,
-            ShapeInsideG0, ShapeInsideG1, ShapeInsideG2,
-            ShapeInsideB0, ShapeInsideB1, ShapeInsideB2);
-    }
-
-    private void ResetShapeOutsideMatrixButton_Click(object sender, RoutedEventArgs e)
-    {
-        SetMatrixTextBoxesFromPreset(0, // Identity matrix
-            ShapeOutsideR0, ShapeOutsideR1, ShapeOutsideR2,
-            ShapeOutsideG0, ShapeOutsideG1, ShapeOutsideG2,
-            ShapeOutsideB0, ShapeOutsideB1, ShapeOutsideB2);
-    }
-
-    // Adjustment sliders
     private void IntensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (IntensityValue != null)
-            IntensityValue.Text = e.NewValue.ToString("F2");
+        if (IntensityValue != null) IntensityValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 
     private void ColorBoostSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (ColorBoostValue != null)
-            ColorBoostValue.Text = e.NewValue.ToString("F2");
-        UpdateConfiguration();
-    }
-
-    // Curves
-    private void EnableCurvesCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
+        if (ColorBoostValue != null) ColorBoostValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 
     private void CurveStrengthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (CurveStrengthValue != null)
-            CurveStrengthValue.Text = e.NewValue.ToString("F2");
+        if (CurveStrengthValue != null) CurveStrengthValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    // Zone 0 handlers
+    private void Zone0CorrectionModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateZoneCorrectionModeUI(0, Zone0CorrectionModeCombo.SelectedIndex, Zone0LMSPanel, Zone0RGBPanel);
+        UpdateConfiguration();
+    }
+
+    private void Zone0LMSFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone0RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        SetMatrixFromPreset(Zone0RGBPresetCombo.SelectedIndex,
+            Zone0MatrixR0, Zone0MatrixR1, Zone0MatrixR2,
+            Zone0MatrixG0, Zone0MatrixG1, Zone0MatrixG2,
+            Zone0MatrixB0, Zone0MatrixB1, Zone0MatrixB2);
+    }
+
+    private void Zone0Matrix_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone0ResetMatrix_Click(object sender, RoutedEventArgs e)
+    {
+        SetMatrixFromPreset(0,
+            Zone0MatrixR0, Zone0MatrixR1, Zone0MatrixR2,
+            Zone0MatrixG0, Zone0MatrixG1, Zone0MatrixG2,
+            Zone0MatrixB0, Zone0MatrixB1, Zone0MatrixB2);
+    }
+
+    // Zone 1 handlers
+    private void Zone1CorrectionModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateZoneCorrectionModeUI(1, Zone1CorrectionModeCombo.SelectedIndex, Zone1LMSPanel, Zone1RGBPanel);
+        UpdateConfiguration();
+    }
+
+    private void Zone1LMSFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone1RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        SetMatrixFromPreset(Zone1RGBPresetCombo.SelectedIndex,
+            Zone1MatrixR0, Zone1MatrixR1, Zone1MatrixR2,
+            Zone1MatrixG0, Zone1MatrixG1, Zone1MatrixG2,
+            Zone1MatrixB0, Zone1MatrixB1, Zone1MatrixB2);
+    }
+
+    private void Zone1Matrix_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone1ResetMatrix_Click(object sender, RoutedEventArgs e)
+    {
+        SetMatrixFromPreset(0,
+            Zone1MatrixR0, Zone1MatrixR1, Zone1MatrixR2,
+            Zone1MatrixG0, Zone1MatrixG1, Zone1MatrixG2,
+            Zone1MatrixB0, Zone1MatrixB1, Zone1MatrixB2);
+    }
+
+    // Zone 2 handlers
+    private void Zone2CorrectionModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateZoneCorrectionModeUI(2, Zone2CorrectionModeCombo.SelectedIndex, Zone2LMSPanel, Zone2RGBPanel);
+        UpdateConfiguration();
+    }
+
+    private void Zone2LMSFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone2RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        SetMatrixFromPreset(Zone2RGBPresetCombo.SelectedIndex,
+            Zone2MatrixR0, Zone2MatrixR1, Zone2MatrixR2,
+            Zone2MatrixG0, Zone2MatrixG1, Zone2MatrixG2,
+            Zone2MatrixB0, Zone2MatrixB1, Zone2MatrixB2);
+    }
+
+    private void Zone2Matrix_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone2ResetMatrix_Click(object sender, RoutedEventArgs e)
+    {
+        SetMatrixFromPreset(0,
+            Zone2MatrixR0, Zone2MatrixR1, Zone2MatrixR2,
+            Zone2MatrixG0, Zone2MatrixG1, Zone2MatrixG2,
+            Zone2MatrixB0, Zone2MatrixB1, Zone2MatrixB2);
+    }
+
+    // Zone 3 handlers
+    private void Zone3CorrectionModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateZoneCorrectionModeUI(3, Zone3CorrectionModeCombo.SelectedIndex, Zone3LMSPanel, Zone3RGBPanel);
+        UpdateConfiguration();
+    }
+
+    private void Zone3LMSFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone3RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        SetMatrixFromPreset(Zone3RGBPresetCombo.SelectedIndex,
+            Zone3MatrixR0, Zone3MatrixR1, Zone3MatrixR2,
+            Zone3MatrixG0, Zone3MatrixG1, Zone3MatrixG2,
+            Zone3MatrixB0, Zone3MatrixB1, Zone3MatrixB2);
+    }
+
+    private void Zone3Matrix_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone3ResetMatrix_Click(object sender, RoutedEventArgs e)
+    {
+        SetMatrixFromPreset(0,
+            Zone3MatrixR0, Zone3MatrixR1, Zone3MatrixR2,
+            Zone3MatrixG0, Zone3MatrixG1, Zone3MatrixG2,
+            Zone3MatrixB0, Zone3MatrixB1, Zone3MatrixB2);
+    }
+
+    // Curves
+    private void EnableCurvesCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
         UpdateConfiguration();
     }
 
