@@ -2,19 +2,103 @@
 
 ## Project Overview
 
-MouseEffects is a GPU-accelerated visual effects overlay for Windows that creates cursor effects in real-time using DirectX 11. It uses a plugin architecture for effects.
+MouseEffects is a GPU-accelerated visual effects overlay for Windows that creates cursor effects in real-time using DirectX 11. It features a plugin architecture allowing custom effects to be added without modifying the core application. The overlay is transparent and click-through, rendering effects on top of all other windows.
+
+**Key Technologies:**
+- .NET 8.0 with WPF
+- DirectX 11 for GPU-accelerated rendering
+- HLSL shaders for visual effects
+- ModernWPF for Fluent Design UI
+- Plugin discovery via reflection
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        MouseEffects.App                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │ MainWindow  │  │EffectManager│  │    PluginSettings       │  │
+│  │   (WPF UI)  │  │             │  │ (JSON serialization)    │  │
+│  └─────────────┘  └─────────────┘  └─────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│MouseEffects   │    │MouseEffects   │    │MouseEffects   │
+│   .Overlay    │    │   .DirectX    │    │   .Input      │
+│               │    │               │    │               │
+│ Transparent   │    │ DX11 Context  │    │ Global Mouse  │
+│ Click-through │    │ Shader Mgmt   │    │    Hook       │
+│   Window      │    │ Buffer Mgmt   │    │               │
+└───────────────┘    └───────────────┘    └───────────────┘
+        │                     │                     │
+        └─────────────────────┼─────────────────────┘
+                              ▼
+                    ┌───────────────┐
+                    │MouseEffects   │
+                    │    .Core      │
+                    │               │
+                    │  Interfaces   │
+                    │  Base Classes │
+                    │  Data Types   │
+                    └───────────────┘
+                              ▲
+        ┌─────────────────────┼─────────────────────┐
+        ▼                     ▼                     ▼
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│   Plugin 1    │    │   Plugin 2    │    │   Plugin N    │
+│ (ParticleTrail│    │  (Invaders)   │    │    (...)      │
+└───────────────┘    └───────────────┘    └───────────────┘
+```
 
 ## Project Structure
 
 ```
 MouseEffects/
 ├── src/
-│   ├── MouseEffects.Core/           # Interfaces: IEffect, IEffectFactory, EffectBase
-│   ├── MouseEffects.DirectX/        # DirectX 11 rendering implementation
-│   ├── MouseEffects.Input/          # Global mouse hook, MouseState
-│   ├── MouseEffects.Overlay/        # Transparent overlay window
-│   ├── MouseEffects.Plugins/        # Plugin discovery and loading
-│   └── MouseEffects.App/            # Main WPF application, settings UI
+│   ├── MouseEffects.Core/           # Core interfaces and base classes
+│   │   ├── Effects/
+│   │   │   ├── IEffect.cs           # Main effect interface
+│   │   │   ├── EffectBase.cs        # Abstract base implementation
+│   │   │   ├── IEffectFactory.cs    # Factory interface for plugins
+│   │   │   ├── EffectConfiguration.cs # Key-value config with type conversion
+│   │   │   └── IHotkeyProvider.cs   # Interface for plugin hotkeys
+│   │   ├── Input/
+│   │   │   └── MouseState.cs        # Mouse position, velocity, buttons
+│   │   ├── Rendering/
+│   │   │   ├── IRenderContext.cs    # GPU rendering abstraction
+│   │   │   └── BlendMode.cs         # Alpha, Additive, etc.
+│   │   ├── Time/
+│   │   │   └── GameTime.cs          # Delta time, total time
+│   │   └── Diagnostics/
+│   │       └── Logger.cs            # Centralized logging
+│   │
+│   ├── MouseEffects.DirectX/        # DirectX 11 implementation
+│   │   ├── DX11RenderContext.cs     # IRenderContext implementation
+│   │   ├── ShaderCompiler.cs        # HLSL compilation
+│   │   └── BufferManager.cs         # GPU buffer management
+│   │
+│   ├── MouseEffects.Input/          # Input handling
+│   │   ├── GlobalMouseHook.cs       # Low-level mouse hook
+│   │   └── MouseTracker.cs          # Position/velocity tracking
+│   │
+│   ├── MouseEffects.Overlay/        # Overlay window
+│   │   └── OverlayWindow.cs         # Transparent, topmost, click-through
+│   │
+│   ├── MouseEffects.Plugins/        # Plugin system
+│   │   └── PluginLoader.cs          # Assembly scanning, factory discovery
+│   │
+│   └── MouseEffects.App/            # Main WPF application
+│       ├── App.xaml                 # Application entry, theming
+│       ├── MainWindow.xaml          # Settings UI
+│       ├── EffectManager.cs         # Effect lifecycle management
+│       ├── GameLoop.cs              # Update/Render loop (60 FPS)
+│       ├── Program.cs               # Entry point, hotkey polling
+│       └── Settings/
+│           ├── AppSettings.cs       # Global app settings
+│           └── PluginSettings.cs    # Per-plugin JSON storage
+│
 ├── plugins/                         # Effect plugins (auto-discovered)
 │   ├── MouseEffects.Effects.ParticleTrail/
 │   ├── MouseEffects.Effects.LaserWork/
@@ -23,201 +107,598 @@ MouseEffects/
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.TileVibration/
 │   ├── MouseEffects.Effects.WaterRipple/
-│   └── MouseEffects.Effects.Zoom/   # NEW - Magnifying lens effect
-├── packaging/                       # MSIX packaging
+│   ├── MouseEffects.Effects.Zoom/
+│   ├── MouseEffects.Effects.Invaders/
+│   └── MouseEffects.Effects.Firework/
+│
+├── packaging/                       # MSIX packaging for Windows Store
+│   └── MouseEffects.Package/
+│
 └── Wiki/                            # Documentation
+    ├── Plugins.md
+    ├── Features.md
+    ├── Plugin-Development.md
+    └── Plugin-ScreenCapture.md
 ```
 
 ## Core Interfaces
 
 ### IEffect (MouseEffects.Core/Effects/IEffect.cs)
-- `InstanceId`, `Metadata`, `Configuration`, `RenderOrder`, `IsComplete`, `IsEnabled`
-- `RequiresContinuousScreenCapture` - for screen capture effects
-- `Initialize(IRenderContext)`, `Configure(EffectConfiguration)`, `Update(GameTime, MouseState)`, `Render(IRenderContext)`
+
+The main interface that all effects must implement:
+
+```csharp
+public interface IEffect : IDisposable
+{
+    Guid InstanceId { get; }
+    EffectMetadata Metadata { get; }
+    EffectConfiguration Configuration { get; }
+    int RenderOrder { get; }
+    bool IsComplete { get; }
+    bool IsEnabled { get; set; }
+    bool IsInitialized { get; }
+    bool RequiresContinuousScreenCapture { get; }  // For screen-reading effects
+
+    void Initialize(IRenderContext context);
+    void Configure(EffectConfiguration config);
+    void Update(GameTime gameTime, MouseState mouseState);
+    void Render(IRenderContext context);
+    void OnViewportSizeChanged(int width, int height);
+}
+```
 
 ### EffectBase (MouseEffects.Core/Effects/EffectBase.cs)
-- Abstract base class implementing IEffect
-- Override: `OnInitialize`, `OnUpdate`, `OnRender`, `OnConfigurationChanged`, `OnViewportSizeChanged`, `OnDispose`
 
-### IEffectFactory
-- `Metadata`, `Create()`, `GetDefaultConfiguration()`, `GetConfigurationSchema()`, `CreateSettingsControl(IEffect)`
+Abstract base class that handles common boilerplate:
 
-### EffectConfiguration
-- Key-value dictionary: `Set<T>(key, value)`, `TryGet<T>(key, out value)`
-- Schema parameters: `FloatParameter`, `IntParameter`, `BoolParameter`, `ColorParameter`, `ChoiceParameter`
+```csharp
+public abstract class EffectBase : IEffect
+{
+    protected IRenderContext? Context { get; private set; }
+    protected int _viewportWidth, _viewportHeight;
+
+    // Override these in your effect:
+    protected abstract void OnInitialize(IRenderContext context);
+    protected abstract void OnUpdate(GameTime gameTime, MouseState mouseState);
+    protected abstract void OnRender(IRenderContext context);
+    protected virtual void OnConfigurationChanged() { }
+    protected virtual void OnViewportSizeChanged(int w, int h) { }
+    protected virtual void OnDispose() { }
+}
+```
+
+### IEffectFactory (MouseEffects.Core/Effects/IEffectFactory.cs)
+
+Factory interface for plugin discovery:
+
+```csharp
+public interface IEffectFactory
+{
+    EffectMetadata Metadata { get; }
+    IEffect Create();
+    EffectConfiguration GetDefaultConfiguration();
+    EffectConfigurationSchema GetConfigurationSchema();
+    object? CreateSettingsControl(IEffect effect);  // WPF UserControl
+}
+```
+
+### EffectConfiguration (MouseEffects.Core/Effects/EffectConfiguration.cs)
+
+Type-safe configuration storage with automatic numeric type conversion:
+
+```csharp
+public class EffectConfiguration
+{
+    public T Get<T>(string key, T defaultValue = default!);
+    public void Set<T>(string key, T value);
+    public bool TryGet<T>(string key, out T value);  // Handles int→float conversion
+    public IReadOnlyDictionary<string, object> GetAll();
+    public EffectConfiguration Clone();
+}
+```
+
+**Important**: The `TryGet<T>` method handles numeric type conversions automatically. JSON may deserialize `30` as `int`, but `TryGet<float>` will still work via `Convert.ToSingle()`.
+
+### IHotkeyProvider (MouseEffects.Core/Effects/IHotkeyProvider.cs)
+
+Interface for plugins that want to register global hotkeys:
+
+```csharp
+public interface IHotkeyProvider
+{
+    IEnumerable<HotkeyDefinition> GetHotkeys();
+}
+
+public record HotkeyDefinition
+{
+    public string Id { get; init; }
+    public string DisplayName { get; init; }
+    public HotkeyModifiers Modifiers { get; init; }  // Ctrl, Shift, Alt (flags)
+    public HotkeyKey Key { get; init; }              // A-Z, 0-9, F1-F12, etc.
+    public bool IsEnabled { get; init; }
+    public Action Callback { get; init; }
+}
+```
 
 ### MouseState (MouseEffects.Core/Input/MouseState.cs)
-- `Position`, `PreviousPosition`, `Velocity`, `ScrollDelta`
-- `ButtonsDown`, `ButtonsPressed`, `ButtonsReleased` (MouseButtons flags)
 
-### IRenderContext
-- `ViewportSize`, `ScreenTexture` (for screen capture effects)
-- `CompileShader`, `CreateBuffer`, `CreateSamplerState`
-- `SetVertexShader`, `SetPixelShader`, `SetConstantBuffer`, `SetShaderResource`, `SetBlendState`
-- `Draw`, `DrawInstanced`
+Mouse input data passed to effects each frame:
 
-## Plugin Development Pattern
+```csharp
+public readonly struct MouseState
+{
+    public Vector2 Position { get; }
+    public Vector2 PreviousPosition { get; }
+    public Vector2 Velocity { get; }
+    public int ScrollDelta { get; }
+    public MouseButtons ButtonsDown { get; }     // Currently held
+    public MouseButtons ButtonsPressed { get; }  // Just pressed this frame
+    public MouseButtons ButtonsReleased { get; } // Just released this frame
+}
+
+[Flags]
+public enum MouseButtons { None, Left, Right, Middle, X1, X2 }
+```
+
+### IRenderContext (MouseEffects.Core/Rendering/IRenderContext.cs)
+
+GPU rendering abstraction (implemented by DX11RenderContext):
+
+```csharp
+public interface IRenderContext
+{
+    Vector2 ViewportSize { get; }
+    IShaderResourceView? ScreenTexture { get; }  // For screen capture effects
+
+    IShader CompileShader(ShaderType type, string source, string entryPoint);
+    IBuffer CreateBuffer<T>(BufferType type, T[] data);
+    IBuffer CreateBuffer(BufferType type, int sizeBytes);
+    ISamplerState CreateSamplerState(SamplerDescription desc);
+
+    void UpdateBuffer<T>(IBuffer buffer, ReadOnlySpan<T> data);
+    void SetVertexShader(IShader shader);
+    void SetPixelShader(IShader shader);
+    void SetConstantBuffer(ShaderStage stage, int slot, IBuffer buffer);
+    void SetShaderResource(ShaderStage stage, int slot, IBuffer buffer);
+    void SetBlendState(BlendMode mode);
+    void SetPrimitiveTopology(PrimitiveTopology topology);
+
+    void Draw(int vertexCount, int startVertex);
+    void DrawInstanced(int vertexCount, int instanceCount, int startVertex, int startInstance);
+}
+```
+
+## Plugin Development Guide
 
 ### Project File (.csproj)
+
 ```xml
-<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-<UseWPF>true</UseWPF>
-<UseWindowsForms>true</UseWindowsForms>
-<Platforms>x64</Platforms>
-<OutputPath>..\..\src\MouseEffects.App\bin\$(Platform)\$(Configuration)\$(TargetFramework)\plugins\</OutputPath>
-<EmbeddedResource Include="Shaders\*.hlsl" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Platforms>x64</Platforms>
+    <OutputPath>..\..\src\MouseEffects.App\bin\$(Platform)\$(Configuration)\$(TargetFramework)\plugins\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MouseEffects.Core\MouseEffects.Core.csproj" />
+    <EmbeddedResource Include="Shaders\*.hlsl" />
+  </ItemGroup>
+</Project>
 ```
 
 ### Effect Class Structure
-1. Define `EffectMetadata` with Id, Name, Description, Author, Version, Category
-2. Declare GPU resources (shaders, buffers, samplers)
-3. Declare cached configuration values
-4. Implement `OnInitialize`: compile shaders, create buffers
-5. Implement `OnConfigurationChanged`: read config values
-6. Implement `OnUpdate`: update state from mouse/time
-7. Implement `OnRender`: set shaders, update buffers, draw
-8. Implement `OnDispose`: cleanup GPU resources
 
-### Shader Loading
 ```csharp
-private static string LoadEmbeddedShader(string name)
+public sealed class MyEffect : EffectBase
 {
-    var assembly = typeof(YourEffect).Assembly;
-    var resourceName = $"Namespace.Shaders.{name}";
-    using var stream = assembly.GetManifestResourceStream(resourceName);
-    using var reader = new StreamReader(stream);
-    return reader.ReadToEnd();
+    // 1. Metadata
+    private static readonly EffectMetadata _metadata = new()
+    {
+        Id = "my-effect",
+        Name = "My Effect",
+        Description = "Does something cool",
+        Author = "You",
+        Version = new Version(1, 0, 0),
+        Category = EffectCategory.Visual
+    };
+
+    // 2. GPU Resources
+    private IShader? _vertexShader;
+    private IShader? _pixelShader;
+    private IBuffer? _constantBuffer;
+
+    // 3. Cached Configuration
+    private float _intensity = 1.0f;
+    private Vector4 _color = new(1, 1, 1, 1);
+
+    public override EffectMetadata Metadata => _metadata;
+
+    // 4. Initialize GPU resources
+    protected override void OnInitialize(IRenderContext context)
+    {
+        var shaderCode = LoadEmbeddedShader("MyShader.hlsl");
+        _vertexShader = context.CompileShader(ShaderType.Vertex, shaderCode, "VSMain");
+        _pixelShader = context.CompileShader(ShaderType.Pixel, shaderCode, "PSMain");
+        _constantBuffer = context.CreateBuffer(BufferType.Constant, 64);
+    }
+
+    // 5. Read configuration
+    protected override void OnConfigurationChanged()
+    {
+        if (Configuration.TryGet("intensity", out float i)) _intensity = i;
+        if (Configuration.TryGet("color", out Vector4 c)) _color = c;
+    }
+
+    // 6. Update state
+    protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
+    {
+        // Update animations, physics, etc.
+    }
+
+    // 7. Render
+    protected override void OnRender(IRenderContext context)
+    {
+        // Update constant buffer, set shaders, draw
+        context.SetVertexShader(_vertexShader);
+        context.SetPixelShader(_pixelShader);
+        context.SetConstantBuffer(ShaderStage.Pixel, 0, _constantBuffer!);
+        context.SetBlendState(BlendMode.Alpha);
+        context.DrawInstanced(6, instanceCount, 0, 0);
+    }
+
+    // 8. Cleanup
+    protected override void OnDispose()
+    {
+        _vertexShader?.Dispose();
+        _pixelShader?.Dispose();
+        _constantBuffer?.Dispose();
+    }
+
+    private static string LoadEmbeddedShader(string name)
+    {
+        var assembly = typeof(MyEffect).Assembly;
+        using var stream = assembly.GetManifestResourceStream($"Namespace.Shaders.{name}");
+        using var reader = new StreamReader(stream!);
+        return reader.ReadToEnd();
+    }
 }
 ```
 
 ### Constant Buffer Alignment
-- Must be multiple of 16 bytes
-- Vector4 requires 16-byte alignment
-- Use `[StructLayout(LayoutKind.Sequential, Size = N)]`
+
+DirectX requires constant buffers to be 16-byte aligned:
+
+```csharp
+[StructLayout(LayoutKind.Sequential, Size = 64)]  // Must be multiple of 16
+private struct ShaderParams
+{
+    public Vector2 MousePos;      // 8 bytes
+    public Vector2 ViewportSize;  // 8 bytes (total: 16)
+    public Vector4 Color;         // 16 bytes (total: 32)
+    public float Intensity;       // 4 bytes
+    public float Time;            // 4 bytes
+    public float Padding1;        // 4 bytes
+    public float Padding2;        // 4 bytes (total: 48)
+    public Vector4 ExtraData;     // 16 bytes (total: 64)
+}
+```
 
 ### Settings Control Pattern
-- WPF UserControl with event `Action<string>? SettingsChanged`
-- Use `_isInitializing` flag to prevent feedback loops
-- Load config in constructor, update effect via `_effect.Configure(config)`
 
-## Zoom Effect Implementation (Latest Addition)
+```csharp
+public partial class MySettingsControl : UserControl
+{
+    private readonly IEffect _effect;
+    private bool _isInitializing = true;
 
-### Features
-- Circle or rectangle shape selection
-- Zoom factor: 1.1x to 5.0x (step 0.1)
-- Circle: radius 20-500 px
-- Rectangle: width/height 40-800 px, sync option for square
-- Border: width 0-10 px, customizable color
-- Hotkeys (optional):
-  - Shift+Ctrl+Wheel: zoom factor +/- 0.1
-  - Shift+Alt+Wheel: size +/- 5%
+    public event Action<string>? SettingsChanged;
 
-### Key Implementation Details
-- Uses `GetAsyncKeyState` from user32.dll for modifier key detection
-- `ConfigurationChangedByHotkey` event notifies UI of hotkey changes
-- UI uses `Dispatcher.BeginInvoke` to refresh from render thread
-- Shader uses signed distance function for rounded rectangle edges
+    public MySettingsControl(IEffect effect)
+    {
+        InitializeComponent();
+        _effect = effect;
+        LoadConfiguration();
+        _isInitializing = false;
+    }
 
-### Files
-- `ZoomEffect.cs` - Main effect class
-- `ZoomEffectFactory.cs` - Factory with config schema
-- `Shaders/ZoomShader.hlsl` - HLSL shader
-- `UI/ZoomSettingsControl.xaml` - WPF settings UI
-- `UI/ZoomSettingsControl.xaml.cs` - Code-behind
+    private void LoadConfiguration()
+    {
+        if (_effect.Configuration.TryGet("intensity", out float i))
+            IntensitySlider.Value = i;
+    }
+
+    private void UpdateConfiguration()
+    {
+        if (_isInitializing) return;
+
+        var config = new EffectConfiguration();
+        config.Set("intensity", (float)IntensitySlider.Value);
+        _effect.Configure(config);
+        SettingsChanged?.Invoke(_effect.Metadata.Id);
+    }
+
+    private void Slider_ValueChanged(object s, RoutedPropertyChangedEventArgs<double> e)
+        => UpdateConfiguration();
+}
+```
+
+## Plugins Reference
+
+### 1. ParticleTrail
+
+**ID**: `particle-trail`
+**Category**: Visual
+**Description**: Colorful particle trails following the cursor
+
+**Features:**
+- Multiple particle colors with rainbow mode
+- Adjustable particle count, size, and lifespan
+- Velocity-based emission rate
+- Glow and bloom effects
+
+### 2. LaserWork
+
+**ID**: `laser-work`
+**Category**: Visual
+**Description**: Glowing laser beams from cursor
+
+**Features:**
+- Multiple beam modes (straight, spread, spiral)
+- Customizable colors and glow intensity
+- Beam length and width controls
+- Click-activated or continuous modes
+
+### 3. ScreenDistortion
+
+**ID**: `screen-distortion`
+**Category**: Screen Capture
+**Description**: Real-time screen warping effects
+
+**Features:**
+- Requires `RequiresContinuousScreenCapture = true`
+- Multiple distortion modes (ripple, swirl, bulge)
+- Adjustable strength and radius
+- Smooth falloff at edges
+
+### 4. ColorBlindness
+
+**ID**: `color-blindness`
+**Category**: Accessibility
+**Description**: Color vision simulation and correction
+
+**Features:**
+- Filter types: None, Protanopia, Deuteranopia, Tritanopia, Grayscale, Inverted
+- Shape modes: Circle, Rectangle, Fullscreen
+- **Dual filter mode**: Different filters inside/outside shape
+- Adjustable shape size and border
+- Shader applies color transformation matrices
+
+**Configuration:**
+- `filterType` (int): Inside filter or fullscreen filter
+- `outsideFilterType` (int): Outside filter (shape modes only)
+- `shapeMode` (int): 0=Circle, 1=Rectangle, 2=Fullscreen
+- `circleRadius`, `rectangleWidth`, `rectangleHeight`
+
+### 5. RadialDithering
+
+**ID**: `radial-dithering`
+**Category**: Visual
+**Description**: Retro dithering effect around cursor
+
+**Features:**
+- Multiple dithering patterns (Bayer, noise, ordered)
+- Adjustable dither size and intensity
+- Color palette reduction
+- Radial falloff from cursor
+
+### 6. TileVibration
+
+**ID**: `tile-vibration`
+**Category**: Visual
+**Description**: Screen divided into vibrating tiles
+
+**Features:**
+- Grid-based tile system
+- Proximity-based vibration intensity
+- Adjustable tile size and gap
+- Color tinting options
+
+### 7. WaterRipple
+
+**ID**: `water-ripple`
+**Category**: Screen Capture
+**Description**: Realistic water ripple effects
+
+**Features:**
+- Physics-based wave propagation
+- Click to create ripples
+- Adjustable wave speed and damping
+- Refraction-based distortion
+
+### 8. Zoom
+
+**ID**: `zoom`
+**Category**: Utility
+**Description**: Magnifying lens effect at cursor
+
+**Features:**
+- Circle or rectangle shape
+- Zoom factor: 1.1x to 5.0x
+- Adjustable size (radius 20-500px, width/height 40-800px)
+- Optional border with customizable color
+- Hotkeys:
+  - Shift+Ctrl+Wheel: Adjust zoom factor
+  - Shift+Alt+Wheel: Adjust size
+- `ConfigurationChangedByHotkey` event for UI sync
+
+**Configuration:**
+- `zoomFactor` (float): 1.1 to 5.0
+- `shapeType` (int): 0=Circle, 1=Rectangle
+- `circleRadius`, `rectangleWidth`, `rectangleHeight`
+- `borderWidth`, `borderColor`
+- `enableWheelZoom`, `enableWheelSize`
+
+### 9. Space Invaders
+
+**ID**: `invaders`
+**Category**: Interactive
+**Description**: Defend against neon space invaders with rockets from your cursor
+
+**Features:**
+- Classic arcade gameplay with modern neon visuals
+- Three invader types (Squid, Crab, Octopus) with different point values
+- Rockets launched on click or mouse movement
+- Timer-based gameplay (default 90 seconds)
+- Real-time score, PPM (points per minute), and countdown display
+
+**Game Over Mechanics:**
+- "TOUCHED" - Mouse cursor touches an invader
+- "INVADED" - Invader reaches bottom of screen
+- Animated "GAME OVER" text with pulsing glow and wave animation
+- Reason displayed below in orange
+
+**High Scores System (NEW):**
+- Stores top 5 scores as Points Per Minute (PPM) with dates
+- Displayed when game ends successfully (timer runs out)
+- New high score: Rainbow cycling colors with breathing animation
+- Old scores: Neon blue with subtle pulsing
+- Default scores: 2000, 1500, 1000, 500, 200 PPM (dated 04/12/2025)
+- Stored in `highScoresJson` config key (not in settings UI)
+
+**Hotkey Support:**
+- Implements `IHotkeyProvider`
+- Ctrl+Shift+I: Reset game (when enabled)
+- Toggle in settings: "Reset Hotkey (Ctrl+Shift+I)"
+
+**Configuration:**
+- Rocket: speed, size, rainbow mode, spawn triggers
+- Invaders: spawn rate, speed range, sizes, colors, descent speed
+- Explosions: particle count, force, lifespan, glow
+- Scoring: points per invader type, overlay position/size/color
+- Timer: `timerDuration` (30-300 seconds)
+- High scores: `highScoresJson` (JSON array, internal use)
+
+### 10. Firework
+
+**ID**: `firework`
+**Category**: Visual
+**Description**: Click-triggered firework explosions
+
+**Features:**
+- Particle-based firework physics
+- Multiple explosion patterns
+- Customizable colors and trail effects
+- Gravity and wind simulation
+
+## Configuration Storage
+
+Settings are stored per-plugin in JSON format:
+
+**Location**: `%APPDATA%\MouseEffects\plugins\{plugin-id}.json`
+
+**Format:**
+```json
+{
+  "IsEnabled": true,
+  "Configuration": {
+    "intensity": 1.5,
+    "color": { "X": 1.0, "Y": 0.5, "Z": 0.0, "W": 1.0 },
+    "timerDuration": 30
+  }
+}
+```
+
+**Type Handling:**
+- Numbers without decimals are deserialized as `int`
+- `EffectConfiguration.TryGet<float>` handles int→float conversion automatically
+- Vector4 (colors) serialized as `{ "X", "Y", "Z", "W" }` objects
+
+## UI Theming
+
+Uses [ModernWPF](https://github.com/Kinnara/ModernWpf) for Fluent Design:
+
+**Theme Options:**
+- System (follows Windows setting)
+- Light
+- Dark (default)
+
+**Implementation:**
+```csharp
+// AppSettings.cs
+public AppTheme Theme { get; set; } = AppTheme.Dark;
+
+// App.xaml.cs
+public static void ApplyTheme(AppTheme theme)
+{
+    ThemeManager.Current.ApplicationTheme = theme switch
+    {
+        AppTheme.Light => ApplicationTheme.Light,
+        AppTheme.Dark => ApplicationTheme.Dark,
+        _ => null  // System
+    };
+}
+```
 
 ## Build Commands
 
 ```bash
 # Build single plugin
-dotnet build "plugins\MouseEffects.Effects.Zoom\MouseEffects.Effects.Zoom.csproj" -c Debug
+dotnet build "plugins\MouseEffects.Effects.Invaders\MouseEffects.Effects.Invaders.csproj" -c Debug -p:Platform=x64
 
 # Build entire solution
-dotnet build -c Debug
+dotnet build -c Release -p:Platform=x64
 
-# Add project to solution
+# Add new plugin to solution
 dotnet sln add "plugins\NewPlugin\NewPlugin.csproj" --solution-folder "plugins"
+
+# Clean and rebuild
+dotnet clean && dotnet build -c Release -p:Platform=x64
 ```
 
-## Configuration Storage
-Settings stored in: `%APPDATA%\MouseEffects\plugins\{plugin-id}.json`
+**IMPORTANT**: Always specify `-p:Platform=x64` for Release builds. Without it, plugins may build to `bin\AnyCPU\` and won't be discovered.
+
+## Recent Bug Fixes
+
+### Numeric Type Conversion in Configuration (2025-12-05)
+
+**Problem**: JSON deserializes whole numbers (e.g., `30`) as `int`, but `TryGet<float>` expected exact type match. This caused saved float settings to be silently ignored.
+
+**Symptoms:**
+- Timer duration set to 30s but effect used default 90s
+- Any float setting saved as whole number wouldn't load
+
+**Fix**: Added automatic numeric type conversion in `EffectConfiguration.TryGet<T>`:
+```csharp
+if (typeof(T) == typeof(float) && obj is IConvertible)
+{
+    value = (T)(object)Convert.ToSingle(obj);
+    return true;
+}
+```
+
+**File**: `MouseEffects.Core/Effects/EffectConfiguration.cs`
 
 ## Current Branch
-Update_ColorBlindness
+
+`color_blindness`
+
+## Git Status
+
+Clean working tree. Recent commits:
+- df01858 Updated Invaders scoring layout
+- 3179c5b Added hotkey to reset invader game, game over mechanics
+- 604315a Changed default settings
+- 836c2aa Added more colors to invaders and default setup
+- 4f2c482 Added screen capture capability for debugging
 
 ## Documentation
-- README.md - Project overview, effects list, installation
-- Wiki/Plugins.md - Detailed plugin reference with all settings
-- Wiki/Features.md - Features overview including theming
-- Wiki/Plugin-Development.md - How to create plugins
-- Wiki/Plugin-ScreenCapture.md - Screen capture plugin guide
 
-## Recent Updates
-
-### UI Theming (ModernWPF)
-- Uses [ModernWPF](https://github.com/Kinnara/ModernWpf) for Fluent Design styling
-- Theme options: System, Light, Dark (default: Dark)
-- Settings in `AppSettings.cs`: `Theme` property with `AppTheme` enum
-- Applied via `App.ApplyTheme()` using `ThemeManager.Current.ApplicationTheme`
-
-### Color Blindness Plugin - Dual Filter Mode
-- **Inside/Outside Filters**: When shape mode is Circle or Rectangle, separate filters can be applied inside and outside the shape
-- **Fullscreen Mode**: Uses single filter (backward compatible)
-- **Default values**: Inside=Grayscale (4), Outside=None (0)
-- **UI behavior**:
-  - Fullscreen: Shows single "Filter Type" dropdown
-  - Circle/Rectangle: Shows "Inside Shape Filter Type" and "Outside Shape Filter Type" dropdowns
-- **Filter syncing**: When switching between fullscreen and shape modes, filters are synced
-
-### ColorBlindness Implementation Details
-- `ColorBlindnessEffect.cs`: Added `_outsideFilterType` field
-- `ColorBlindnessParams` struct: Added `OutsideFilterType` field (64 bytes total)
-- `ColorBlindness.hlsl`: Modified `PSMain` to apply different filters based on mask value
-- `ColorBlindnessSettingsControl.xaml`: Added `FullscreenFilterPanel` and `ShapeFilterPanel` with conditional visibility
-- Configuration keys: `filterType` (inside), `outsideFilterType` (outside)
-
-### Space Invaders - Game Over Mechanics
-- **Game over triggers**:
-  - Mouse cursor touches an invader → "TOUCHED"
-  - Invader reaches bottom of screen → "INVADED"
-- **Visual display**:
-  - Centered "GAME OVER" text with animated pulsing glow
-  - Pulsing intensity (0.6 to 1.0), subtle size breathing effect
-  - Color cycling with red base, wave animation per character
-  - Reason text displayed below in softer orange color
-- **Timer behavior**: Continues showing countdown time (doesn't change to "GAME OVER")
-- **Implementation**: `InvadersEffect.cs` - `TriggerGameOver()`, `CheckMouseCollision()`, game over rendering in `OnRender`
-
-### Plugin Hotkey Architecture (NEW)
-- **IHotkeyProvider interface** (`MouseEffects.Core/Effects/IHotkeyProvider.cs`):
-  - `IEnumerable<HotkeyDefinition> GetHotkeys()` - plugins return their hotkeys
-  - `HotkeyDefinition`: Id, DisplayName, Modifiers (Ctrl/Shift/Alt), Key, IsEnabled, Callback
-  - `HotkeyModifiers` enum: None, Ctrl, Shift, Alt (flags)
-  - `HotkeyKey` enum: A-Z, 0-9, F1-F12, arrows, etc.
-- **Main app integration** (`Program.cs`):
-  - `CheckPluginHotkeys()` polls all effects implementing `IHotkeyProvider`
-  - Uses `GetAsyncKeyState` for modifier and key detection
-  - Tracks pressed state to avoid repeat triggers
-- **Space Invaders reset hotkey**:
-  - Ctrl+Shift+I to reset game (when enabled)
-  - Checkbox in settings below RESET button
-  - Configuration key: `enableResetHotkey`
-
-### Plugin Default Settings Updated
-All plugin factories updated with user's preferred settings from `%APPDATA%\MouseEffects\plugins\`:
-- `InvadersFactory.cs`, `FireworkFactory.cs`, `WaterRippleFactory.cs`
-- `TileVibrationFactory.cs`, `ZoomEffectFactory.cs`, `LaserWorkFactory.cs`
-- `ColorBlindnessFactory.cs`, `ParticleTrailFactory.cs`
-
-### Shader Updates - InvadersShader.hlsl
-- Added missing letters for "GAME OVER" text rendering:
-  - Letter G (index 6): C-shape with middle right arm
-  - Letter H (index 7): Two verticals with middle horizontal
-  - Letter V (index 21): Two top verticals with diagonal to bottom center
-
-## Build Notes
-
-**IMPORTANT**: Always build with explicit x64 platform for Release:
-```bash
-dotnet build -c Release -p:Platform=x64
-```
-Without `-p:Platform=x64`, plugins may build to `bin\AnyCPU\` instead of `bin\x64\` and won't be found by the app.
+- `README.md` - Project overview, effects list, installation
+- `Wiki/Plugins.md` - Detailed plugin reference with all settings
+- `Wiki/Features.md` - Features overview including theming
+- `Wiki/Plugin-Development.md` - How to create plugins
+- `Wiki/Plugin-ScreenCapture.md` - Screen capture plugin guide
