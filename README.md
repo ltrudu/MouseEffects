@@ -158,6 +158,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Velopack](https://github.com/velopack/velopack) - Modern installer and auto-update framework
 - [ModernWpf](https://github.com/Kinnara/ModernWpf) - Fluent Design theme for WPF
 
+## Support the Project
+
+If you find MouseEffects useful, consider supporting its development:
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?logo=paypal)](https://www.paypal.com/ncp/payment/TU8EH7BZEPCPN)
+
+Your support helps keep this project alive and enables new features!
+
 ---
 
 <p align="center">❤️ Made with love and <a href="https://claude.ai">Claude.ai</a> ❤️</p>
