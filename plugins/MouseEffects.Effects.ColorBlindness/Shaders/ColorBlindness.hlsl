@@ -652,6 +652,74 @@ float3 ApplyZoneCorrection(float3 color, int zoneIndex)
 }
 
 // ============================================================================
+// Virtual Cursor for Comparison Mode
+// ============================================================================
+
+// Get the transformed mouse position within a zone for comparison mode
+float2 GetTransformedMousePos(int zoneIndex)
+{
+    float2 zoneMin, zoneMax;
+    GetZoneBounds(zoneIndex, zoneMin, zoneMax);
+    float2 zoneSize = zoneMax - zoneMin;
+    float2 zoneCenter = (zoneMin + zoneMax) * 0.5;
+
+    // Normalize mouse position to 0-1
+    float2 normalizedMouse = MousePosition / ViewportSize;
+
+    if (LayoutMode > 4.5) // Quadrants - stretch to fit
+    {
+        return zoneMin + normalizedMouse * zoneSize;
+    }
+
+    // Split modes - preserve aspect ratio
+    float screenAspect = ViewportSize.x / ViewportSize.y;
+    float zoneAspect = zoneSize.x / zoneSize.y;
+
+    float2 scaledSize;
+    if (screenAspect > zoneAspect)
+    {
+        scaledSize.x = zoneSize.x;
+        scaledSize.y = zoneSize.x / screenAspect;
+    }
+    else
+    {
+        scaledSize.y = zoneSize.y;
+        scaledSize.x = zoneSize.y * screenAspect;
+    }
+
+    float2 contentMin = zoneCenter - scaledSize * 0.5;
+    return contentMin + normalizedMouse * scaledSize;
+}
+
+// Draw a crosshair cursor indicator
+float DrawCursor(float2 screenPos, float2 cursorPos, float size)
+{
+    float2 delta = screenPos - cursorPos;
+    float dist = length(delta);
+
+    // Crosshair parameters
+    float lineWidth = 2.0;
+    float innerRadius = 4.0;
+    float outerRadius = size;
+
+    // Horizontal line
+    bool onHLine = abs(delta.y) < lineWidth && abs(delta.x) > innerRadius && abs(delta.x) < outerRadius;
+    // Vertical line
+    bool onVLine = abs(delta.x) < lineWidth && abs(delta.y) > innerRadius && abs(delta.y) < outerRadius;
+    // Center dot
+    bool onCenter = dist < 3.0;
+    // Outer circle (thin)
+    bool onCircle = abs(dist - outerRadius) < 1.5;
+
+    if (onHLine || onVLine || onCenter || onCircle)
+    {
+        return 1.0;
+    }
+
+    return 0.0;
+}
+
+// ============================================================================
 // Vertex Shader
 // ============================================================================
 
@@ -730,6 +798,45 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     // Apply color boost
     finalColor = ApplyColorBoost(finalColor, ColorBoost);
+
+    // Draw virtual cursor in comparison mode
+    if (ComparisonMode > 0.5 && LayoutMode > 2.5)
+    {
+        float2 transformedMouse = GetTransformedMousePos(zoneIndex);
+        float cursorSize = 15.0;
+
+        // Scale cursor size based on zone size (smaller for quadrants)
+        if (LayoutMode > 4.5) // Quadrants
+        {
+            cursorSize = 12.0;
+        }
+
+        float cursorAlpha = DrawCursor(screenPos, transformedMouse, cursorSize);
+
+        if (cursorAlpha > 0.5)
+        {
+            // Draw cursor with contrasting color (inverted luminance)
+            float lum = dot(finalColor, float3(0.299, 0.587, 0.114));
+            float3 cursorColor = lum > 0.5 ? float3(0.0, 0.0, 0.0) : float3(1.0, 1.0, 1.0);
+
+            // Add colored outline for better visibility
+            float2 delta = screenPos - transformedMouse;
+            float dist = length(delta);
+
+            // Inner part is solid contrasting color
+            if (dist < 3.0 || abs(dist - cursorSize) < 1.5)
+            {
+                // Center dot and outer ring - use accent color (cyan/magenta based on zone)
+                float3 accentColor = (zoneIndex % 2 == 0) ? float3(0.0, 1.0, 1.0) : float3(1.0, 0.0, 1.0);
+                finalColor = lerp(finalColor, accentColor, 0.9);
+            }
+            else
+            {
+                // Crosshair lines - use contrasting color
+                finalColor = lerp(finalColor, cursorColor, 0.95);
+            }
+        }
+    }
 
     return float4(finalColor, 1.0);
 }
