@@ -45,7 +45,10 @@ public enum EffectCategory
     Ambient,
 
     /// <summary>Utility effects.</summary>
-    Utility
+    Utility,
+
+    /// <summary>Accessibility effects for users with disabilities.</summary>
+    Accessibility
 }
 
 /// <summary>

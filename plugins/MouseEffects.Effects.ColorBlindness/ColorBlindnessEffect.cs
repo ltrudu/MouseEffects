@@ -9,7 +9,8 @@ using MouseEffects.Core.Time;
 namespace MouseEffects.Effects.ColorBlindness;
 
 /// <summary>
-/// Color blindness simulation effect with RGB curve adjustment.
+/// Color blindness correction effect using Daltonization algorithm.
+/// Corrects colors for people with color vision deficiency.
 /// Supports circular, rectangular, and fullscreen application modes.
 /// </summary>
 public sealed class ColorBlindnessEffect : EffectBase
@@ -20,22 +21,28 @@ public sealed class ColorBlindnessEffect : EffectBase
     private const float DefaultRectWidth = 400.0f;
     private const float DefaultRectHeight = 300.0f;
     private const int DefaultShapeMode = 0; // Circle
-    private const int DefaultFilterType = 4; // Grayscale (inside shape default)
+    private const int DefaultFilterType = 0; // None (select correction type as needed)
     private const int DefaultOutsideFilterType = 0; // None (outside shape default)
     private const float DefaultIntensity = 1.0f;
     private const float DefaultColorBoost = 1.0f;
     private const float DefaultEdgeSoftness = 0.2f;
     private const bool DefaultEnableCurves = false;
     private const float DefaultCurveStrength = 1.0f;
+    private const bool DefaultEnableCustomMatrix = false;
+
+    // Default identity matrix (normal vision)
+    private static readonly Vector4 DefaultMatrixRow0 = new(1.0f, 0.0f, 0.0f, 0.0f);
+    private static readonly Vector4 DefaultMatrixRow1 = new(0.0f, 1.0f, 0.0f, 0.0f);
+    private static readonly Vector4 DefaultMatrixRow2 = new(0.0f, 0.0f, 1.0f, 0.0f);
 
     private static readonly EffectMetadata _metadata = new()
     {
         Id = "color-blindness",
-        Name = "Color Blindness",
-        Description = "Simulates color blindness conditions with RGB curve adjustment. Apply to circular, rectangular, or fullscreen areas.",
+        Name = "Color Blindness Correction",
+        Description = "Corrects colors for color vision deficiency using Daltonization. Supports Protanopia, Deuteranopia, Tritanopia, and more.",
         Author = "MouseEffects",
-        Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Version = new Version(1, 1, 0),
+        Category = EffectCategory.Accessibility
     };
 
     // GPU resources
@@ -58,6 +65,10 @@ public sealed class ColorBlindnessEffect : EffectBase
     private float _edgeSoftness = DefaultEdgeSoftness;
     private bool _enableCurves = DefaultEnableCurves;
     private float _curveStrength = DefaultCurveStrength;
+    private bool _enableCustomMatrix = DefaultEnableCustomMatrix;
+    private Vector4 _customMatrixRow0 = DefaultMatrixRow0;
+    private Vector4 _customMatrixRow1 = DefaultMatrixRow1;
+    private Vector4 _customMatrixRow2 = DefaultMatrixRow2;
     private Vector2 _mousePosition;
 
     // Curve data - array of control points for R, G, B, and Master curves
@@ -242,6 +253,20 @@ public sealed class ColorBlindnessEffect : EffectBase
         if (Configuration.TryGet("curveStrength", out float curveStrength))
             _curveStrength = curveStrength;
 
+        if (Configuration.TryGet("enableCustomMatrix", out bool enableCustomMatrix))
+            _enableCustomMatrix = enableCustomMatrix;
+
+        // Load custom matrix values
+        if (Configuration.TryGet("matrixR0", out float r0)) _customMatrixRow0.X = r0;
+        if (Configuration.TryGet("matrixR1", out float r1)) _customMatrixRow0.Y = r1;
+        if (Configuration.TryGet("matrixR2", out float r2)) _customMatrixRow0.Z = r2;
+        if (Configuration.TryGet("matrixG0", out float g0)) _customMatrixRow1.X = g0;
+        if (Configuration.TryGet("matrixG1", out float g1)) _customMatrixRow1.Y = g1;
+        if (Configuration.TryGet("matrixG2", out float g2)) _customMatrixRow1.Z = g2;
+        if (Configuration.TryGet("matrixB0", out float b0)) _customMatrixRow2.X = b0;
+        if (Configuration.TryGet("matrixB1", out float b1)) _customMatrixRow2.Y = b1;
+        if (Configuration.TryGet("matrixB2", out float b2)) _customMatrixRow2.Z = b2;
+
         // Load curve data if present
         if (Configuration.TryGet("redCurve", out string? redCurveJson) && redCurveJson != null)
             _redCurve = CurveData.FromJson(redCurveJson);
@@ -289,7 +314,11 @@ public sealed class ColorBlindnessEffect : EffectBase
             ColorBoost = _colorBoost,
             EdgeSoftness = _edgeSoftness,
             EnableCurves = _enableCurves ? 1.0f : 0.0f,
-            CurveStrength = _curveStrength
+            CurveStrength = _curveStrength,
+            EnableCustomMatrix = _enableCustomMatrix ? 1.0f : 0.0f,
+            CustomMatrixRow0 = _customMatrixRow0,
+            CustomMatrixRow1 = _customMatrixRow1,
+            CustomMatrixRow2 = _customMatrixRow2
         };
 
         context.UpdateBuffer(_paramsBuffer!, cbParams);
@@ -356,7 +385,7 @@ public sealed class ColorBlindnessEffect : EffectBase
 
     #region Shader Structures
 
-    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    [StructLayout(LayoutKind.Sequential, Size = 112)]
     private struct ColorBlindnessParams
     {
         // Must match HLSL cbuffer layout exactly!
@@ -373,7 +402,10 @@ public sealed class ColorBlindnessEffect : EffectBase
         public float EdgeSoftness;         // 4 bytes, offset 48
         public float EnableCurves;         // 4 bytes, offset 52
         public float CurveStrength;        // 4 bytes, offset 56
-        private float _padding;            // 4 bytes, offset 60
+        public float EnableCustomMatrix;   // 4 bytes, offset 60
+        public Vector4 CustomMatrixRow0;   // 16 bytes, offset 64
+        public Vector4 CustomMatrixRow1;   // 16 bytes, offset 80
+        public Vector4 CustomMatrixRow2;   // 16 bytes, offset 96
     }
 
     #endregion

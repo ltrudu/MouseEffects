@@ -43,7 +43,7 @@
         </Grid>
 
         <!-- Description (always visible) -->
-        <TextBlock Text="Simulates color blindness with RGB curve adjustment. Apply to circular, rectangular, or fullscreen areas."
+        <TextBlock Text="Corrects colors for color vision deficiency using Daltonization. Apply to circular, rectangular, or fullscreen areas."
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
         <!-- Collapsible Content Panel -->
@@ -87,46 +87,140 @@
 
             <Separator Margin="0,12,0,8"/>
 
-            <!-- Color Filter -->
-            <TextBlock Text="Color Filter" Style="{StaticResource SectionStyle}"/>
+            <!-- Color Correction -->
+            <TextBlock Text="Color Correction" Style="{StaticResource SectionStyle}"/>
 
             <!-- Single filter for Fullscreen mode -->
             <StackPanel x:Name="FullscreenFilterPanel" Visibility="Collapsed">
-                <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
+                <TextBlock Text="Correction Type" Style="{StaticResource LabelStyle}"/>
                 <ComboBox x:Name="FilterTypeCombo" SelectionChanged="FilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
-                    <ComboBoxItem Content="None (curves only)"/>
-                    <ComboBoxItem Content="Red-green (deuteranopia)"/>
-                    <ComboBoxItem Content="Red-green (protanopia)"/>
-                    <ComboBoxItem Content="Blue-yellow (tritanopia)"/>
-                    <ComboBoxItem Content="Grayscale" IsSelected="True"/>
-                    <ComboBoxItem Content="Grayscale inverted"/>
-                    <ComboBoxItem Content="Inverted"/>
+                    <ComboBoxItem Content="None (curves only)" IsSelected="True"/>
+                    <ComboBoxItem Content="Protanopia (red-blind)"/>
+                    <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                    <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                    <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                    <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                    <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                    <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
+                    <ComboBoxItem Content="Achromatomaly (weak color)"/>
+                    <ComboBoxItem Content="Grayscale"/>
+                    <ComboBoxItem Content="Inverted Grayscale"/>
                 </ComboBox>
             </StackPanel>
 
             <!-- Dual filters for Shape modes (Circle/Rectangle) -->
             <StackPanel x:Name="ShapeFilterPanel">
-                <TextBlock Text="Inside Shape Filter Type" Style="{StaticResource LabelStyle}"/>
+                <TextBlock Text="Inside Shape Correction" Style="{StaticResource LabelStyle}"/>
                 <ComboBox x:Name="InsideFilterTypeCombo" SelectionChanged="InsideFilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
-                    <ComboBoxItem Content="None (curves only)"/>
-                    <ComboBoxItem Content="Red-green (deuteranopia)"/>
-                    <ComboBoxItem Content="Red-green (protanopia)"/>
-                    <ComboBoxItem Content="Blue-yellow (tritanopia)"/>
-                    <ComboBoxItem Content="Grayscale" IsSelected="True"/>
-                    <ComboBoxItem Content="Grayscale inverted"/>
-                    <ComboBoxItem Content="Inverted"/>
+                    <ComboBoxItem Content="None (curves only)" IsSelected="True"/>
+                    <ComboBoxItem Content="Protanopia (red-blind)"/>
+                    <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                    <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                    <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                    <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                    <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                    <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
+                    <ComboBoxItem Content="Achromatomaly (weak color)"/>
+                    <ComboBoxItem Content="Grayscale"/>
+                    <ComboBoxItem Content="Inverted Grayscale"/>
                 </ComboBox>
 
-                <TextBlock Text="Outside Shape Filter Type" Style="{StaticResource LabelStyle}"/>
+                <TextBlock Text="Outside Shape Correction" Style="{StaticResource LabelStyle}"/>
                 <ComboBox x:Name="OutsideFilterTypeCombo" SelectionChanged="OutsideFilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
                     <ComboBoxItem Content="None" IsSelected="True"/>
-                    <ComboBoxItem Content="Red-green (deuteranopia)"/>
-                    <ComboBoxItem Content="Red-green (protanopia)"/>
-                    <ComboBoxItem Content="Blue-yellow (tritanopia)"/>
+                    <ComboBoxItem Content="Protanopia (red-blind)"/>
+                    <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                    <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                    <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                    <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                    <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                    <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
+                    <ComboBoxItem Content="Achromatomaly (weak color)"/>
                     <ComboBoxItem Content="Grayscale"/>
-                    <ComboBoxItem Content="Grayscale inverted"/>
-                    <ComboBoxItem Content="Inverted"/>
+                    <ComboBoxItem Content="Inverted Grayscale"/>
                 </ComboBox>
+            </StackPanel>
+
+            <!-- Custom Color Matrix -->
+            <CheckBox x:Name="EnableCustomMatrixCheckBox" Content="Enable Custom Matrix" Margin="0,8,0,4"
+                      IsChecked="False" Checked="EnableCustomMatrixCheckBox_Changed" Unchecked="EnableCustomMatrixCheckBox_Changed"/>
+
+            <StackPanel x:Name="CustomMatrixPanel" Visibility="Collapsed">
+                <TextBlock Text="Load Preset" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="MatrixPresetCombo" SelectionChanged="MatrixPresetCombo_SelectionChanged" Margin="0,0,0,8">
+                    <ComboBoxItem Content="Normal Vision (Identity)" IsSelected="True"/>
+                    <ComboBoxItem Content="Protanopia"/>
+                    <ComboBoxItem Content="Protanomaly"/>
+                    <ComboBoxItem Content="Deuteranopia"/>
+                    <ComboBoxItem Content="Deuteranomaly"/>
+                    <ComboBoxItem Content="Tritanopia"/>
+                    <ComboBoxItem Content="Tritanomaly"/>
+                    <ComboBoxItem Content="Achromatopsia"/>
+                    <ComboBoxItem Content="Achromatomaly"/>
+                    <ComboBoxItem Content="Grayscale"/>
+                    <ComboBoxItem Content="Sepia"/>
+                </ComboBox>
+
+                <TextBlock Text="Color Matrix (3x3)" Style="{StaticResource LabelStyle}"/>
+                <TextBlock Text="Each row defines how R, G, B input maps to output" Opacity="0.6" FontSize="10" Margin="0,0,0,4"/>
+
+                <!-- Matrix Row Labels -->
+                <Grid Margin="0,4,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="" FontWeight="SemiBold"/>
+                    <TextBlock Grid.Column="1" Text="R in" HorizontalAlignment="Center" Opacity="0.7" FontSize="11"/>
+                    <TextBlock Grid.Column="2" Text="G in" HorizontalAlignment="Center" Opacity="0.7" FontSize="11"/>
+                    <TextBlock Grid.Column="3" Text="B in" HorizontalAlignment="Center" Opacity="0.7" FontSize="11"/>
+                </Grid>
+
+                <!-- Red Output Row -->
+                <Grid Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="R out" VerticalAlignment="Center" Foreground="#FFCC6666" FontWeight="SemiBold"/>
+                    <TextBox x:Name="MatrixR0" Grid.Column="1" Text="1.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                    <TextBox x:Name="MatrixR1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                    <TextBox x:Name="MatrixR2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                </Grid>
+
+                <!-- Green Output Row -->
+                <Grid Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="G out" VerticalAlignment="Center" Foreground="#FF66CC66" FontWeight="SemiBold"/>
+                    <TextBox x:Name="MatrixG0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                    <TextBox x:Name="MatrixG1" Grid.Column="2" Text="1.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                    <TextBox x:Name="MatrixG2" Grid.Column="3" Text="0.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                </Grid>
+
+                <!-- Blue Output Row -->
+                <Grid Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="B out" VerticalAlignment="Center" Foreground="#FF6666CC" FontWeight="SemiBold"/>
+                    <TextBox x:Name="MatrixB0" Grid.Column="1" Text="0.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                    <TextBox x:Name="MatrixB1" Grid.Column="2" Text="0.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                    <TextBox x:Name="MatrixB2" Grid.Column="3" Text="1.000" Margin="2" TextChanged="Matrix_TextChanged"/>
+                </Grid>
+
+                <Button x:Name="ResetMatrixButton" Content="Reset to Identity" Margin="0,8,0,0" Click="ResetMatrixButton_Click"/>
             </StackPanel>
 
             <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
