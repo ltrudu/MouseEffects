@@ -115,6 +115,6 @@ public sealed class ColorBlindnessNGFactory : IEffectFactory
 
     public object? CreateSettingsControl(IEffect effect)
     {
-        return new ColorBlindnessNGSettingsControl(effect);
+        return new ColorBlindnessNGSettingsControl { DataContext = effect };
     }
 }

@@ -14,12 +14,20 @@
         </Style>
         <Style TargetType="TextBlock" x:Key="SectionStyle">
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Margin" Value="0,8,0,8"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ZoneHeaderStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
         </Style>
         <Style TargetType="TextBlock" x:Key="ChannelHeaderStyle">
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Margin" Value="0,8,0,4"/>
+        </Style>
+        <Style TargetType="Expander" x:Key="ZoneExpanderStyle">
+            <Setter Property="Margin" Value="0,4,0,4"/>
+            <Setter Property="Padding" Value="8"/>
         </Style>
     </UserControl.Resources>
 
@@ -47,228 +55,417 @@
         </Grid>
 
         <!-- Description -->
-        <TextBlock Text="Next-gen CVD simulation and correction with LUT-based color remapping."
+        <TextBlock Text="Per-zone CVD simulation and correction with LUT-based color remapping."
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
         <!-- Collapsible Content -->
         <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
 
-            <!-- Mode Selection -->
-            <TextBlock Text="Operating Mode" Style="{StaticResource SectionStyle}"/>
-            <ComboBox x:Name="ModeCombo" SelectionChanged="ModeCombo_SelectionChanged" Margin="0,0,0,12">
-                <ComboBoxItem Content="Simulation (show what CVD people see)" IsSelected="True"/>
-                <ComboBoxItem Content="Correction (help CVD users see better)"/>
+            <!-- ======================== SPLIT SCREEN SETTINGS ======================== -->
+            <TextBlock Text="Split Screen Layout" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Display Mode" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="SplitModeCombo" SelectionChanged="SplitModeCombo_SelectionChanged" Margin="0,0,0,8">
+                <ComboBoxItem Content="Fullscreen (1 zone)" IsSelected="True"/>
+                <ComboBoxItem Content="Split Vertical (Left/Right)"/>
+                <ComboBoxItem Content="Split Horizontal (Top/Bottom)"/>
+                <ComboBoxItem Content="4 Quadrants"/>
             </ComboBox>
 
-            <!-- ======================== SIMULATION MODE UI ======================== -->
-            <StackPanel x:Name="SimulationPanel">
-                <TextBlock Text="Simulation Settings" Style="{StaticResource SectionStyle}"/>
+            <!-- Split Position Sliders -->
+            <StackPanel x:Name="SplitPositionPanel" Visibility="Collapsed">
+                <TextBlock Text="Horizontal Split Position" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="SplitPositionSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionSlider_ValueChanged"/>
+                <TextBlock x:Name="SplitPositionValue" Text="50%" Opacity="0.7" FontSize="11"/>
 
-                <TextBlock Text="Algorithm" Style="{StaticResource LabelStyle}"/>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <RadioButton x:Name="MachadoRadio" Content="Machado (RGB)" IsChecked="True"
-                                 Checked="Algorithm_Changed" Margin="0,0,16,0"/>
-                    <RadioButton x:Name="StrictRadio" Content="Strict (LMS)"
-                                 Checked="Algorithm_Changed"/>
-                </StackPanel>
-
-                <TextBlock Text="CVD Type" Style="{StaticResource LabelStyle}"/>
-                <ComboBox x:Name="SimulationFilterCombo" SelectionChanged="SimulationFilterCombo_SelectionChanged" Margin="0,0,0,8">
-                    <ComboBoxItem Content="None" IsSelected="True"/>
-                    <ComboBoxItem Content="Protanopia (red-blind)"/>
-                    <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                    <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                    <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                    <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                    <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
-                    <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
-                    <ComboBoxItem Content="Achromatomaly (weak color)"/>
-                </ComboBox>
-            </StackPanel>
-
-            <!-- ======================== CORRECTION MODE UI ======================== -->
-            <StackPanel x:Name="CorrectionPanel" Visibility="Collapsed">
-                <TextBlock Text="Correction Settings" Style="{StaticResource SectionStyle}"/>
-
-                <!-- Preset Selection -->
-                <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <ComboBox x:Name="PresetCombo" Grid.Column="0" Margin="0,0,8,0">
-                        <ComboBoxItem Content="Custom" IsSelected="True"/>
-                        <ComboBoxItem Content="Deuteranopia"/>
-                        <ComboBoxItem Content="Protanopia"/>
-                        <ComboBoxItem Content="Tritanopia"/>
-                        <ComboBoxItem Content="Deuteranomaly"/>
-                        <ComboBoxItem Content="Protanomaly"/>
-                        <ComboBoxItem Content="Tritanomaly"/>
-                        <ComboBoxItem Content="Red-Green (Both)"/>
-                        <ComboBoxItem Content="High Contrast"/>
-                    </ComboBox>
-                    <Button x:Name="ApplyPresetButton" Grid.Column="1" Content="Apply"
-                            Click="ApplyPresetButton_Click" Padding="12,4"/>
-                </Grid>
-
-                <!-- Application Mode -->
-                <TextBlock Text="Application Mode" Style="{StaticResource LabelStyle}"/>
-                <ComboBox x:Name="ApplicationModeCombo" SelectionChanged="ApplicationModeCombo_SelectionChanged" Margin="0,0,0,8">
-                    <ComboBoxItem Content="Full Channel (apply to all pixels)" IsSelected="True"/>
-                    <ComboBoxItem Content="Dominant Only (apply when channel is strongest)"/>
-                    <ComboBoxItem Content="Threshold (apply above threshold)"/>
-                </ComboBox>
-
-                <!-- Threshold (only visible in threshold mode) -->
-                <StackPanel x:Name="ThresholdPanel" Visibility="Collapsed">
-                    <TextBlock Text="Threshold" Style="{StaticResource LabelStyle}"/>
-                    <Slider x:Name="ThresholdSlider" Minimum="0" Maximum="1" Value="0.3"
-                            Style="{StaticResource SliderStyle}" ValueChanged="ThresholdSlider_ValueChanged"/>
-                    <TextBlock x:Name="ThresholdValue" Text="0.30" Opacity="0.7" FontSize="11"/>
-                </StackPanel>
-
-                <!-- Gradient Type -->
-                <TextBlock Text="Gradient Interpolation" Style="{StaticResource LabelStyle}"/>
-                <ComboBox x:Name="GradientTypeCombo" SelectionChanged="GradientTypeCombo_SelectionChanged" Margin="0,0,0,8">
-                    <ComboBoxItem Content="Linear RGB (fast)" IsSelected="True"/>
-                    <ComboBoxItem Content="Perceptual LAB (smooth)"/>
-                    <ComboBoxItem Content="HSL (vibrant)"/>
-                </ComboBox>
-
-                <Separator Margin="0,8,0,8"/>
-
-                <!-- Red Channel -->
-                <StackPanel>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="RedEnabledCheckBox" Grid.Column="0" VerticalAlignment="Center"
-                                  Checked="ChannelEnabled_Changed" Unchecked="ChannelEnabled_Changed"/>
-                        <TextBlock Grid.Column="1" Text="Red Channel" Foreground="#FFCC6666"
-                                   Style="{StaticResource ChannelHeaderStyle}"/>
-                    </Grid>
-                    <StackPanel x:Name="RedChannelPanel" Visibility="Collapsed" Margin="20,0,0,0">
-                        <TextBlock Text="Strength" Style="{StaticResource LabelStyle}"/>
-                        <Slider x:Name="RedStrengthSlider" Minimum="0" Maximum="1" Value="1"
-                                Style="{StaticResource SliderStyle}" ValueChanged="RedStrengthSlider_ValueChanged"/>
-                        <TextBlock x:Name="RedStrengthValue" Text="1.00" Opacity="0.7" FontSize="11"/>
-
-                        <Grid Margin="0,4,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Start Color" FontSize="11" Opacity="0.7"/>
-                                <Border x:Name="RedStartColorBorder" Height="24" Margin="0,2,4,0"
-                                        Background="#FF0000" BorderBrush="Gray" BorderThickness="1"
-                                        MouseLeftButtonDown="RedStartColor_Click" Cursor="Hand"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="End Color" FontSize="11" Opacity="0.7"/>
-                                <Border x:Name="RedEndColorBorder" Height="24" Margin="4,2,0,0"
-                                        Background="#00FFFF" BorderBrush="Gray" BorderThickness="1"
-                                        MouseLeftButtonDown="RedEndColor_Click" Cursor="Hand"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Green Channel -->
-                <StackPanel Margin="0,8,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="GreenEnabledCheckBox" Grid.Column="0" VerticalAlignment="Center"
-                                  Checked="ChannelEnabled_Changed" Unchecked="ChannelEnabled_Changed"/>
-                        <TextBlock Grid.Column="1" Text="Green Channel" Foreground="#FF66CC66"
-                                   Style="{StaticResource ChannelHeaderStyle}"/>
-                    </Grid>
-                    <StackPanel x:Name="GreenChannelPanel" Visibility="Collapsed" Margin="20,0,0,0">
-                        <TextBlock Text="Strength" Style="{StaticResource LabelStyle}"/>
-                        <Slider x:Name="GreenStrengthSlider" Minimum="0" Maximum="1" Value="1"
-                                Style="{StaticResource SliderStyle}" ValueChanged="GreenStrengthSlider_ValueChanged"/>
-                        <TextBlock x:Name="GreenStrengthValue" Text="1.00" Opacity="0.7" FontSize="11"/>
-
-                        <Grid Margin="0,4,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Start Color" FontSize="11" Opacity="0.7"/>
-                                <Border x:Name="GreenStartColorBorder" Height="24" Margin="0,2,4,0"
-                                        Background="#00FF00" BorderBrush="Gray" BorderThickness="1"
-                                        MouseLeftButtonDown="GreenStartColor_Click" Cursor="Hand"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="End Color" FontSize="11" Opacity="0.7"/>
-                                <Border x:Name="GreenEndColorBorder" Height="24" Margin="4,2,0,0"
-                                        Background="#00FFFF" BorderBrush="Gray" BorderThickness="1"
-                                        MouseLeftButtonDown="GreenEndColor_Click" Cursor="Hand"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </StackPanel>
-
-                <!-- Blue Channel -->
-                <StackPanel Margin="0,8,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="BlueEnabledCheckBox" Grid.Column="0" VerticalAlignment="Center"
-                                  Checked="ChannelEnabled_Changed" Unchecked="ChannelEnabled_Changed"/>
-                        <TextBlock Grid.Column="1" Text="Blue Channel" Foreground="#FF6699FF"
-                                   Style="{StaticResource ChannelHeaderStyle}"/>
-                    </Grid>
-                    <StackPanel x:Name="BlueChannelPanel" Visibility="Collapsed" Margin="20,0,0,0">
-                        <TextBlock Text="Strength" Style="{StaticResource LabelStyle}"/>
-                        <Slider x:Name="BlueStrengthSlider" Minimum="0" Maximum="1" Value="1"
-                                Style="{StaticResource SliderStyle}" ValueChanged="BlueStrengthSlider_ValueChanged"/>
-                        <TextBlock x:Name="BlueStrengthValue" Text="1.00" Opacity="0.7" FontSize="11"/>
-
-                        <Grid Margin="0,4,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Start Color" FontSize="11" Opacity="0.7"/>
-                                <Border x:Name="BlueStartColorBorder" Height="24" Margin="0,2,4,0"
-                                        Background="#0000FF" BorderBrush="Gray" BorderThickness="1"
-                                        MouseLeftButtonDown="BlueStartColor_Click" Cursor="Hand"/>
-                            </StackPanel>
-                            <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="End Color" FontSize="11" Opacity="0.7"/>
-                                <Border x:Name="BlueEndColorBorder" Height="24" Margin="4,2,0,0"
-                                        Background="#FFFF00" BorderBrush="Gray" BorderThickness="1"
-                                        MouseLeftButtonDown="BlueEndColor_Click" Cursor="Hand"/>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
+                <StackPanel x:Name="SplitPositionVPanel" Visibility="Collapsed">
+                    <TextBlock Text="Vertical Split Position" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="SplitPositionVSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                            Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionVSlider_ValueChanged"/>
+                    <TextBlock x:Name="SplitPositionVValue" Text="50%" Opacity="0.7" FontSize="11"/>
                 </StackPanel>
             </StackPanel>
+
+            <!-- Comparison Mode -->
+            <CheckBox x:Name="ComparisonModeCheckBox" Content="Comparison Mode (Zone 1 shows original)"
+                      Margin="0,8,0,0" Visibility="Collapsed"
+                      Checked="ComparisonModeCheckBox_Changed" Unchecked="ComparisonModeCheckBox_Changed"/>
 
             <Separator Margin="0,12,0,8"/>
 
-            <!-- Global Intensity -->
-            <TextBlock Text="Global Intensity" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="IntensitySlider" Minimum="0" Maximum="1" Value="1"
-                    Style="{StaticResource SliderStyle}" ValueChanged="IntensitySlider_ValueChanged"/>
-            <TextBlock x:Name="IntensityValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+            <!-- ======================== ZONE SETTINGS ======================== -->
+
+            <!-- Zone 0 (always visible) -->
+            <Expander x:Name="Zone0Expander" Style="{StaticResource ZoneExpanderStyle}" IsExpanded="True">
+                <Expander.Header>
+                    <TextBlock x:Name="Zone0Header" Text="Zone 1 (Left / Top-Left)" Style="{StaticResource ZoneHeaderStyle}"/>
+                </Expander.Header>
+                <StackPanel x:Name="Zone0Panel" Margin="0,8,0,0">
+                    <!-- Zone Mode -->
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone0ModeCombo" SelectionChanged="Zone0ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Original (no processing)"/>
+                        <ComboBoxItem Content="Simulation (show CVD view)"/>
+                        <ComboBoxItem Content="Correction (enhance colors)"/>
+                    </ComboBox>
+
+                    <!-- Simulation Settings -->
+                    <StackPanel x:Name="Zone0SimulationPanel" Visibility="Collapsed">
+                        <TextBlock Text="Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <RadioButton x:Name="Zone0MachadoRadio" Content="Machado" IsChecked="True"
+                                         Checked="Zone0Algorithm_Changed" Margin="0,0,16,0"/>
+                            <RadioButton x:Name="Zone0StrictRadio" Content="Strict (LMS)"
+                                         Checked="Zone0Algorithm_Changed"/>
+                        </StackPanel>
+
+                        <TextBlock Text="CVD Type" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone0SimFilterCombo" SelectionChanged="Zone0SimFilter_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="None"/>
+                            <ComboBoxItem Content="Protanopia (red-blind)"/>
+                            <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                            <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                            <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                            <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                            <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            <ComboBoxItem Content="Achromatopsia"/>
+                            <ComboBoxItem Content="Achromatomaly"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <!-- Correction Settings -->
+                    <StackPanel x:Name="Zone0CorrectionPanel" Visibility="Collapsed">
+                        <!-- Preset -->
+                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="Zone0PresetCombo" Grid.Column="0" Margin="0,0,8,0"/>
+                            <Button x:Name="Zone0ApplyPresetButton" Grid.Column="1" Content="Apply"
+                                    Click="Zone0ApplyPreset_Click" Padding="12,4"/>
+                        </Grid>
+
+                        <!-- Custom Preset Buttons -->
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="SaveAsPresetButton" Content="Save As..."
+                                    Click="SaveAsPresetButton_Click" Padding="8,4" Margin="0,0,4,0"
+                                    ToolTip="Save current settings as a new custom preset"/>
+                            <Button x:Name="SavePresetButton" Content="Save"
+                                    Click="SavePresetButton_Click" Padding="8,4" Margin="0,0,4,0"
+                                    IsEnabled="False"
+                                    ToolTip="Update the selected custom preset"/>
+                            <Button x:Name="ExportPresetButton" Content="Export"
+                                    Click="ExportPresetButton_Click" Padding="8,4" Margin="0,0,4,0"
+                                    ToolTip="Export selected preset to file"/>
+                            <Button x:Name="ImportPresetButton" Content="Import"
+                                    Click="ImportPresetButton_Click" Padding="8,4"
+                                    ToolTip="Import preset from file"/>
+                        </StackPanel>
+
+                        <!-- Application Mode -->
+                        <TextBlock Text="Application Mode" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone0AppModeCombo" SelectionChanged="Zone0AppMode_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="Full Channel" IsSelected="True"/>
+                            <ComboBoxItem Content="Dominant Only"/>
+                            <ComboBoxItem Content="Threshold"/>
+                        </ComboBox>
+
+                        <StackPanel x:Name="Zone0ThresholdPanel" Visibility="Collapsed">
+                            <TextBlock Text="Threshold" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone0ThresholdSlider" Minimum="0" Maximum="1" Value="0.3"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone0Threshold_Changed"/>
+                            <TextBlock x:Name="Zone0ThresholdValue" Text="0.30" Opacity="0.7" FontSize="11"/>
+                        </StackPanel>
+
+                        <!-- Gradient Type -->
+                        <TextBlock Text="Gradient Interpolation" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone0GradientCombo" SelectionChanged="Zone0Gradient_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="Linear RGB" IsSelected="True"/>
+                            <ComboBoxItem Content="Perceptual LAB"/>
+                            <ComboBoxItem Content="HSL"/>
+                        </ComboBox>
+
+                        <Separator Margin="0,8,0,8"/>
+
+                        <!-- Red Channel -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox x:Name="Zone0RedEnabled" Grid.Column="0" VerticalAlignment="Center"
+                                      Checked="Zone0Channel_Changed" Unchecked="Zone0Channel_Changed"/>
+                            <TextBlock Grid.Column="1" Text="Red Channel" Foreground="#FFCC6666"
+                                       Style="{StaticResource ChannelHeaderStyle}"/>
+                        </Grid>
+                        <StackPanel x:Name="Zone0RedPanel" Visibility="Collapsed" Margin="20,0,0,0">
+                            <TextBlock Text="Strength" FontSize="11"/>
+                            <Slider x:Name="Zone0RedStrength" Minimum="0" Maximum="1" Value="1"
+                                    ValueChanged="Zone0Channel_Changed"/>
+                            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
+                            <Slider x:Name="Zone0RedWhiteProt" Minimum="0" Maximum="1" Value="0"
+                                    ValueChanged="Zone0Channel_Changed"/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Zone0RedStart" Grid.Column="0" Height="20" Background="#FF0000"
+                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonDown="Zone0RedStart_Click"/>
+                                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                                <Border x:Name="Zone0RedEnd" Grid.Column="2" Height="20" Background="#00FFFF"
+                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonDown="Zone0RedEnd_Click"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Green Channel -->
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox x:Name="Zone0GreenEnabled" Grid.Column="0" VerticalAlignment="Center"
+                                      Checked="Zone0Channel_Changed" Unchecked="Zone0Channel_Changed"/>
+                            <TextBlock Grid.Column="1" Text="Green Channel" Foreground="#FF66CC66"
+                                       Style="{StaticResource ChannelHeaderStyle}"/>
+                        </Grid>
+                        <StackPanel x:Name="Zone0GreenPanel" Visibility="Collapsed" Margin="20,0,0,0">
+                            <TextBlock Text="Strength" FontSize="11"/>
+                            <Slider x:Name="Zone0GreenStrength" Minimum="0" Maximum="1" Value="1"
+                                    ValueChanged="Zone0Channel_Changed"/>
+                            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
+                            <Slider x:Name="Zone0GreenWhiteProt" Minimum="0" Maximum="1" Value="0"
+                                    ValueChanged="Zone0Channel_Changed"/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Zone0GreenStart" Grid.Column="0" Height="20" Background="#00FF00"
+                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonDown="Zone0GreenStart_Click"/>
+                                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                                <Border x:Name="Zone0GreenEnd" Grid.Column="2" Height="20" Background="#00FFFF"
+                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonDown="Zone0GreenEnd_Click"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Blue Channel -->
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox x:Name="Zone0BlueEnabled" Grid.Column="0" VerticalAlignment="Center"
+                                      Checked="Zone0Channel_Changed" Unchecked="Zone0Channel_Changed"/>
+                            <TextBlock Grid.Column="1" Text="Blue Channel" Foreground="#FF6699FF"
+                                       Style="{StaticResource ChannelHeaderStyle}"/>
+                        </Grid>
+                        <StackPanel x:Name="Zone0BluePanel" Visibility="Collapsed" Margin="20,0,0,0">
+                            <TextBlock Text="Strength" FontSize="11"/>
+                            <Slider x:Name="Zone0BlueStrength" Minimum="0" Maximum="1" Value="1"
+                                    ValueChanged="Zone0Channel_Changed"/>
+                            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
+                            <Slider x:Name="Zone0BlueWhiteProt" Minimum="0" Maximum="1" Value="0"
+                                    ValueChanged="Zone0Channel_Changed"/>
+                            <Grid Margin="0,4,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Zone0BlueStart" Grid.Column="0" Height="20" Background="#0000FF"
+                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonDown="Zone0BlueStart_Click"/>
+                                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                                <Border x:Name="Zone0BlueEnd" Grid.Column="2" Height="20" Background="#FFFF00"
+                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                                        MouseLeftButtonDown="Zone0BlueEnd_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Intensity -->
+                    <StackPanel x:Name="Zone0IntensityPanel" Visibility="Collapsed">
+                        <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="Zone0IntensitySlider" Minimum="0" Maximum="1" Value="1"
+                                ValueChanged="Zone0Intensity_Changed"/>
+                        <TextBlock x:Name="Zone0IntensityValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
+            <!-- Zone 1 (visible for split modes) -->
+            <Expander x:Name="Zone1Expander" Style="{StaticResource ZoneExpanderStyle}" Visibility="Collapsed">
+                <Expander.Header>
+                    <TextBlock x:Name="Zone1Header" Text="Zone 2 (Right / Top-Right)" Style="{StaticResource ZoneHeaderStyle}"/>
+                </Expander.Header>
+                <StackPanel x:Name="Zone1Panel" Margin="0,8,0,0">
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone1ModeCombo" SelectionChanged="Zone1ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Original (no processing)"/>
+                        <ComboBoxItem Content="Simulation (show CVD view)"/>
+                        <ComboBoxItem Content="Correction (enhance colors)"/>
+                    </ComboBox>
+
+                    <StackPanel x:Name="Zone1SimulationPanel" Visibility="Collapsed">
+                        <TextBlock Text="Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <RadioButton x:Name="Zone1MachadoRadio" Content="Machado" IsChecked="True"
+                                         Checked="Zone1Algorithm_Changed" Margin="0,0,16,0"/>
+                            <RadioButton x:Name="Zone1StrictRadio" Content="Strict (LMS)"
+                                         Checked="Zone1Algorithm_Changed"/>
+                        </StackPanel>
+                        <TextBlock Text="CVD Type" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone1SimFilterCombo" SelectionChanged="Zone1SimFilter_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="None"/>
+                            <ComboBoxItem Content="Protanopia"/>
+                            <ComboBoxItem Content="Protanomaly"/>
+                            <ComboBoxItem Content="Deuteranopia"/>
+                            <ComboBoxItem Content="Deuteranomaly"/>
+                            <ComboBoxItem Content="Tritanopia"/>
+                            <ComboBoxItem Content="Tritanomaly"/>
+                            <ComboBoxItem Content="Achromatopsia"/>
+                            <ComboBoxItem Content="Achromatomaly"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel x:Name="Zone1CorrectionPanel" Visibility="Collapsed">
+                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="Zone1PresetCombo" Grid.Column="0" Margin="0,0,8,0"
+                                      SelectionChanged="Zone1PresetCombo_SelectionChanged"/>
+                            <Button x:Name="Zone1ApplyPresetButton" Grid.Column="1" Content="Apply"
+                                    Click="Zone1ApplyPreset_Click" Padding="12,4"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="Zone1SaveAsPresetButton" Content="Save As..."
+                                    Click="Zone1SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone1SavePresetButton" Content="Save"
+                                    Click="Zone1SavePreset_Click" Padding="8,4" Margin="0,0,4,0"
+                                    IsEnabled="False"/>
+                            <Button x:Name="Zone1ExportPresetButton" Content="Export"
+                                    Click="Zone1ExportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone1ImportPresetButton" Content="Import"
+                                    Click="Zone1ImportPreset_Click" Padding="8,4"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel x:Name="Zone1IntensityPanel" Visibility="Collapsed">
+                        <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="Zone1IntensitySlider" Minimum="0" Maximum="1" Value="1"
+                                ValueChanged="Zone1Intensity_Changed"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
+            <!-- Zone 2 (visible for quadrant mode) -->
+            <Expander x:Name="Zone2Expander" Style="{StaticResource ZoneExpanderStyle}" Visibility="Collapsed">
+                <Expander.Header>
+                    <TextBlock x:Name="Zone2Header" Text="Zone 3 (Bottom-Left)" Style="{StaticResource ZoneHeaderStyle}"/>
+                </Expander.Header>
+                <StackPanel x:Name="Zone2Panel" Margin="0,8,0,0">
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone2ModeCombo" SelectionChanged="Zone2ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Original"/>
+                        <ComboBoxItem Content="Simulation"/>
+                        <ComboBoxItem Content="Correction"/>
+                    </ComboBox>
+
+                    <StackPanel x:Name="Zone2SimulationPanel" Visibility="Collapsed">
+                        <ComboBox x:Name="Zone2SimFilterCombo" SelectionChanged="Zone2SimFilter_Changed">
+                            <ComboBoxItem Content="None"/>
+                            <ComboBoxItem Content="Protanopia"/>
+                            <ComboBoxItem Content="Deuteranopia"/>
+                            <ComboBoxItem Content="Tritanopia"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel x:Name="Zone2CorrectionPanel" Visibility="Collapsed">
+                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="Zone2PresetCombo" Grid.Column="0" Margin="0,0,8,0"
+                                      SelectionChanged="Zone2PresetCombo_SelectionChanged"/>
+                            <Button Content="Apply" Grid.Column="1" Click="Zone2ApplyPreset_Click" Padding="12,4"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="Zone2SaveAsPresetButton" Content="Save As..."
+                                    Click="Zone2SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone2SavePresetButton" Content="Save"
+                                    Click="Zone2SavePreset_Click" Padding="8,4" Margin="0,0,4,0"
+                                    IsEnabled="False"/>
+                            <Button x:Name="Zone2ExportPresetButton" Content="Export"
+                                    Click="Zone2ExportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone2ImportPresetButton" Content="Import"
+                                    Click="Zone2ImportPreset_Click" Padding="8,4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
+            <!-- Zone 3 (visible for quadrant mode) -->
+            <Expander x:Name="Zone3Expander" Style="{StaticResource ZoneExpanderStyle}" Visibility="Collapsed">
+                <Expander.Header>
+                    <TextBlock x:Name="Zone3Header" Text="Zone 4 (Bottom-Right)" Style="{StaticResource ZoneHeaderStyle}"/>
+                </Expander.Header>
+                <StackPanel x:Name="Zone3Panel" Margin="0,8,0,0">
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone3ModeCombo" SelectionChanged="Zone3ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Original"/>
+                        <ComboBoxItem Content="Simulation"/>
+                        <ComboBoxItem Content="Correction"/>
+                    </ComboBox>
+
+                    <StackPanel x:Name="Zone3SimulationPanel" Visibility="Collapsed">
+                        <ComboBox x:Name="Zone3SimFilterCombo" SelectionChanged="Zone3SimFilter_Changed">
+                            <ComboBoxItem Content="None"/>
+                            <ComboBoxItem Content="Protanopia"/>
+                            <ComboBoxItem Content="Deuteranopia"/>
+                            <ComboBoxItem Content="Tritanopia"/>
+                        </ComboBox>
+                    </StackPanel>
+
+                    <StackPanel x:Name="Zone3CorrectionPanel" Visibility="Collapsed">
+                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="Zone3PresetCombo" Grid.Column="0" Margin="0,0,8,0"
+                                      SelectionChanged="Zone3PresetCombo_SelectionChanged"/>
+                            <Button Content="Apply" Grid.Column="1" Click="Zone3ApplyPreset_Click" Padding="12,4"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                            <Button x:Name="Zone3SaveAsPresetButton" Content="Save As..."
+                                    Click="Zone3SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone3SavePresetButton" Content="Save"
+                                    Click="Zone3SavePreset_Click" Padding="8,4" Margin="0,0,4,0"
+                                    IsEnabled="False"/>
+                            <Button x:Name="Zone3ExportPresetButton" Content="Export"
+                                    Click="Zone3ExportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone3ImportPresetButton" Content="Import"
+                                    Click="Zone3ImportPreset_Click" Padding="8,4"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
 
         </StackPanel>
     </StackPanel>

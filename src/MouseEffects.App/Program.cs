@@ -208,6 +208,10 @@ static partial class Program
                 Log($"Screenshot hotkey registration: {(screenshotHotkeyResult ? "SUCCESS" : "FAILED")}");
             }
 
+            // Register settings window hotkey (Ctrl+Shift+L)
+            var settingsHotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID, MOD_CONTROL | MOD_SHIFT, (uint)'L');
+            Log($"Settings hotkey registration: {(settingsHotkeyResult ? "SUCCESS" : "FAILED")}");
+
             // Initialize FPS overlay if enabled
             if (_settings.ShowFpsOverlay)
             {
@@ -284,6 +288,7 @@ static partial class Program
     {
         UnregisterHotKey(nint.Zero, HOTKEY_ID);
         UnregisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID);
+        UnregisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID);
 
         // Save all plugin settings before shutdown (each to its own file)
         Log("Saving plugin settings on shutdown...");
@@ -431,6 +436,10 @@ static partial class Program
                     else if (msg.wParam == HOTKEY_SCREENSHOT_ID)
                     {
                         CaptureScreenToClipboard();
+                    }
+                    else if (msg.wParam == HOTKEY_SETTINGS_ID)
+                    {
+                        ToggleSettingsWindow();
                     }
                 }
 
@@ -598,6 +607,27 @@ static partial class Program
         }
     }
 
+    private static void ToggleSettingsWindow()
+    {
+        if (_effectManager == null) return;
+
+        if (_settingsWindow == null)
+        {
+            _settingsWindow = new SettingsWindow(_effectManager);
+            _settingsWindow.Show();
+            _settingsWindow.Activate();
+        }
+        else if (_settingsWindow.IsVisible)
+        {
+            _settingsWindow.Hide();
+        }
+        else
+        {
+            _settingsWindow.Show();
+            _settingsWindow.Activate();
+        }
+    }
+
     /// <summary>
     /// Capture the entire screen (including overlay) to clipboard.
     /// Blends overlay content with screen capture since overlay is excluded from normal capture.
@@ -678,6 +708,7 @@ static partial class Program
 
     private const int HOTKEY_ID = 1;
     private const int HOTKEY_SCREENSHOT_ID = 2;
+    private const int HOTKEY_SETTINGS_ID = 3;
     private const uint MOD_ALT = 0x0001;
     private const uint MOD_CONTROL = 0x0002;
     private const uint MOD_SHIFT = 0x0004;

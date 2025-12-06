@@ -15,18 +15,21 @@ public record CorrectionPreset
     public float RedStrength { get; init; } = 1.0f;
     public Vector3 RedStartColor { get; init; } = new(1, 0, 0);
     public Vector3 RedEndColor { get; init; } = new(0, 1, 1);
+    public float RedWhiteProtection { get; init; } = 0.0f;
 
     // Green channel settings
     public bool GreenEnabled { get; init; }
     public float GreenStrength { get; init; } = 1.0f;
     public Vector3 GreenStartColor { get; init; } = new(0, 1, 0);
     public Vector3 GreenEndColor { get; init; } = new(0, 1, 1);
+    public float GreenWhiteProtection { get; init; } = 0.0f;
 
     // Blue channel settings
     public bool BlueEnabled { get; init; }
     public float BlueStrength { get; init; } = 1.0f;
     public Vector3 BlueStartColor { get; init; } = new(0, 0, 1);
     public Vector3 BlueEndColor { get; init; } = new(1, 1, 0);
+    public float BlueWhiteProtection { get; init; } = 0.0f;
 
     // Default intensity for this preset
     public float DefaultIntensity { get; init; } = 1.0f;
