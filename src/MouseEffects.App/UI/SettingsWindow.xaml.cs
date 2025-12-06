@@ -40,7 +40,7 @@ public partial class SettingsWindow : Window
         LoadGpuList();
         LoadFrameRateSetting();
         LoadFpsCounterSetting();
-        LoadScreenCaptureHotkeySetting();
+        LoadHotkeySettings();
         LoadPluginSettings();
         LoadUpdateSettings();
         _isInitializing = false;
@@ -163,10 +163,40 @@ public partial class SettingsWindow : Window
         settings.Save();
     }
 
-    private void LoadScreenCaptureHotkeySetting()
+    private void LoadHotkeySettings()
     {
         var settings = Program.Settings;
+        ToggleHotkeyCheckBox.IsChecked = settings.EnableToggleHotkey;
+        SettingsHotkeyCheckBox.IsChecked = settings.EnableSettingsHotkey;
         ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
+    }
+
+    private void ToggleHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = ToggleHotkeyCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableToggleHotkey = enabled;
+        settings.Save();
+
+        // Update hotkey registration
+        Program.UpdateToggleHotkey(enabled);
+    }
+
+    private void SettingsHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = SettingsHotkeyCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableSettingsHotkey = enabled;
+        settings.Save();
+
+        // Update hotkey registration
+        Program.UpdateSettingsHotkey(enabled);
     }
 
     private void ScreenCaptureHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)

@@ -192,7 +192,7 @@ Effects in MouseEffects can:
 | **Particle Systems** | Spawn and manage thousands of particles |
 | **Screen Transformation** | Modify screen content in real-time |
 | **Physics Simulation** | Gravity, velocity, collision detection |
-| **Color Processing** | HSL/RGB manipulation, color blindness simulation |
+| **Color Processing** | HSL/RGB manipulation, color blindness simulation/correction |
 | **Geometric Rendering** | Lines, circles, rectangles with shaders |
 | **Texture Sampling** | Use screen content as texture source |
 

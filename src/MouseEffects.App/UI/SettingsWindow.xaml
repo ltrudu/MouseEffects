@@ -116,7 +116,7 @@
                                           Grid.Column="0"
                                           Content="Show FPS on screen"
                                           VerticalAlignment="Center"
-                                          Margin="20,0,0,0"
+                                          Margin="0,0,0,0"
                                           Checked="ShowFpsOverlayCheckBox_Changed"
                                           Unchecked="ShowFpsOverlayCheckBox_Changed"/>
                                 <TextBlock x:Name="CaptureFpsText"
@@ -139,13 +139,23 @@
                         <TextBlock Text="Hotkeys" Style="{StaticResource HeaderStyle}" Margin="0"/>
                         <TextBlock Text="Keyboard shortcuts for quick actions"
                                    Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
+                        <CheckBox x:Name="ToggleHotkeyCheckBox"
+                                  Content="Toggle Effects (Alt+Shift+M)"
+                                  ToolTip="Toggle all effects on/off"
+                                  Margin="0,0,0,5"
+                                  Checked="ToggleHotkeyCheckBox_Changed"
+                                  Unchecked="ToggleHotkeyCheckBox_Changed"/>
+                        <CheckBox x:Name="SettingsHotkeyCheckBox"
+                                  Content="Toggle Settings Window (Alt+Shift+L)"
+                                  ToolTip="Show/hide the settings window"
+                                  Margin="0,0,0,5"
+                                  Checked="SettingsHotkeyCheckBox_Changed"
+                                  Unchecked="SettingsHotkeyCheckBox_Changed"/>
                         <CheckBox x:Name="ScreenCaptureHotkeyCheckBox"
-                                  Content="Enable Screen Capture (Alt+Shift+S)"
+                                  Content="Screen Capture (Alt+Shift+S)"
                                   ToolTip="Captures the screen with overlay and copies to clipboard"
                                   Checked="ScreenCaptureHotkeyCheckBox_Changed"
                                   Unchecked="ScreenCaptureHotkeyCheckBox_Changed"/>
-                        <TextBlock Text="Ctrl+Shift+M - Toggle effects on/off"
-                                   Opacity="0.5" FontSize="11" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
 
@@ -215,10 +225,8 @@
         </ScrollViewer>
 
         <!-- Footer -->
-        <StackPanel Grid.Row="2" Margin="0,15,0,0">
-            <TextBlock Text="Hotkey: Ctrl+Shift+M to toggle effects"
-                       Opacity="0.5" FontSize="11" HorizontalAlignment="Center"/>
-            <Button Content="Close" Width="100" Height="30" Margin="0,10,0,0"
+        <StackPanel Grid.Row="3" Margin="0,15,0,0">
+            <Button Content="Close" Width="100" Height="30"
                     HorizontalAlignment="Center" Click="CloseButton_Click"/>
         </StackPanel>
     </Grid>

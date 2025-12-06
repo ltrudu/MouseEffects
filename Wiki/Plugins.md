@@ -8,6 +8,7 @@ This document provides detailed information about each built-in effect plugin.
 - [Laser Work](#laser-work)
 - [Screen Distortion](#screen-distortion)
 - [Color Blindness](#color-blindness)
+- [Color Blindness NG](#color-blindness-ng)
 - [Radial Dithering](#radial-dithering)
 - [Tile Vibration](#tile-vibration)
 - [Water Ripple](#water-ripple)
@@ -342,6 +343,228 @@ Each point is `x,y` where both values are 0-1 normalized.
 
 - **Blend Mode**: Opaque (fullscreen)
 - **Shader**: Color matrix transformation with curve LUT
+
+---
+
+## Color Blindness NG
+
+**ID**: `color-blindness-ng`
+**Screen Capture**: Yes (Continuous)
+
+Next-generation color vision deficiency (CVD) simulation and correction plugin with per-zone independent configuration, LUT-based correction, and real comparison mode with screen duplication.
+
+### Features
+
+- **Per-zone architecture**: Up to 4 independent zones, each configurable as Original, Simulation, or Correction
+- **14 CVD simulation types** across Machado (RGB) and Strict (LMS) algorithms
+- **LUT-based correction**: Per-channel color remapping with customizable gradients
+- **Real comparison mode**: Full screen duplicated in each zone with virtual cursor projection
+- **Custom preset system**: Save, load, export, and import correction presets
+- **Multiple split modes**: Fullscreen, Split Vertical/Horizontal, Quadrants
+
+### Split Modes
+
+| Mode | Zones | Description |
+|------|-------|-------------|
+| **Fullscreen** | 1 | Single zone covering entire screen |
+| **Split Vertical** | 2 | Left and Right zones |
+| **Split Horizontal** | 2 | Top and Bottom zones |
+| **Quadrants** | 4 | Four corner zones (TL, TR, BL, BR) |
+
+### Zone Modes
+
+Each zone can operate in one of three modes:
+
+| Mode | Description |
+|------|-------------|
+| **Original** | No processing, displays original screen content |
+| **Simulation** | Applies CVD simulation to show how colorblind users perceive colors |
+| **Correction** | Applies LUT-based color remapping to help distinguish colors |
+
+### Settings
+
+#### Split Screen
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `splitMode` | int | 0-3 | 0 | 0=Fullscreen, 1=SplitV, 2=SplitH, 3=Quadrants |
+| `splitPosition` | float | 0.1-0.9 | 0.5 | Horizontal split position |
+| `splitPositionV` | float | 0.1-0.9 | 0.5 | Vertical split position |
+| `comparisonMode` | bool | - | false | Enable screen duplication comparison |
+
+#### Per-Zone Configuration
+
+Each zone (0-3) has independent settings with prefix `zone{n}_`:
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zone{n}_mode` | int | 0-2 | varies | 0=Original, 1=Simulation, 2=Correction |
+| `zone{n}_simAlgorithm` | int | 0-1 | 0 | 0=Machado, 1=Strict |
+| `zone{n}_simFilterType` | int | 0-14 | 0 | Simulation filter type |
+| `zone{n}_intensity` | float | 0-1 | 1.0 | Effect intensity |
+
+### Simulation Filter Types
+
+| Index | Filter Name | Algorithm | Description |
+|-------|-------------|-----------|-------------|
+| 0 | None | - | No color transformation |
+| 1 | Protanopia | Machado | L-cone deficiency |
+| 2 | Protanomaly | Machado | Partial L-cone weakness |
+| 3 | Deuteranopia | Machado | M-cone deficiency |
+| 4 | Deuteranomaly | Machado | Partial M-cone weakness |
+| 5 | Tritanopia | Machado | S-cone deficiency |
+| 6 | Tritanomaly | Machado | Partial S-cone weakness |
+| 7 | Protanopia | Strict/LMS | L-cone deficiency (LMS space) |
+| 8 | Protanomaly | Strict/LMS | Partial L-cone weakness (LMS space) |
+| 9 | Deuteranopia | Strict/LMS | M-cone deficiency (LMS space) |
+| 10 | Deuteranomaly | Strict/LMS | Partial M-cone weakness (LMS space) |
+| 11 | Tritanopia | Strict/LMS | S-cone deficiency (LMS space) |
+| 12 | Tritanomaly | Strict/LMS | Partial S-cone weakness (LMS space) |
+| 13 | Achromatopsia | - | Complete color blindness |
+| 14 | Achromatomaly | - | Partial color blindness |
+
+### LUT Correction Settings
+
+Each zone has three channel LUTs (Red, Green, Blue) with these settings:
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zone{n}_{color}Enabled` | bool | - | varies | Enable channel correction |
+| `zone{n}_{color}Strength` | float | 0-1 | 1.0 | Channel correction strength |
+| `zone{n}_{color}StartColor` | string | hex | varies | LUT gradient start color |
+| `zone{n}_{color}EndColor` | string | hex | varies | LUT gradient end color |
+| `zone{n}_{color}WhiteProtection` | float | 0-1 | 0.0 | Protect whites from correction |
+
+#### Application Modes
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zone{n}_appMode` | int | 0-2 | 0 | 0=Full, 1=Dominant, 2=Threshold |
+| `zone{n}_threshold` | float | 0-1 | 0.3 | Threshold for threshold mode |
+| `zone{n}_gradientType` | int | 0-2 | 0 | 0=LinearRGB, 1=LAB, 2=HSL |
+
+**Application Mode Details:**
+- **Full Channel**: Apply correction to all pixels where channel has value
+- **Dominant Only**: Apply only when channel is the dominant color
+- **Threshold**: Apply only when channel value exceeds threshold
+
+### Comparison Mode
+
+When enabled with a split mode, comparison mode:
+
+1. **Duplicates the full screen** into each zone (scaled to fit)
+2. **Preserves aspect ratio** with letterboxing/pillarboxing for split modes
+3. **Projects a virtual cursor** showing mouse position in each zone
+4. **Applies zone effects** to each duplicated view independently
+
+This allows direct side-by-side comparison of:
+- Original vs. Simulated
+- Original vs. Corrected
+- Multiple simulation types
+- Different correction configurations
+
+### Custom Preset System
+
+The plugin supports custom presets for correction configurations:
+
+#### Preset Buttons
+
+| Button | Description |
+|--------|-------------|
+| **Apply** | Apply selected preset to current zone |
+| **Save As...** | Save current settings as new custom preset |
+| **Save** | Update existing custom preset (custom presets only) |
+| **Export** | Export preset to JSON file |
+| **Import** | Import preset from JSON file |
+
+#### Preset Storage
+
+- **Built-in presets**: Deuteranopia, Protanopia, Tritanopia corrections, High Contrast, etc.
+- **Custom presets**: Stored in `{PluginDir}/ColorBlindnessNG_Presets/*.json`
+
+#### Preset JSON Format
+
+```json
+{
+  "Name": "My Custom Preset",
+  "Description": "Custom correction for enhanced visibility",
+  "IsCustom": true,
+  "CreatedDate": "2025-12-06T10:30:00Z",
+  "RedEnabled": true,
+  "RedStrength": 0.8,
+  "RedStartColor": "#FF0000",
+  "RedEndColor": "#00FFFF",
+  "RedWhiteProtection": 0.2,
+  "GreenEnabled": false,
+  "GreenStrength": 1.0,
+  "GreenStartColor": "#00FF00",
+  "GreenEndColor": "#00FFFF",
+  "GreenWhiteProtection": 0.0,
+  "BlueEnabled": false,
+  "BlueStrength": 1.0,
+  "BlueStartColor": "#0000FF",
+  "BlueEndColor": "#FFFF00",
+  "BlueWhiteProtection": 0.0,
+  "DefaultIntensity": 1.0,
+  "RecommendedGradientType": 0,
+  "RecommendedApplicationMode": 0
+}
+```
+
+### Hotkeys
+
+| Hotkey | Action |
+|--------|--------|
+| **Alt+Shift+M** | Toggle effect on/off |
+| **Alt+Shift+L** | Toggle settings window visibility |
+
+### Algorithm Details
+
+#### Machado Algorithm (Types 1-6)
+
+Based on Machado, Oliveira, and Fernandes (2009). Uses pre-computed 3x3 matrices operating in linear RGB space.
+
+**Advantages:**
+- Fast computation (single matrix multiply)
+- Widely validated in accessibility tools
+- Good visual accuracy
+
+#### Strict LMS Algorithm (Types 7-12)
+
+Based on Brettel, Viénot & Mollon (1997) confusion lines. Converts to LMS colorspace for processing.
+
+**Advantages:**
+- More physiologically accurate
+- Better for scientific/medical applications
+- Proper colorspace handling
+
+**Technical Details:**
+- Uses Hunt-Pointer-Estevez matrix for RGB→LMS
+- Applies confusion line projection
+- Coefficients preserve white point
+
+### Use Cases
+
+1. **Accessibility Testing**
+   - Compare original vs. simulated side-by-side
+   - Test UI color contrast for colorblind users
+   - Validate multiple CVD types simultaneously with quadrant mode
+
+2. **Vision Assistance**
+   - Apply correction to distinguish problematic colors
+   - Customize per-channel correction
+   - Save presets for different scenarios
+
+3. **Education & Design**
+   - Demonstrate CVD perception
+   - Validate color schemes for accessibility
+   - Share presets with team via export/import
+
+### Rendering
+
+- **Blend Mode**: Opaque (fullscreen)
+- **Shader**: Per-zone processing with 12 LUT textures (4 zones × 3 channels)
+- **Constant Buffer**: 288 bytes with global and per-zone parameters
 
 ---
 

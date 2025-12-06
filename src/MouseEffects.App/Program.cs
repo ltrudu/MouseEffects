@@ -195,11 +195,14 @@ static partial class Program
             // Populate the effects menu dynamically from loaded plugins
             PopulateTrayEffectsMenu();
 
-            _trayManager.ShowBalloon("MouseEffects", "Running in background. Press Ctrl+Shift+M to toggle.");
+            _trayManager.ShowBalloon("MouseEffects", "Running in background. Press Alt+Shift+M to toggle.");
 
-            // Register hotkey (Ctrl+Shift+M to toggle)
-            var hotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_ID, MOD_CONTROL | MOD_SHIFT, (uint)'M');
-            Log($"Hotkey registration: {(hotkeyResult ? "SUCCESS" : "FAILED")}");
+            // Register hotkey (Alt+Shift+M to toggle) if enabled
+            if (_settings.EnableToggleHotkey)
+            {
+                var hotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_ID, MOD_ALT | MOD_SHIFT, (uint)'M');
+                Log($"Hotkey registration (Alt+Shift+M): {(hotkeyResult ? "SUCCESS" : "FAILED")}");
+            }
 
             // Register screen capture hotkey (Alt+Shift+S) if enabled
             if (_settings.EnableScreenCaptureHotkey)
@@ -208,9 +211,13 @@ static partial class Program
                 Log($"Screenshot hotkey registration: {(screenshotHotkeyResult ? "SUCCESS" : "FAILED")}");
             }
 
-            // Register settings window hotkey (Ctrl+Shift+L)
-            var settingsHotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID, MOD_CONTROL | MOD_SHIFT, (uint)'L');
-            Log($"Settings hotkey registration: {(settingsHotkeyResult ? "SUCCESS" : "FAILED")}");
+            // Register settings window hotkey (Alt+Shift+L) if enabled
+            if (_settings.EnableSettingsHotkey)
+            {
+                var settingsHotkeyResult = RegisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID, MOD_ALT | MOD_SHIFT, (uint)'L');
+                var settingsHotkeyError = System.Runtime.InteropServices.Marshal.GetLastWin32Error();
+                Log($"Settings hotkey registration (Alt+Shift+L): {(settingsHotkeyResult ? "SUCCESS" : $"FAILED (error: {settingsHotkeyError})")}");
+            }
 
             // Initialize FPS overlay if enabled
             if (_settings.ShowFpsOverlay)
@@ -701,6 +708,40 @@ static partial class Program
         {
             UnregisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID);
             Log("Screenshot hotkey unregistered");
+        }
+    }
+
+    /// <summary>
+    /// Update the toggle effects hotkey registration based on settings.
+    /// </summary>
+    public static void UpdateToggleHotkey(bool enabled)
+    {
+        if (enabled)
+        {
+            var result = RegisterHotKey(nint.Zero, HOTKEY_ID, MOD_ALT | MOD_SHIFT, (uint)'M');
+            Log($"Toggle hotkey registration: {(result ? "SUCCESS" : "FAILED")}");
+        }
+        else
+        {
+            UnregisterHotKey(nint.Zero, HOTKEY_ID);
+            Log("Toggle hotkey unregistered");
+        }
+    }
+
+    /// <summary>
+    /// Update the settings window hotkey registration based on settings.
+    /// </summary>
+    public static void UpdateSettingsHotkey(bool enabled)
+    {
+        if (enabled)
+        {
+            var result = RegisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID, MOD_ALT | MOD_SHIFT, (uint)'L');
+            Log($"Settings hotkey registration: {(result ? "SUCCESS" : "FAILED")}");
+        }
+        else
+        {
+            UnregisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID);
+            Log("Settings hotkey unregistered");
         }
     }
 

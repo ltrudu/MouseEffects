@@ -69,6 +69,18 @@ public class AppSettings
     /// </summary>
     public bool EnableScreenCaptureHotkey { get; set; } = true;
 
+    /// <summary>
+    /// Whether to enable the toggle effects hotkey (ALT+SHIFT+M).
+    /// Toggles all effects on/off.
+    /// </summary>
+    public bool EnableToggleHotkey { get; set; } = true;
+
+    /// <summary>
+    /// Whether to enable the settings window hotkey (ALT+SHIFT+L).
+    /// Toggles the settings window visibility.
+    /// </summary>
+    public bool EnableSettingsHotkey { get; set; } = true;
+
     // ═══════════════════════════════════════════════════
     // Update Settings
     // ═══════════════════════════════════════════════════

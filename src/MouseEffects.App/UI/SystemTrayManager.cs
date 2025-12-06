@@ -54,7 +54,7 @@ public sealed class SystemTrayManager : IDisposable
         _notifyIcon = new NotifyIcon
         {
             Icon = CreateDefaultIcon(),
-            Text = "MouseEffects - Ctrl+Shift+M to toggle",
+            Text = "MouseEffects - Alt+Shift+M to toggle",
             ContextMenuStrip = _contextMenu,
             Visible = true
         };
