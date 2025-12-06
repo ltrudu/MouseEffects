@@ -59,6 +59,19 @@ public static class CorrectionPresets
     };
 
     /// <summary>
+    /// Passthrough preset - Colors remain unchanged.
+    /// </summary>
+    public static CorrectionPreset Passthrough { get; } = new()
+    {
+        Name = "Passthrough",
+        Description = "No color correction applied. Colors remain unchanged.",
+        RedEnabled = false,
+        GreenEnabled = false,
+        BlueEnabled = false,
+        DefaultIntensity = 0.0f
+    };
+
+    /// <summary>
     /// Deuteranopia - Complete green cone deficiency.
     /// Shifts greens to cyan/blue for better visibility.
     /// </summary>
@@ -224,6 +237,7 @@ public static class CorrectionPresets
     public static IReadOnlyList<CorrectionPreset> All { get; } = new[]
     {
         Custom,
+        Passthrough,
         Deuteranopia,
         Protanopia,
         Tritanopia,

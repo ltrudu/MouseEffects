@@ -30,6 +30,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Laser Work** | Directional lasers shooting from cursor with collision detection |
 | **Screen Distortion** | Real-time lens/ripple distortion effect |
 | **Color Blindness** | CVD simulation & correction with 17 filter types (Machado/Strict algorithms), zone layouts, and comparison view |
+| **Color Blindness NG** | Next-gen CVD plugin with per-zone configuration, LUT-based correction, custom presets, reusable correction editor, and Passthrough mode |
 | **Radial Dithering** | Bayer-pattern dithering effect around cursor |
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
 | **Water Ripple** | Expanding water ripples on click with realistic wave interference |
@@ -128,6 +129,7 @@ MouseEffects/
 │   ├── MouseEffects.Effects.LaserWork/
 │   ├── MouseEffects.Effects.ScreenDistortion/
 │   ├── MouseEffects.Effects.ColorBlindness/
+│   ├── MouseEffects.Effects.ColorBlindnessNG/
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.TileVibration/
 │   ├── MouseEffects.Effects.WaterRipple/

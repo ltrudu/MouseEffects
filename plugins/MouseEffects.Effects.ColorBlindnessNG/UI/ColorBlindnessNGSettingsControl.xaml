@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:MouseEffects.Effects.ColorBlindnessNG.UI"
              mc:Ignorable="d" d:DesignWidth="320">
     <UserControl.Resources>
         <Style TargetType="TextBlock" x:Key="LabelStyle">
@@ -143,7 +144,8 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="Zone0PresetCombo" Grid.Column="0" Margin="0,0,8,0"/>
+                            <ComboBox x:Name="Zone0PresetCombo" Grid.Column="0" Margin="0,0,8,0"
+                                      SelectionChanged="Zone0PresetCombo_SelectionChanged"/>
                             <Button x:Name="Zone0ApplyPresetButton" Grid.Column="1" Content="Apply"
                                     Click="Zone0ApplyPreset_Click" Padding="12,4"/>
                         </Grid>
@@ -153,10 +155,10 @@
                             <Button x:Name="SaveAsPresetButton" Content="Save As..."
                                     Click="SaveAsPresetButton_Click" Padding="8,4" Margin="0,0,4,0"
                                     ToolTip="Save current settings as a new custom preset"/>
-                            <Button x:Name="SavePresetButton" Content="Save"
+                            <Button x:Name="SavePresetButton" Content="Update"
                                     Click="SavePresetButton_Click" Padding="8,4" Margin="0,0,4,0"
                                     IsEnabled="False"
-                                    ToolTip="Update the selected custom preset"/>
+                                    ToolTip="Update the selected custom preset with current settings"/>
                             <Button x:Name="ExportPresetButton" Content="Export"
                                     Click="ExportPresetButton_Click" Padding="8,4" Margin="0,0,4,0"
                                     ToolTip="Export selected preset to file"/>
@@ -164,133 +166,7 @@
                                     Click="ImportPresetButton_Click" Padding="8,4"
                                     ToolTip="Import preset from file"/>
                         </StackPanel>
-
-                        <!-- Application Mode -->
-                        <TextBlock Text="Application Mode" Style="{StaticResource LabelStyle}"/>
-                        <ComboBox x:Name="Zone0AppModeCombo" SelectionChanged="Zone0AppMode_Changed" Margin="0,0,0,8">
-                            <ComboBoxItem Content="Full Channel" IsSelected="True"/>
-                            <ComboBoxItem Content="Dominant Only"/>
-                            <ComboBoxItem Content="Threshold"/>
-                        </ComboBox>
-
-                        <StackPanel x:Name="Zone0ThresholdPanel" Visibility="Collapsed">
-                            <TextBlock Text="Threshold" Style="{StaticResource LabelStyle}"/>
-                            <Slider x:Name="Zone0ThresholdSlider" Minimum="0" Maximum="1" Value="0.3"
-                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone0Threshold_Changed"/>
-                            <TextBlock x:Name="Zone0ThresholdValue" Text="0.30" Opacity="0.7" FontSize="11"/>
-                        </StackPanel>
-
-                        <!-- Gradient Type -->
-                        <TextBlock Text="Gradient Interpolation" Style="{StaticResource LabelStyle}"/>
-                        <ComboBox x:Name="Zone0GradientCombo" SelectionChanged="Zone0Gradient_Changed" Margin="0,0,0,8">
-                            <ComboBoxItem Content="Linear RGB" IsSelected="True"/>
-                            <ComboBoxItem Content="Perceptual LAB"/>
-                            <ComboBoxItem Content="HSL"/>
-                        </ComboBox>
-
-                        <Separator Margin="0,8,0,8"/>
-
-                        <!-- Red Channel -->
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <CheckBox x:Name="Zone0RedEnabled" Grid.Column="0" VerticalAlignment="Center"
-                                      Checked="Zone0Channel_Changed" Unchecked="Zone0Channel_Changed"/>
-                            <TextBlock Grid.Column="1" Text="Red Channel" Foreground="#FFCC6666"
-                                       Style="{StaticResource ChannelHeaderStyle}"/>
-                        </Grid>
-                        <StackPanel x:Name="Zone0RedPanel" Visibility="Collapsed" Margin="20,0,0,0">
-                            <TextBlock Text="Strength" FontSize="11"/>
-                            <Slider x:Name="Zone0RedStrength" Minimum="0" Maximum="1" Value="1"
-                                    ValueChanged="Zone0Channel_Changed"/>
-                            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
-                            <Slider x:Name="Zone0RedWhiteProt" Minimum="0" Maximum="1" Value="0"
-                                    ValueChanged="Zone0Channel_Changed"/>
-                            <Grid Margin="0,4,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border x:Name="Zone0RedStart" Grid.Column="0" Height="20" Background="#FF0000"
-                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                                        MouseLeftButtonDown="Zone0RedStart_Click"/>
-                                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
-                                <Border x:Name="Zone0RedEnd" Grid.Column="2" Height="20" Background="#00FFFF"
-                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                                        MouseLeftButtonDown="Zone0RedEnd_Click"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Green Channel -->
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <CheckBox x:Name="Zone0GreenEnabled" Grid.Column="0" VerticalAlignment="Center"
-                                      Checked="Zone0Channel_Changed" Unchecked="Zone0Channel_Changed"/>
-                            <TextBlock Grid.Column="1" Text="Green Channel" Foreground="#FF66CC66"
-                                       Style="{StaticResource ChannelHeaderStyle}"/>
-                        </Grid>
-                        <StackPanel x:Name="Zone0GreenPanel" Visibility="Collapsed" Margin="20,0,0,0">
-                            <TextBlock Text="Strength" FontSize="11"/>
-                            <Slider x:Name="Zone0GreenStrength" Minimum="0" Maximum="1" Value="1"
-                                    ValueChanged="Zone0Channel_Changed"/>
-                            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
-                            <Slider x:Name="Zone0GreenWhiteProt" Minimum="0" Maximum="1" Value="0"
-                                    ValueChanged="Zone0Channel_Changed"/>
-                            <Grid Margin="0,4,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border x:Name="Zone0GreenStart" Grid.Column="0" Height="20" Background="#00FF00"
-                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                                        MouseLeftButtonDown="Zone0GreenStart_Click"/>
-                                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
-                                <Border x:Name="Zone0GreenEnd" Grid.Column="2" Height="20" Background="#00FFFF"
-                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                                        MouseLeftButtonDown="Zone0GreenEnd_Click"/>
-                            </Grid>
-                        </StackPanel>
-
-                        <!-- Blue Channel -->
-                        <Grid Margin="0,8,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <CheckBox x:Name="Zone0BlueEnabled" Grid.Column="0" VerticalAlignment="Center"
-                                      Checked="Zone0Channel_Changed" Unchecked="Zone0Channel_Changed"/>
-                            <TextBlock Grid.Column="1" Text="Blue Channel" Foreground="#FF6699FF"
-                                       Style="{StaticResource ChannelHeaderStyle}"/>
-                        </Grid>
-                        <StackPanel x:Name="Zone0BluePanel" Visibility="Collapsed" Margin="20,0,0,0">
-                            <TextBlock Text="Strength" FontSize="11"/>
-                            <Slider x:Name="Zone0BlueStrength" Minimum="0" Maximum="1" Value="1"
-                                    ValueChanged="Zone0Channel_Changed"/>
-                            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
-                            <Slider x:Name="Zone0BlueWhiteProt" Minimum="0" Maximum="1" Value="0"
-                                    ValueChanged="Zone0Channel_Changed"/>
-                            <Grid Margin="0,4,0,0">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Border x:Name="Zone0BlueStart" Grid.Column="0" Height="20" Background="#0000FF"
-                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                                        MouseLeftButtonDown="Zone0BlueStart_Click"/>
-                                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
-                                <Border x:Name="Zone0BlueEnd" Grid.Column="2" Height="20" Background="#FFFF00"
-                                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                                        MouseLeftButtonDown="Zone0BlueEnd_Click"/>
-                            </Grid>
-                        </StackPanel>
+                        <local:CorrectionEditor x:Name="Zone0CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
 
                     <!-- Intensity -->
@@ -353,7 +229,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Button x:Name="Zone1SaveAsPresetButton" Content="Save As..."
                                     Click="Zone1SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
-                            <Button x:Name="Zone1SavePresetButton" Content="Save"
+                            <Button x:Name="Zone1SavePresetButton" Content="Update"
                                     Click="Zone1SavePreset_Click" Padding="8,4" Margin="0,0,4,0"
                                     IsEnabled="False"/>
                             <Button x:Name="Zone1ExportPresetButton" Content="Export"
@@ -361,6 +237,7 @@
                             <Button x:Name="Zone1ImportPresetButton" Content="Import"
                                     Click="Zone1ImportPreset_Click" Padding="8,4"/>
                         </StackPanel>
+                        <local:CorrectionEditor x:Name="Zone1CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
 
                     <StackPanel x:Name="Zone1IntensityPanel" Visibility="Collapsed">
@@ -407,7 +284,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Button x:Name="Zone2SaveAsPresetButton" Content="Save As..."
                                     Click="Zone2SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
-                            <Button x:Name="Zone2SavePresetButton" Content="Save"
+                            <Button x:Name="Zone2SavePresetButton" Content="Update"
                                     Click="Zone2SavePreset_Click" Padding="8,4" Margin="0,0,4,0"
                                     IsEnabled="False"/>
                             <Button x:Name="Zone2ExportPresetButton" Content="Export"
@@ -415,6 +292,7 @@
                             <Button x:Name="Zone2ImportPresetButton" Content="Import"
                                     Click="Zone2ImportPreset_Click" Padding="8,4"/>
                         </StackPanel>
+                        <local:CorrectionEditor x:Name="Zone2CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
                 </StackPanel>
             </Expander>
@@ -455,7 +333,7 @@
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Button x:Name="Zone3SaveAsPresetButton" Content="Save As..."
                                     Click="Zone3SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
-                            <Button x:Name="Zone3SavePresetButton" Content="Save"
+                            <Button x:Name="Zone3SavePresetButton" Content="Update"
                                     Click="Zone3SavePreset_Click" Padding="8,4" Margin="0,0,4,0"
                                     IsEnabled="False"/>
                             <Button x:Name="Zone3ExportPresetButton" Content="Export"
@@ -463,6 +341,7 @@
                             <Button x:Name="Zone3ImportPresetButton" Content="Import"
                                     Click="Zone3ImportPreset_Click" Padding="8,4"/>
                         </StackPanel>
+                        <local:CorrectionEditor x:Name="Zone3CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
                 </StackPanel>
             </Expander>

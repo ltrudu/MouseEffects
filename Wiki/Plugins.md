@@ -361,6 +361,10 @@ Next-generation color vision deficiency (CVD) simulation and correction plugin w
 - **Real comparison mode**: Full screen duplicated in each zone with virtual cursor projection
 - **Custom preset system**: Save, load, export, and import correction presets
 - **Multiple split modes**: Fullscreen, Split Vertical/Horizontal, Quadrants
+- **Reusable CorrectionEditor**: Unified settings control for all zones with consistent UI
+- **Configurable hotkeys**: Enable/disable Alt+Shift+M (toggle effect) and Alt+Shift+L (toggle settings)
+- **Passthrough preset**: Apply no color changes for reference comparison
+- **Improved dialog handling**: Dialogs properly appear above overlay with suspended topmost
 
 ### Split Modes
 
@@ -479,8 +483,23 @@ The plugin supports custom presets for correction configurations:
 
 #### Preset Storage
 
-- **Built-in presets**: Deuteranopia, Protanopia, Tritanopia corrections, High Contrast, etc.
+- **Built-in presets**: Custom, Passthrough, Deuteranopia, Protanopia, Tritanopia, Deuteranomaly, Protanomaly, Tritanomaly, Red-Green (Both), High Contrast
 - **Custom presets**: Stored in `{PluginDir}/ColorBlindnessNG_Presets/*.json`
+
+#### Built-in Preset Descriptions
+
+| Preset | Description |
+|--------|-------------|
+| **Custom** | User-defined settings, all channels disabled by default |
+| **Passthrough** | No color correction applied - colors remain unchanged |
+| **Deuteranopia** | Green-blind correction, shifts greens to cyan |
+| **Protanopia** | Red-blind correction, shifts reds to cyan |
+| **Tritanopia** | Blue-blind correction, shifts blues to yellow |
+| **Deuteranomaly** | Green-weak correction with milder settings |
+| **Protanomaly** | Red-weak correction with milder settings |
+| **Tritanomaly** | Blue-weak correction with milder settings |
+| **Red-Green (Both)** | Combined red and green correction |
+| **High Contrast** | Enhanced color separation for general accessibility |
 
 #### Preset JSON Format
 
@@ -513,10 +532,12 @@ The plugin supports custom presets for correction configurations:
 
 ### Hotkeys
 
-| Hotkey | Action |
-|--------|--------|
-| **Alt+Shift+M** | Toggle effect on/off |
-| **Alt+Shift+L** | Toggle settings window visibility |
+Hotkeys can be individually enabled or disabled in the settings window under the Hotkeys section.
+
+| Hotkey | Action | Default |
+|--------|--------|---------|
+| **Alt+Shift+M** | Toggle effect on/off | Enabled |
+| **Alt+Shift+L** | Toggle settings window visibility | Enabled |
 
 ### Algorithm Details
 

@@ -1,0 +1,144 @@
+<UserControl x:Class="MouseEffects.Effects.ColorBlindnessNG.UI.CorrectionEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+        </Style>
+        <Style x:Key="ChannelHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="4,0,0,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- Application Mode -->
+        <TextBlock Text="Application Mode" Style="{StaticResource LabelStyle}"/>
+        <ComboBox x:Name="AppModeCombo" SelectionChanged="AppMode_Changed" Margin="0,0,0,8">
+            <ComboBoxItem Content="Full Channel" IsSelected="True"/>
+            <ComboBoxItem Content="Dominant Only"/>
+            <ComboBoxItem Content="Threshold"/>
+        </ComboBox>
+
+        <StackPanel x:Name="ThresholdPanel" Visibility="Collapsed">
+            <TextBlock Text="Threshold" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ThresholdSlider" Minimum="0" Maximum="1" Value="0.3"
+                    ValueChanged="Threshold_Changed"/>
+            <TextBlock x:Name="ThresholdValue" Text="0.30" Opacity="0.7" FontSize="11"/>
+        </StackPanel>
+
+        <!-- Gradient Type -->
+        <TextBlock Text="Gradient Interpolation" Style="{StaticResource LabelStyle}"/>
+        <ComboBox x:Name="GradientCombo" SelectionChanged="Gradient_Changed" Margin="0,0,0,8">
+            <ComboBoxItem Content="Linear RGB" IsSelected="True"/>
+            <ComboBoxItem Content="Perceptual LAB"/>
+            <ComboBoxItem Content="HSL"/>
+        </ComboBox>
+
+        <Separator Margin="0,8,0,8"/>
+
+        <!-- Red Channel -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="RedEnabled" Grid.Column="0" VerticalAlignment="Center"
+                      Checked="Channel_Changed" Unchecked="Channel_Changed"/>
+            <TextBlock Grid.Column="1" Text="Red Channel" Foreground="#FFCC6666"
+                       Style="{StaticResource ChannelHeaderStyle}"/>
+        </Grid>
+        <StackPanel x:Name="RedPanel" Visibility="Collapsed" Margin="20,0,0,0">
+            <TextBlock Text="Strength" FontSize="11"/>
+            <Slider x:Name="RedStrength" Minimum="0" Maximum="1" Value="1"
+                    ValueChanged="Channel_Changed"/>
+            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
+            <Slider x:Name="RedWhiteProt" Minimum="0" Maximum="1" Value="0"
+                    ValueChanged="Channel_Changed"/>
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border x:Name="RedStart" Grid.Column="0" Height="20" Background="#FF0000"
+                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                        MouseLeftButtonDown="RedStart_Click"/>
+                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                <Border x:Name="RedEnd" Grid.Column="2" Height="20" Background="#00FFFF"
+                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                        MouseLeftButtonDown="RedEnd_Click"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Green Channel -->
+        <Grid Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="GreenEnabled" Grid.Column="0" VerticalAlignment="Center"
+                      Checked="Channel_Changed" Unchecked="Channel_Changed"/>
+            <TextBlock Grid.Column="1" Text="Green Channel" Foreground="#FF66CC66"
+                       Style="{StaticResource ChannelHeaderStyle}"/>
+        </Grid>
+        <StackPanel x:Name="GreenPanel" Visibility="Collapsed" Margin="20,0,0,0">
+            <TextBlock Text="Strength" FontSize="11"/>
+            <Slider x:Name="GreenStrength" Minimum="0" Maximum="1" Value="1"
+                    ValueChanged="Channel_Changed"/>
+            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
+            <Slider x:Name="GreenWhiteProt" Minimum="0" Maximum="1" Value="0"
+                    ValueChanged="Channel_Changed"/>
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border x:Name="GreenStart" Grid.Column="0" Height="20" Background="#00FF00"
+                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                        MouseLeftButtonDown="GreenStart_Click"/>
+                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                <Border x:Name="GreenEnd" Grid.Column="2" Height="20" Background="#00FFFF"
+                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                        MouseLeftButtonDown="GreenEnd_Click"/>
+            </Grid>
+        </StackPanel>
+
+        <!-- Blue Channel -->
+        <Grid Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <CheckBox x:Name="BlueEnabled" Grid.Column="0" VerticalAlignment="Center"
+                      Checked="Channel_Changed" Unchecked="Channel_Changed"/>
+            <TextBlock Grid.Column="1" Text="Blue Channel" Foreground="#FF6699FF"
+                       Style="{StaticResource ChannelHeaderStyle}"/>
+        </Grid>
+        <StackPanel x:Name="BluePanel" Visibility="Collapsed" Margin="20,0,0,0">
+            <TextBlock Text="Strength" FontSize="11"/>
+            <Slider x:Name="BlueStrength" Minimum="0" Maximum="1" Value="1"
+                    ValueChanged="Channel_Changed"/>
+            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
+            <Slider x:Name="BlueWhiteProt" Minimum="0" Maximum="1" Value="0"
+                    ValueChanged="Channel_Changed"/>
+            <Grid Margin="0,4,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Border x:Name="BlueStart" Grid.Column="0" Height="20" Background="#0000FF"
+                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                        MouseLeftButtonDown="BlueStart_Click"/>
+                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                <Border x:Name="BlueEnd" Grid.Column="2" Height="20" Background="#FFFF00"
+                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
+                        MouseLeftButtonDown="BlueEnd_Click"/>
+            </Grid>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

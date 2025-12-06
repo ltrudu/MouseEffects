@@ -1,8 +1,5 @@
-using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using MouseEffects.Core.Effects;
 using MouseEffects.Core.UI;
 using Button = System.Windows.Controls.Button;
@@ -33,7 +30,54 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             _presetManager.LoadCustomPresets();
             LoadConfiguration();
             PopulatePresetComboBoxes();
+            InitializeCorrectionEditors();
         }
+    }
+
+    private void InitializeCorrectionEditors()
+    {
+        if (_effect == null) return;
+
+        // Bind each CorrectionEditor to its corresponding zone
+        Zone0CorrectionEditor.BindToZone(_effect.GetZone(0));
+        Zone1CorrectionEditor.BindToZone(_effect.GetZone(1));
+        Zone2CorrectionEditor.BindToZone(_effect.GetZone(2));
+        Zone3CorrectionEditor.BindToZone(_effect.GetZone(3));
+
+        // Subscribe to settings changes to save config
+        Zone0CorrectionEditor.SettingsChanged += (s, e) => SaveZoneConfiguration(0);
+        Zone1CorrectionEditor.SettingsChanged += (s, e) => SaveZoneConfiguration(1);
+        Zone2CorrectionEditor.SettingsChanged += (s, e) => SaveZoneConfiguration(2);
+        Zone3CorrectionEditor.SettingsChanged += (s, e) => SaveZoneConfiguration(3);
+    }
+
+    private void SaveZoneConfiguration(int zoneIndex)
+    {
+        if (_effect == null) return;
+        var zone = _effect.GetZone(zoneIndex);
+        var prefix = $"zone{zoneIndex}_";
+
+        _effect.Configuration.Set(prefix + "appMode", (int)zone.ApplicationMode);
+        _effect.Configuration.Set(prefix + "threshold", zone.Threshold);
+        _effect.Configuration.Set(prefix + "gradientType", (int)zone.GradientType);
+
+        _effect.Configuration.Set(prefix + "redEnabled", zone.RedChannel.Enabled);
+        _effect.Configuration.Set(prefix + "redStrength", zone.RedChannel.Strength);
+        _effect.Configuration.Set(prefix + "redWhiteProt", zone.RedChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "redStartColor", CustomPreset.ToHexColor(zone.RedChannel.StartColor));
+        _effect.Configuration.Set(prefix + "redEndColor", CustomPreset.ToHexColor(zone.RedChannel.EndColor));
+
+        _effect.Configuration.Set(prefix + "greenEnabled", zone.GreenChannel.Enabled);
+        _effect.Configuration.Set(prefix + "greenStrength", zone.GreenChannel.Strength);
+        _effect.Configuration.Set(prefix + "greenWhiteProt", zone.GreenChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "greenStartColor", CustomPreset.ToHexColor(zone.GreenChannel.StartColor));
+        _effect.Configuration.Set(prefix + "greenEndColor", CustomPreset.ToHexColor(zone.GreenChannel.EndColor));
+
+        _effect.Configuration.Set(prefix + "blueEnabled", zone.BlueChannel.Enabled);
+        _effect.Configuration.Set(prefix + "blueStrength", zone.BlueChannel.Strength);
+        _effect.Configuration.Set(prefix + "blueWhiteProt", zone.BlueChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "blueStartColor", CustomPreset.ToHexColor(zone.BlueChannel.StartColor));
+        _effect.Configuration.Set(prefix + "blueEndColor", CustomPreset.ToHexColor(zone.BlueChannel.EndColor));
     }
 
     private void PopulatePresetComboBoxes()
@@ -171,29 +215,9 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         else if (filterIndex >= 7) filterIndex = filterIndex - 6; // Strict -> same display
         Zone0SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone0SimFilterCombo.Items.Count - 1);
 
-        Zone0AppModeCombo.SelectedIndex = (int)zone.ApplicationMode;
-        Zone0ThresholdSlider.Value = zone.Threshold;
-        Zone0GradientCombo.SelectedIndex = (int)zone.GradientType;
         Zone0IntensitySlider.Value = zone.Intensity;
 
-        // Channel settings
-        Zone0RedEnabled.IsChecked = zone.RedChannel.Enabled;
-        Zone0RedStrength.Value = zone.RedChannel.Strength;
-        Zone0RedWhiteProt.Value = zone.RedChannel.WhiteProtection;
-        UpdateColorBorder(Zone0RedStart, zone.RedChannel.StartColor);
-        UpdateColorBorder(Zone0RedEnd, zone.RedChannel.EndColor);
-
-        Zone0GreenEnabled.IsChecked = zone.GreenChannel.Enabled;
-        Zone0GreenStrength.Value = zone.GreenChannel.Strength;
-        Zone0GreenWhiteProt.Value = zone.GreenChannel.WhiteProtection;
-        UpdateColorBorder(Zone0GreenStart, zone.GreenChannel.StartColor);
-        UpdateColorBorder(Zone0GreenEnd, zone.GreenChannel.EndColor);
-
-        Zone0BlueEnabled.IsChecked = zone.BlueChannel.Enabled;
-        Zone0BlueStrength.Value = zone.BlueChannel.Strength;
-        Zone0BlueWhiteProt.Value = zone.BlueChannel.WhiteProtection;
-        UpdateColorBorder(Zone0BlueStart, zone.BlueChannel.StartColor);
-        UpdateColorBorder(Zone0BlueEnd, zone.BlueChannel.EndColor);
+        // Channel settings are loaded via CorrectionEditor in InitializeCorrectionEditors()
     }
 
     private void LoadZone1Settings()
@@ -211,23 +235,6 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone1SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone1SimFilterCombo.Items.Count - 1);
 
         Zone1IntensitySlider.Value = zone.Intensity;
-    }
-
-    private void UpdateColorBorder(Border border, Vector3 color)
-    {
-        byte r = (byte)(color.X * 255);
-        byte g = (byte)(color.Y * 255);
-        byte b = (byte)(color.Z * 255);
-        border.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
-    }
-
-    private Vector3 GetColorFromBorder(Border border)
-    {
-        if (border.Background is SolidColorBrush brush)
-        {
-            return new Vector3(brush.Color.R / 255f, brush.Color.G / 255f, brush.Color.B / 255f);
-        }
-        return new Vector3(1, 1, 1);
     }
 
     #region UI Event Handlers
@@ -349,13 +356,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone0CorrectionPanel.Visibility = isCorrection ? Visibility.Visible : Visibility.Collapsed;
         Zone0IntensityPanel.Visibility = hasProcessing ? Visibility.Visible : Visibility.Collapsed;
 
-        // Update channel panels
-        Zone0RedPanel.Visibility = Zone0RedEnabled.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        Zone0GreenPanel.Visibility = Zone0GreenEnabled.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-        Zone0BluePanel.Visibility = Zone0BlueEnabled.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
-
-        // Update threshold panel
-        Zone0ThresholdPanel.Visibility = Zone0AppModeCombo.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+        // Channel panels are now managed by CorrectionEditor
     }
 
     private void Zone0Algorithm_Changed(object sender, RoutedEventArgs e)
@@ -386,36 +387,6 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         _effect.Configuration.Set("zone0_simFilterType", zone.SimulationFilterType);
     }
 
-    private void Zone0AppMode_Changed(object sender, SelectionChangedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        var zone = _effect.GetZone(0);
-        zone.ApplicationMode = (ApplicationMode)Zone0AppModeCombo.SelectedIndex;
-        _effect.Configuration.Set("zone0_appMode", Zone0AppModeCombo.SelectedIndex);
-        Zone0ThresholdPanel.Visibility = Zone0AppModeCombo.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void Zone0Threshold_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        var zone = _effect.GetZone(0);
-        zone.Threshold = (float)Zone0ThresholdSlider.Value;
-        _effect.Configuration.Set("zone0_threshold", zone.Threshold);
-        Zone0ThresholdValue.Text = zone.Threshold.ToString("F2");
-    }
-
-    private void Zone0Gradient_Changed(object sender, SelectionChangedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        var zone = _effect.GetZone(0);
-        zone.GradientType = (GradientType)Zone0GradientCombo.SelectedIndex;
-        zone.LutsNeedUpdate = true;
-        _effect.Configuration.Set("zone0_gradientType", Zone0GradientCombo.SelectedIndex);
-    }
-
     private void Zone0Intensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
@@ -426,113 +397,11 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone0IntensityValue.Text = zone.Intensity.ToString("F2");
     }
 
-    private void Zone0Channel_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        var zone = _effect.GetZone(0);
-
-        zone.RedChannel.Enabled = Zone0RedEnabled.IsChecked == true;
-        zone.RedChannel.Strength = (float)Zone0RedStrength.Value;
-        zone.RedChannel.WhiteProtection = (float)Zone0RedWhiteProt.Value;
-
-        zone.GreenChannel.Enabled = Zone0GreenEnabled.IsChecked == true;
-        zone.GreenChannel.Strength = (float)Zone0GreenStrength.Value;
-        zone.GreenChannel.WhiteProtection = (float)Zone0GreenWhiteProt.Value;
-
-        zone.BlueChannel.Enabled = Zone0BlueEnabled.IsChecked == true;
-        zone.BlueChannel.Strength = (float)Zone0BlueStrength.Value;
-        zone.BlueChannel.WhiteProtection = (float)Zone0BlueWhiteProt.Value;
-
-        // Update visibility
-        Zone0RedPanel.Visibility = zone.RedChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
-        Zone0GreenPanel.Visibility = zone.GreenChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
-        Zone0BluePanel.Visibility = zone.BlueChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
-
-        SaveZone0ChannelSettings();
-    }
-
-    private void SaveZone0ChannelSettings()
-    {
-        if (_effect == null) return;
-        var zone = _effect.GetZone(0);
-
-        _effect.Configuration.Set("zone0_redEnabled", zone.RedChannel.Enabled);
-        _effect.Configuration.Set("zone0_redStrength", zone.RedChannel.Strength);
-        _effect.Configuration.Set("zone0_redWhiteProtection", zone.RedChannel.WhiteProtection);
-        _effect.Configuration.Set("zone0_redStartColor", ToHexColor(zone.RedChannel.StartColor));
-        _effect.Configuration.Set("zone0_redEndColor", ToHexColor(zone.RedChannel.EndColor));
-
-        _effect.Configuration.Set("zone0_greenEnabled", zone.GreenChannel.Enabled);
-        _effect.Configuration.Set("zone0_greenStrength", zone.GreenChannel.Strength);
-        _effect.Configuration.Set("zone0_greenWhiteProtection", zone.GreenChannel.WhiteProtection);
-        _effect.Configuration.Set("zone0_greenStartColor", ToHexColor(zone.GreenChannel.StartColor));
-        _effect.Configuration.Set("zone0_greenEndColor", ToHexColor(zone.GreenChannel.EndColor));
-
-        _effect.Configuration.Set("zone0_blueEnabled", zone.BlueChannel.Enabled);
-        _effect.Configuration.Set("zone0_blueStrength", zone.BlueChannel.Strength);
-        _effect.Configuration.Set("zone0_blueWhiteProtection", zone.BlueChannel.WhiteProtection);
-        _effect.Configuration.Set("zone0_blueStartColor", ToHexColor(zone.BlueChannel.StartColor));
-        _effect.Configuration.Set("zone0_blueEndColor", ToHexColor(zone.BlueChannel.EndColor));
-    }
-
     private void Zone0ApplyPreset_Click(object sender, RoutedEventArgs e)
     {
         ApplyPresetToZone(0, Zone0PresetCombo);
-
-        _isLoading = true;
-        LoadZone0Settings();
-        _isLoading = false;
-
-        UpdateZone0ModeUI();
-        SaveZone0ChannelSettings();
-    }
-
-    private void Zone0RedStart_Click(object sender, MouseButtonEventArgs e) => PickColorForBorder(Zone0RedStart, 0, "redStart");
-    private void Zone0RedEnd_Click(object sender, MouseButtonEventArgs e) => PickColorForBorder(Zone0RedEnd, 0, "redEnd");
-    private void Zone0GreenStart_Click(object sender, MouseButtonEventArgs e) => PickColorForBorder(Zone0GreenStart, 0, "greenStart");
-    private void Zone0GreenEnd_Click(object sender, MouseButtonEventArgs e) => PickColorForBorder(Zone0GreenEnd, 0, "greenEnd");
-    private void Zone0BlueStart_Click(object sender, MouseButtonEventArgs e) => PickColorForBorder(Zone0BlueStart, 0, "blueStart");
-    private void Zone0BlueEnd_Click(object sender, MouseButtonEventArgs e) => PickColorForBorder(Zone0BlueEnd, 0, "blueEnd");
-
-    private void PickColorForBorder(Border border, int zoneIndex, string colorType)
-    {
-        if (_effect == null) return;
-
-        var currentColor = GetColorFromBorder(border);
-        var dialog = new System.Windows.Forms.ColorDialog
-        {
-            Color = System.Drawing.Color.FromArgb(
-                (int)(currentColor.X * 255),
-                (int)(currentColor.Y * 255),
-                (int)(currentColor.Z * 255))
-        };
-
-        // Show dialog in topmost form
-        using var form = new System.Windows.Forms.Form { TopMost = true };
-        if (dialog.ShowDialog(form) == System.Windows.Forms.DialogResult.OK)
-        {
-            var newColor = new Vector3(
-                dialog.Color.R / 255f,
-                dialog.Color.G / 255f,
-                dialog.Color.B / 255f);
-
-            UpdateColorBorder(border, newColor);
-
-            var zone = _effect.GetZone(zoneIndex);
-            switch (colorType)
-            {
-                case "redStart": zone.RedChannel.StartColor = newColor; break;
-                case "redEnd": zone.RedChannel.EndColor = newColor; break;
-                case "greenStart": zone.GreenChannel.StartColor = newColor; break;
-                case "greenEnd": zone.GreenChannel.EndColor = newColor; break;
-                case "blueStart": zone.BlueChannel.StartColor = newColor; break;
-                case "blueEnd": zone.BlueChannel.EndColor = newColor; break;
-            }
-
-            zone.LutsNeedUpdate = true;
-            SaveZone0ChannelSettings();
-        }
+        Zone0CorrectionEditor.LoadFromZone();
+        SaveZoneConfiguration(0);
     }
 
     #endregion
@@ -595,8 +464,10 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     private void Zone1ApplyPreset_Click(object sender, RoutedEventArgs e)
     {
         ApplyPresetToZone(1, Zone1PresetCombo);
+        Zone1CorrectionEditor.LoadFromZone();
         _effect?.Configuration.Set("zone1_mode", (int)ZoneMode.Correction);
         Zone1ModeCombo.SelectedIndex = 2;
+        SaveZoneConfiguration(1);
     }
 
     #endregion
@@ -629,6 +500,8 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     private void Zone2ApplyPreset_Click(object sender, RoutedEventArgs e)
     {
         ApplyPresetToZone(2, Zone2PresetCombo);
+        Zone2CorrectionEditor.LoadFromZone();
+        SaveZoneConfiguration(2);
     }
 
     private void Zone3ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -656,6 +529,8 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     private void Zone3ApplyPreset_Click(object sender, RoutedEventArgs e)
     {
         ApplyPresetToZone(3, Zone3PresetCombo);
+        Zone3CorrectionEditor.LoadFromZone();
+        SaveZoneConfiguration(3);
     }
 
     // Zone 1 custom preset handlers
@@ -891,37 +766,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     /// </summary>
     private CustomPreset CreatePresetFromZone(int zoneIndex, string name)
     {
-        var zone = _effect!.GetZone(zoneIndex);
-
-        return new CustomPreset
+        var editor = zoneIndex switch
         {
-            Name = name,
-            Description = $"Custom preset created on {DateTime.Now:yyyy-MM-dd}",
-            IsCustom = true,
-            CreatedDate = DateTime.UtcNow,
-
-            RedEnabled = zone.RedChannel.Enabled,
-            RedStrength = zone.RedChannel.Strength,
-            RedStartColor = CustomPreset.ToHexColor(zone.RedChannel.StartColor),
-            RedEndColor = CustomPreset.ToHexColor(zone.RedChannel.EndColor),
-            RedWhiteProtection = zone.RedChannel.WhiteProtection,
-
-            GreenEnabled = zone.GreenChannel.Enabled,
-            GreenStrength = zone.GreenChannel.Strength,
-            GreenStartColor = CustomPreset.ToHexColor(zone.GreenChannel.StartColor),
-            GreenEndColor = CustomPreset.ToHexColor(zone.GreenChannel.EndColor),
-            GreenWhiteProtection = zone.GreenChannel.WhiteProtection,
-
-            BlueEnabled = zone.BlueChannel.Enabled,
-            BlueStrength = zone.BlueChannel.Strength,
-            BlueStartColor = CustomPreset.ToHexColor(zone.BlueChannel.StartColor),
-            BlueEndColor = CustomPreset.ToHexColor(zone.BlueChannel.EndColor),
-            BlueWhiteProtection = zone.BlueChannel.WhiteProtection,
-
-            DefaultIntensity = zone.Intensity,
-            RecommendedGradientType = (int)zone.GradientType,
-            RecommendedApplicationMode = (int)zone.ApplicationMode
+            0 => Zone0CorrectionEditor,
+            1 => Zone1CorrectionEditor,
+            2 => Zone2CorrectionEditor,
+            3 => Zone3CorrectionEditor,
+            _ => Zone0CorrectionEditor
         };
+
+        return editor.GetAsPreset(name);
     }
 
     private string GetSelectedPresetName(ComboBox presetCombo)
@@ -965,18 +819,6 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         {
             System.Windows.MessageBox.Show(message, caption, button, icon);
         });
-    }
-
-    #endregion
-
-    #region Helpers
-
-    private static string ToHexColor(Vector3 color)
-    {
-        byte r = (byte)(color.X * 255);
-        byte g = (byte)(color.Y * 255);
-        byte b = (byte)(color.Z * 255);
-        return $"#{r:X2}{g:X2}{b:X2}";
     }
 
     #endregion
