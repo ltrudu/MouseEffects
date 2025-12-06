@@ -142,11 +142,59 @@ public sealed class OverlayWindow : IDisposable
         NativeMethods.SetWindowLongPtrW(_hwnd, NativeMethods.GWL_EXSTYLE, (nint)exStyle);
     }
 
+    private bool _isTopmost = true;
+    private bool _topmostSuspended = false;
+
     public void SetAlwaysOnTop(bool enable)
+    {
+        _isTopmost = enable;
+        if (!_topmostSuspended)
+        {
+            ApplyTopmostState(enable);
+        }
+    }
+
+    /// <summary>
+    /// Temporarily suspend topmost state to allow modal dialogs to appear above the overlay.
+    /// Call ResumeTopmost() when done.
+    /// </summary>
+    public void SuspendTopmost()
+    {
+        if (!_topmostSuspended)
+        {
+            _topmostSuspended = true;
+            ApplyTopmostState(false);
+        }
+    }
+
+    /// <summary>
+    /// Resume topmost state after modal dialog is closed.
+    /// </summary>
+    public void ResumeTopmost()
+    {
+        if (_topmostSuspended)
+        {
+            _topmostSuspended = false;
+            ApplyTopmostState(_isTopmost);
+        }
+    }
+
+    /// <summary>
+    /// Re-apply topmost state. Call periodically to ensure overlay stays on top.
+    /// </summary>
+    public void EnforceTopmost()
+    {
+        if (!_topmostSuspended && _isTopmost)
+        {
+            ApplyTopmostState(true);
+        }
+    }
+
+    private void ApplyTopmostState(bool topmost)
     {
         NativeMethods.SetWindowPos(
             _hwnd,
-            enable ? NativeMethods.HWND_TOPMOST : NativeMethods.HWND_NOTOPMOST,
+            topmost ? NativeMethods.HWND_TOPMOST : NativeMethods.HWND_NOTOPMOST,
             0, 0, 0, 0,
             NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
         );

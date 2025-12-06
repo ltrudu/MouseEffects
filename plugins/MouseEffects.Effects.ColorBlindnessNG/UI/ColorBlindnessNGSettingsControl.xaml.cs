@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using MouseEffects.Core.Effects;
+using MouseEffects.Core.UI;
 using Button = System.Windows.Controls.Button;
 using ComboBox = System.Windows.Controls.ComboBox;
 using UserControl = System.Windows.Controls.UserControl;
@@ -729,11 +730,10 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         var dialog = new PresetNameDialog(_presetManager, "", true)
         {
-            Owner = Window.GetWindow(this),
-            Topmost = true
+            Owner = Window.GetWindow(this)
         };
 
-        if (dialog.ShowDialog() == true && !string.IsNullOrWhiteSpace(dialog.PresetName))
+        if (DialogHelper.WithSuspendedTopmost(() => dialog.ShowDialog()) == true && !string.IsNullOrWhiteSpace(dialog.PresetName))
         {
             var presetName = dialog.PresetName.Trim();
 
@@ -792,7 +792,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             FileName = GetSelectedPresetName(presetCombo)
         };
 
-        if (TopmostDialogHelper.ShowSaveFileDialog(dialog) == true)
+        if (DialogHelper.WithSuspendedTopmost(() => dialog.ShowDialog()) == true)
         {
             try
             {
@@ -837,7 +837,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             DefaultExt = ".json"
         };
 
-        if (TopmostDialogHelper.ShowOpenFileDialog(dialog) == true)
+        if (DialogHelper.WithSuspendedTopmost(() => dialog.ShowDialog()) == true)
         {
             try
             {
@@ -856,11 +856,10 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
                 {
                     var conflictDialog = new PresetConflictDialog(_presetManager, finalName, _presetManager.GetUniqueName(finalName))
                     {
-                        Owner = Window.GetWindow(this),
-                        Topmost = true
+                        Owner = Window.GetWindow(this)
                     };
 
-                    if (conflictDialog.ShowDialog() != true)
+                    if (DialogHelper.WithSuspendedTopmost(() => conflictDialog.ShowDialog()) != true)
                         return;
 
                     if (conflictDialog.Resolution == ConflictResolution.Rename)
@@ -962,30 +961,10 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     /// </summary>
     private static void ShowTopmostMessageBox(string message, string caption, MessageBoxButton button, MessageBoxImage icon)
     {
-        // Create a temporary topmost window as owner for the message box
-        var tempWindow = new Window
+        DialogHelper.WithSuspendedTopmost(() =>
         {
-            Width = 0,
-            Height = 0,
-            WindowStyle = WindowStyle.None,
-            ShowInTaskbar = false,
-            ShowActivated = false,
-            Topmost = true,
-            WindowStartupLocation = WindowStartupLocation.Manual,
-            Left = -10000,
-            Top = -10000
-        };
-
-        tempWindow.Show();
-
-        try
-        {
-            System.Windows.MessageBox.Show(tempWindow, message, caption, button, icon);
-        }
-        finally
-        {
-            tempWindow.Close();
-        }
+            System.Windows.MessageBox.Show(message, caption, button, icon);
+        });
     }
 
     #endregion

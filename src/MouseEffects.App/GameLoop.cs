@@ -25,6 +25,8 @@ public sealed class GameLoop : IDisposable
     private bool _running;
     private bool _disposed;
     private bool _wasAnyEffectEnabled;
+    private double _lastTopmostEnforceTime;
+    private const double TopmostEnforceInterval = 1.0; // Enforce topmost every 1 second
 
     public bool IsRunning => _running;
     public double CurrentFps { get; private set; }
@@ -164,6 +166,13 @@ public sealed class GameLoop : IDisposable
 
         // Render
         Render();
+
+        // Periodically enforce topmost state to prevent other windows from stealing it
+        if (currentTime - _lastTopmostEnforceTime >= TopmostEnforceInterval)
+        {
+            _overlayManager.EnforceTopmost();
+            _lastTopmostEnforceTime = currentTime;
+        }
 
         // Clear per-frame input state
         if (_mouseInput is Input.GlobalMouseHook hook2)

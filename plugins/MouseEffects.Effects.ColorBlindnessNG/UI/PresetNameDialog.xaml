@@ -4,8 +4,7 @@
         Title="Save Preset" Height="160" Width="350"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        ShowInTaskbar="False"
-        Topmost="True">
+        ShowInTaskbar="False">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

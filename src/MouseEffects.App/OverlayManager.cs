@@ -89,6 +89,39 @@ public sealed partial class OverlayManager : IDisposable
         Initialize();
     }
 
+    /// <summary>
+    /// Temporarily suspend topmost state for all overlays to allow modal dialogs to appear.
+    /// </summary>
+    public void SuspendTopmost()
+    {
+        foreach (var overlay in _overlays)
+        {
+            overlay.SuspendTopmost();
+        }
+    }
+
+    /// <summary>
+    /// Resume topmost state for all overlays after modal dialog is closed.
+    /// </summary>
+    public void ResumeTopmost()
+    {
+        foreach (var overlay in _overlays)
+        {
+            overlay.ResumeTopmost();
+        }
+    }
+
+    /// <summary>
+    /// Re-apply topmost state for all overlays. Call periodically to ensure overlays stay on top.
+    /// </summary>
+    public void EnforceTopmost()
+    {
+        foreach (var overlay in _overlays)
+        {
+            overlay.EnforceTopmost();
+        }
+    }
+
     private static List<Rectangle> GetAllMonitors()
     {
         var monitors = new List<Rectangle>();

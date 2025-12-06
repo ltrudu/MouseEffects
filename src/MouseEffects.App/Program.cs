@@ -5,6 +5,7 @@ using MouseEffects.App.Settings;
 using MouseEffects.App.UI;
 using MouseEffects.Core.Diagnostics;
 using MouseEffects.Core.Effects;
+using MouseEffects.Core.UI;
 using MouseEffects.Input;
 using MouseEffects.Plugins;
 using Velopack;
@@ -123,6 +124,23 @@ static partial class Program
         _gameLoop?.SetTrackCaptureFps(needsTracking);
     }
 
+    /// <summary>
+    /// Temporarily suspend overlay topmost state to allow modal dialogs to appear.
+    /// Call ResumeOverlayTopmost() when the dialog is closed.
+    /// </summary>
+    public static void SuspendOverlayTopmost()
+    {
+        _overlayManager?.SuspendTopmost();
+    }
+
+    /// <summary>
+    /// Resume overlay topmost state after modal dialog is closed.
+    /// </summary>
+    public static void ResumeOverlayTopmost()
+    {
+        _overlayManager?.ResumeTopmost();
+    }
+
     private static void Initialize()
     {
         try
@@ -141,6 +159,10 @@ static partial class Program
                 throw new InvalidOperationException("Failed to create overlay windows");
             }
             Log($"Created {_overlayManager.Overlays.Count} overlay(s)");
+
+            // Initialize global dialog helper for plugins
+            DialogHelper.Initialize(SuspendOverlayTopmost, ResumeOverlayTopmost);
+            Log("DialogHelper initialized");
 
             // Create effect manager with shared render context
             Log("Creating EffectManager...");

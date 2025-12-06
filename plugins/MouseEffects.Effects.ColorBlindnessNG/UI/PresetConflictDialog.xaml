@@ -4,8 +4,7 @@
         Title="Preset Already Exists" Height="220" Width="400"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        ShowInTaskbar="False"
-        Topmost="True">
+        ShowInTaskbar="False">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
