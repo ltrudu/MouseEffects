@@ -13,6 +13,7 @@ This document provides detailed information about each built-in effect plugin.
 - [Water Ripple](#water-ripple)
 - [Zoom](#zoom)
 - [Firework](#firework)
+- [Space Invaders](#space-invaders)
 
 ---
 
@@ -684,6 +685,142 @@ Each firework explosion spawns a random number of particles between `minParticle
 - **Blend Mode**: Additive (creates glow effect)
 - **Shader**: GPU instanced point sprites with trail stretching
 - **Performance**: Efficient structured buffers for thousands of particles
+
+---
+
+## Space Invaders
+
+**ID**: `invaders`
+**Screen Capture**: No
+
+A fully playable Space Invaders mini-game where you defend against waves of neon invaders by shooting rockets from your cursor.
+
+### Features
+
+- Classic Space Invaders gameplay with modern neon visuals
+- Three invader types with different point values (Squid, Crab, Octopus)
+- GPU instanced rendering for smooth performance
+- Timed gameplay with Points-Per-Minute scoring
+- High score leaderboard with persistent storage
+- Game over on invader collision with mouse or screen bottom
+- Hotkey support for quick game reset
+- Rainbow color modes for rockets
+
+### Game Rules
+
+1. **Timer starts** on your first kill (not when effect is enabled)
+2. **Shoot rockets** by clicking or moving the mouse
+3. **Destroy invaders** before they reach the bottom or touch your cursor
+4. **Score points** based on invader type:
+   - Small (Squid) = 200 points
+   - Medium (Crab) = 100 points
+   - Big (Octopus) = 50 points
+5. **Game ends** when timer expires or an invader touches mouse/bottom
+6. **High scores** track Points-Per-Minute (PPM) for fair comparison
+
+### Settings
+
+#### Rocket Configuration
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `spawnOnLeftClick` | bool | - | true | Fire rocket on left click |
+| `spawnOnRightClick` | bool | - | false | Fire rocket on right click |
+| `spawnOnMove` | bool | - | false | Fire rockets while moving |
+| `moveSpawnDistance` | float | 20-200 | 80 | Distance before movement rocket (px) |
+| `rocketSpeed` | float | 200-1500 | 600 | Rocket travel speed (px/s) |
+| `rocketSize` | float | 4-20 | 8 | Rocket particle size (px) |
+| `rocketRainbowMode` | bool | - | true | Cycle rocket colors |
+| `rocketRainbowSpeed` | float | 0.1-5 | 0.5 | Rainbow cycling speed |
+| `rocketColor` | Color4 | - | Green (0,1,0.5) | Static rocket color |
+
+#### Invader Configuration
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `invaderSpawnRate` | float | 0.5-5 | 1.5 | Seconds between spawns |
+| `invaderMinSpeed` | float | 20-200 | 50 | Minimum descent speed (px/s) |
+| `invaderMaxSpeed` | float | 50-300 | 150 | Maximum descent speed (px/s) |
+| `invaderBigSize` | float | 24-80 | 48 | Base invader size (px) |
+| `invaderMediumSizePercent` | float | 0.3-0.8 | 0.5 | Medium size (% of big) |
+| `invaderSmallSizePercent` | float | 0.15-0.5 | 0.25 | Small size (% of big) |
+| `maxActiveInvaders` | int | 5-50 | 20 | Maximum simultaneous invaders |
+| `invaderDescentSpeed` | float | 10-100 | 30 | Additional downward speed (px/s) |
+
+#### Invader Colors
+
+| Setting | Type | Default | Description |
+|---------|------|---------|-------------|
+| `invaderSmallColor` | Color4 | Magenta (1,0.2,0.8) | Small invader color |
+| `invaderMediumColor` | Color4 | Cyan (0.2,0.8,1) | Medium invader color |
+| `invaderBigColor` | Color4 | Green (0.2,1,0.4) | Big invader color |
+
+#### Explosion Effects
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `explosionParticleCount` | int | 10-100 | 30 | Particles per explosion |
+| `explosionForce` | float | 50-500 | 200 | Explosion force (px/s) |
+| `explosionLifespan` | float | 0.5-3 | 1.0 | Particle lifetime (seconds) |
+| `explosionParticleSize` | float | 2-15 | 6 | Explosion particle size (px) |
+| `explosionGlowIntensity` | float | 0.5-3 | 1.5 | Explosion glow strength |
+
+#### Visual Effects
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `glowIntensity` | float | 0-2 | 1.2 | Overall glow strength |
+| `neonIntensity` | float | 0-2 | 1.0 | Neon effect strength |
+| `enableTrails` | bool | - | true | Enable particle trails |
+| `trailLength` | float | 0.1-1 | 0.4 | Trail length factor |
+| `animSpeed` | float | 0.5-5 | 2.0 | Invader animation speed |
+
+#### Scoring
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `scoreSmall` | int | 50-500 | 200 | Points for small invader |
+| `scoreMedium` | int | 25-250 | 100 | Points for medium invader |
+| `scoreBig` | int | 10-100 | 50 | Points for big invader |
+
+#### Timer & Game
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `timerDuration` | float | 30-300 | 90 | Game duration (seconds) |
+| `showScoreOverlay` | bool | - | true | Display score HUD |
+| `enableResetHotkey` | bool | - | false | Enable Ctrl+Shift+I reset |
+
+#### Score Overlay
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `scoreOverlaySize` | float | 16-64 | 32 | Score text size (px) |
+| `scoreOverlaySpacing` | float | 1-3 | 1.5 | Character spacing multiplier |
+| `scoreOverlayMargin` | float | 5-50 | 20 | Margin between elements (px) |
+| `scoreOverlayBgOpacity` | float | 0-1 | 0.7 | Background opacity |
+| `scoreOverlayColor` | Color4 | - | Green (0,1,0) | Score text color |
+| `scoreOverlayX` | float | 0-200 | 70 | Horizontal position (px) |
+| `scoreOverlayY` | float | 0-200 | 50 | Vertical position (px) |
+
+### Hotkeys
+
+| Hotkey | Action | Condition |
+|--------|--------|-----------|
+| **Ctrl+Shift+I** | Reset Game | When `enableResetHotkey` is true |
+
+### High Score System
+
+- Scores are tracked as **Points-Per-Minute (PPM)** for fair comparison across different timer durations
+- Top 5 high scores are saved with timestamps
+- New high scores are highlighted in the leaderboard
+- Scores persist across sessions in the plugin configuration
+
+### Rendering
+
+- **Blend Mode**: Additive (creates neon glow)
+- **Shader**: GPU instanced sprites with animation
+- **Entity Types**: Invaders (3 types), Rockets, Explosion Particles, Score Overlay
 
 ---
 

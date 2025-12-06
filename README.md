@@ -29,12 +29,13 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Particle Trail** | Colorful particles that follow your cursor with physics simulation |
 | **Laser Work** | Directional lasers shooting from cursor with collision detection |
 | **Screen Distortion** | Real-time lens/ripple distortion effect |
-| **Color Blindness** | Simulates color blindness with separate inside/outside shape filters and RGB curves |
+| **Color Blindness** | Zone-based color correction with LMS/RGB modes and comparison view |
 | **Radial Dithering** | Bayer-pattern dithering effect around cursor |
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
 | **Water Ripple** | Expanding water ripples on click with realistic wave interference |
 | **Zoom** | Magnifying lens effect with circle or rectangle shape and hotkey support |
 | **Firework** | Stunning firework explosions with rockets, trails, and secondary explosions |
+| **Space Invaders** | Defend against neon invaders with rockets - includes scoring and leaderboard |
 
 ## Screenshots
 
@@ -131,7 +132,8 @@ MouseEffects/
 │   ├── MouseEffects.Effects.TileVibration/
 │   ├── MouseEffects.Effects.WaterRipple/
 │   ├── MouseEffects.Effects.Zoom/
-│   └── MouseEffects.Effects.Firework/
+│   ├── MouseEffects.Effects.Firework/
+│   └── MouseEffects.Effects.Invaders/
 ├── packaging/                    # MSIX packaging files
 └── Wiki/                         # Documentation
 ```
