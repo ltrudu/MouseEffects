@@ -95,6 +95,9 @@ public sealed class ColorBlindnessNGEffect : EffectBase
     private float _splitPositionV = 0.5f;
     private bool _comparisonMode = false;
 
+    // Mouse position for virtual cursor in comparison mode
+    private Vector2 _mousePosition;
+
     // Per-zone settings (4 zones max)
     private readonly ZoneSettings[] _zones = new ZoneSettings[MaxZones];
 
@@ -388,7 +391,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
-        // No per-frame updates needed
+        _mousePosition = mouseState.Position;
     }
 
     protected override void OnRender(IRenderContext context)
@@ -448,6 +451,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
     {
         var cbParams = new ColorBlindnessNGParams
         {
+            MousePosition = _mousePosition,
             ViewportSize = viewportSize,
             SplitModeValue = (float)_splitMode,
             SplitPosition = _splitPosition,
@@ -567,20 +571,18 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 16 (global) + 4 * 64 (zones) = 272 bytes, padded to 288 for 16-byte alignment
+    /// Size: 32 (global) + 4 * 64 (zones) = 288 bytes
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Size = 288)]
     private struct ColorBlindnessNGParams
     {
-        // Global parameters (16 bytes)
+        // Global parameters (32 bytes)
+        public Vector2 MousePosition;      // 8 bytes
         public Vector2 ViewportSize;       // 8 bytes
         public float SplitModeValue;       // 4 bytes
         public float SplitPosition;        // 4 bytes
-
         public float SplitPositionV;       // 4 bytes
         public float ComparisonMode;       // 4 bytes
-        public float GlobalPadding1;       // 4 bytes
-        public float GlobalPadding2;       // 4 bytes
 
         // Per-zone parameters (64 bytes each × 4 = 256 bytes)
         public ZoneParams Zone0;

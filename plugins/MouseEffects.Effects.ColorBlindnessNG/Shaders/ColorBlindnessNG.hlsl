@@ -46,14 +46,12 @@ struct ZoneParams
 cbuffer ColorBlindnessNGParams : register(b0)
 {
     // Global parameters (32 bytes)
-    float2 ViewportSize;
+    float2 MousePosition;       // Mouse position in screen pixels
+    float2 ViewportSize;        // Viewport size in pixels
     float SplitModeValue;       // 0=Full, 1=SplitV, 2=SplitH, 3=Quad
     float SplitPosition;        // Horizontal split (0-1)
-
     float SplitPositionV;       // Vertical split (0-1)
-    float ComparisonMode;       // 0=off, 1=on (zone 0 shows original)
-    float _globalPad1;
-    float _globalPad2;
+    float ComparisonMode;       // 0=off, 1=on (screen duplication mode)
 
     // Per-zone parameters (64 bytes each × 4 = 256 bytes)
     ZoneParams Zone0;
@@ -670,6 +668,176 @@ float GetSeparatorAlpha(float2 screenPos)
 }
 
 // ============================================================================
+// Comparison Mode - Screen Duplication
+// ============================================================================
+
+// Get zone bounds in screen coordinates
+void GetZoneBounds(int zoneIndex, out float2 zoneMin, out float2 zoneMax)
+{
+    float splitX = ViewportSize.x * SplitPosition;
+    float splitY = ViewportSize.y * SplitPositionV;
+
+    if (SplitModeValue > 2.5) // Quadrants (3)
+    {
+        if (zoneIndex == 0) // Top-Left
+        {
+            zoneMin = float2(0, 0);
+            zoneMax = float2(splitX, splitY);
+        }
+        else if (zoneIndex == 1) // Top-Right
+        {
+            zoneMin = float2(splitX, 0);
+            zoneMax = float2(ViewportSize.x, splitY);
+        }
+        else if (zoneIndex == 2) // Bottom-Left
+        {
+            zoneMin = float2(0, splitY);
+            zoneMax = float2(splitX, ViewportSize.y);
+        }
+        else // Bottom-Right (3)
+        {
+            zoneMin = float2(splitX, splitY);
+            zoneMax = ViewportSize;
+        }
+    }
+    else if (SplitModeValue > 1.5) // Split Horizontal (2)
+    {
+        if (zoneIndex == 0) // Top
+        {
+            zoneMin = float2(0, 0);
+            zoneMax = float2(ViewportSize.x, splitY);
+        }
+        else // Bottom
+        {
+            zoneMin = float2(0, splitY);
+            zoneMax = ViewportSize;
+        }
+    }
+    else // Split Vertical (1)
+    {
+        if (zoneIndex == 0) // Left
+        {
+            zoneMin = float2(0, 0);
+            zoneMax = float2(splitX, ViewportSize.y);
+        }
+        else // Right
+        {
+            zoneMin = float2(splitX, 0);
+            zoneMax = ViewportSize;
+        }
+    }
+}
+
+// Get UV coordinates for comparison mode with aspect ratio preservation
+// Returns (-1, -1) if pixel is in letterbox/pillarbox area (black bars)
+float2 GetComparisonUV(float2 screenPos, int zoneIndex)
+{
+    float2 zoneMin, zoneMax;
+    GetZoneBounds(zoneIndex, zoneMin, zoneMax);
+    float2 zoneSize = zoneMax - zoneMin;
+    float2 zoneCenter = (zoneMin + zoneMax) * 0.5;
+
+    if (SplitModeValue > 2.5) // Quadrants - stretch to fit
+    {
+        return (screenPos - zoneMin) / zoneSize;
+    }
+
+    // Split modes - preserve aspect ratio with letterboxing/pillarboxing
+    float screenAspect = ViewportSize.x / ViewportSize.y;
+    float zoneAspect = zoneSize.x / zoneSize.y;
+
+    float2 scaledSize;
+    if (screenAspect > zoneAspect)
+    {
+        // Screen is wider than zone - fit to zone width, letterbox
+        scaledSize.x = zoneSize.x;
+        scaledSize.y = zoneSize.x / screenAspect;
+    }
+    else
+    {
+        // Screen is taller than zone - fit to zone height, pillarbox
+        scaledSize.y = zoneSize.y;
+        scaledSize.x = zoneSize.y * screenAspect;
+    }
+
+    float2 contentMin = zoneCenter - scaledSize * 0.5;
+    float2 contentMax = zoneCenter + scaledSize * 0.5;
+
+    // Check if pixel is outside content area (in black bars)
+    if (screenPos.x < contentMin.x || screenPos.x > contentMax.x ||
+        screenPos.y < contentMin.y || screenPos.y > contentMax.y)
+    {
+        return float2(-1, -1); // Signal to render black
+    }
+
+    return (screenPos - contentMin) / scaledSize;
+}
+
+// Get the transformed mouse position within a zone for comparison mode
+float2 GetTransformedMousePos(int zoneIndex)
+{
+    float2 zoneMin, zoneMax;
+    GetZoneBounds(zoneIndex, zoneMin, zoneMax);
+    float2 zoneSize = zoneMax - zoneMin;
+    float2 zoneCenter = (zoneMin + zoneMax) * 0.5;
+
+    // Normalize mouse position to 0-1
+    float2 normalizedMouse = MousePosition / ViewportSize;
+
+    if (SplitModeValue > 2.5) // Quadrants - stretch to fit
+    {
+        return zoneMin + normalizedMouse * zoneSize;
+    }
+
+    // Split modes - preserve aspect ratio
+    float screenAspect = ViewportSize.x / ViewportSize.y;
+    float zoneAspect = zoneSize.x / zoneSize.y;
+
+    float2 scaledSize;
+    if (screenAspect > zoneAspect)
+    {
+        scaledSize.x = zoneSize.x;
+        scaledSize.y = zoneSize.x / screenAspect;
+    }
+    else
+    {
+        scaledSize.y = zoneSize.y;
+        scaledSize.x = zoneSize.y * screenAspect;
+    }
+
+    float2 contentMin = zoneCenter - scaledSize * 0.5;
+    return contentMin + normalizedMouse * scaledSize;
+}
+
+// Draw a crosshair cursor indicator
+float DrawCursor(float2 screenPos, float2 cursorPos, float size)
+{
+    float2 delta = screenPos - cursorPos;
+    float dist = length(delta);
+
+    // Crosshair parameters
+    float lineWidth = 2.0;
+    float innerRadius = 4.0;
+    float outerRadius = size;
+
+    // Horizontal line
+    bool onHLine = abs(delta.y) < lineWidth && abs(delta.x) > innerRadius && abs(delta.x) < outerRadius;
+    // Vertical line
+    bool onVLine = abs(delta.x) < lineWidth && abs(delta.y) > innerRadius && abs(delta.y) < outerRadius;
+    // Center dot
+    bool onCenter = dist < 3.0;
+    // Outer circle (thin)
+    bool onCircle = abs(dist - outerRadius) < 1.5;
+
+    if (onHLine || onVLine || onCenter || onCircle)
+    {
+        return 1.0;
+    }
+
+    return 0.0;
+}
+
+// ============================================================================
 // Pixel Shader
 // ============================================================================
 
@@ -678,36 +846,88 @@ float4 PSMain(PSInput input) : SV_TARGET
     float2 uv = input.TexCoord;
     float2 screenPos = uv * ViewportSize;
 
-    // Sample original screen color
-    float4 screenColor = ScreenTexture.Sample(LinearSampler, uv);
-    float3 color = screenColor.rgb;
-
     // Get zone index
     int zoneIndex = GetZoneIndex(screenPos);
 
+    // Handle comparison mode - full screen duplication in each zone
+    float2 sampleUV = uv;
+    bool isBlackBar = false;
+
+    if (ComparisonMode > 0.5 && SplitModeValue > 0.5)
+    {
+        // In comparison mode, duplicate the full screen into each zone
+        float2 comparisonUV = GetComparisonUV(screenPos, zoneIndex);
+        if (comparisonUV.x < 0)
+        {
+            isBlackBar = true;
+        }
+        else
+        {
+            sampleUV = comparisonUV;
+        }
+    }
+
+    // Return black for letterbox/pillarbox areas
+    if (isBlackBar)
+    {
+        return float4(0.0, 0.0, 0.0, 1.0);
+    }
+
+    // Sample original screen color at the (possibly remapped) UV
+    float4 screenColor = ScreenTexture.Sample(LinearSampler, sampleUV);
+    float3 color = screenColor.rgb;
+
     float3 finalColor;
 
-    // In comparison mode, zone 0 always shows original
-    bool forceOriginal = (ComparisonMode > 0.5 && zoneIndex == 0);
-
-    if (forceOriginal)
-    {
-        finalColor = color;
-    }
+    // Get zone parameters and process
+    ZoneParams zone;
+    if (zoneIndex == 0)
+        zone = Zone0;
+    else if (zoneIndex == 1)
+        zone = Zone1;
+    else if (zoneIndex == 2)
+        zone = Zone2;
     else
-    {
-        // Get zone parameters and process
-        ZoneParams zone;
-        if (zoneIndex == 0)
-            zone = Zone0;
-        else if (zoneIndex == 1)
-            zone = Zone1;
-        else if (zoneIndex == 2)
-            zone = Zone2;
-        else
-            zone = Zone3;
+        zone = Zone3;
 
-        finalColor = ProcessZone(color, zone, zoneIndex);
+    finalColor = ProcessZone(color, zone, zoneIndex);
+
+    // Draw virtual cursor in comparison mode
+    if (ComparisonMode > 0.5 && SplitModeValue > 0.5)
+    {
+        float2 transformedMouse = GetTransformedMousePos(zoneIndex);
+        float cursorSize = 15.0;
+
+        // Scale cursor size based on zone size (smaller for quadrants)
+        if (SplitModeValue > 2.5) // Quadrants
+        {
+            cursorSize = 12.0;
+        }
+
+        float cursorAlpha = DrawCursor(screenPos, transformedMouse, cursorSize);
+
+        if (cursorAlpha > 0.5)
+        {
+            // Draw cursor with contrasting color (inverted luminance)
+            float lum = dot(finalColor, float3(0.299, 0.587, 0.114));
+            float3 cursorColor = lum > 0.5 ? float3(0.0, 0.0, 0.0) : float3(1.0, 1.0, 1.0);
+
+            // Add colored accent for better visibility
+            float2 delta = screenPos - transformedMouse;
+            float dist = length(delta);
+
+            // Center dot and outer ring - use accent color (cyan/magenta based on zone)
+            if (dist < 3.0 || abs(dist - cursorSize) < 1.5)
+            {
+                float3 accentColor = (zoneIndex % 2 == 0) ? float3(0.0, 1.0, 1.0) : float3(1.0, 0.0, 1.0);
+                finalColor = lerp(finalColor, accentColor, 0.9);
+            }
+            else
+            {
+                // Crosshair lines - use contrasting color
+                finalColor = lerp(finalColor, cursorColor, 0.95);
+            }
+        }
     }
 
     // Draw separator line
