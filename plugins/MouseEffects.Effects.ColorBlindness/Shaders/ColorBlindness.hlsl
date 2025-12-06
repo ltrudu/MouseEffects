@@ -166,11 +166,14 @@ static const float3x3 Machado_Protanomaly = float3x3(
     -0.017, 0.000, 1.017
 );
 
-// Machado Deuteranopia 100% severity
+// Machado Deuteranopia 100% severity - Original from Machado et al. (2009)
+// This is the scientifically correct simulation that makes red and green
+// converge toward similar yellows - exactly what deuteranopes see.
+// The "15" Ishihara plate (green on green) should become nearly invisible.
 static const float3x3 Machado_Deuteranopia = float3x3(
     0.367322, 0.860646, -0.227968,
-    0.280085, 0.672501, 0.047413,
-    -0.011820, 0.042940, 0.968881
+    0.280085, 0.672501,  0.047413,
+   -0.011820, 0.042940,  0.968881
 );
 
 // Machado Deuteranomaly 50% severity
@@ -225,13 +228,11 @@ static const float3x3 Strict_Protanopia_LMS = float3x3(
     0.0,        0.0,         1.0           // S' = S (preserved)
 );
 
-// Strict Deuteranopia - M-cone deficient (reconstructs M from L and S)
-// M' = 0.9513092*L + 0.04866992*S (preserves white: 0.951 + 0.049 ≈ 1.0)
-static const float3x3 Strict_Deuteranopia_LMS = float3x3(
-    1.0,        0.0,         0.0,          // L' = L (preserved)
-    0.9513092,  0.0,         0.04866992,   // M' = 0.95*L + 0.05*S
-    0.0,        0.0,         1.0           // S' = S (preserved)
-);
+// Strict Deuteranopia - M-cone deficient
+// Uses min(M, L) approach consistent with Protanopia
+// Only reduces M for greens (where M > L), preserves M for reds (where M < L)
+// This ensures reds stay red, greens shift toward yellow
+// (Matrix not used - see SimulateStrict function for actual implementation)
 
 // Strict Tritanopia - S-cone deficient (reconstructs S from L and M)
 // Tritanopes confuse blue with green. Blue should shift toward green, not the other way.
@@ -316,16 +317,19 @@ float3 SimulateStrict(float3 linearRGB, float cvdType)
     }
     else if (strictType < 3.5) // Deuteranopia (9 -> 3)
     {
-        simLMS.x = dot(lms, Strict_Deuteranopia_LMS[0]);
-        simLMS.y = dot(lms, Strict_Deuteranopia_LMS[1]);
-        simLMS.z = dot(lms, Strict_Deuteranopia_LMS[2]);
+        // M' = min(M, L) - only reduce M for greens (where M > L), preserve for reds
+        // This is consistent with Protanopia using min(L, M)
+        // Reds stay red, greens shift toward yellow, blues unaffected
+        simLMS.x = lms.x;              // L preserved
+        simLMS.y = min(lms.y, lms.x);  // M' = min(M, L)
+        simLMS.z = lms.z;              // S preserved
     }
     else if (strictType < 4.5) // Deuteranomaly (10 -> 4) - 50% blend
     {
         float3 fullSim;
-        fullSim.x = dot(lms, Strict_Deuteranopia_LMS[0]);
-        fullSim.y = dot(lms, Strict_Deuteranopia_LMS[1]);
-        fullSim.z = dot(lms, Strict_Deuteranopia_LMS[2]);
+        fullSim.x = lms.x;
+        fullSim.y = min(lms.y, lms.x);  // M' = min(M, L)
+        fullSim.z = lms.z;
         simLMS = lerp(lms, fullSim, 0.5);
     }
     else if (strictType < 5.5) // Tritanopia (11 -> 5)
