@@ -187,18 +187,34 @@ Creates lens/ripple distortion effects around your cursor that warp the screen.
 **ID**: `color-blindness`
 **Screen Capture**: Yes (Continuous)
 
-Simulates various color blindness conditions with customizable RGB curve adjustment. Supports separate filters for inside and outside the shape area.
+Advanced color vision deficiency (CVD) simulation and correction tool. Supports multiple scientifically-validated algorithms, zone-based filtering, and comparison layouts for accessibility testing.
 
 ### Features
 
-- Protanopia, Deuteranopia, Tritanopia, Grayscale, Inverted simulation
+- **17 filter types** including 6 Machado and 6 Strict algorithm variants
+- **Correction & Simulation modes**: Help colorblind users see colors OR simulate what they see
+- **Zone-based architecture**: Up to 4 independent zones with different filters
+- **Multiple layouts**: Single, Split (horizontal/vertical), Quadrants, Comparison
+- **Dual algorithm support**: Machado (RGB-space) and Strict (LMS-space) methods
 - Circular, rectangular, or fullscreen application
-- **Dual filter mode**: Apply different filters inside and outside the shape
 - Editable RGB curves with Catmull-Rom interpolation
-- Real-time color transformation
-- Smooth edge transitions
+- Real-time color transformation with smooth edge transitions
+- Global hotkey support (Alt+Shift+C to toggle)
 
 ### Settings
+
+#### Layout
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `layoutMode` | int | 0-4 | 0 | 0=Single, 1=Split H, 2=Split V, 3=Quadrants, 4=Comparison |
+
+**Layout Modes:**
+- **Single**: One filter applied to entire area
+- **Split Horizontal**: Two zones side by side
+- **Split Vertical**: Two zones top and bottom
+- **Quadrants**: Four zones in corners
+- **Comparison**: Original vs filtered with virtual cursor indicator
 
 #### Shape
 
@@ -210,35 +226,91 @@ Simulates various color blindness conditions with customizable RGB curve adjustm
 | `rectHeight` | float | 100-1000 | 300 | Rectangle height (px) |
 | `edgeSoftness` | float | 0-1 | 0.2 | Edge feather amount |
 
-#### Filter
+#### Filter Types
 
-When **Fullscreen** mode is selected, a single "Filter Type" dropdown is shown.
+Each zone can have an independent filter and mode. The plugin supports 17 filter types across two algorithm families:
 
-When **Circle** or **Rectangle** mode is selected, two separate filter dropdowns appear:
-- **Inside Shape Filter Type**: Filter applied inside the shape (default: Grayscale)
-- **Outside Shape Filter Type**: Filter applied outside the shape (default: None)
+| Index | Filter Name | Description |
+|-------|-------------|-------------|
+| 0 | None | No color transformation |
+| 1 | Protanopia (Machado) | L-cone deficiency, RGB-space algorithm |
+| 2 | Protanomaly (Machado) | Partial L-cone weakness, RGB-space |
+| 3 | Deuteranopia (Machado) | M-cone deficiency, RGB-space algorithm |
+| 4 | Deuteranomaly (Machado) | Partial M-cone weakness, RGB-space |
+| 5 | Tritanopia (Machado) | S-cone deficiency, RGB-space algorithm |
+| 6 | Tritanomaly (Machado) | Partial S-cone weakness, RGB-space |
+| 7 | Protanopia (Strict) | L-cone deficiency, LMS-space algorithm |
+| 8 | Protanomaly (Strict) | Partial L-cone weakness, LMS-space |
+| 9 | Deuteranopia (Strict) | M-cone deficiency, LMS-space algorithm |
+| 10 | Deuteranomaly (Strict) | Partial M-cone weakness, LMS-space |
+| 11 | Tritanopia (Strict) | S-cone deficiency, LMS-space algorithm |
+| 12 | Tritanomaly (Strict) | Partial S-cone weakness, LMS-space |
+| 13 | Achromatopsia | Complete color blindness (rod monochromacy) |
+| 14 | Achromatomaly | Partial color blindness |
+| 15 | Grayscale | Simple luminance conversion |
+| 16 | Inverted Grayscale | Inverted luminance |
+
+#### Mode (Correction vs Simulation)
+
+Each zone can operate in one of two modes:
+
+| Mode | Description |
+|------|-------------|
+| **Correction** | Enhances colors to help colorblind users distinguish them. Shifts lost color information to visible channels (e.g., red-green differences shifted to blue). |
+| **Simulation** | Shows how a colorblind person perceives colors. Useful for accessibility testing and empathy building. |
 
 | Setting | Type | Range | Default | Description |
 |---------|------|-------|---------|-------------|
-| `filterType` | int | 0-6 | 4 | Inside shape filter (or fullscreen filter) |
-| `outsideFilterType` | int | 0-6 | 0 | Outside shape filter (shapes only) |
+| `zone0Mode` | int | 0-1 | 0 | 0=Correction, 1=Simulation |
+| `zone1Mode` | int | 0-1 | 0 | Mode for zone 1 |
+| `zone2Mode` | int | 0-1 | 0 | Mode for zone 2 |
+| `zone3Mode` | int | 0-1 | 0 | Mode for zone 3 |
+
+#### Zone Configuration
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zone0FilterType` | int | 0-16 | 0 | Filter for zone 0 |
+| `zone1FilterType` | int | 0-16 | 0 | Filter for zone 1 |
+| `zone2FilterType` | int | 0-16 | 0 | Filter for zone 2 |
+| `zone3FilterType` | int | 0-16 | 0 | Filter for zone 3 |
 | `intensity` | float | 0-1 | 1.0 | Filter strength |
 | `colorBoost` | float | 0-2 | 1.0 | Color saturation boost |
 
-**Filter Types**:
-- 0 = None (no filter / curves only)
-- 1 = Deuteranopia (green-blind)
-- 2 = Protanopia (red-blind)
-- 3 = Tritanopia (blue-blind)
-- 4 = Grayscale
-- 5 = Grayscale Inverted
-- 6 = Inverted
+### Algorithm Details
+
+#### Machado Algorithm (Types 1-6)
+
+Based on research by Machado, Oliveira, and Fernandes (2009). Uses pre-computed 3x3 matrices that operate directly in linear RGB space.
+
+**Advantages:**
+- Fast computation (single matrix multiply)
+- Widely validated and used in accessibility tools
+- Good visual accuracy for most use cases
+
+**Technical Reference:**
+- Machado, G. M., Oliveira, M. M., & Fernandes, L. A. (2009). "A Physiologically-based Model for Simulation of Color Vision Deficiency"
+
+#### Strict LMS Algorithm (Types 7-12)
+
+Based on Brettel, Viénot & Mollon (1997) confusion lines. Converts to LMS colorspace, applies cone deficiency simulation, then converts back.
+
+**Advantages:**
+- More physiologically accurate
+- Better for scientific/medical applications
+- Proper colorspace handling
+
+**Technical Details:**
+- Uses Hunt-Pointer-Estevez matrix for RGB→LMS conversion
+- Applies confusion line projection for missing cone type
+- Coefficients preserve white point (sum to 1.0)
 
 ### Use Cases
 
-- **Accessibility Testing**: View a portion of the screen in grayscale while keeping the rest in color
-- **Focus Mode**: Apply a filter outside the cursor area to reduce distractions
-- **Color Blindness Preview**: See how users with color blindness would perceive specific UI elements
+- **Accessibility Testing**: Compare original vs simulated to check UI color contrast
+- **Correction Mode**: Help colorblind users distinguish problematic colors
+- **Design Validation**: Use Quadrants layout to compare multiple CVD types simultaneously
+- **Education**: Demonstrate how different CVD types perceive the world
 
 #### Curves
 
@@ -259,6 +331,12 @@ Curves are stored as semicolon-separated control points:
 ```
 
 Each point is `x,y` where both values are 0-1 normalized.
+
+### Hotkeys
+
+| Hotkey | Action |
+|--------|--------|
+| **Alt+Shift+C** | Toggle effect on/off |
 
 ### Rendering
 
