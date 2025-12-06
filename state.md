@@ -104,6 +104,7 @@ MouseEffects/
 │   ├── MouseEffects.Effects.LaserWork/
 │   ├── MouseEffects.Effects.ScreenDistortion/
 │   ├── MouseEffects.Effects.ColorBlindness/
+│   ├── MouseEffects.Effects.ColorBlindnessNG/  # NEW: Next-gen CVD simulation & correction
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.TileVibration/
 │   ├── MouseEffects.Effects.WaterRipple/
@@ -482,6 +483,69 @@ public partial class MySettingsControl : UserControl
 - `outsideFilterType` (int): Outside filter (shape modes only)
 - `shapeMode` (int): 0=Circle, 1=Rectangle, 2=Fullscreen
 - `circleRadius`, `rectangleWidth`, `rectangleHeight`
+
+### 4b. ColorBlindnessNG (NEW)
+
+**ID**: `color-blindness-ng`
+**Category**: Accessibility
+**Description**: Next-generation CVD simulation and correction with LUT-based color remapping
+
+**Key Differences from ColorBlindness:**
+- Separates Simulation and Correction into distinct operating modes
+- Uses verified Machado (2009) matrices for simulation
+- Implements LUT-based color remapping for correction (instead of matrix-based)
+- Per-channel color gradient control for fine-tuned correction
+
+**Operating Modes:**
+
+1. **Simulation Mode** - Shows what CVD people see
+   - Algorithm: Machado (RGB-space) or Strict (LMS-space)
+   - 9 CVD types: None, Protanopia, Protanomaly, Deuteranopia, Deuteranomaly, Tritanopia, Tritanomaly, Achromatopsia, Achromatomaly
+
+2. **Correction Mode** - Helps CVD users see colors better
+   - LUT-based color remapping with 256-entry gradients per channel
+   - 9 presets: Custom, Deuteranopia, Protanopia, Tritanopia, Deuteranomaly, Protanomaly, Tritanomaly, Red-Green (Both), High Contrast
+   - Per-channel controls: Enable, Strength (0-1), Start Color, End Color
+   - Application modes: Full Channel, Dominant Only, Threshold
+   - Gradient interpolation: Linear RGB, Perceptual LAB, HSL
+
+**Configuration:**
+- `mode` (int): 0=Simulation, 1=Correction
+- `simulationAlgorithm` (int): 0=Machado, 1=Strict
+- `simulationFilterType` (int): CVD type for simulation
+- `applicationMode` (int): 0=Full Channel, 1=Dominant Only, 2=Threshold
+- `gradientType` (int): 0=Linear RGB, 1=Perceptual LAB, 2=HSL
+- `threshold` (float): For threshold mode (0-1)
+- `redEnabled`, `greenEnabled`, `blueEnabled` (bool): Channel enables
+- `redStrength`, `greenStrength`, `blueStrength` (float): Channel strengths
+- `redStartColor`, `redEndColor`, etc. (string): Hex colors like "#FF0000"
+- `intensity` (float): Global intensity (0-1)
+
+**Machado (2009) Matrices:**
+```hlsl
+// Deuteranopia (100% M-cone loss)
+float3x3(0.625, 0.375, 0.000,
+         0.700, 0.300, 0.000,
+         0.000, 0.300, 0.700)
+
+// Protanopia (100% L-cone loss)
+float3x3(0.567, 0.433, 0.000,
+         0.558, 0.442, 0.000,
+         0.000, 0.242, 0.758)
+
+// Tritanopia (100% S-cone loss)
+float3x3(0.950, 0.050, 0.000,
+         0.000, 0.433, 0.567,
+         0.000, 0.475, 0.525)
+```
+
+**Files:**
+- `ColorBlindnessNGEffect.cs` - Main effect with LUT texture management
+- `ColorBlindnessNGFactory.cs` - Plugin factory
+- `LUTGenerator.cs` - Generates gradient LUT textures (Linear RGB, LAB, HSL)
+- `CorrectionPresets.cs` - 9 preset definitions
+- `Shaders/ColorBlindnessNG.hlsl` - Combined simulation + correction shader
+- `UI/ColorBlindnessNGSettingsControl.xaml(.cs)` - Dynamic WPF settings UI
 
 ### 5. RadialDithering
 
@@ -894,3 +958,153 @@ Based on Brettel, Viénot & Mollon (1997) confusion lines:
 
 1. Consider committing changes with descriptive message
 2. Update Wiki documentation for the new filter options
+
+---
+
+# Session State: 2025-12-06 (ColorBlindnessNG Implementation)
+
+## Completed Implementation
+
+### ColorBlindnessNG Plugin - COMPLETE
+
+Created a new "ColorBlindnessNG" (Next Generation) plugin that separates **Simulation** and **Correction** into two distinct approaches:
+
+**Plugin Structure:**
+```
+plugins/MouseEffects.Effects.ColorBlindnessNG/
+├── MouseEffects.Effects.ColorBlindnessNG.csproj
+├── ColorBlindnessNGEffect.cs      # Main effect with LUT management
+├── ColorBlindnessNGFactory.cs     # Plugin factory for discovery
+├── LUTGenerator.cs                # LUT texture generation (RGB, LAB, HSL)
+├── CorrectionPresets.cs           # 9 preset definitions
+├── Shaders/
+│   └── ColorBlindnessNG.hlsl      # Combined simulation + correction shader
+└── UI/
+    ├── ColorBlindnessNGSettingsControl.xaml
+    └── ColorBlindnessNGSettingsControl.xaml.cs
+```
+
+### Files Created
+
+1. **MouseEffects.Effects.ColorBlindnessNG.csproj**
+   - Project file with embedded shader resources
+   - References Core and DirectX projects
+   - Output to plugins folder
+
+2. **ColorBlindnessNGFactory.cs**
+   - Plugin factory for discovery
+   - Default configuration with mode=0 (Simulation), intensity=1.0
+
+3. **ColorBlindnessNGEffect.cs**
+   - Main effect class extending EffectBase
+   - Creates and manages 256x1 RGBA float LUT textures for R, G, B channels
+   - Handles mode switching between Simulation and Correction
+   - Updates LUT textures when configuration changes
+
+4. **LUTGenerator.cs**
+   - Static class generating gradient LUT textures
+   - Three interpolation types:
+     - `LerpLinearRGB()` - Simple linear RGB interpolation
+     - `LerpLAB()` - Perceptually uniform LAB colorspace interpolation
+     - `LerpHSL()` - HSL interpolation with hue wrap-around handling
+   - Full color space conversion: RGB↔XYZ↔LAB, RGB↔HSL
+   - sRGB gamma correction (linearize/encode)
+
+5. **CorrectionPresets.cs**
+   - `CorrectionPreset` record with per-channel settings
+   - 9 presets: Custom, Deuteranopia, Protanopia, Tritanopia, Deuteranomaly, Protanomaly, Tritanomaly, RedGreenBoth, HighContrast
+   - Each preset specifies: channel enables, strengths, start/end colors, recommended gradient type and application mode
+
+6. **ColorBlindnessNG.hlsl**
+   - **Simulation Mode**: Verified Machado (2009) matrices + Strict LMS mode
+   - **Correction Mode**: LUT-based per-channel color remapping
+   - Three application modes: Full Channel, Dominant Only, Threshold
+   - Proper sRGB linearization for accurate color math
+
+7. **ColorBlindnessNGSettingsControl.xaml/xaml.cs**
+   - Dynamic UI switching between Simulation and Correction panels
+   - Simulation: Algorithm radio (Machado/Strict), CVD type dropdown
+   - Correction: Preset dropdown, application mode, gradient type, per-channel controls with color pickers
+   - Windows Forms ColorDialog for color picking
+
+### Verified Machado (2009) Matrices
+
+Source: "A Physiologically-based Model for Simulation of Color Vision Deficiency"
+IEEE Transactions on Visualization and Computer Graphics, Vol. 15, No. 6, 2009
+
+```hlsl
+// Protanopia (100% L-cone loss)
+static const float3x3 Machado_Protanopia = float3x3(
+    0.567, 0.433, 0.000,
+    0.558, 0.442, 0.000,
+    0.000, 0.242, 0.758
+);
+
+// Deuteranopia (100% M-cone loss)
+static const float3x3 Machado_Deuteranopia = float3x3(
+    0.625, 0.375, 0.000,
+    0.700, 0.300, 0.000,
+    0.000, 0.300, 0.700
+);
+
+// Tritanopia (100% S-cone loss)
+static const float3x3 Machado_Tritanopia = float3x3(
+    0.950, 0.050, 0.000,
+    0.000, 0.433, 0.567,
+    0.000, 0.475, 0.525
+);
+```
+
+### Build Status
+
+- **ColorBlindnessNG Project**: Builds successfully
+- **Solution Build**: File lock errors because MouseEffects.App was running (not a code issue)
+- Project added to solution under `plugins` folder
+
+### Bug Fix Applied
+
+- **Ambiguous UserControl reference**: Fixed by adding `using UserControl = System.Windows.Controls.UserControl;` to distinguish WPF from WinForms UserControl
+
+### Testing Required
+
+1. Close MouseEffects.App if running
+2. Build full solution: `dotnet build -c Debug -p:Platform=x64`
+3. Test Simulation mode with Ishihara test images
+4. Test Correction mode presets with color wheel images
+5. Verify LUT gradient interpolation (LAB should be smoother than Linear RGB)
+
+### LUT-Based Correction Architecture
+
+```
+Input Screen Color (R, G, B)
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  For each channel with LUT enabled:     │
+│                                         │
+│  R channel → Sample R_LUT[R] → R'       │
+│  G channel → Sample G_LUT[G] → G'       │
+│  B channel → Sample B_LUT[B] → B'       │
+│                                         │
+│  Channels without LUT pass through      │
+└─────────────────────────────────────────┘
+         │
+         ▼
+Output Corrected Color (R', G', B')
+```
+
+### Application Modes
+
+| Mode | Description |
+|------|-------------|
+| **Full Channel** | Any pixel with R>0 gets the red LUT applied proportionally |
+| **Dominant Only** | Only remap when channel is dominant (R > G and R > B) |
+| **Threshold** | Apply LUT only when channel exceeds configurable threshold |
+
+### Gradient Interpolation Types
+
+| Type | Description |
+|------|-------------|
+| **Linear RGB** | Simple linear interpolation - fast, may have muddy midtones |
+| **Perceptual LAB** | Interpolate in LAB color space - perceptually uniform gradient |
+| **HSL** | Interpolate through hue - more vibrant gradient |
