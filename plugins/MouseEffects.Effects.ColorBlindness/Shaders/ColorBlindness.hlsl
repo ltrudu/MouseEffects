@@ -36,8 +36,8 @@ cbuffer ColorBlindnessParams : register(b0)
     // Zone 0 (64 bytes)
     float Zone0_CorrectionMode; // 4 bytes - 0=LMS, 1=RGB
     float Zone0_LMSFilterType;  // 4 bytes - LMS filter type
+    float Zone0_SimulationMode; // 4 bytes - 0=Correction, 1=Simulation
     float _zone0_pad1;          // 4 bytes - padding
-    float _zone0_pad2;          // 4 bytes - padding
     float4 Zone0_MatrixRow0;    // 16 bytes - RGB matrix row 0
     float4 Zone0_MatrixRow1;    // 16 bytes - RGB matrix row 1
     float4 Zone0_MatrixRow2;    // 16 bytes - RGB matrix row 2
@@ -45,8 +45,8 @@ cbuffer ColorBlindnessParams : register(b0)
     // Zone 1 (64 bytes)
     float Zone1_CorrectionMode;
     float Zone1_LMSFilterType;
+    float Zone1_SimulationMode;
     float _zone1_pad1;
-    float _zone1_pad2;
     float4 Zone1_MatrixRow0;
     float4 Zone1_MatrixRow1;
     float4 Zone1_MatrixRow2;
@@ -54,8 +54,8 @@ cbuffer ColorBlindnessParams : register(b0)
     // Zone 2 (64 bytes)
     float Zone2_CorrectionMode;
     float Zone2_LMSFilterType;
+    float Zone2_SimulationMode;
     float _zone2_pad1;
-    float _zone2_pad2;
     float4 Zone2_MatrixRow0;
     float4 Zone2_MatrixRow1;
     float4 Zone2_MatrixRow2;
@@ -63,8 +63,8 @@ cbuffer ColorBlindnessParams : register(b0)
     // Zone 3 (64 bytes)
     float Zone3_CorrectionMode;
     float Zone3_LMSFilterType;
+    float Zone3_SimulationMode;
     float _zone3_pad1;
-    float _zone3_pad2;
     float4 Zone3_MatrixRow0;
     float4 Zone3_MatrixRow1;
     float4 Zone3_MatrixRow2;
@@ -78,17 +78,26 @@ SamplerState PointSampler : register(s1);
 // ============================================================================
 // LMS Filter Type Constants
 // ============================================================================
+// Machado et al. (2009) - RGB-space matrices (fast, widely used)
 // 0  = None (pass through)
-// 1  = Protanopia (red-blind)
-// 2  = Protanomaly (red-weak)
-// 3  = Deuteranopia (green-blind)
-// 4  = Deuteranomaly (green-weak)
-// 5  = Tritanopia (blue-blind)
-// 6  = Tritanomaly (blue-weak)
-// 7  = Achromatopsia (monochromacy)
-// 8  = Achromatomaly (weak color)
-// 9  = Grayscale
-// 10 = Inverted Grayscale
+// 1  = Protanopia (Machado)
+// 2  = Protanomaly (Machado)
+// 3  = Deuteranopia (Machado)
+// 4  = Deuteranomaly (Machado)
+// 5  = Tritanopia (Machado)
+// 6  = Tritanomaly (Machado)
+// Strict LMS - Proper LMS colorspace simulation (more accurate)
+// 7  = Protanopia (Strict)
+// 8  = Protanomaly (Strict)
+// 9  = Deuteranopia (Strict)
+// 10 = Deuteranomaly (Strict)
+// 11 = Tritanopia (Strict)
+// 12 = Tritanomaly (Strict)
+// Other effects
+// 13 = Achromatopsia (monochromacy)
+// 14 = Achromatomaly (weak color)
+// 15 = Grayscale
+// 16 = Inverted Grayscale
 
 // Grayscale weights (luminance)
 static const float3 GrayscaleWeights = float3(0.2126, 0.7152, 0.0722);
@@ -138,77 +147,204 @@ float3 LMSToLinearRGB(float3 lms)
 }
 
 // ============================================================================
-// LMS CVD Simulation (Viénot/Brettel)
+// CVD Simulation Matrices - Machado et al. (2009)
+// These work directly in linear RGB space - fast and widely used
+// Source: https://godotshaders.com/shader/color-blind/
 // ============================================================================
 
-float3 SimulateCVD_LMS(float3 lms, float cvdType)
+// Machado Protanopia 100% severity
+static const float3x3 Machado_Protanopia = float3x3(
+    0.152286, 1.052583, -0.204868,
+    0.114503, 0.786281, 0.099216,
+    -0.003882, -0.048116, 1.051998
+);
+
+// Machado Protanomaly 50% severity
+static const float3x3 Machado_Protanomaly = float3x3(
+    0.817, 0.333, -0.150,
+    0.333, 0.667, 0.000,
+    -0.017, 0.000, 1.017
+);
+
+// Machado Deuteranopia 100% severity
+static const float3x3 Machado_Deuteranopia = float3x3(
+    0.367322, 0.860646, -0.227968,
+    0.280085, 0.672501, 0.047413,
+    -0.011820, 0.042940, 0.968881
+);
+
+// Machado Deuteranomaly 50% severity
+static const float3x3 Machado_Deuteranomaly = float3x3(
+    0.800, 0.200, 0.000,
+    0.258, 0.742, 0.000,
+    0.000, 0.142, 0.858
+);
+
+// Machado Tritanopia 100% severity
+static const float3x3 Machado_Tritanopia = float3x3(
+    1.255528, -0.076749, -0.178779,
+    -0.078411, 0.930809, 0.147602,
+    0.004733, 0.691367, 0.303900
+);
+
+// Machado Tritanomaly 50% severity
+static const float3x3 Machado_Tritanomaly = float3x3(
+    0.967, 0.033, 0.000,
+    0.000, 0.733, 0.267,
+    0.000, 0.183, 0.817
+);
+
+// Machado Achromatopsia (complete color blindness)
+static const float3x3 Machado_Achromatopsia = float3x3(
+    0.299, 0.587, 0.114,
+    0.299, 0.587, 0.114,
+    0.299, 0.587, 0.114
+);
+
+// Machado Achromatomaly (blue-cone monochromacy)
+static const float3x3 Machado_Achromatomaly = float3x3(
+    0.618, 0.320, 0.062,
+    0.163, 0.775, 0.062,
+    0.163, 0.320, 0.516
+);
+
+// ============================================================================
+// Strict LMS Simulation Matrices
+// These work in LMS color space for more accurate physiological simulation
+// Source: ixora.io/projects/colorblindness/color-blindness-simulation-research/
+// Coefficients preserve white point (sum to ~1.0)
+// ============================================================================
+
+// Strict Protanopia - L-cone deficient (reconstructs L from M and S)
+// L' = 1.05118294*M - 0.05116099*S (preserves white: 1.051 - 0.051 ≈ 1.0)
+static const float3x3 Strict_Protanopia_LMS = float3x3(
+    0.0,        1.05118294, -0.05116099,   // L' = 1.05*M - 0.05*S
+    0.0,        1.0,         0.0,          // M' = M (preserved)
+    0.0,        0.0,         1.0           // S' = S (preserved)
+);
+
+// Strict Deuteranopia - M-cone deficient (reconstructs M from L and S)
+// M' = 0.9513092*L + 0.04866992*S (preserves white: 0.951 + 0.049 ≈ 1.0)
+static const float3x3 Strict_Deuteranopia_LMS = float3x3(
+    1.0,        0.0,         0.0,          // L' = L (preserved)
+    0.9513092,  0.0,         0.04866992,   // M' = 0.95*L + 0.05*S
+    0.0,        0.0,         1.0           // S' = S (preserved)
+);
+
+// Strict Tritanopia - S-cone deficient (reconstructs S from L and M)
+// Tritanopes confuse blue with green. Blue should shift toward green, not the other way.
+// S' = -0.395913*L + 0.801109*M (from Viénot 1999, preserves white)
+static const float3x3 Strict_Tritanopia_LMS = float3x3(
+    1.0,         0.0,         0.0,         // L' = L (preserved)
+    0.0,         1.0,         0.0,         // M' = M (preserved)
+    -0.395913,   0.801109,    0.0          // S' = -0.4*L + 0.8*M (reduces S for most colors)
+);
+
+// Apply Machado CVD simulation (operates directly on linear RGB)
+float3 SimulateMachado(float3 linearRGB, float cvdType)
 {
-    float l = lms.x;
-    float m = lms.y;
-    float s = lms.z;
+    float3 result;
 
-    float3 result = lms;
-
-    if (cvdType < 1.5) // Protanopia (1) - L cone missing
+    if (cvdType < 1.5) // Protanopia (1)
     {
-        result.x = 2.02344 * m - 2.52580 * s;
-        result.y = m;
-        result.z = s;
+        result.r = dot(linearRGB, Machado_Protanopia[0]);
+        result.g = dot(linearRGB, Machado_Protanopia[1]);
+        result.b = dot(linearRGB, Machado_Protanopia[2]);
     }
-    else if (cvdType < 2.5) // Protanomaly (2) - L cone weak
+    else if (cvdType < 2.5) // Protanomaly (2)
     {
-        float3 simulated;
-        simulated.x = 2.02344 * m - 2.52580 * s;
-        simulated.y = m;
-        simulated.z = s;
-        result = lerp(lms, simulated, 0.5);
+        result.r = dot(linearRGB, Machado_Protanomaly[0]);
+        result.g = dot(linearRGB, Machado_Protanomaly[1]);
+        result.b = dot(linearRGB, Machado_Protanomaly[2]);
     }
-    else if (cvdType < 3.5) // Deuteranopia (3) - M cone missing
+    else if (cvdType < 3.5) // Deuteranopia (3)
     {
-        result.x = l;
-        result.y = 0.49421 * l + 1.24827 * s;
-        result.z = s;
+        result.r = dot(linearRGB, Machado_Deuteranopia[0]);
+        result.g = dot(linearRGB, Machado_Deuteranopia[1]);
+        result.b = dot(linearRGB, Machado_Deuteranopia[2]);
     }
-    else if (cvdType < 4.5) // Deuteranomaly (4) - M cone weak
+    else if (cvdType < 4.5) // Deuteranomaly (4)
     {
-        float3 simulated;
-        simulated.x = l;
-        simulated.y = 0.49421 * l + 1.24827 * s;
-        simulated.z = s;
-        result = lerp(lms, simulated, 0.5);
+        result.r = dot(linearRGB, Machado_Deuteranomaly[0]);
+        result.g = dot(linearRGB, Machado_Deuteranomaly[1]);
+        result.b = dot(linearRGB, Machado_Deuteranomaly[2]);
     }
-    else if (cvdType < 5.5) // Tritanopia (5) - S cone missing
+    else if (cvdType < 5.5) // Tritanopia (5)
     {
-        if (l * 0.34478 - m * 0.65518 >= 0)
-        {
-            result.z = -0.00257 * l + 0.05366 * m;
-        }
-        else
-        {
-            result.z = -0.06011 * l + 0.16299 * m;
-        }
-        result.x = l;
-        result.y = m;
+        result.r = dot(linearRGB, Machado_Tritanopia[0]);
+        result.g = dot(linearRGB, Machado_Tritanopia[1]);
+        result.b = dot(linearRGB, Machado_Tritanopia[2]);
     }
-    else if (cvdType < 6.5) // Tritanomaly (6) - S cone weak
+    else // Tritanomaly (6)
     {
-        float3 simulated = lms;
-        if (l * 0.34478 - m * 0.65518 >= 0)
-        {
-            simulated.z = -0.00257 * l + 0.05366 * m;
-        }
-        else
-        {
-            simulated.z = -0.06011 * l + 0.16299 * m;
-        }
-        result = lerp(lms, simulated, 0.5);
+        result.r = dot(linearRGB, Machado_Tritanomaly[0]);
+        result.g = dot(linearRGB, Machado_Tritanomaly[1]);
+        result.b = dot(linearRGB, Machado_Tritanomaly[2]);
     }
 
     return result;
 }
 
+// Apply Strict LMS-based CVD simulation (proper LMS colorspace)
+// cvdType: 7=Protanopia, 8=Protanomaly, 9=Deuteranopia, 10=Deuteranomaly, 11=Tritanopia, 12=Tritanomaly
+float3 SimulateStrict(float3 linearRGB, float cvdType)
+{
+    // Convert to LMS
+    float3 lms = linearRGBToLMS(linearRGB);
+    float3 simLMS;
+
+    // Map cvdType 7-12 to the simulation matrices
+    float strictType = cvdType - 6.0; // 1-6 range
+
+    if (strictType < 1.5) // Protanopia (7 -> 1)
+    {
+        simLMS.x = dot(lms, Strict_Protanopia_LMS[0]);
+        simLMS.y = dot(lms, Strict_Protanopia_LMS[1]);
+        simLMS.z = dot(lms, Strict_Protanopia_LMS[2]);
+    }
+    else if (strictType < 2.5) // Protanomaly (8 -> 2) - 50% blend
+    {
+        float3 fullSim;
+        fullSim.x = dot(lms, Strict_Protanopia_LMS[0]);
+        fullSim.y = dot(lms, Strict_Protanopia_LMS[1]);
+        fullSim.z = dot(lms, Strict_Protanopia_LMS[2]);
+        simLMS = lerp(lms, fullSim, 0.5);
+    }
+    else if (strictType < 3.5) // Deuteranopia (9 -> 3)
+    {
+        simLMS.x = dot(lms, Strict_Deuteranopia_LMS[0]);
+        simLMS.y = dot(lms, Strict_Deuteranopia_LMS[1]);
+        simLMS.z = dot(lms, Strict_Deuteranopia_LMS[2]);
+    }
+    else if (strictType < 4.5) // Deuteranomaly (10 -> 4) - 50% blend
+    {
+        float3 fullSim;
+        fullSim.x = dot(lms, Strict_Deuteranopia_LMS[0]);
+        fullSim.y = dot(lms, Strict_Deuteranopia_LMS[1]);
+        fullSim.z = dot(lms, Strict_Deuteranopia_LMS[2]);
+        simLMS = lerp(lms, fullSim, 0.5);
+    }
+    else if (strictType < 5.5) // Tritanopia (11 -> 5)
+    {
+        simLMS.x = dot(lms, Strict_Tritanopia_LMS[0]);
+        simLMS.y = dot(lms, Strict_Tritanopia_LMS[1]);
+        simLMS.z = dot(lms, Strict_Tritanopia_LMS[2]);
+    }
+    else // Tritanomaly (12 -> 6) - 50% blend
+    {
+        float3 fullSim;
+        fullSim.x = dot(lms, Strict_Tritanopia_LMS[0]);
+        fullSim.y = dot(lms, Strict_Tritanopia_LMS[1]);
+        fullSim.z = dot(lms, Strict_Tritanopia_LMS[2]);
+        simLMS = lerp(lms, fullSim, 0.5);
+    }
+
+    // Convert back to RGB
+    return LMSToLinearRGB(simLMS);
+}
+
 // ============================================================================
-// LMS Daltonization Correction
+// Daltonization Correction
 // ============================================================================
 
 float3 ApplyLMSCorrection(float3 color, float cvdType)
@@ -219,10 +355,12 @@ float3 ApplyLMSCorrection(float3 color, float cvdType)
         return color;
     }
 
-    // Handle Achromatopsia (7) - complete color blindness
-    if (cvdType > 6.5 && cvdType < 7.5)
+    // Handle Achromatopsia (13) - complete color blindness
+    // For monochromats, enhance contrast in grayscale
+    if (cvdType > 12.5 && cvdType < 13.5)
     {
         float gray = dot(color, GrayscaleWeights);
+        // Apply S-curve for contrast enhancement
         float enhanced = gray;
         if (gray < 0.5)
         {
@@ -236,8 +374,9 @@ float3 ApplyLMSCorrection(float3 color, float cvdType)
         return float3(contrast, contrast, contrast);
     }
 
-    // Handle Achromatomaly (8) - partial color blindness
-    if (cvdType > 7.5 && cvdType < 8.5)
+    // Handle Achromatomaly (14) - partial color blindness
+    // Boost saturation and contrast
+    if (cvdType > 13.5 && cvdType < 14.5)
     {
         float gray = dot(color, GrayscaleWeights);
         float3 saturated = lerp(float3(gray, gray, gray), color, 1.5);
@@ -246,46 +385,173 @@ float3 ApplyLMSCorrection(float3 color, float cvdType)
         return clamp(enhanced, 0.0, 1.0);
     }
 
-    // Handle Grayscale (9)
-    if (cvdType > 8.5 && cvdType < 9.5)
+    // Handle Grayscale (15)
+    if (cvdType > 14.5 && cvdType < 15.5)
     {
         float gray = dot(color, GrayscaleWeights);
         return float3(gray, gray, gray);
     }
 
-    // Handle Inverted Grayscale (10)
-    if (cvdType > 9.5 && cvdType < 10.5)
+    // Handle Inverted Grayscale (16)
+    if (cvdType > 15.5 && cvdType < 16.5)
     {
         float gray = 1.0 - dot(color, GrayscaleWeights);
         return float3(gray, gray, gray);
     }
 
-    // Daltonization for types 1-6
+    // Convert to linear RGB for correction
     float3 linearRGB = sRGBToLinear3(color);
-    float3 lms = linearRGBToLMS(linearRGB);
-    float3 simLMS = SimulateCVD_LMS(lms, cvdType);
-    float3 simLinearRGB = LMSToLinearRGB(simLMS);
-    float3 error = linearRGB - simLinearRGB;
-
+    float3 simLinearRGB;
+    float3 error;
     float3 correction = float3(0.0, 0.0, 0.0);
 
-    if (cvdType < 4.5) // Protan/Deutan types (red-green)
+    // Determine if Machado (1-6) or Strict (7-12)
+    bool isMachado = cvdType < 6.5;
+    bool isStrict = cvdType > 6.5 && cvdType < 12.5;
+
+    if (isMachado)
     {
-        correction.r = 0.0;
-        correction.g = 0.7 * error.r + 1.0 * error.g;
-        correction.b = 0.7 * error.r + 1.0 * error.b;
+        // Machado simulation for error calculation
+        simLinearRGB = SimulateMachado(linearRGB, cvdType);
+        simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
+        error = linearRGB - simLinearRGB;
+
+        // Redistribute error based on CVD type
+        if (cvdType < 2.5) // Protanopia, Protanomaly (1, 2) - red-blind
+        {
+            // Only correct actual reds (positive error.r), not colors that gained red
+            float redError = max(0.0, error.r);
+            correction.r = 0.0;
+            correction.g = 0.7 * redError;
+            correction.b = 1.0 * redError;
+        }
+        else if (cvdType < 4.5) // Deuteranopia, Deuteranomaly (3, 4) - green-blind
+        {
+            // Only correct actual greens (positive error.g), leave reds unchanged
+            float greenError = max(0.0, error.g);
+            correction.r = 0.0;
+            correction.g = -0.5 * greenError;   // Reduce green
+            correction.b = 1.5 * greenError;    // Add blue (shift to cyan)
+        }
+        else // Tritanopia, Tritanomaly (5, 6) - blue-blind
+        {
+            // Only correct actual blues (positive error.b)
+            float blueError = max(0.0, error.b);
+            correction.r = 0.7 * blueError;
+            correction.g = 0.7 * blueError;
+            correction.b = 0.0;
+        }
     }
-    else // Tritan types (blue-yellow)
+    else if (isStrict)
     {
-        correction.r = 1.0 * error.r + 0.7 * error.b;
-        correction.g = 1.0 * error.g + 0.7 * error.b;
-        correction.b = 0.0;
+        // Strict LMS simulation for error calculation
+        simLinearRGB = SimulateStrict(linearRGB, cvdType);
+        simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
+        error = linearRGB - simLinearRGB;
+
+        // Map strict type: 7-8 = protan, 9-10 = deutan, 11-12 = tritan
+        float strictType = cvdType - 6.0;
+
+        if (strictType < 2.5) // Protanopia, Protanomaly (7, 8) - red-blind
+        {
+            // Only correct actual reds (positive error.r)
+            float redError = max(0.0, error.r);
+            correction.r = 0.0;
+            correction.g = 0.7 * redError;
+            correction.b = 1.0 * redError;
+        }
+        else if (strictType < 4.5) // Deuteranopia, Deuteranomaly (9, 10) - green-blind
+        {
+            // Only correct actual greens (positive error.g), leave reds unchanged
+            float greenError = max(0.0, error.g);
+            correction.r = 0.0;
+            correction.g = -0.5 * greenError;   // Reduce green
+            correction.b = 1.5 * greenError;    // Add blue (shift to cyan)
+        }
+        else // Tritanopia, Tritanomaly (11, 12) - blue-blind
+        {
+            // Only correct actual blues (positive error.b)
+            float blueError = max(0.0, error.b);
+            correction.r = 0.7 * blueError;
+            correction.g = 0.7 * blueError;
+            correction.b = 0.0;
+        }
+    }
+    else
+    {
+        // Unknown type - return original
+        return color;
     }
 
+    // Apply correction
     float3 correctedLinear = linearRGB + correction;
     correctedLinear = clamp(correctedLinear, 0.0, 1.0);
 
     return linearToSRGB3(correctedLinear);
+}
+
+// ============================================================================
+// CVD Simulation (shows what colorblind people see)
+// ============================================================================
+
+float3 ApplyLMSSimulation(float3 color, float cvdType)
+{
+    // No simulation needed
+    if (cvdType < 0.5)
+    {
+        return color;
+    }
+
+    // Handle Achromatopsia (13) - complete color blindness (monochromacy)
+    if (cvdType > 12.5 && cvdType < 13.5)
+    {
+        float gray = dot(color, GrayscaleWeights);
+        return float3(gray, gray, gray);
+    }
+
+    // Handle Achromatomaly (14) - partial color blindness
+    if (cvdType > 13.5 && cvdType < 14.5)
+    {
+        float gray = dot(color, GrayscaleWeights);
+        return lerp(float3(gray, gray, gray), color, 0.3);
+    }
+
+    // Handle Grayscale (15)
+    if (cvdType > 14.5 && cvdType < 15.5)
+    {
+        float gray = dot(color, GrayscaleWeights);
+        return float3(gray, gray, gray);
+    }
+
+    // Handle Inverted Grayscale (16)
+    if (cvdType > 15.5 && cvdType < 16.5)
+    {
+        float gray = 1.0 - dot(color, GrayscaleWeights);
+        return float3(gray, gray, gray);
+    }
+
+    // Convert to linear for simulation
+    float3 linearRGB = sRGBToLinear3(color);
+    float3 simLinearRGB;
+
+    // Machado simulation (1-6)
+    if (cvdType < 6.5)
+    {
+        simLinearRGB = SimulateMachado(linearRGB, cvdType);
+    }
+    // Strict LMS simulation (7-12)
+    else if (cvdType < 12.5)
+    {
+        simLinearRGB = SimulateStrict(linearRGB, cvdType);
+    }
+    else
+    {
+        return color;
+    }
+
+    // Clamp and convert back to sRGB
+    simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
+    return linearToSRGB3(simLinearRGB);
 }
 
 // ============================================================================
@@ -600,10 +866,10 @@ void GetZoneInfo(float2 screenPos, out int zoneIndex, out float blendFactor, out
     }
 }
 
-// Apply correction for a specific zone
+// Apply correction or simulation for a specific zone
 float3 ApplyZoneCorrection(float3 color, int zoneIndex)
 {
-    float correctionMode, lmsFilterType;
+    float correctionMode, lmsFilterType, simulationMode;
     float4 matrixRow0, matrixRow1, matrixRow2;
 
     // Select zone parameters
@@ -611,6 +877,7 @@ float3 ApplyZoneCorrection(float3 color, int zoneIndex)
     {
         correctionMode = Zone0_CorrectionMode;
         lmsFilterType = Zone0_LMSFilterType;
+        simulationMode = Zone0_SimulationMode;
         matrixRow0 = Zone0_MatrixRow0;
         matrixRow1 = Zone0_MatrixRow1;
         matrixRow2 = Zone0_MatrixRow2;
@@ -619,6 +886,7 @@ float3 ApplyZoneCorrection(float3 color, int zoneIndex)
     {
         correctionMode = Zone1_CorrectionMode;
         lmsFilterType = Zone1_LMSFilterType;
+        simulationMode = Zone1_SimulationMode;
         matrixRow0 = Zone1_MatrixRow0;
         matrixRow1 = Zone1_MatrixRow1;
         matrixRow2 = Zone1_MatrixRow2;
@@ -627,6 +895,7 @@ float3 ApplyZoneCorrection(float3 color, int zoneIndex)
     {
         correctionMode = Zone2_CorrectionMode;
         lmsFilterType = Zone2_LMSFilterType;
+        simulationMode = Zone2_SimulationMode;
         matrixRow0 = Zone2_MatrixRow0;
         matrixRow1 = Zone2_MatrixRow1;
         matrixRow2 = Zone2_MatrixRow2;
@@ -635,18 +904,28 @@ float3 ApplyZoneCorrection(float3 color, int zoneIndex)
     {
         correctionMode = Zone3_CorrectionMode;
         lmsFilterType = Zone3_LMSFilterType;
+        simulationMode = Zone3_SimulationMode;
         matrixRow0 = Zone3_MatrixRow0;
         matrixRow1 = Zone3_MatrixRow1;
         matrixRow2 = Zone3_MatrixRow2;
     }
 
-    // Apply correction based on mode
+    // Apply based on correction mode (LMS vs RGB) and simulation mode
     if (correctionMode < 0.5)
     {
-        return ApplyLMSCorrection(color, lmsFilterType);
+        // LMS mode - check if simulation or correction
+        if (simulationMode > 0.5)
+        {
+            return ApplyLMSSimulation(color, lmsFilterType);
+        }
+        else
+        {
+            return ApplyLMSCorrection(color, lmsFilterType);
+        }
     }
     else
     {
+        // RGB Matrix mode (always applies the matrix directly)
         return ApplyRGBMatrix(color, matrixRow0, matrixRow1, matrixRow2);
     }
 }

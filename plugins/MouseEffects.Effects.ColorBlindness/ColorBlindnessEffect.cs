@@ -28,6 +28,7 @@ public class ZoneSettings
 {
     public int CorrectionMode { get; set; } = 0; // 0=LMS, 1=RGB
     public int LMSFilterType { get; set; } = 0;  // 0-10
+    public int SimulationMode { get; set; } = 0; // 0=Correction, 1=Simulation
     public Vector4 MatrixRow0 { get; set; } = new(1.0f, 0.0f, 0.0f, 0.0f);
     public Vector4 MatrixRow1 { get; set; } = new(0.0f, 1.0f, 0.0f, 0.0f);
     public Vector4 MatrixRow2 { get; set; } = new(0.0f, 0.0f, 1.0f, 0.0f);
@@ -38,6 +39,7 @@ public class ZoneSettings
         {
             CorrectionMode = CorrectionMode,
             LMSFilterType = LMSFilterType,
+            SimulationMode = SimulationMode,
             MatrixRow0 = MatrixRow0,
             MatrixRow1 = MatrixRow1,
             MatrixRow2 = MatrixRow2
@@ -381,6 +383,9 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
             if (Configuration.TryGet($"{prefix}lmsFilterType", out int lmsFilterType))
                 _zones[z].LMSFilterType = lmsFilterType;
 
+            if (Configuration.TryGet($"{prefix}simulationMode", out int simulationMode))
+                _zones[z].SimulationMode = simulationMode;
+
             // Load matrix values
             var row0 = _zones[z].MatrixRow0;
             var row1 = _zones[z].MatrixRow1;
@@ -454,8 +459,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
             // Zone 0
             Zone0_CorrectionMode = _zones[0].CorrectionMode,
             Zone0_LMSFilterType = _zones[0].LMSFilterType,
+            Zone0_SimulationMode = _zones[0].SimulationMode,
             Zone0_Pad1 = 0,
-            Zone0_Pad2 = 0,
             Zone0_MatrixRow0 = _zones[0].MatrixRow0,
             Zone0_MatrixRow1 = _zones[0].MatrixRow1,
             Zone0_MatrixRow2 = _zones[0].MatrixRow2,
@@ -463,8 +468,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
             // Zone 1
             Zone1_CorrectionMode = _zones[1].CorrectionMode,
             Zone1_LMSFilterType = _zones[1].LMSFilterType,
+            Zone1_SimulationMode = _zones[1].SimulationMode,
             Zone1_Pad1 = 0,
-            Zone1_Pad2 = 0,
             Zone1_MatrixRow0 = _zones[1].MatrixRow0,
             Zone1_MatrixRow1 = _zones[1].MatrixRow1,
             Zone1_MatrixRow2 = _zones[1].MatrixRow2,
@@ -472,8 +477,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
             // Zone 2
             Zone2_CorrectionMode = _zones[2].CorrectionMode,
             Zone2_LMSFilterType = _zones[2].LMSFilterType,
+            Zone2_SimulationMode = _zones[2].SimulationMode,
             Zone2_Pad1 = 0,
-            Zone2_Pad2 = 0,
             Zone2_MatrixRow0 = _zones[2].MatrixRow0,
             Zone2_MatrixRow1 = _zones[2].MatrixRow1,
             Zone2_MatrixRow2 = _zones[2].MatrixRow2,
@@ -481,8 +486,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
             // Zone 3
             Zone3_CorrectionMode = _zones[3].CorrectionMode,
             Zone3_LMSFilterType = _zones[3].LMSFilterType,
+            Zone3_SimulationMode = _zones[3].SimulationMode,
             Zone3_Pad1 = 0,
-            Zone3_Pad2 = 0,
             Zone3_MatrixRow0 = _zones[3].MatrixRow0,
             Zone3_MatrixRow1 = _zones[3].MatrixRow1,
             Zone3_MatrixRow2 = _zones[3].MatrixRow2
@@ -614,8 +619,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
         // Zone 0 (64 bytes) - offset 64
         public float Zone0_CorrectionMode; // 4 bytes, offset 64
         public float Zone0_LMSFilterType;  // 4 bytes, offset 68
-        public float Zone0_Pad1;           // 4 bytes, offset 72
-        public float Zone0_Pad2;           // 4 bytes, offset 76
+        public float Zone0_SimulationMode; // 4 bytes, offset 72
+        public float Zone0_Pad1;           // 4 bytes, offset 76
         public Vector4 Zone0_MatrixRow0;   // 16 bytes, offset 80
         public Vector4 Zone0_MatrixRow1;   // 16 bytes, offset 96
         public Vector4 Zone0_MatrixRow2;   // 16 bytes, offset 112
@@ -623,8 +628,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
         // Zone 1 (64 bytes) - offset 128
         public float Zone1_CorrectionMode; // 4 bytes, offset 128
         public float Zone1_LMSFilterType;  // 4 bytes, offset 132
-        public float Zone1_Pad1;           // 4 bytes, offset 136
-        public float Zone1_Pad2;           // 4 bytes, offset 140
+        public float Zone1_SimulationMode; // 4 bytes, offset 136
+        public float Zone1_Pad1;           // 4 bytes, offset 140
         public Vector4 Zone1_MatrixRow0;   // 16 bytes, offset 144
         public Vector4 Zone1_MatrixRow1;   // 16 bytes, offset 160
         public Vector4 Zone1_MatrixRow2;   // 16 bytes, offset 176
@@ -632,8 +637,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
         // Zone 2 (64 bytes) - offset 192
         public float Zone2_CorrectionMode; // 4 bytes, offset 192
         public float Zone2_LMSFilterType;  // 4 bytes, offset 196
-        public float Zone2_Pad1;           // 4 bytes, offset 200
-        public float Zone2_Pad2;           // 4 bytes, offset 204
+        public float Zone2_SimulationMode; // 4 bytes, offset 200
+        public float Zone2_Pad1;           // 4 bytes, offset 204
         public Vector4 Zone2_MatrixRow0;   // 16 bytes, offset 208
         public Vector4 Zone2_MatrixRow1;   // 16 bytes, offset 224
         public Vector4 Zone2_MatrixRow2;   // 16 bytes, offset 240
@@ -641,8 +646,8 @@ public sealed class ColorBlindnessEffect : EffectBase, IHotkeyProvider
         // Zone 3 (64 bytes) - offset 256
         public float Zone3_CorrectionMode; // 4 bytes, offset 256
         public float Zone3_LMSFilterType;  // 4 bytes, offset 260
-        public float Zone3_Pad1;           // 4 bytes, offset 264
-        public float Zone3_Pad2;           // 4 bytes, offset 268
+        public float Zone3_SimulationMode; // 4 bytes, offset 264
+        public float Zone3_Pad1;           // 4 bytes, offset 268
         public Vector4 Zone3_MatrixRow0;   // 16 bytes, offset 272
         public Vector4 Zone3_MatrixRow1;   // 16 bytes, offset 288
         public Vector4 Zone3_MatrixRow2;   // 16 bytes, offset 304

@@ -156,16 +156,28 @@
                     <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
                     <ComboBox x:Name="Zone0LMSFilterCombo" SelectionChanged="Zone0LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="None" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia (red-blind)"/>
-                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Protanopia (Machado)"/>
+                        <ComboBoxItem Content="Protanomaly (Machado)"/>
+                        <ComboBoxItem Content="Deuteranopia (Machado)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Machado)"/>
+                        <ComboBoxItem Content="Tritanopia (Machado)"/>
+                        <ComboBoxItem Content="Tritanomaly (Machado)"/>
+                        <ComboBoxItem Content="Protanopia (Strict)"/>
+                        <ComboBoxItem Content="Protanomaly (Strict)"/>
+                        <ComboBoxItem Content="Deuteranopia (Strict)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Strict)"/>
+                        <ComboBoxItem Content="Tritanopia (Strict)"/>
+                        <ComboBoxItem Content="Tritanomaly (Strict)"/>
                         <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
                         <ComboBoxItem Content="Achromatomaly (weak color)"/>
                         <ComboBoxItem Content="Grayscale"/>
                         <ComboBoxItem Content="Inverted Grayscale"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone0ModeCombo" SelectionChanged="Zone0ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Correction (help colorblind users)" IsSelected="True"/>
+                        <ComboBoxItem Content="Simulation (show what they see)"/>
                     </ComboBox>
                 </StackPanel>
 
@@ -242,16 +254,28 @@
                     <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
                     <ComboBox x:Name="Zone1LMSFilterCombo" SelectionChanged="Zone1LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="None" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia (red-blind)"/>
-                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Protanopia (Machado)"/>
+                        <ComboBoxItem Content="Protanomaly (Machado)"/>
+                        <ComboBoxItem Content="Deuteranopia (Machado)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Machado)"/>
+                        <ComboBoxItem Content="Tritanopia (Machado)"/>
+                        <ComboBoxItem Content="Tritanomaly (Machado)"/>
+                        <ComboBoxItem Content="Protanopia (Strict)"/>
+                        <ComboBoxItem Content="Protanomaly (Strict)"/>
+                        <ComboBoxItem Content="Deuteranopia (Strict)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Strict)"/>
+                        <ComboBoxItem Content="Tritanopia (Strict)"/>
+                        <ComboBoxItem Content="Tritanomaly (Strict)"/>
                         <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
                         <ComboBoxItem Content="Achromatomaly (weak color)"/>
                         <ComboBoxItem Content="Grayscale"/>
                         <ComboBoxItem Content="Inverted Grayscale"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone1ModeCombo" SelectionChanged="Zone1ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Correction (help colorblind users)" IsSelected="True"/>
+                        <ComboBoxItem Content="Simulation (show what they see)"/>
                     </ComboBox>
                 </StackPanel>
 
@@ -327,16 +351,28 @@
                     <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
                     <ComboBox x:Name="Zone2LMSFilterCombo" SelectionChanged="Zone2LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="None" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia (red-blind)"/>
-                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Protanopia (Machado)"/>
+                        <ComboBoxItem Content="Protanomaly (Machado)"/>
+                        <ComboBoxItem Content="Deuteranopia (Machado)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Machado)"/>
+                        <ComboBoxItem Content="Tritanopia (Machado)"/>
+                        <ComboBoxItem Content="Tritanomaly (Machado)"/>
+                        <ComboBoxItem Content="Protanopia (Strict)"/>
+                        <ComboBoxItem Content="Protanomaly (Strict)"/>
+                        <ComboBoxItem Content="Deuteranopia (Strict)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Strict)"/>
+                        <ComboBoxItem Content="Tritanopia (Strict)"/>
+                        <ComboBoxItem Content="Tritanomaly (Strict)"/>
                         <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
                         <ComboBoxItem Content="Achromatomaly (weak color)"/>
                         <ComboBoxItem Content="Grayscale"/>
                         <ComboBoxItem Content="Inverted Grayscale"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone2ModeCombo" SelectionChanged="Zone2ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Correction (help colorblind users)" IsSelected="True"/>
+                        <ComboBoxItem Content="Simulation (show what they see)"/>
                     </ComboBox>
                 </StackPanel>
 
@@ -412,16 +448,28 @@
                     <TextBlock Text="Filter Type" Style="{StaticResource LabelStyle}"/>
                     <ComboBox x:Name="Zone3LMSFilterCombo" SelectionChanged="Zone3LMSFilterCombo_SelectionChanged" Margin="0,0,0,8">
                         <ComboBoxItem Content="None" IsSelected="True"/>
-                        <ComboBoxItem Content="Protanopia (red-blind)"/>
-                        <ComboBoxItem Content="Protanomaly (red-weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (green-blind)"/>
-                        <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
-                        <ComboBoxItem Content="Tritanopia (blue-blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                        <ComboBoxItem Content="Protanopia (Machado)"/>
+                        <ComboBoxItem Content="Protanomaly (Machado)"/>
+                        <ComboBoxItem Content="Deuteranopia (Machado)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Machado)"/>
+                        <ComboBoxItem Content="Tritanopia (Machado)"/>
+                        <ComboBoxItem Content="Tritanomaly (Machado)"/>
+                        <ComboBoxItem Content="Protanopia (Strict)"/>
+                        <ComboBoxItem Content="Protanomaly (Strict)"/>
+                        <ComboBoxItem Content="Deuteranopia (Strict)"/>
+                        <ComboBoxItem Content="Deuteranomaly (Strict)"/>
+                        <ComboBoxItem Content="Tritanopia (Strict)"/>
+                        <ComboBoxItem Content="Tritanomaly (Strict)"/>
                         <ComboBoxItem Content="Achromatopsia (monochromacy)"/>
                         <ComboBoxItem Content="Achromatomaly (weak color)"/>
                         <ComboBoxItem Content="Grayscale"/>
                         <ComboBoxItem Content="Inverted Grayscale"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Mode" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="Zone3ModeCombo" SelectionChanged="Zone3ModeCombo_SelectionChanged" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Correction (help colorblind users)" IsSelected="True"/>
+                        <ComboBoxItem Content="Simulation (show what they see)"/>
                     </ComboBox>
                 </StackPanel>
 

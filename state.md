@@ -684,16 +684,16 @@ if (typeof(T) == typeof(float) && obj is IConvertible)
 
 ## Current Branch
 
-`color_blindness`
+`master`
 
 ## Git Status
 
-Clean working tree. Recent commits:
+Modified files pending commit. Recent commits:
+- fced7b8 Fixed float error in settings
 - df01858 Updated Invaders scoring layout
 - 3179c5b Added hotkey to reset invader game, game over mechanics
 - 604315a Changed default settings
 - 836c2aa Added more colors to invaders and default setup
-- 4f2c482 Added screen capture capability for debugging
 
 ## Documentation
 
@@ -702,3 +702,195 @@ Clean working tree. Recent commits:
 - `Wiki/Features.md` - Features overview including theming
 - `Wiki/Plugin-Development.md` - How to create plugins
 - `Wiki/Plugin-ScreenCapture.md` - Screen capture plugin guide
+
+---
+
+# Session State: 2025-12-06
+
+## Current Session Summary
+
+### Completed Tasks
+
+1. **Added Correction/Simulation Mode Toggle to ColorBlindness Plugin**
+   - Users can now choose between "Correction" (helps colorblind users) and "Simulation" (shows what they see)
+   - Default mode is Correction
+   - Each zone can have independent mode settings
+
+2. **Fixed CVD Simulation and Correction Algorithms**
+   - Replaced broken LMS-based simulation (had incorrect coefficients that produced negative values for neutral white)
+   - Implemented Machado et al. (2009) research matrices for accurate CVD simulation
+   - Matrices work directly in linear RGB space - scientifically validated and well-tested
+   - Added matrices for all 6 CVD types:
+     - Protanopia (100% L-cone deficiency)
+     - Protanomaly (50% L-cone weakness)
+     - Deuteranopia (100% M-cone deficiency)
+     - Deuteranomaly (50% M-cone weakness)
+     - Tritanopia (100% S-cone deficiency)
+     - Tritanomaly (50% S-cone weakness)
+
+3. **Updated Daltonization (Correction) Algorithm**
+   - Now uses accurate Machado simulation to calculate color error
+   - Properly redistributes lost color information:
+     - Protan/Deutan: shifts red-green error to blue channel
+     - Tritan: shifts blue error to red/green channels
+
+### Files Modified This Session
+
+1. **ColorBlindness.hlsl** (`plugins/MouseEffects.Effects.ColorBlindness/Shaders/`)
+   - Added `SimulationMode` to constant buffer for each zone
+   - Added Machado (2009) simulation matrices as static constants
+   - Added `SimulateCVD_RGB()` function using Machado matrices
+   - Updated `ApplyLMSCorrection()` to use new simulation for error calculation
+   - Updated `ApplyLMSSimulation()` to use Machado matrices
+   - Updated `ApplyZoneCorrection()` to check simulation mode flag
+
+2. **ColorBlindnessEffect.cs** (`plugins/MouseEffects.Effects.ColorBlindness/`)
+   - Added `SimulationMode` property to `ZoneSettings` class
+   - Updated constant buffer struct with `SimulationMode` for each zone
+   - Updated `OnRender()` to pass simulation mode values
+   - Added configuration loading for `simulationMode`
+
+3. **ColorBlindnessSettingsControl.xaml** (`plugins/MouseEffects.Effects.ColorBlindness/UI/`)
+   - Added Mode ComboBox to all 4 zones with options:
+     - "Correction (help colorblind users)" - default
+     - "Simulation (show what they see)"
+
+4. **ColorBlindnessSettingsControl.xaml.cs** (`plugins/MouseEffects.Effects.ColorBlindness/UI/`)
+   - Updated `LoadZoneSettings()` to include `modeCombo` parameter
+   - Updated `SaveZoneSettings()` to include `modeCombo` parameter
+   - Added event handlers: `Zone0ModeCombo_SelectionChanged` through `Zone3ModeCombo_SelectionChanged`
+
+### Previous Session Work (From Earlier Context)
+
+- Implemented zone-based architecture for ColorBlindness plugin
+- Fixed Alt+Shift+C hotkey using `IHotkeyProvider` interface for global hotkeys
+- Added virtual cursor indicator in comparison mode
+- Added PayPal donate button to README.md
+- Documented Space Invaders plugin in README.md and Wiki/Plugins.md
+
+### Build Status
+
+- **Last Build**: Successful (0 warnings, 0 errors)
+- **Build Time**: ~4 seconds
+
+### Testing Notes
+
+To verify the fix:
+1. Open MouseEffects and enable ColorBlindness plugin
+2. Set layout to Quadrants for comparison view
+3. Test with color wheel image (`Linear_RGB_color_wheel.png` in project root)
+4. **Correction mode + Protanopia**: Should add blue tints to distinguish red from green
+5. **Simulation mode + Protanopia**: Red and green should appear similar (as protanope sees them)
+
+### Technical Reference: Machado (2009) Simulation Matrices
+
+**Protanopia (100%):**
+```
+[0.152286,  1.052583, -0.204868]
+[0.114503,  0.786281,  0.099216]
+[-0.003882, -0.048116,  1.051998]
+```
+
+**Deuteranopia (100%):**
+```
+[0.367322,  0.860646, -0.227968]
+[0.280085,  0.672501,  0.047413]
+[-0.011820,  0.042940,  0.968881]
+```
+
+**Tritanopia (100%):**
+```
+[1.255528, -0.076749, -0.178779]
+[-0.078411,  0.930809,  0.147602]
+[0.004733,  0.691367,  0.303900]
+```
+
+4. **Added Machado and Strict LMS Filter Modes**
+   - Users can now choose between two simulation/correction algorithms:
+     - **Machado**: RGB-space matrices from Machado et al. (2009) - fast, widely used
+     - **Strict**: Proper LMS colorspace simulation - more physiologically accurate
+   - Both modes available for all 6 CVD types (Protanopia, Protanomaly, Deuteranopia, Deuteranomaly, Tritanopia, Tritanomaly)
+   - Filter dropdown now shows 17 options:
+     - None
+     - 6 Machado filters (Protanopia through Tritanomaly)
+     - 6 Strict filters (Protanopia through Tritanomaly)
+     - Achromatopsia, Achromatomaly, Grayscale, Inverted Grayscale
+
+### Files Modified This Session (Continued)
+
+5. **ColorBlindness.hlsl** - Added Machado vs Strict architecture:
+   - Added `Machado_*` matrices (from godotshaders.com)
+   - Added `Strict_*_LMS` matrices (Brettel/Viénot confusion lines)
+   - Created `SimulateMachado()` function for RGB-space simulation
+   - Created `SimulateStrict()` function for LMS-space simulation
+   - Updated `ApplyLMSCorrection()` to handle filter types 1-16
+   - Updated `ApplyLMSSimulation()` to handle filter types 1-16
+
+6. **ColorBlindnessSettingsControl.xaml** - Updated all 4 zone filter ComboBoxes:
+   - Added "(Machado)" suffix to types 1-6
+   - Added "(Strict)" suffix to types 7-12
+   - Total 17 filter options per zone
+
+### Filter Type Mapping
+
+| Index | Filter Name |
+|-------|-------------|
+| 0 | None |
+| 1 | Protanopia (Machado) |
+| 2 | Protanomaly (Machado) |
+| 3 | Deuteranopia (Machado) |
+| 4 | Deuteranomaly (Machado) |
+| 5 | Tritanopia (Machado) |
+| 6 | Tritanomaly (Machado) |
+| 7 | Protanopia (Strict) |
+| 8 | Protanomaly (Strict) |
+| 9 | Deuteranopia (Strict) |
+| 10 | Deuteranomaly (Strict) |
+| 11 | Tritanopia (Strict) |
+| 12 | Tritanomaly (Strict) |
+| 13 | Achromatopsia |
+| 14 | Achromatomaly |
+| 15 | Grayscale |
+| 16 | Inverted Grayscale |
+
+### Technical Reference: Strict LMS Matrices
+
+Based on Brettel, Viénot & Mollon (1997) confusion lines:
+
+**Protanopia (L-cone deficient):**
+- L' = 2.02344*M - 2.52581*S
+
+**Deuteranopia (M-cone deficient):**
+- M' = 0.49421*L + 1.24827*S
+
+**Tritanopia (S-cone deficient):**
+- S' = -0.01224*L + 0.07203*M
+
+### Build Status
+
+- **Last Build**: Successful (0 warnings, 0 errors)
+- **Build Time**: ~7 seconds
+
+5. **Fixed Strict LMS Simulation Matrices**
+   - **Deuteranopia**: Fixed coefficients from `M' = 0.49*L + 1.25*S` (wrong, sum=1.74) to `M' = 0.95*L + 0.05*S` (correct, sum=1.0)
+   - **Tritanopia**: Fixed coefficients from `S' = -0.87*L + 1.87*M` (amplified blue!) to `S' = -0.4*L + 0.8*M` (Viénot 1999)
+   - **Protanopia**: Fixed to use ixora.io coefficients `L' = 1.05*M - 0.05*S`
+
+6. **Fixed Correction Algorithm**
+   - Problem: Red colors got negative error, causing correction to add green/remove blue → orange tint
+   - Solution: Use `max(0.0, error)` to only correct actual color losses, not colors that shifted in simulation
+   - Result: Reds stay red, greens shift to cyan (for deuteranopia correction)
+
+### Key Principle: White Point Preservation
+- Simulation matrix coefficients must sum to ~1.0 to preserve white
+- Previous coefficients summed to 1.74 (deuteranopia) and produced wrong results
+- Fixed coefficients: 0.95 + 0.05 = 1.0 ✓
+
+### Build Status
+
+- **Last Build**: Successful (0 warnings, 0 errors)
+
+### Next Steps (If Continuing)
+
+1. Consider committing changes with descriptive message
+2. Update Wiki documentation for the new filter options

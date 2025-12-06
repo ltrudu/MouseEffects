@@ -137,22 +137,22 @@ public partial class ColorBlindnessSettingsControl : UserControl
             EnableComparisonHotkeyCheckBox.IsChecked = enableComparisonHotkey;
 
         // Load zone settings
-        LoadZoneSettings(0, Zone0CorrectionModeCombo, Zone0LMSFilterCombo, Zone0RGBPresetCombo,
+        LoadZoneSettings(0, Zone0CorrectionModeCombo, Zone0LMSFilterCombo, Zone0ModeCombo, Zone0RGBPresetCombo,
             Zone0MatrixR0, Zone0MatrixR1, Zone0MatrixR2,
             Zone0MatrixG0, Zone0MatrixG1, Zone0MatrixG2,
             Zone0MatrixB0, Zone0MatrixB1, Zone0MatrixB2);
 
-        LoadZoneSettings(1, Zone1CorrectionModeCombo, Zone1LMSFilterCombo, Zone1RGBPresetCombo,
+        LoadZoneSettings(1, Zone1CorrectionModeCombo, Zone1LMSFilterCombo, Zone1ModeCombo, Zone1RGBPresetCombo,
             Zone1MatrixR0, Zone1MatrixR1, Zone1MatrixR2,
             Zone1MatrixG0, Zone1MatrixG1, Zone1MatrixG2,
             Zone1MatrixB0, Zone1MatrixB1, Zone1MatrixB2);
 
-        LoadZoneSettings(2, Zone2CorrectionModeCombo, Zone2LMSFilterCombo, Zone2RGBPresetCombo,
+        LoadZoneSettings(2, Zone2CorrectionModeCombo, Zone2LMSFilterCombo, Zone2ModeCombo, Zone2RGBPresetCombo,
             Zone2MatrixR0, Zone2MatrixR1, Zone2MatrixR2,
             Zone2MatrixG0, Zone2MatrixG1, Zone2MatrixG2,
             Zone2MatrixB0, Zone2MatrixB1, Zone2MatrixB2);
 
-        LoadZoneSettings(3, Zone3CorrectionModeCombo, Zone3LMSFilterCombo, Zone3RGBPresetCombo,
+        LoadZoneSettings(3, Zone3CorrectionModeCombo, Zone3LMSFilterCombo, Zone3ModeCombo, Zone3RGBPresetCombo,
             Zone3MatrixR0, Zone3MatrixR1, Zone3MatrixR2,
             Zone3MatrixG0, Zone3MatrixG1, Zone3MatrixG2,
             Zone3MatrixB0, Zone3MatrixB1, Zone3MatrixB2);
@@ -193,7 +193,7 @@ public partial class ColorBlindnessSettingsControl : UserControl
     }
 
     private void LoadZoneSettings(int zoneIndex, ComboBox correctionModeCombo, ComboBox lmsFilterCombo,
-        ComboBox rgbPresetCombo, TextBox r0, TextBox r1, TextBox r2,
+        ComboBox modeCombo, ComboBox rgbPresetCombo, TextBox r0, TextBox r1, TextBox r2,
         TextBox g0, TextBox g1, TextBox g2, TextBox b0, TextBox b1, TextBox b2)
     {
         string prefix = $"zone{zoneIndex}_";
@@ -206,6 +206,11 @@ public partial class ColorBlindnessSettingsControl : UserControl
         if (_effect.Configuration.TryGet($"{prefix}lmsFilterType", out int lmsFilterType))
         {
             lmsFilterCombo.SelectedIndex = lmsFilterType;
+        }
+
+        if (_effect.Configuration.TryGet($"{prefix}simulationMode", out int simulationMode))
+        {
+            modeCombo.SelectedIndex = simulationMode;
         }
 
         // Load matrix values
@@ -260,25 +265,25 @@ public partial class ColorBlindnessSettingsControl : UserControl
 
         // Zone settings
         SaveZoneSettings(config, 0,
-            Zone0CorrectionModeCombo, Zone0LMSFilterCombo,
+            Zone0CorrectionModeCombo, Zone0LMSFilterCombo, Zone0ModeCombo,
             Zone0MatrixR0, Zone0MatrixR1, Zone0MatrixR2,
             Zone0MatrixG0, Zone0MatrixG1, Zone0MatrixG2,
             Zone0MatrixB0, Zone0MatrixB1, Zone0MatrixB2);
 
         SaveZoneSettings(config, 1,
-            Zone1CorrectionModeCombo, Zone1LMSFilterCombo,
+            Zone1CorrectionModeCombo, Zone1LMSFilterCombo, Zone1ModeCombo,
             Zone1MatrixR0, Zone1MatrixR1, Zone1MatrixR2,
             Zone1MatrixG0, Zone1MatrixG1, Zone1MatrixG2,
             Zone1MatrixB0, Zone1MatrixB1, Zone1MatrixB2);
 
         SaveZoneSettings(config, 2,
-            Zone2CorrectionModeCombo, Zone2LMSFilterCombo,
+            Zone2CorrectionModeCombo, Zone2LMSFilterCombo, Zone2ModeCombo,
             Zone2MatrixR0, Zone2MatrixR1, Zone2MatrixR2,
             Zone2MatrixG0, Zone2MatrixG1, Zone2MatrixG2,
             Zone2MatrixB0, Zone2MatrixB1, Zone2MatrixB2);
 
         SaveZoneSettings(config, 3,
-            Zone3CorrectionModeCombo, Zone3LMSFilterCombo,
+            Zone3CorrectionModeCombo, Zone3LMSFilterCombo, Zone3ModeCombo,
             Zone3MatrixR0, Zone3MatrixR1, Zone3MatrixR2,
             Zone3MatrixG0, Zone3MatrixG1, Zone3MatrixG2,
             Zone3MatrixB0, Zone3MatrixB1, Zone3MatrixB2);
@@ -311,7 +316,7 @@ public partial class ColorBlindnessSettingsControl : UserControl
     }
 
     private void SaveZoneSettings(EffectConfiguration config, int zoneIndex,
-        ComboBox correctionModeCombo, ComboBox lmsFilterCombo,
+        ComboBox correctionModeCombo, ComboBox lmsFilterCombo, ComboBox modeCombo,
         TextBox r0, TextBox r1, TextBox r2,
         TextBox g0, TextBox g1, TextBox g2,
         TextBox b0, TextBox b1, TextBox b2)
@@ -320,6 +325,7 @@ public partial class ColorBlindnessSettingsControl : UserControl
 
         config.Set($"{prefix}correctionMode", correctionModeCombo.SelectedIndex);
         config.Set($"{prefix}lmsFilterType", lmsFilterCombo.SelectedIndex);
+        config.Set($"{prefix}simulationMode", modeCombo.SelectedIndex);
 
         config.Set($"{prefix}matrixR0", ParseFloat(r0.Text, 1f));
         config.Set($"{prefix}matrixR1", ParseFloat(r1.Text, 0f));
@@ -544,6 +550,11 @@ public partial class ColorBlindnessSettingsControl : UserControl
         UpdateConfiguration();
     }
 
+    private void Zone0ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
     private void Zone0RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isInitializing) return;
@@ -575,6 +586,11 @@ public partial class ColorBlindnessSettingsControl : UserControl
     }
 
     private void Zone1LMSFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone1ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateConfiguration();
     }
@@ -614,6 +630,11 @@ public partial class ColorBlindnessSettingsControl : UserControl
         UpdateConfiguration();
     }
 
+    private void Zone2ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
     private void Zone2RGBPresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isInitializing) return;
@@ -645,6 +666,11 @@ public partial class ColorBlindnessSettingsControl : UserControl
     }
 
     private void Zone3LMSFilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void Zone3ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         UpdateConfiguration();
     }
