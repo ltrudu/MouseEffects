@@ -40,18 +40,22 @@ struct ZoneParams
 };
 
 // ============================================================================
-// Constant Buffer (288 bytes total)
+// Constant Buffer (304 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
 {
-    // Global parameters (32 bytes)
+    // Global parameters (48 bytes)
     float2 MousePosition;       // Mouse position in screen pixels
     float2 ViewportSize;        // Viewport size in pixels
-    float SplitModeValue;       // 0=Full, 1=SplitV, 2=SplitH, 3=Quad
+    float SplitModeValue;       // 0=Full, 1=SplitV, 2=SplitH, 3=Quad, 4=Circle, 5=Rectangle
     float SplitPosition;        // Horizontal split (0-1)
     float SplitPositionV;       // Vertical split (0-1)
     float ComparisonMode;       // 0=off, 1=on (screen duplication mode)
+    float Radius;               // Circle mode radius in pixels
+    float RectWidth;            // Rectangle mode width in pixels
+    float RectHeight;           // Rectangle mode height in pixels
+    float EdgeSoftness;         // Edge blending (0=hard, 1=maximum soft)
 
     // Per-zone parameters (64 bytes each × 4 = 256 bytes)
     ZoneParams Zone0;
@@ -606,12 +610,20 @@ PSInput VSMain(uint vertexId : SV_VertexID)
 // Zone Detection
 // ============================================================================
 
-int GetZoneIndex(float2 screenPos)
+// Returns zone info with blend factor for smooth transitions between zones
+// zoneIndex: primary zone (0-3)
+// blendFactor: 0.0 = fully in primary zone, 1.0 = fully in secondary zone
+// nextZoneIndex: secondary zone to blend with (only used when blendFactor > 0)
+void GetZoneInfo(float2 screenPos, out int zoneIndex, out float blendFactor, out int nextZoneIndex)
 {
+    blendFactor = 0.0;
+    nextZoneIndex = 0;
+
     // Fullscreen - always zone 0
     if (SplitModeValue < 0.5)
     {
-        return 0;
+        zoneIndex = 0;
+        return;
     }
 
     float splitX = ViewportSize.x * SplitPosition;
@@ -620,23 +632,100 @@ int GetZoneIndex(float2 screenPos)
     // Split Vertical (1) - left/right
     if (SplitModeValue < 1.5)
     {
-        return screenPos.x < splitX ? 0 : 1;
+        zoneIndex = screenPos.x < splitX ? 0 : 1;
+        return;
     }
 
     // Split Horizontal (2) - top/bottom
     if (SplitModeValue < 2.5)
     {
-        return screenPos.y < splitY ? 0 : 1;
+        zoneIndex = screenPos.y < splitY ? 0 : 1;
+        return;
     }
 
     // Quadrants (3) - 4 zones
-    bool left = screenPos.x < splitX;
-    bool top = screenPos.y < splitY;
+    if (SplitModeValue < 3.5)
+    {
+        bool left = screenPos.x < splitX;
+        bool top = screenPos.y < splitY;
 
-    if (top && left) return 0;
-    if (top && !left) return 1;
-    if (!top && left) return 2;
-    return 3;
+        if (top && left) zoneIndex = 0;
+        else if (top && !left) zoneIndex = 1;
+        else if (!top && left) zoneIndex = 2;
+        else zoneIndex = 3;
+        return;
+    }
+
+    // Circle mode (4) - Zone 0 = inside circle, Zone 1 = outside
+    if (SplitModeValue < 4.5)
+    {
+        float dist = length(screenPos - MousePosition);
+        float normalizedDist = dist / max(Radius, 1.0);
+        float edgeWidth = EdgeSoftness * 0.5;
+
+        if (normalizedDist < 1.0 - edgeWidth)
+        {
+            // Fully inside the circle
+            zoneIndex = 0;
+        }
+        else if (normalizedDist > 1.0 + edgeWidth)
+        {
+            // Fully outside the circle
+            zoneIndex = 1;
+        }
+        else
+        {
+            // In the transition zone - blend between inner and outer
+            zoneIndex = 0;
+            nextZoneIndex = 1;
+            blendFactor = smoothstep(1.0 - edgeWidth, 1.0 + edgeWidth, normalizedDist);
+        }
+        return;
+    }
+
+    // Rectangle mode (5) - Zone 0 = inside rectangle, Zone 1 = outside
+    {
+        float2 toMouse = abs(screenPos - MousePosition);
+        float2 halfSize = float2(RectWidth, RectHeight) * 0.5;
+        float2 edgeSize = halfSize * EdgeSoftness * 0.5;
+
+        // Check if we're fully inside (no edge transition)
+        bool fullyInside = toMouse.x < halfSize.x - edgeSize.x &&
+                           toMouse.y < halfSize.y - edgeSize.y;
+        // Check if we're fully outside (no edge transition)
+        bool fullyOutside = toMouse.x > halfSize.x + edgeSize.x ||
+                            toMouse.y > halfSize.y + edgeSize.y;
+
+        if (fullyInside)
+        {
+            zoneIndex = 0;
+        }
+        else if (fullyOutside)
+        {
+            zoneIndex = 1;
+        }
+        else
+        {
+            // In the transition zone - calculate blend factor based on edge distance
+            float2 edgeDist = (toMouse - halfSize + edgeSize) / (2.0 * edgeSize + 0.001);
+            edgeDist = saturate(edgeDist);
+            float dist = max(edgeDist.x, edgeDist.y);
+
+            zoneIndex = 0;
+            nextZoneIndex = 1;
+            blendFactor = smoothstep(0.0, 1.0, dist);
+        }
+    }
+}
+
+// Legacy function for compatibility (no blending)
+int GetZoneIndex(float2 screenPos)
+{
+    int zoneIndex;
+    float blendFactor;
+    int nextZoneIndex;
+    GetZoneInfo(screenPos, zoneIndex, blendFactor, nextZoneIndex);
+    return blendFactor > 0.5 ? nextZoneIndex : zoneIndex;
 }
 
 // Separator line
@@ -841,19 +930,37 @@ float DrawCursor(float2 screenPos, float2 cursorPos, float size)
 // Pixel Shader
 // ============================================================================
 
+// Helper function to get zone parameters by index
+ZoneParams GetZoneParams(int zoneIndex)
+{
+    if (zoneIndex == 0)
+        return Zone0;
+    else if (zoneIndex == 1)
+        return Zone1;
+    else if (zoneIndex == 2)
+        return Zone2;
+    else
+        return Zone3;
+}
+
 float4 PSMain(PSInput input) : SV_TARGET
 {
     float2 uv = input.TexCoord;
     float2 screenPos = uv * ViewportSize;
 
-    // Get zone index
-    int zoneIndex = GetZoneIndex(screenPos);
+    // Get zone info with blend factor for smooth transitions
+    int zoneIndex;
+    float blendFactor;
+    int nextZoneIndex;
+    GetZoneInfo(screenPos, zoneIndex, blendFactor, nextZoneIndex);
 
     // Handle comparison mode - full screen duplication in each zone
+    // Note: Comparison mode is disabled for shape modes (Circle/Rectangle)
     float2 sampleUV = uv;
     bool isBlackBar = false;
+    bool isShapeMode = SplitModeValue > 3.5;
 
-    if (ComparisonMode > 0.5 && SplitModeValue > 0.5)
+    if (ComparisonMode > 0.5 && SplitModeValue > 0.5 && !isShapeMode)
     {
         // In comparison mode, duplicate the full screen into each zone
         float2 comparisonUV = GetComparisonUV(screenPos, zoneIndex);
@@ -879,27 +986,30 @@ float4 PSMain(PSInput input) : SV_TARGET
 
     float3 finalColor;
 
-    // Get zone parameters and process
-    ZoneParams zone;
-    if (zoneIndex == 0)
-        zone = Zone0;
-    else if (zoneIndex == 1)
-        zone = Zone1;
-    else if (zoneIndex == 2)
-        zone = Zone2;
+    // Get zone parameters and process primary zone
+    ZoneParams zone = GetZoneParams(zoneIndex);
+    float3 primaryColor = ProcessZone(color, zone, zoneIndex);
+
+    // If we have a blend factor, also process the secondary zone and blend
+    if (blendFactor > 0.001)
+    {
+        ZoneParams nextZone = GetZoneParams(nextZoneIndex);
+        float3 secondaryColor = ProcessZone(color, nextZone, nextZoneIndex);
+        finalColor = lerp(primaryColor, secondaryColor, blendFactor);
+    }
     else
-        zone = Zone3;
+    {
+        finalColor = primaryColor;
+    }
 
-    finalColor = ProcessZone(color, zone, zoneIndex);
-
-    // Draw virtual cursor in comparison mode
-    if (ComparisonMode > 0.5 && SplitModeValue > 0.5)
+    // Draw virtual cursor in comparison mode (not for shape modes)
+    if (ComparisonMode > 0.5 && SplitModeValue > 0.5 && !isShapeMode)
     {
         float2 transformedMouse = GetTransformedMousePos(zoneIndex);
         float cursorSize = 15.0;
 
         // Scale cursor size based on zone size (smaller for quadrants)
-        if (SplitModeValue > 2.5) // Quadrants
+        if (SplitModeValue > 2.5 && SplitModeValue < 3.5) // Quadrants only
         {
             cursorSize = 12.0;
         }
@@ -930,11 +1040,14 @@ float4 PSMain(PSInput input) : SV_TARGET
         }
     }
 
-    // Draw separator line
-    float separatorAlpha = GetSeparatorAlpha(screenPos);
-    if (separatorAlpha > 0.0)
+    // Draw separator line (not for shape modes - they have soft edges instead)
+    if (!isShapeMode)
     {
-        finalColor = lerp(finalColor, float3(0.2, 0.2, 0.2), separatorAlpha);
+        float separatorAlpha = GetSeparatorAlpha(screenPos);
+        if (separatorAlpha > 0.0)
+        {
+            finalColor = lerp(finalColor, float3(0.2, 0.2, 0.2), separatorAlpha);
+        }
     }
 
     return float4(finalColor, 1.0);

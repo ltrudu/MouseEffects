@@ -71,24 +71,63 @@
                 <ComboBoxItem Content="Split Vertical (Left/Right)"/>
                 <ComboBoxItem Content="Split Horizontal (Top/Bottom)"/>
                 <ComboBoxItem Content="4 Quadrants"/>
+                <ComboBoxItem Content="Circle (follows cursor)"/>
+                <ComboBoxItem Content="Rectangle (follows cursor)"/>
             </ComboBox>
 
-            <!-- Split Position Sliders -->
+            <!-- Split Position Sliders (hidden for shape modes) -->
+            <!-- Horizontal Split Position (for vertical split: left/right) -->
             <StackPanel x:Name="SplitPositionPanel" Visibility="Collapsed">
                 <TextBlock Text="Horizontal Split Position" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="SplitPositionSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
                         Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionSlider_ValueChanged"/>
                 <TextBlock x:Name="SplitPositionValue" Text="50%" Opacity="0.7" FontSize="11"/>
-
-                <StackPanel x:Name="SplitPositionVPanel" Visibility="Collapsed">
-                    <TextBlock Text="Vertical Split Position" Style="{StaticResource LabelStyle}"/>
-                    <Slider x:Name="SplitPositionVSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
-                            Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionVSlider_ValueChanged"/>
-                    <TextBlock x:Name="SplitPositionVValue" Text="50%" Opacity="0.7" FontSize="11"/>
-                </StackPanel>
             </StackPanel>
 
-            <!-- Comparison Mode -->
+            <!-- Vertical Split Position (for horizontal split: top/bottom) -->
+            <StackPanel x:Name="SplitPositionVPanel" Visibility="Collapsed">
+                <TextBlock Text="Vertical Split Position" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="SplitPositionVSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionVSlider_ValueChanged"/>
+                <TextBlock x:Name="SplitPositionVValue" Text="50%" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Shape Settings (Circle and Rectangle modes) -->
+            <StackPanel x:Name="ShapeSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Shape Settings" Style="{StaticResource SectionStyle}"/>
+
+                <!-- Circle: Radius -->
+                <StackPanel x:Name="CircleSettingsPanel" Visibility="Collapsed">
+                    <TextBlock Text="Radius (pixels)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="RadiusSlider" Minimum="10" Maximum="1000" Value="200"
+                            Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_ValueChanged"/>
+                    <TextBlock x:Name="RadiusValue" Text="200 px" Opacity="0.7" FontSize="11"/>
+                </StackPanel>
+
+                <!-- Rectangle: Width, Height, Square checkbox -->
+                <StackPanel x:Name="RectangleSettingsPanel" Visibility="Collapsed">
+                    <TextBlock Text="Width (pixels)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="RectWidthSlider" Minimum="10" Maximum="2000" Value="300"
+                            Style="{StaticResource SliderStyle}" ValueChanged="RectWidthSlider_ValueChanged"/>
+                    <TextBlock x:Name="RectWidthValue" Text="300 px" Opacity="0.7" FontSize="11"/>
+
+                    <TextBlock Text="Height (pixels)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="RectHeightSlider" Minimum="10" Maximum="2000" Value="200"
+                            Style="{StaticResource SliderStyle}" ValueChanged="RectHeightSlider_ValueChanged"/>
+                    <TextBlock x:Name="RectHeightValue" Text="200 px" Opacity="0.7" FontSize="11"/>
+
+                    <CheckBox x:Name="SquareCheckBox" Content="Square (sync width and height)"
+                              Margin="0,4,0,0" Checked="SquareCheckBox_Changed" Unchecked="SquareCheckBox_Changed"/>
+                </StackPanel>
+
+                <!-- Edge Softness (for both Circle and Rectangle) -->
+                <TextBlock Text="Edge Softness" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="1" Value="0.2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_ValueChanged"/>
+                <TextBlock x:Name="EdgeSoftnessValue" Text="0.20 (Soft)" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Comparison Mode (hidden for shape modes) -->
             <CheckBox x:Name="ComparisonModeCheckBox" Content="Comparison Mode (Zone 1 shows original)"
                       Margin="0,8,0,0" Visibility="Collapsed"
                       Checked="ComparisonModeCheckBox_Changed" Unchecked="ComparisonModeCheckBox_Changed"/>

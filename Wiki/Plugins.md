@@ -360,7 +360,8 @@ Next-generation color vision deficiency (CVD) simulation and correction plugin w
 - **LUT-based correction**: Per-channel color remapping with customizable gradients
 - **Real comparison mode**: Full screen duplicated in each zone with virtual cursor projection
 - **Custom preset system**: Save, load, export, and import correction presets
-- **Multiple split modes**: Fullscreen, Split Vertical/Horizontal, Quadrants
+- **Multiple split modes**: Fullscreen, Split Vertical/Horizontal, Quadrants, Circle, Rectangle
+- **Circle/Rectangle modes**: Cursor-following shapes with configurable dimensions and soft edge blending
 - **Reusable CorrectionEditor**: Unified settings control for all zones with consistent UI
 - **Configurable hotkeys**: Enable/disable Alt+Shift+M (toggle effect) and Alt+Shift+L (toggle settings)
 - **Passthrough preset**: Apply no color changes for reference comparison
@@ -374,6 +375,8 @@ Next-generation color vision deficiency (CVD) simulation and correction plugin w
 | **Split Vertical** | 2 | Left and Right zones |
 | **Split Horizontal** | 2 | Top and Bottom zones |
 | **Quadrants** | 4 | Four corner zones (TL, TR, BL, BR) |
+| **Circle** | 2 | Circular zone follows cursor (Inner/Outer zones) |
+| **Rectangle** | 2 | Rectangular zone follows cursor (Inner/Outer zones) |
 
 ### Zone Modes
 
@@ -391,10 +394,29 @@ Each zone can operate in one of three modes:
 
 | Setting | Type | Range | Default | Description |
 |---------|------|-------|---------|-------------|
-| `splitMode` | int | 0-3 | 0 | 0=Fullscreen, 1=SplitV, 2=SplitH, 3=Quadrants |
+| `splitMode` | int | 0-5 | 0 | 0=Fullscreen, 1=SplitV, 2=SplitH, 3=Quadrants, 4=Circle, 5=Rectangle |
 | `splitPosition` | float | 0.1-0.9 | 0.5 | Horizontal split position |
 | `splitPositionV` | float | 0.1-0.9 | 0.5 | Vertical split position |
 | `comparisonMode` | bool | - | false | Enable screen duplication comparison |
+
+#### Shape Mode Settings (Circle/Rectangle)
+
+When Circle or Rectangle mode is selected, the shape follows the mouse cursor with an inner zone (inside the shape) and outer zone (outside the shape).
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `radius` | float | 10-1000 | 200 | Circle mode radius (pixels) |
+| `rectWidth` | float | 10-2000 | 300 | Rectangle mode width (pixels) |
+| `rectHeight` | float | 10-2000 | 200 | Rectangle mode height (pixels) |
+| `edgeSoftness` | float | 0-1 | 0.2 | Edge blending (0=hard edge, 1=maximum soft) |
+
+**Shape Mode Notes:**
+- Comparison mode is not available for shape modes
+- Split position sliders are hidden for shape modes
+- Zone 0 = Inner zone (inside the shape)
+- Zone 1 = Outer zone (outside the shape)
+- Both zones have full configuration (Original/Simulation/Correction)
+- Edge softness creates smooth blending between inner and outer zones using `smoothstep()`
 
 #### Per-Zone Configuration
 

@@ -45,7 +45,9 @@ public enum SplitMode
     Fullscreen = 0,
     SplitVertical = 1,
     SplitHorizontal = 2,
-    Quadrants = 3
+    Quadrants = 3,
+    Circle = 4,
+    Rectangle = 5
 }
 
 /// <summary>
@@ -95,6 +97,12 @@ public sealed class ColorBlindnessNGEffect : EffectBase
     private float _splitPositionV = 0.5f;
     private bool _comparisonMode = false;
 
+    // Shape mode parameters (Circle and Rectangle)
+    private float _radius = 200f;
+    private float _rectWidth = 300f;
+    private float _rectHeight = 200f;
+    private float _edgeSoftness = 0.2f;
+
     // Mouse position for virtual cursor in comparison mode
     private Vector2 _mousePosition;
 
@@ -142,6 +150,42 @@ public sealed class ColorBlindnessNGEffect : EffectBase
     }
 
     /// <summary>
+    /// Gets or sets the radius for Circle mode (in pixels).
+    /// </summary>
+    public float Radius
+    {
+        get => _radius;
+        set => _radius = Math.Clamp(value, 10f, 1000f);
+    }
+
+    /// <summary>
+    /// Gets or sets the width for Rectangle mode (in pixels).
+    /// </summary>
+    public float RectWidth
+    {
+        get => _rectWidth;
+        set => _rectWidth = Math.Clamp(value, 10f, 2000f);
+    }
+
+    /// <summary>
+    /// Gets or sets the height for Rectangle mode (in pixels).
+    /// </summary>
+    public float RectHeight
+    {
+        get => _rectHeight;
+        set => _rectHeight = Math.Clamp(value, 10f, 2000f);
+    }
+
+    /// <summary>
+    /// Gets or sets the edge softness for shape modes (0 = hard, 1 = maximum soft).
+    /// </summary>
+    public float EdgeSoftness
+    {
+        get => _edgeSoftness;
+        set => _edgeSoftness = Math.Clamp(value, 0f, 1f);
+    }
+
+    /// <summary>
     /// Gets the settings for a specific zone (0-3).
     /// </summary>
     public ZoneSettings GetZone(int index) => _zones[Math.Clamp(index, 0, MaxZones - 1)];
@@ -155,8 +199,15 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         SplitMode.SplitVertical => 2,
         SplitMode.SplitHorizontal => 2,
         SplitMode.Quadrants => 4,
+        SplitMode.Circle => 2,
+        SplitMode.Rectangle => 2,
         _ => 1
     };
+
+    /// <summary>
+    /// Gets whether the current mode is a shape mode (Circle or Rectangle).
+    /// </summary>
+    public bool IsShapeMode => _splitMode == SplitMode.Circle || _splitMode == SplitMode.Rectangle;
 
     public ColorBlindnessNGEffect()
     {
@@ -281,6 +332,16 @@ public sealed class ColorBlindnessNGEffect : EffectBase
             _splitPositionV = splitPosV;
         if (Configuration.TryGet("comparisonMode", out bool compMode))
             _comparisonMode = compMode;
+
+        // Shape mode settings
+        if (Configuration.TryGet("radius", out float radius))
+            _radius = radius;
+        if (Configuration.TryGet("rectWidth", out float rectWidth))
+            _rectWidth = rectWidth;
+        if (Configuration.TryGet("rectHeight", out float rectHeight))
+            _rectHeight = rectHeight;
+        if (Configuration.TryGet("edgeSoftness", out float edgeSoftness))
+            _edgeSoftness = edgeSoftness;
 
         // Load per-zone settings
         for (int i = 0; i < MaxZones; i++)
@@ -456,7 +517,11 @@ public sealed class ColorBlindnessNGEffect : EffectBase
             SplitModeValue = (float)_splitMode,
             SplitPosition = _splitPosition,
             SplitPositionV = _splitPositionV,
-            ComparisonMode = _comparisonMode ? 1.0f : 0.0f
+            ComparisonMode = _comparisonMode ? 1.0f : 0.0f,
+            Radius = _radius,
+            RectWidth = _rectWidth,
+            RectHeight = _rectHeight,
+            EdgeSoftness = _edgeSoftness
         };
 
         // Fill zone parameters
@@ -571,18 +636,22 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 32 (global) + 4 * 64 (zones) = 288 bytes
+    /// Size: 48 (global) + 4 * 64 (zones) = 304 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 288)]
+    [StructLayout(LayoutKind.Sequential, Size = 304)]
     private struct ColorBlindnessNGParams
     {
-        // Global parameters (32 bytes)
+        // Global parameters (48 bytes)
         public Vector2 MousePosition;      // 8 bytes
         public Vector2 ViewportSize;       // 8 bytes
         public float SplitModeValue;       // 4 bytes
         public float SplitPosition;        // 4 bytes
         public float SplitPositionV;       // 4 bytes
         public float ComparisonMode;       // 4 bytes
+        public float Radius;               // 4 bytes - Circle mode radius
+        public float RectWidth;            // 4 bytes - Rectangle mode width
+        public float RectHeight;           // 4 bytes - Rectangle mode height
+        public float EdgeSoftness;         // 4 bytes - Edge blending softness (0=hard, 1=soft)
 
         // Per-zone parameters (64 bytes each × 4 = 256 bytes)
         public ZoneParams Zone0;

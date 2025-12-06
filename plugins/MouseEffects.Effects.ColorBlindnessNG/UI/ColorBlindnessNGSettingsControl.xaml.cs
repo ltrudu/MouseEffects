@@ -183,6 +183,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             SplitPositionVSlider.Value = _effect.SplitPositionV;
             ComparisonModeCheckBox.IsChecked = _effect.ComparisonMode;
 
+            // Load shape settings
+            RadiusSlider.Value = _effect.Radius;
+            RadiusValue.Text = $"{_effect.Radius:F0} px";
+            RectWidthSlider.Value = _effect.RectWidth;
+            RectWidthValue.Text = $"{_effect.RectWidth:F0} px";
+            RectHeightSlider.Value = _effect.RectHeight;
+            RectHeightValue.Text = $"{_effect.RectHeight:F0} px";
+            EdgeSoftnessSlider.Value = _effect.EdgeSoftness;
+            UpdateEdgeSoftnessLabel();
+
             // Load zone 0 settings
             LoadZone0Settings();
 
@@ -198,6 +208,13 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         {
             _isLoading = false;
         }
+    }
+
+    private void UpdateEdgeSoftnessLabel()
+    {
+        if (EdgeSoftnessSlider == null || EdgeSoftnessValue == null) return;
+        string description = EdgeSoftnessSlider.Value < 0.1 ? "Hard" : EdgeSoftnessSlider.Value > 0.7 ? "Very Soft" : "Soft";
+        EdgeSoftnessValue.Text = $"{EdgeSoftnessSlider.Value:F2} ({description})";
     }
 
     private void LoadZone0Settings()
@@ -268,15 +285,30 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         if (SplitPositionPanel == null) return;
 
-        bool isSplit = splitMode > 0;
-        bool isQuadrant = splitMode == 3;
+        bool isSplit = splitMode > 0 && splitMode <= 3;
+        bool isVerticalSplit = splitMode == 1;   // Left/Right - needs horizontal position slider
+        bool isHorizontalSplit = splitMode == 2; // Top/Bottom - needs vertical position slider
+        bool isQuadrant = splitMode == 3;        // Needs both sliders
+        bool isCircle = splitMode == 4;
+        bool isRectangle = splitMode == 5;
+        bool isShapeMode = isCircle || isRectangle;
 
-        SplitPositionPanel.Visibility = isSplit ? Visibility.Visible : Visibility.Collapsed;
-        SplitPositionVPanel.Visibility = isQuadrant ? Visibility.Visible : Visibility.Collapsed;
+        // Horizontal Split Position slider (for vertical split: left/right, or quadrants)
+        SplitPositionPanel.Visibility = (isVerticalSplit || isQuadrant) ? Visibility.Visible : Visibility.Collapsed;
+        // Vertical Split Position slider (for horizontal split: top/bottom, or quadrants)
+        SplitPositionVPanel.Visibility = (isHorizontalSplit || isQuadrant) ? Visibility.Visible : Visibility.Collapsed;
+
+        // Comparison mode (hidden for shape modes)
         ComparisonModeCheckBox.Visibility = isSplit ? Visibility.Visible : Visibility.Collapsed;
 
-        // Update zone visibility
-        Zone1Expander.Visibility = isSplit ? Visibility.Visible : Visibility.Collapsed;
+        // Shape settings panel
+        ShapeSettingsPanel.Visibility = isShapeMode ? Visibility.Visible : Visibility.Collapsed;
+        CircleSettingsPanel.Visibility = isCircle ? Visibility.Visible : Visibility.Collapsed;
+        RectangleSettingsPanel.Visibility = isRectangle ? Visibility.Visible : Visibility.Collapsed;
+
+        // Update zone visibility (shape modes have 2 zones: inner and outer)
+        bool hasMultipleZones = isSplit || isShapeMode;
+        Zone1Expander.Visibility = hasMultipleZones ? Visibility.Visible : Visibility.Collapsed;
         Zone2Expander.Visibility = isQuadrant ? Visibility.Visible : Visibility.Collapsed;
         Zone3Expander.Visibility = isQuadrant ? Visibility.Visible : Visibility.Collapsed;
 
@@ -299,6 +331,14 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
                 Zone1Header.Text = "Zone 2 (Top-Right)";
                 Zone2Header.Text = "Zone 3 (Bottom-Left)";
                 Zone3Header.Text = "Zone 4 (Bottom-Right)";
+                break;
+            case 4: // Circle
+                Zone0Header.Text = "Inner Zone (inside circle)";
+                Zone1Header.Text = "Outer Zone (outside circle)";
+                break;
+            case 5: // Rectangle
+                Zone0Header.Text = "Inner Zone (inside rectangle)";
+                Zone1Header.Text = "Outer Zone (outside rectangle)";
                 break;
         }
     }
@@ -327,6 +367,84 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         _effect.ComparisonMode = ComparisonModeCheckBox.IsChecked == true;
         _effect.Configuration.Set("comparisonMode", ComparisonModeCheckBox.IsChecked == true);
+    }
+
+    #endregion
+
+    #region Shape Settings Event Handlers
+
+    private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        _effect.Radius = (float)RadiusSlider.Value;
+        _effect.Configuration.Set("radius", (float)RadiusSlider.Value);
+        RadiusValue.Text = $"{RadiusSlider.Value:F0} px";
+    }
+
+    private void RectWidthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        _effect.RectWidth = (float)RectWidthSlider.Value;
+        _effect.Configuration.Set("rectWidth", (float)RectWidthSlider.Value);
+        RectWidthValue.Text = $"{RectWidthSlider.Value:F0} px";
+
+        // Sync height if Square checkbox is checked
+        if (SquareCheckBox.IsChecked == true && Math.Abs(RectHeightSlider.Value - RectWidthSlider.Value) > 0.1)
+        {
+            _isLoading = true;
+            RectHeightSlider.Value = RectWidthSlider.Value;
+            _effect.RectHeight = (float)RectWidthSlider.Value;
+            _effect.Configuration.Set("rectHeight", (float)RectWidthSlider.Value);
+            RectHeightValue.Text = $"{RectWidthSlider.Value:F0} px";
+            _isLoading = false;
+        }
+    }
+
+    private void RectHeightSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        _effect.RectHeight = (float)RectHeightSlider.Value;
+        _effect.Configuration.Set("rectHeight", (float)RectHeightSlider.Value);
+        RectHeightValue.Text = $"{RectHeightSlider.Value:F0} px";
+
+        // Sync width if Square checkbox is checked
+        if (SquareCheckBox.IsChecked == true && Math.Abs(RectWidthSlider.Value - RectHeightSlider.Value) > 0.1)
+        {
+            _isLoading = true;
+            RectWidthSlider.Value = RectHeightSlider.Value;
+            _effect.RectWidth = (float)RectHeightSlider.Value;
+            _effect.Configuration.Set("rectWidth", (float)RectHeightSlider.Value);
+            RectWidthValue.Text = $"{RectHeightSlider.Value:F0} px";
+            _isLoading = false;
+        }
+    }
+
+    private void SquareCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        // When Square is checked, sync height to width
+        if (SquareCheckBox.IsChecked == true && Math.Abs(RectHeightSlider.Value - RectWidthSlider.Value) > 0.1)
+        {
+            _isLoading = true;
+            RectHeightSlider.Value = RectWidthSlider.Value;
+            _effect.RectHeight = (float)RectWidthSlider.Value;
+            _effect.Configuration.Set("rectHeight", (float)RectWidthSlider.Value);
+            RectHeightValue.Text = $"{RectWidthSlider.Value:F0} px";
+            _isLoading = false;
+        }
+    }
+
+    private void EdgeSoftnessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        _effect.EdgeSoftness = (float)EdgeSoftnessSlider.Value;
+        _effect.Configuration.Set("edgeSoftness", (float)EdgeSoftnessSlider.Value);
+        UpdateEdgeSoftnessLabel();
     }
 
     #endregion
