@@ -405,80 +405,88 @@ float3 ApplyLMSCorrection(float3 color, float cvdType)
 
     // Convert to linear RGB for correction
     float3 linearRGB = sRGBToLinear3(color);
-    float3 simLinearRGB;
-    float3 error;
     float3 correction = float3(0.0, 0.0, 0.0);
 
     // Determine if Machado (1-6) or Strict (7-12)
     bool isMachado = cvdType < 6.5;
     bool isStrict = cvdType > 6.5 && cvdType < 12.5;
 
+    // Direct daltonization approach - shift confusable colors apart
+    // Instead of error-based, use direct color analysis for stronger effect
+    // This makes Ishihara test numbers readable for colorblind users
+
+    // Optimized parameters from Python testing on Ishihara plates
+    // Key: Bottom-right quadrant (simulated+corrected) must show visible numbers
+
     if (isMachado)
     {
-        // Machado simulation for error calculation
-        simLinearRGB = SimulateMachado(linearRGB, cvdType);
-        simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
-        error = linearRGB - simLinearRGB;
-
-        // Redistribute error based on CVD type
         if (cvdType < 2.5) // Protanopia, Protanomaly (1, 2) - red-blind
         {
-            // Only correct actual reds (positive error.r), not colors that gained red
-            float redError = max(0.0, error.r);
-            correction.r = 0.0;
-            correction.g = 0.7 * redError;
-            correction.b = 1.0 * redError;
+            // Shift reds strongly toward magenta/pink (add blue to reds)
+            // Parameters optimized: red_to_blue=1.2 works best for Ishihara
+            float redness = linearRGB.r - linearRGB.g;
+            if (redness > 0.0) {
+                correction.b = 1.2 * redness;  // Strong blue shift for reds
+            }
         }
         else if (cvdType < 4.5) // Deuteranopia, Deuteranomaly (3, 4) - green-blind
         {
-            // Only correct actual greens (positive error.g), leave reds unchanged
-            float greenError = max(0.0, error.g);
-            correction.r = 0.0;
-            correction.g = -0.5 * greenError;   // Reduce green
-            correction.b = 1.5 * greenError;    // Add blue (shift to cyan)
+            // Shift greens toward cyan (add blue, reduce red)
+            // Parameters optimized: strong blue addition to greens
+            float greenness = linearRGB.g - max(linearRGB.r * 0.8, linearRGB.b);
+            if (greenness > 0.0) {
+                correction.r = -0.3 * greenness;  // Reduce red in greens
+                correction.b = 1.5 * greenness;   // Strong blue (cyan shift)
+            }
         }
         else // Tritanopia, Tritanomaly (5, 6) - blue-blind
         {
-            // Only correct actual blues (positive error.b)
-            float blueError = max(0.0, error.b);
-            correction.r = 0.7 * blueError;
-            correction.g = 0.7 * blueError;
-            correction.b = 0.0;
+            // Shift blues toward magenta (add red)
+            // Shift yellows toward green (add green, reduce red)
+            float blueness = linearRGB.b - max(linearRGB.r, linearRGB.g);
+            if (blueness > 0.0) {
+                correction.r = 1.0 * blueness;  // Strong red shift for blues
+            }
+            float yellowness = min(linearRGB.r, linearRGB.g) - linearRGB.b * 0.5;
+            if (yellowness > 0.0) {
+                correction.r = -0.6 * yellowness;
+                correction.g = 0.4 * yellowness;
+            }
         }
     }
     else if (isStrict)
     {
-        // Strict LMS simulation for error calculation
-        simLinearRGB = SimulateStrict(linearRGB, cvdType);
-        simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
-        error = linearRGB - simLinearRGB;
-
-        // Map strict type: 7-8 = protan, 9-10 = deutan, 11-12 = tritan
         float strictType = cvdType - 6.0;
 
         if (strictType < 2.5) // Protanopia, Protanomaly (7, 8) - red-blind
         {
-            // Only correct actual reds (positive error.r)
-            float redError = max(0.0, error.r);
-            correction.r = 0.0;
-            correction.g = 0.7 * redError;
-            correction.b = 1.0 * redError;
+            // Shift reds strongly toward magenta/pink
+            float redness = linearRGB.r - linearRGB.g;
+            if (redness > 0.0) {
+                correction.b = 1.2 * redness;  // Strong blue shift
+            }
         }
         else if (strictType < 4.5) // Deuteranopia, Deuteranomaly (9, 10) - green-blind
         {
-            // Only correct actual greens (positive error.g), leave reds unchanged
-            float greenError = max(0.0, error.g);
-            correction.r = 0.0;
-            correction.g = -0.5 * greenError;   // Reduce green
-            correction.b = 1.5 * greenError;    // Add blue (shift to cyan)
+            // Shift greens toward cyan
+            float greenness = linearRGB.g - max(linearRGB.r * 0.8, linearRGB.b);
+            if (greenness > 0.0) {
+                correction.r = -0.3 * greenness;
+                correction.b = 1.5 * greenness;  // Strong cyan shift
+            }
         }
         else // Tritanopia, Tritanomaly (11, 12) - blue-blind
         {
-            // Only correct actual blues (positive error.b)
-            float blueError = max(0.0, error.b);
-            correction.r = 0.7 * blueError;
-            correction.g = 0.7 * blueError;
-            correction.b = 0.0;
+            // Shift blues toward magenta
+            float blueness = linearRGB.b - max(linearRGB.r, linearRGB.g);
+            if (blueness > 0.0) {
+                correction.r = 1.0 * blueness;
+            }
+            float yellowness = min(linearRGB.r, linearRGB.g) - linearRGB.b * 0.5;
+            if (yellowness > 0.0) {
+                correction.r = -0.6 * yellowness;
+                correction.g = 0.4 * yellowness;
+            }
         }
     }
     else
