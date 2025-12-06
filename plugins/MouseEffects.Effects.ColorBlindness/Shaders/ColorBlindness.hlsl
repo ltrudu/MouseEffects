@@ -215,10 +215,12 @@ static const float3x3 Machado_Achromatomaly = float3x3(
 // Coefficients preserve white point (sum to ~1.0)
 // ============================================================================
 
-// Strict Protanopia - L-cone deficient (reconstructs L from M and S)
-// L' = 1.05118294*M - 0.05116099*S (preserves white: 1.051 - 0.051 ≈ 1.0)
+// Strict Protanopia - L-cone deficient (reconstructs L from M only)
+// Protanopes confuse red with green. Red shifts toward green.
+// L' = M (no S contribution - keeps blue pure, doesn't add purple tint)
+// For white (L=M=S=1): L'=1 ✓ preserves white
 static const float3x3 Strict_Protanopia_LMS = float3x3(
-    0.0,        1.05118294, -0.05116099,   // L' = 1.05*M - 0.05*S
+    0.0,        1.0,         0.0,          // L' = M (red reconstructed from green only)
     0.0,        1.0,         0.0,          // M' = M (preserved)
     0.0,        0.0,         1.0           // S' = S (preserved)
 );
@@ -298,16 +300,18 @@ float3 SimulateStrict(float3 linearRGB, float cvdType)
 
     if (strictType < 1.5) // Protanopia (7 -> 1)
     {
-        simLMS.x = dot(lms, Strict_Protanopia_LMS[0]);
-        simLMS.y = dot(lms, Strict_Protanopia_LMS[1]);
-        simLMS.z = dot(lms, Strict_Protanopia_LMS[2]);
+        // L' = min(L, M) - only reduce L for reds, never increase for greens/blues
+        // This preserves green and blue while shifting red toward green
+        simLMS.x = min(lms.x, lms.y);  // L' = min(L, M)
+        simLMS.y = lms.y;              // M preserved
+        simLMS.z = lms.z;              // S preserved
     }
     else if (strictType < 2.5) // Protanomaly (8 -> 2) - 50% blend
     {
         float3 fullSim;
-        fullSim.x = dot(lms, Strict_Protanopia_LMS[0]);
-        fullSim.y = dot(lms, Strict_Protanopia_LMS[1]);
-        fullSim.z = dot(lms, Strict_Protanopia_LMS[2]);
+        fullSim.x = min(lms.x, lms.y);  // L' = min(L, M)
+        fullSim.y = lms.y;
+        fullSim.z = lms.z;
         simLMS = lerp(lms, fullSim, 0.5);
     }
     else if (strictType < 3.5) // Deuteranopia (9 -> 3)
