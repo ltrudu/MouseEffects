@@ -162,7 +162,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 If you find MouseEffects useful, consider supporting its development:
 
-[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg?logo=paypal)](https://www.paypal.com/ncp/payment/TU8EH7BZEPCPN)
+<p align="center">
+  <a href="https://www.paypal.com/ncp/payment/TU8EH7BZEPCPN">
+    <img src="https://img.shields.io/badge/Donate-PayPal-blue.svg?logo=paypal" alt="Donate with PayPal">
+  </a>
+</p>
 
 Your support helps keep this project alive and enables new features!
 
