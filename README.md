@@ -40,7 +40,8 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 
 ## Screenshots
 
-*Coming soon*
+<img width="225" height="325" alt="image" src="https://github.com/user-attachments/assets/08df3105-a2f9-4c02-9584-9ef014c08d6d" />
+
 
 ## Installation
 
