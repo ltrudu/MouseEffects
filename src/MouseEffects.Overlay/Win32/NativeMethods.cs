@@ -39,7 +39,10 @@ internal static partial class NativeMethods
     public const uint SWP_NOMOVE = 0x0002;
     public const uint SWP_NOSIZE = 0x0001;
     public const uint SWP_NOACTIVATE = 0x0010;
+    public const uint SWP_SHOWWINDOW = 0x0040;
+    public const uint SWP_FRAMECHANGED = 0x0020;
 
+    public static readonly nint HWND_TOP = new(0);
     public static readonly nint HWND_TOPMOST = new(-1);
     public static readonly nint HWND_NOTOPMOST = new(-2);
 
@@ -197,4 +200,15 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool SetWindowDisplayAffinity(nint hWnd, uint dwAffinity);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool BringWindowToTop(nint hWnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetForegroundWindow(nint hWnd);
+
+    [LibraryImport("user32.dll")]
+    public static partial nint GetForegroundWindow();
 }

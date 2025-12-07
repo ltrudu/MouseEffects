@@ -5,11 +5,21 @@
         <Style x:Key="LabelStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style x:Key="ChannelHeaderStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="4,0,0,0"/>
+        </Style>
+        <Style x:Key="SmallLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style x:Key="ValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
     </UserControl.Resources>
 
@@ -23,10 +33,9 @@
         </ComboBox>
 
         <StackPanel x:Name="ThresholdPanel" Visibility="Collapsed">
-            <TextBlock Text="Threshold" Style="{StaticResource LabelStyle}"/>
+            <TextBlock x:Name="ThresholdLabel" Text="Threshold (0.30)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="ThresholdSlider" Minimum="0" Maximum="1" Value="0.3"
                     ValueChanged="Threshold_Changed"/>
-            <TextBlock x:Name="ThresholdValue" Text="0.30" Opacity="0.7" FontSize="11"/>
         </StackPanel>
 
         <!-- Gradient Type -->
@@ -51,11 +60,11 @@
                        Style="{StaticResource ChannelHeaderStyle}"/>
         </Grid>
         <StackPanel x:Name="RedPanel" Visibility="Collapsed" Margin="20,0,0,0">
-            <TextBlock Text="Strength" FontSize="11"/>
+            <TextBlock x:Name="RedStrengthLabel" Text="Strength (1.00)" Style="{StaticResource SmallLabelStyle}"/>
             <Slider x:Name="RedStrength" Minimum="0" Maximum="1" Value="1"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
-            <Slider x:Name="RedWhiteProt" Minimum="0" Maximum="1" Value="0"
+            <TextBlock x:Name="RedWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
+            <Slider x:Name="RedWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
             <Grid Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
@@ -66,7 +75,7 @@
                 <Border x:Name="RedStart" Grid.Column="0" Height="20" Background="#FF0000"
                         BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
                         MouseLeftButtonDown="RedStart_Click"/>
-                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4" Foreground="White"/>
                 <Border x:Name="RedEnd" Grid.Column="2" Height="20" Background="#00FFFF"
                         BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
                         MouseLeftButtonDown="RedEnd_Click"/>
@@ -85,11 +94,11 @@
                        Style="{StaticResource ChannelHeaderStyle}"/>
         </Grid>
         <StackPanel x:Name="GreenPanel" Visibility="Collapsed" Margin="20,0,0,0">
-            <TextBlock Text="Strength" FontSize="11"/>
+            <TextBlock x:Name="GreenStrengthLabel" Text="Strength (1.00)" Style="{StaticResource SmallLabelStyle}"/>
             <Slider x:Name="GreenStrength" Minimum="0" Maximum="1" Value="1"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
-            <Slider x:Name="GreenWhiteProt" Minimum="0" Maximum="1" Value="0"
+            <TextBlock x:Name="GreenWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
+            <Slider x:Name="GreenWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
             <Grid Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
@@ -100,7 +109,7 @@
                 <Border x:Name="GreenStart" Grid.Column="0" Height="20" Background="#00FF00"
                         BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
                         MouseLeftButtonDown="GreenStart_Click"/>
-                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4" Foreground="White"/>
                 <Border x:Name="GreenEnd" Grid.Column="2" Height="20" Background="#00FFFF"
                         BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
                         MouseLeftButtonDown="GreenEnd_Click"/>
@@ -119,11 +128,11 @@
                        Style="{StaticResource ChannelHeaderStyle}"/>
         </Grid>
         <StackPanel x:Name="BluePanel" Visibility="Collapsed" Margin="20,0,0,0">
-            <TextBlock Text="Strength" FontSize="11"/>
+            <TextBlock x:Name="BlueStrengthLabel" Text="Strength (1.00)" Style="{StaticResource SmallLabelStyle}"/>
             <Slider x:Name="BlueStrength" Minimum="0" Maximum="1" Value="1"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock Text="White Protection" FontSize="11" Margin="0,4,0,0"/>
-            <Slider x:Name="BlueWhiteProt" Minimum="0" Maximum="1" Value="0"
+            <TextBlock x:Name="BlueWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
+            <Slider x:Name="BlueWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
             <Grid Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
@@ -134,7 +143,7 @@
                 <Border x:Name="BlueStart" Grid.Column="0" Height="20" Background="#0000FF"
                         BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
                         MouseLeftButtonDown="BlueStart_Click"/>
-                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4"/>
+                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4" Foreground="White"/>
                 <Border x:Name="BlueEnd" Grid.Column="2" Height="20" Background="#FFFF00"
                         BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
                         MouseLeftButtonDown="BlueEnd_Click"/>

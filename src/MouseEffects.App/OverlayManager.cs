@@ -89,6 +89,38 @@ public sealed partial class OverlayManager : IDisposable
         Initialize();
     }
 
+    private bool _topmostEnforcementSuspended;
+
+    /// <summary>
+    /// Gets whether topmost enforcement is currently suspended.
+    /// </summary>
+    public bool IsTopmostEnforcementSuspended => _topmostEnforcementSuspended;
+
+    /// <summary>
+    /// Suspend topmost enforcement to allow dialogs to appear above the overlay.
+    /// The overlay keeps its topmost state, but EnforceTopmost() becomes a no-op.
+    /// </summary>
+    public void SuspendTopmostEnforcement()
+    {
+        _topmostEnforcementSuspended = true;
+        Log("Topmost enforcement suspended for dialogs");
+    }
+
+    /// <summary>
+    /// Resume topmost enforcement after dialogs are closed.
+    /// </summary>
+    public void ResumeTopmostEnforcement()
+    {
+        _topmostEnforcementSuspended = false;
+        Log("Topmost enforcement resumed");
+
+        // Immediately enforce topmost to reclaim position
+        foreach (var overlay in _overlays)
+        {
+            overlay.EnforceTopmost();
+        }
+    }
+
     /// <summary>
     /// Temporarily suspend topmost state for all overlays to allow modal dialogs to appear.
     /// </summary>
@@ -113,9 +145,12 @@ public sealed partial class OverlayManager : IDisposable
 
     /// <summary>
     /// Re-apply topmost state for all overlays. Call periodically to ensure overlays stay on top.
+    /// Skipped if topmost enforcement is suspended (dialogs are open).
     /// </summary>
     public void EnforceTopmost()
     {
+        if (_topmostEnforcementSuspended) return;
+
         foreach (var overlay in _overlays)
         {
             overlay.EnforceTopmost();

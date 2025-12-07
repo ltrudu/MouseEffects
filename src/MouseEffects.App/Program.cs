@@ -141,6 +141,23 @@ static partial class Program
         _overlayManager?.ResumeTopmost();
     }
 
+    /// <summary>
+    /// Suspend topmost enforcement to allow dialogs to appear above the overlay.
+    /// The overlay keeps its topmost state, but periodic enforcement is paused.
+    /// </summary>
+    public static void SuspendTopmostEnforcement()
+    {
+        _overlayManager?.SuspendTopmostEnforcement();
+    }
+
+    /// <summary>
+    /// Resume topmost enforcement after dialogs are closed.
+    /// </summary>
+    public static void ResumeTopmostEnforcement()
+    {
+        _overlayManager?.ResumeTopmostEnforcement();
+    }
+
     private static void Initialize()
     {
         try
@@ -161,7 +178,7 @@ static partial class Program
             Log($"Created {_overlayManager.Overlays.Count} overlay(s)");
 
             // Initialize global dialog helper for plugins
-            DialogHelper.Initialize(SuspendOverlayTopmost, ResumeOverlayTopmost);
+            DialogHelper.Initialize(SuspendTopmostEnforcement, ResumeTopmostEnforcement);
             Log("DialogHelper initialized");
 
             // Create effect manager with shared render context

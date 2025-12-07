@@ -9,6 +9,7 @@
         <Style TargetType="TextBlock" x:Key="LabelStyle">
             <Setter Property="Margin" Value="0,8,0,4"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style TargetType="Slider" x:Key="SliderStyle">
             <Setter Property="Margin" Value="0,0,0,4"/>
@@ -16,15 +17,23 @@
         <Style TargetType="TextBlock" x:Key="SectionStyle">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,8,0,8"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style TargetType="TextBlock" x:Key="ZoneHeaderStyle">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style TargetType="TextBlock" x:Key="ChannelHeaderStyle">
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style TargetType="Expander" x:Key="ZoneExpanderStyle">
             <Setter Property="Margin" Value="0,4,0,4"/>
@@ -81,7 +90,7 @@
                 <TextBlock Text="Horizontal Split Position" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="SplitPositionSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
                         Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionSlider_ValueChanged"/>
-                <TextBlock x:Name="SplitPositionValue" Text="50%" Opacity="0.7" FontSize="11"/>
+                <TextBlock x:Name="SplitPositionValue" Text="50%" Style="{StaticResource ValueStyle}"/>
             </StackPanel>
 
             <!-- Vertical Split Position (for horizontal split: top/bottom) -->
@@ -89,7 +98,7 @@
                 <TextBlock Text="Vertical Split Position" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="SplitPositionVSlider" Minimum="0.1" Maximum="0.9" Value="0.5"
                         Style="{StaticResource SliderStyle}" ValueChanged="SplitPositionVSlider_ValueChanged"/>
-                <TextBlock x:Name="SplitPositionVValue" Text="50%" Opacity="0.7" FontSize="11"/>
+                <TextBlock x:Name="SplitPositionVValue" Text="50%" Style="{StaticResource ValueStyle}"/>
             </StackPanel>
 
             <!-- Shape Settings (Circle and Rectangle modes) -->
@@ -101,7 +110,7 @@
                     <TextBlock Text="Radius (pixels)" Style="{StaticResource LabelStyle}"/>
                     <Slider x:Name="RadiusSlider" Minimum="10" Maximum="1000" Value="200"
                             Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_ValueChanged"/>
-                    <TextBlock x:Name="RadiusValue" Text="200 px" Opacity="0.7" FontSize="11"/>
+                    <TextBlock x:Name="RadiusValue" Text="200 px" Style="{StaticResource ValueStyle}"/>
                 </StackPanel>
 
                 <!-- Rectangle: Width, Height, Square checkbox -->
@@ -109,12 +118,12 @@
                     <TextBlock Text="Width (pixels)" Style="{StaticResource LabelStyle}"/>
                     <Slider x:Name="RectWidthSlider" Minimum="10" Maximum="2000" Value="300"
                             Style="{StaticResource SliderStyle}" ValueChanged="RectWidthSlider_ValueChanged"/>
-                    <TextBlock x:Name="RectWidthValue" Text="300 px" Opacity="0.7" FontSize="11"/>
+                    <TextBlock x:Name="RectWidthValue" Text="300 px" Style="{StaticResource ValueStyle}"/>
 
                     <TextBlock Text="Height (pixels)" Style="{StaticResource LabelStyle}"/>
                     <Slider x:Name="RectHeightSlider" Minimum="10" Maximum="2000" Value="200"
                             Style="{StaticResource SliderStyle}" ValueChanged="RectHeightSlider_ValueChanged"/>
-                    <TextBlock x:Name="RectHeightValue" Text="200 px" Opacity="0.7" FontSize="11"/>
+                    <TextBlock x:Name="RectHeightValue" Text="200 px" Style="{StaticResource ValueStyle}"/>
 
                     <CheckBox x:Name="SquareCheckBox" Content="Square (sync width and height)"
                               Margin="0,4,0,0" Checked="SquareCheckBox_Changed" Unchecked="SquareCheckBox_Changed"/>
@@ -124,7 +133,7 @@
                 <TextBlock Text="Edge Softness" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="1" Value="0.2"
                         Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_ValueChanged"/>
-                <TextBlock x:Name="EdgeSoftnessValue" Text="0.20 (Soft)" Opacity="0.7" FontSize="11"/>
+                <TextBlock x:Name="EdgeSoftnessValue" Text="0.20 (Soft)" Style="{StaticResource ValueStyle}"/>
             </StackPanel>
 
             <!-- Comparison Mode (hidden for shape modes) -->
@@ -210,10 +219,9 @@
 
                     <!-- Intensity -->
                     <StackPanel x:Name="Zone0IntensityPanel" Visibility="Collapsed">
-                        <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock x:Name="Zone0IntensityLabel" Text="Intensity (1.00)" Style="{StaticResource LabelStyle}"/>
                         <Slider x:Name="Zone0IntensitySlider" Minimum="0" Maximum="1" Value="1"
                                 ValueChanged="Zone0Intensity_Changed"/>
-                        <TextBlock x:Name="Zone0IntensityValue" Text="1.00" Opacity="0.7" FontSize="11"/>
                     </StackPanel>
                 </StackPanel>
             </Expander>
@@ -280,7 +288,7 @@
                     </StackPanel>
 
                     <StackPanel x:Name="Zone1IntensityPanel" Visibility="Collapsed">
-                        <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                        <TextBlock x:Name="Zone1IntensityLabel" Text="Intensity (1.00)" Style="{StaticResource LabelStyle}"/>
                         <Slider x:Name="Zone1IntensitySlider" Minimum="0" Maximum="1" Value="1"
                                 ValueChanged="Zone1Intensity_Changed"/>
                     </StackPanel>

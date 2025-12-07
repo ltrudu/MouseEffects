@@ -30,6 +30,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             _presetManager.LoadCustomPresets();
             LoadConfiguration();
             PopulatePresetComboBoxes();
+            RestoreSavedPresetSelections();
             InitializeCorrectionEditors();
         }
     }
@@ -184,14 +185,26 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             ComparisonModeCheckBox.IsChecked = _effect.ComparisonMode;
 
             // Load shape settings
-            RadiusSlider.Value = _effect.Radius;
-            RadiusValue.Text = $"{_effect.Radius:F0} px";
-            RectWidthSlider.Value = _effect.RectWidth;
-            RectWidthValue.Text = $"{_effect.RectWidth:F0} px";
-            RectHeightSlider.Value = _effect.RectHeight;
-            RectHeightValue.Text = $"{_effect.RectHeight:F0} px";
-            EdgeSoftnessSlider.Value = _effect.EdgeSoftness;
-            UpdateEdgeSoftnessLabel();
+            if (RadiusSlider != null)
+            {
+                RadiusSlider.Value = _effect.Radius;
+                RadiusValue.Text = $"{_effect.Radius:F0} px";
+            }
+            if (RectWidthSlider != null)
+            {
+                RectWidthSlider.Value = _effect.RectWidth;
+                RectWidthValue.Text = $"{_effect.RectWidth:F0} px";
+            }
+            if (RectHeightSlider != null)
+            {
+                RectHeightSlider.Value = _effect.RectHeight;
+                RectHeightValue.Text = $"{_effect.RectHeight:F0} px";
+            }
+            if (EdgeSoftnessSlider != null)
+            {
+                EdgeSoftnessSlider.Value = _effect.EdgeSoftness;
+                UpdateEdgeSoftnessLabel();
+            }
 
             // Load zone 0 settings
             LoadZone0Settings();
@@ -233,6 +246,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone0SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone0SimFilterCombo.Items.Count - 1);
 
         Zone0IntensitySlider.Value = zone.Intensity;
+        Zone0IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
 
         // Channel settings are loaded via CorrectionEditor in InitializeCorrectionEditors()
     }
@@ -252,6 +266,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone1SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone1SimFilterCombo.Items.Count - 1);
 
         Zone1IntensitySlider.Value = zone.Intensity;
+        Zone1IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
     }
 
     #region UI Event Handlers
@@ -283,7 +298,8 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
     private void UpdateSplitModeUI(int splitMode)
     {
-        if (SplitPositionPanel == null) return;
+        // Guard against null controls during initialization
+        if (SplitPositionPanel == null || ShapeSettingsPanel == null) return;
 
         bool isSplit = splitMode > 0 && splitMode <= 3;
         bool isVerticalSplit = splitMode == 1;   // Left/Right - needs horizontal position slider
@@ -303,8 +319,10 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         // Shape settings panel
         ShapeSettingsPanel.Visibility = isShapeMode ? Visibility.Visible : Visibility.Collapsed;
-        CircleSettingsPanel.Visibility = isCircle ? Visibility.Visible : Visibility.Collapsed;
-        RectangleSettingsPanel.Visibility = isRectangle ? Visibility.Visible : Visibility.Collapsed;
+        if (CircleSettingsPanel != null)
+            CircleSettingsPanel.Visibility = isCircle ? Visibility.Visible : Visibility.Collapsed;
+        if (RectangleSettingsPanel != null)
+            RectangleSettingsPanel.Visibility = isRectangle ? Visibility.Visible : Visibility.Collapsed;
 
         // Update zone visibility (shape modes have 2 zones: inner and outer)
         bool hasMultipleZones = isSplit || isShapeMode;
@@ -512,7 +530,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         var zone = _effect.GetZone(0);
         zone.Intensity = (float)Zone0IntensitySlider.Value;
         _effect.Configuration.Set("zone0_intensity", zone.Intensity);
-        Zone0IntensityValue.Text = zone.Intensity.ToString("F2");
+        Zone0IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
     }
 
     private void Zone0ApplyPreset_Click(object sender, RoutedEventArgs e)
@@ -577,6 +595,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         var zone = _effect.GetZone(1);
         zone.Intensity = (float)Zone1IntensitySlider.Value;
         _effect.Configuration.Set("zone1_intensity", zone.Intensity);
+        Zone1IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
     }
 
     private void Zone1ApplyPreset_Click(object sender, RoutedEventArgs e)
@@ -692,11 +711,13 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         int selectedIndex = presetCombo.SelectedIndex;
         CorrectionPreset? preset = null;
+        string presetName = "Custom";
 
         if (selectedIndex < _builtInPresetCount)
         {
             // Built-in preset
             preset = CorrectionPresets.All[selectedIndex];
+            presetName = preset.Name;
         }
         else if (selectedIndex > _builtInPresetCount && _presetManager.CustomPresets.Count > 0)
         {
@@ -704,7 +725,9 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             int customIndex = selectedIndex - _builtInPresetCount - 1;
             if (customIndex >= 0 && customIndex < _presetManager.CustomPresets.Count)
             {
-                preset = _presetManager.CustomPresets[customIndex].ToCorrectionPreset();
+                var customPreset = _presetManager.CustomPresets[customIndex];
+                preset = customPreset.ToCorrectionPreset();
+                presetName = customPreset.Name;
             }
         }
 
@@ -712,6 +735,10 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         var zone = _effect.GetZone(zoneIndex);
         zone.ApplyPreset(preset);
+
+        // Save preset name and zone configuration to persist the selection
+        _effect.Configuration.Set($"zone{zoneIndex}_presetName", presetName);
+        SaveZoneConfiguration(zoneIndex);
     }
 
     /// <summary>
@@ -926,6 +953,86 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         }
 
         UpdateAllSaveButtonStates();
+    }
+
+    /// <summary>
+    /// Restores the saved preset selection for all zones after combo boxes are populated.
+    /// Falls back to Passthrough if a saved preset is not found.
+    /// </summary>
+    private void RestoreSavedPresetSelections()
+    {
+        if (_effect == null) return;
+
+        RestorePresetSelectionForZone(0, Zone0PresetCombo);
+        RestorePresetSelectionForZone(1, Zone1PresetCombo);
+        RestorePresetSelectionForZone(2, Zone2PresetCombo);
+        RestorePresetSelectionForZone(3, Zone3PresetCombo);
+    }
+
+    /// <summary>
+    /// Restores the saved preset selection for a specific zone.
+    /// </summary>
+    private void RestorePresetSelectionForZone(int zoneIndex, ComboBox presetCombo)
+    {
+        if (_effect == null) return;
+
+        string savedPresetName = _effect.Configuration.Get($"zone{zoneIndex}_presetName", "");
+        if (string.IsNullOrEmpty(savedPresetName))
+        {
+            // No saved preset, default to Custom (index 0)
+            presetCombo.SelectedIndex = 0;
+            return;
+        }
+
+        // Try to find the preset in the combo box
+        int foundIndex = FindPresetIndexByName(presetCombo, savedPresetName);
+
+        if (foundIndex >= 0)
+        {
+            // Found the preset, select it
+            presetCombo.SelectedIndex = foundIndex;
+        }
+        else
+        {
+            // Preset not found - show error and fall back to Passthrough
+            ShowTopmostMessageBox(
+                $"Preset \"{savedPresetName}\" not found. Falling back to \"Passthrough\".",
+                "Preset Not Found",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+
+            // Find and select Passthrough (should be at index 1)
+            int passthroughIndex = FindPresetIndexByName(presetCombo, "Passthrough");
+            presetCombo.SelectedIndex = passthroughIndex >= 0 ? passthroughIndex : 0;
+
+            // Clear the invalid saved preset name
+            _effect.Configuration.Set($"zone{zoneIndex}_presetName", "Passthrough");
+        }
+    }
+
+    /// <summary>
+    /// Finds the index of a preset by name in the combo box.
+    /// </summary>
+    private int FindPresetIndexByName(ComboBox presetCombo, string presetName)
+    {
+        if (presetCombo.ItemsSource == null) return -1;
+
+        var items = presetCombo.ItemsSource.Cast<object>().ToList();
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i] is Separator) continue;
+
+            if (items[i] is string itemName)
+            {
+                // Check for exact match (built-in) or custom preset match (prefixed with "* ")
+                if (itemName == presetName || itemName == $"* {presetName}")
+                {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>

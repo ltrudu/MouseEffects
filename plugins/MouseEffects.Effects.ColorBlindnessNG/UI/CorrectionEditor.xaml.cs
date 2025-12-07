@@ -48,7 +48,7 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             // Application mode
             AppModeCombo.SelectedIndex = (int)_zone.ApplicationMode;
             ThresholdSlider.Value = _zone.Threshold;
-            ThresholdValue.Text = _zone.Threshold.ToString("F2");
+            ThresholdLabel.Text = $"Threshold ({_zone.Threshold:F2})";
             ThresholdPanel.Visibility = _zone.ApplicationMode == ApplicationMode.Threshold
                 ? Visibility.Visible : Visibility.Collapsed;
 
@@ -58,7 +58,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             // Red channel
             RedEnabled.IsChecked = _zone.RedChannel.Enabled;
             RedStrength.Value = _zone.RedChannel.Strength;
+            RedStrengthLabel.Text = $"Strength ({_zone.RedChannel.Strength:F2})";
             RedWhiteProt.Value = _zone.RedChannel.WhiteProtection;
+            RedWhiteProtLabel.Text = $"White Protection ({_zone.RedChannel.WhiteProtection:F2})";
             RedStart.Background = new SolidColorBrush(Vector3ToColor(_zone.RedChannel.StartColor));
             RedEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.RedChannel.EndColor));
             RedPanel.Visibility = _zone.RedChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -66,7 +68,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             // Green channel
             GreenEnabled.IsChecked = _zone.GreenChannel.Enabled;
             GreenStrength.Value = _zone.GreenChannel.Strength;
+            GreenStrengthLabel.Text = $"Strength ({_zone.GreenChannel.Strength:F2})";
             GreenWhiteProt.Value = _zone.GreenChannel.WhiteProtection;
+            GreenWhiteProtLabel.Text = $"White Protection ({_zone.GreenChannel.WhiteProtection:F2})";
             GreenStart.Background = new SolidColorBrush(Vector3ToColor(_zone.GreenChannel.StartColor));
             GreenEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.GreenChannel.EndColor));
             GreenPanel.Visibility = _zone.GreenChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -74,7 +78,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             // Blue channel
             BlueEnabled.IsChecked = _zone.BlueChannel.Enabled;
             BlueStrength.Value = _zone.BlueChannel.Strength;
+            BlueStrengthLabel.Text = $"Strength ({_zone.BlueChannel.Strength:F2})";
             BlueWhiteProt.Value = _zone.BlueChannel.WhiteProtection;
+            BlueWhiteProtLabel.Text = $"White Protection ({_zone.BlueChannel.WhiteProtection:F2})";
             BlueStart.Background = new SolidColorBrush(Vector3ToColor(_zone.BlueChannel.StartColor));
             BlueEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.BlueChannel.EndColor));
             BluePanel.Visibility = _zone.BlueChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -142,7 +148,7 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         if (_isLoading || _zone == null) return;
 
         _zone.Threshold = (float)ThresholdSlider.Value;
-        ThresholdValue.Text = _zone.Threshold.ToString("F2");
+        ThresholdLabel.Text = $"Threshold ({_zone.Threshold:F2})";
 
         OnSettingsChanged();
     }
@@ -172,6 +178,14 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         _zone.BlueChannel.Enabled = BlueEnabled.IsChecked == true;
         _zone.BlueChannel.Strength = (float)BlueStrength.Value;
         _zone.BlueChannel.WhiteProtection = (float)BlueWhiteProt.Value;
+
+        // Update labels with current values
+        RedStrengthLabel.Text = $"Strength ({_zone.RedChannel.Strength:F2})";
+        RedWhiteProtLabel.Text = $"White Protection ({_zone.RedChannel.WhiteProtection:F2})";
+        GreenStrengthLabel.Text = $"Strength ({_zone.GreenChannel.Strength:F2})";
+        GreenWhiteProtLabel.Text = $"White Protection ({_zone.GreenChannel.WhiteProtection:F2})";
+        BlueStrengthLabel.Text = $"Strength ({_zone.BlueChannel.Strength:F2})";
+        BlueWhiteProtLabel.Text = $"White Protection ({_zone.BlueChannel.WhiteProtection:F2})";
 
         // Update panel visibility
         RedPanel.Visibility = _zone.RedChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;

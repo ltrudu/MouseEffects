@@ -610,12 +610,26 @@ public partial class SettingsWindow : Window
         // Hide instead of close to preserve window state
         e.Cancel = true;
         _fpsTimer.Stop();
+
+        // Remove topmost from settings window when hidden
+        Topmost = false;
+
+        // Resume overlay topmost enforcement
+        Program.ResumeTopmostEnforcement();
+
         Hide();
     }
 
     protected override void OnActivated(EventArgs e)
     {
         base.OnActivated(e);
+
+        // Suspend overlay topmost enforcement so settings window can stay on top
+        Program.SuspendTopmostEnforcement();
+
+        // Make settings window topmost so it appears above the overlay
+        Topmost = true;
+
         // Restart FPS timer when window becomes visible (if enabled)
         if (Program.Settings.ShowFpsCounter)
         {

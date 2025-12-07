@@ -59,7 +59,7 @@ public class ChannelLUTSettings
     public float Strength { get; set; } = 1.0f;
     public Vector3 StartColor { get; set; } = new(1, 0, 0);
     public Vector3 EndColor { get; set; } = new(0, 1, 1);
-    public float WhiteProtection { get; set; } = 0.0f;
+    public float WhiteProtection { get; set; } = 0.01f;
 }
 
 /// <summary>

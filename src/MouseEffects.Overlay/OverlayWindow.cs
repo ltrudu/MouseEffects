@@ -169,24 +169,70 @@ public sealed class OverlayWindow : IDisposable
 
     /// <summary>
     /// Resume topmost state after modal dialog is closed.
+    /// This ensures the overlay is brought back to the front of the Z-order.
     /// </summary>
     public void ResumeTopmost()
     {
         if (_topmostSuspended)
         {
             _topmostSuspended = false;
-            ApplyTopmostState(_isTopmost);
+            if (_isTopmost)
+            {
+                // Aggressive approach to force overlay to front:
+                // 1. First remove topmost to reset Z-order state
+                NativeMethods.SetWindowPos(
+                    _hwnd,
+                    NativeMethods.HWND_NOTOPMOST,
+                    0, 0, 0, 0,
+                    NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
+                );
+
+                // 2. Bring window to top of Z-order
+                NativeMethods.BringWindowToTop(_hwnd);
+
+                // 3. Re-apply topmost with SHOWWINDOW flag to force refresh
+                NativeMethods.SetWindowPos(
+                    _hwnd,
+                    NativeMethods.HWND_TOPMOST,
+                    0, 0, 0, 0,
+                    NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW
+                );
+
+                // 4. Force window to redraw and update
+                NativeMethods.UpdateWindow(_hwnd);
+            }
+            else
+            {
+                ApplyTopmostState(false);
+            }
         }
     }
 
     /// <summary>
     /// Re-apply topmost state. Call periodically to ensure overlay stays on top.
+    /// Uses aggressive approach to force window to front of Z-order.
     /// </summary>
     public void EnforceTopmost()
     {
         if (!_topmostSuspended && _isTopmost)
         {
-            ApplyTopmostState(true);
+            // Aggressive enforcement: cycle topmost state to force Z-order recalculation
+            // This ensures the overlay stays on top even if other topmost windows appear
+            NativeMethods.SetWindowPos(
+                _hwnd,
+                NativeMethods.HWND_NOTOPMOST,
+                0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
+            );
+
+            NativeMethods.BringWindowToTop(_hwnd);
+
+            NativeMethods.SetWindowPos(
+                _hwnd,
+                NativeMethods.HWND_TOPMOST,
+                0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW
+            );
         }
     }
 
