@@ -248,6 +248,17 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone0IntensitySlider.Value = zone.Intensity;
         Zone0IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
 
+        // Simulation-guided correction settings
+        Zone0SimGuidedCheckBox.IsChecked = zone.SimulationGuidedEnabled;
+        Zone0SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone0SimGuidedMachadoRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Machado;
+        Zone0SimGuidedStrictRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Strict;
+        // Map filter type to combo index (1-6 -> 0-5, 13-14 -> 6-7)
+        int simGuidedFilterIndex = zone.SimulationGuidedFilterType;
+        if (simGuidedFilterIndex >= 13) simGuidedFilterIndex = simGuidedFilterIndex - 7; // 13->6, 14->7
+        else if (simGuidedFilterIndex >= 1) simGuidedFilterIndex = simGuidedFilterIndex - 1; // 1->0, 6->5
+        Zone0SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone0SimGuidedFilterCombo.Items.Count - 1));
+
         // Channel settings are loaded via CorrectionEditor in InitializeCorrectionEditors()
     }
 
@@ -267,6 +278,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         Zone1IntensitySlider.Value = zone.Intensity;
         Zone1IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
+
+        // Simulation-guided correction settings
+        Zone1SimGuidedCheckBox.IsChecked = zone.SimulationGuidedEnabled;
+        Zone1SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone1SimGuidedMachadoRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Machado;
+        Zone1SimGuidedStrictRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Strict;
+        int simGuidedFilterIndex = zone.SimulationGuidedFilterType;
+        if (simGuidedFilterIndex >= 13) simGuidedFilterIndex = simGuidedFilterIndex - 7;
+        else if (simGuidedFilterIndex >= 1) simGuidedFilterIndex = simGuidedFilterIndex - 1;
+        Zone1SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone1SimGuidedFilterCombo.Items.Count - 1));
     }
 
     #region UI Event Handlers
@@ -687,6 +708,155 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     private void Zone3SavePreset_Click(object sender, RoutedEventArgs e) => SavePresetForZone(3, Zone3PresetCombo);
     private void Zone3ExportPreset_Click(object sender, RoutedEventArgs e) => ExportPresetForZone(Zone3PresetCombo);
     private void Zone3ImportPreset_Click(object sender, RoutedEventArgs e) => ImportPreset();
+
+    #endregion
+
+    #region Simulation-Guided Correction Event Handlers
+
+    // Zone 0
+    private void Zone0SimGuided_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.SimulationGuidedEnabled = Zone0SimGuidedCheckBox.IsChecked == true;
+        Zone0SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone0_simGuidedEnabled", zone.SimulationGuidedEnabled);
+    }
+
+    private void Zone0SimGuidedAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.SimulationGuidedAlgorithm = Zone0SimGuidedStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone0_simGuidedAlgorithm", (int)zone.SimulationGuidedAlgorithm);
+    }
+
+    private void Zone0SimGuidedFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        int index = Zone0SimGuidedFilterCombo.SelectedIndex;
+        // Map combo index (0-7) to filter type (1-8 for Machado, then 13-14 for Achro)
+        if (index <= 5)
+            zone.SimulationGuidedFilterType = index + 1; // 1-6
+        else
+            zone.SimulationGuidedFilterType = index + 7; // 7->13, 8->14
+
+        _effect.Configuration.Set("zone0_simGuidedFilterType", zone.SimulationGuidedFilterType);
+    }
+
+    // Zone 1
+    private void Zone1SimGuided_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.SimulationGuidedEnabled = Zone1SimGuidedCheckBox.IsChecked == true;
+        Zone1SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone1_simGuidedEnabled", zone.SimulationGuidedEnabled);
+    }
+
+    private void Zone1SimGuidedAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.SimulationGuidedAlgorithm = Zone1SimGuidedStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone1_simGuidedAlgorithm", (int)zone.SimulationGuidedAlgorithm);
+    }
+
+    private void Zone1SimGuidedFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        int index = Zone1SimGuidedFilterCombo.SelectedIndex;
+        if (index <= 5)
+            zone.SimulationGuidedFilterType = index + 1;
+        else
+            zone.SimulationGuidedFilterType = index + 7;
+
+        _effect.Configuration.Set("zone1_simGuidedFilterType", zone.SimulationGuidedFilterType);
+    }
+
+    // Zone 2
+    private void Zone2SimGuided_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.SimulationGuidedEnabled = Zone2SimGuidedCheckBox.IsChecked == true;
+        Zone2SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone2_simGuidedEnabled", zone.SimulationGuidedEnabled);
+    }
+
+    private void Zone2SimGuidedAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.SimulationGuidedAlgorithm = Zone2SimGuidedStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone2_simGuidedAlgorithm", (int)zone.SimulationGuidedAlgorithm);
+    }
+
+    private void Zone2SimGuidedFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        int index = Zone2SimGuidedFilterCombo.SelectedIndex;
+        if (index <= 5)
+            zone.SimulationGuidedFilterType = index + 1;
+        else
+            zone.SimulationGuidedFilterType = index + 7;
+
+        _effect.Configuration.Set("zone2_simGuidedFilterType", zone.SimulationGuidedFilterType);
+    }
+
+    // Zone 3
+    private void Zone3SimGuided_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.SimulationGuidedEnabled = Zone3SimGuidedCheckBox.IsChecked == true;
+        Zone3SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone3_simGuidedEnabled", zone.SimulationGuidedEnabled);
+    }
+
+    private void Zone3SimGuidedAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.SimulationGuidedAlgorithm = Zone3SimGuidedStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone3_simGuidedAlgorithm", (int)zone.SimulationGuidedAlgorithm);
+    }
+
+    private void Zone3SimGuidedFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        int index = Zone3SimGuidedFilterCombo.SelectedIndex;
+        if (index <= 5)
+            zone.SimulationGuidedFilterType = index + 1;
+        else
+            zone.SimulationGuidedFilterType = index + 7;
+
+        _effect.Configuration.Set("zone3_simGuidedFilterType", zone.SimulationGuidedFilterType);
+    }
 
     #endregion
 

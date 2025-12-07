@@ -214,6 +214,35 @@
                                     Click="ImportPresetButton_Click" Padding="8,4"
                                     ToolTip="Import preset from file"/>
                         </StackPanel>
+
+                        <!-- Simulation-Guided Correction -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone0SimGuidedCheckBox" Content="Simulation-Guided Correction"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Only apply correction to pixels that would be affected by CVD (detected via simulation)"
+                                  Checked="Zone0SimGuided_Changed" Unchecked="Zone0SimGuided_Changed"/>
+                        <StackPanel x:Name="Zone0SimGuidedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Detection Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone0SimGuidedMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone0SimGuidedAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone0SimGuidedStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone0SimGuidedAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Detect" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone0SimGuidedFilterCombo" SelectionChanged="Zone0SimGuidedFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <Separator Margin="0,8,0,8"/>
+
                         <local:CorrectionEditor x:Name="Zone0CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
 
@@ -284,6 +313,35 @@
                             <Button x:Name="Zone1ImportPresetButton" Content="Import"
                                     Click="Zone1ImportPreset_Click" Padding="8,4"/>
                         </StackPanel>
+
+                        <!-- Simulation-Guided Correction -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone1SimGuidedCheckBox" Content="Simulation-Guided Correction"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Only apply correction to pixels that would be affected by CVD"
+                                  Checked="Zone1SimGuided_Changed" Unchecked="Zone1SimGuided_Changed"/>
+                        <StackPanel x:Name="Zone1SimGuidedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Detection Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone1SimGuidedMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone1SimGuidedAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone1SimGuidedStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone1SimGuidedAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Detect" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone1SimGuidedFilterCombo" SelectionChanged="Zone1SimGuidedFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <Separator Margin="0,8,0,8"/>
+
                         <local:CorrectionEditor x:Name="Zone1CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
 
@@ -339,6 +397,34 @@
                             <Button x:Name="Zone2ImportPresetButton" Content="Import"
                                     Click="Zone2ImportPreset_Click" Padding="8,4"/>
                         </StackPanel>
+
+                        <!-- Simulation-Guided Correction -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone2SimGuidedCheckBox" Content="Simulation-Guided Correction"
+                                  Margin="0,0,0,4"
+                                  Checked="Zone2SimGuided_Changed" Unchecked="Zone2SimGuided_Changed"/>
+                        <StackPanel x:Name="Zone2SimGuidedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Detection Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone2SimGuidedMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone2SimGuidedAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone2SimGuidedStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone2SimGuidedAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Detect" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone2SimGuidedFilterCombo" SelectionChanged="Zone2SimGuidedFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <Separator Margin="0,8,0,8"/>
+
                         <local:CorrectionEditor x:Name="Zone2CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
                 </StackPanel>
@@ -388,6 +474,34 @@
                             <Button x:Name="Zone3ImportPresetButton" Content="Import"
                                     Click="Zone3ImportPreset_Click" Padding="8,4"/>
                         </StackPanel>
+
+                        <!-- Simulation-Guided Correction -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone3SimGuidedCheckBox" Content="Simulation-Guided Correction"
+                                  Margin="0,0,0,4"
+                                  Checked="Zone3SimGuided_Changed" Unchecked="Zone3SimGuided_Changed"/>
+                        <StackPanel x:Name="Zone3SimGuidedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Detection Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone3SimGuidedMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone3SimGuidedAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone3SimGuidedStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone3SimGuidedAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Detect" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone3SimGuidedFilterCombo" SelectionChanged="Zone3SimGuidedFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <Separator Margin="0,8,0,8"/>
+
                         <local:CorrectionEditor x:Name="Zone3CorrectionEditor" Margin="0,8,0,0"/>
                     </StackPanel>
                 </StackPanel>

@@ -57,6 +57,25 @@ public class ZoneSettings
     /// </summary>
     public float Intensity { get; set; } = 1.0f;
 
+    // ============ Simulation-Guided Correction Settings ============
+
+    /// <summary>
+    /// When enabled, uses CVD simulation to detect which pixels are affected
+    /// and applies LUT correction only to those pixels (proportionally to error magnitude).
+    /// </summary>
+    public bool SimulationGuidedEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Algorithm to use for simulation-guided detection.
+    /// </summary>
+    public SimulationAlgorithm SimulationGuidedAlgorithm { get; set; } = SimulationAlgorithm.Machado;
+
+    /// <summary>
+    /// CVD filter type for simulation-guided detection (1-6=Machado, 7-12=Strict, 13-14=Achro).
+    /// This determines which type of color blindness to detect/correct for.
+    /// </summary>
+    public int SimulationGuidedFilterType { get; set; } = 3; // Deuteranopia by default
+
     // ============ Per-Channel LUT Settings ============
 
     /// <summary>
@@ -105,6 +124,9 @@ public class ZoneSettings
             GradientType = GradientType,
             Threshold = Threshold,
             Intensity = Intensity,
+            SimulationGuidedEnabled = SimulationGuidedEnabled,
+            SimulationGuidedAlgorithm = SimulationGuidedAlgorithm,
+            SimulationGuidedFilterType = SimulationGuidedFilterType,
             LutsNeedUpdate = LutsNeedUpdate
         };
 

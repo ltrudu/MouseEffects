@@ -381,6 +381,14 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         if (Configuration.TryGet($"{prefix}intensity", out float intensity))
             z.Intensity = intensity;
 
+        // Simulation-guided correction settings
+        if (Configuration.TryGet($"{prefix}simGuidedEnabled", out bool simGuidedEnabled))
+            z.SimulationGuidedEnabled = simGuidedEnabled;
+        if (Configuration.TryGet($"{prefix}simGuidedAlgorithm", out int simGuidedAlgorithm))
+            z.SimulationGuidedAlgorithm = (SimulationAlgorithm)simGuidedAlgorithm;
+        if (Configuration.TryGet($"{prefix}simGuidedFilterType", out int simGuidedFilterType))
+            z.SimulationGuidedFilterType = simGuidedFilterType;
+
         // Red channel
         bool needsUpdate = z.LutsNeedUpdate;
         LoadChannelConfiguration(z.RedChannel, $"{prefix}red", ref needsUpdate);
@@ -537,6 +545,14 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 effectiveFilterType = z.SimulationFilterType + 6;
             }
 
+            // Calculate effective filter type for simulation-guided correction
+            int effectiveSimGuidedFilterType = z.SimulationGuidedFilterType;
+            if (z.SimulationGuidedAlgorithm == SimulationAlgorithm.Strict &&
+                z.SimulationGuidedFilterType > 0 && z.SimulationGuidedFilterType <= 6)
+            {
+                effectiveSimGuidedFilterType = z.SimulationGuidedFilterType + 6;
+            }
+
             var zoneParams = new ZoneParams
             {
                 Mode = (float)z.Mode,
@@ -553,8 +569,8 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 BlueEnabled = z.BlueChannel.Enabled ? 1.0f : 0.0f,
                 BlueStrength = z.BlueChannel.Strength,
                 BlueWhiteProtection = z.BlueChannel.WhiteProtection,
-                Padding1 = 0,
-                Padding2 = 0
+                SimulationGuidedEnabled = z.SimulationGuidedEnabled ? 1.0f : 0.0f,
+                SimulationGuidedFilterType = effectiveSimGuidedFilterType
             };
 
             switch (i)
@@ -630,8 +646,8 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
         public float BlueStrength;         // Blue channel strength
         public float BlueWhiteProtection;  // Blue white protection
-        public float Padding1;             // Padding
-        public float Padding2;             // Padding
+        public float SimulationGuidedEnabled;    // 1.0 = use simulation to detect affected pixels
+        public float SimulationGuidedFilterType; // CVD type for detection
     }
 
     /// <summary>

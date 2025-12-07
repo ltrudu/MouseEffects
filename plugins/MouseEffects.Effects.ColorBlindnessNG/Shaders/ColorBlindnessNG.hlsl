@@ -35,8 +35,8 @@ struct ZoneParams
 
     float BlueStrength;         // Blue channel strength
     float BlueWhiteProtection;  // Blue white protection
-    float _padding1;
-    float _padding2;
+    float SimulationGuidedEnabled;   // 1.0 = use simulation to detect affected pixels
+    float SimulationGuidedFilterType; // CVD type for detection (0=None, 1-6=Machado, 7-12=Strict)
 };
 
 // ============================================================================
@@ -333,6 +333,74 @@ float3 ApplySimulation(float3 color, float cvdType)
 }
 
 // ============================================================================
+// Simulation-Guided Correction Detection
+// ============================================================================
+// Calculates the per-channel "error" between original and simulated colors.
+// Returns a weight (0-1) for each channel indicating how much correction to apply.
+// Only positive errors (lost colors) are considered for correction.
+
+float3 GetSimulationError(float3 color, float cvdType)
+{
+    if (cvdType < 0.5) return float3(0.0, 0.0, 0.0);
+
+    float3 linearRGB = sRGBToLinear3(color);
+    float3 simLinearRGB;
+
+    // Simulate based on CVD type
+    if (cvdType < 6.5)
+    {
+        simLinearRGB = SimulateMachado(linearRGB, cvdType);
+    }
+    else if (cvdType < 12.5)
+    {
+        simLinearRGB = SimulateStrict(linearRGB, cvdType);
+    }
+    else if (cvdType < 13.5) // Achromatopsia
+    {
+        float gray = dot(linearRGB, GrayscaleWeights);
+        simLinearRGB = float3(gray, gray, gray);
+    }
+    else if (cvdType < 14.5) // Achromatomaly
+    {
+        float gray = dot(linearRGB, GrayscaleWeights);
+        simLinearRGB = lerp(float3(gray, gray, gray), linearRGB, 0.3);
+    }
+    else
+    {
+        return float3(0.0, 0.0, 0.0);
+    }
+
+    simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
+
+    // Calculate error: positive values indicate color lost in simulation
+    float3 error = linearRGB - simLinearRGB;
+
+    // Return only positive errors (colors that were lost/reduced in simulation)
+    // These are the colors that need correction
+    return max(float3(0.0, 0.0, 0.0), error);
+}
+
+// Calculates a blend weight for simulation-guided correction.
+// Returns a value 0-1 indicating how much of the LUT correction to apply.
+// Higher error = more correction applied.
+float GetSimulationGuidedWeight(float3 color, float cvdType)
+{
+    float3 error = GetSimulationError(color, cvdType);
+
+    // Calculate the total error magnitude
+    // Using max instead of sum to get the dominant error channel
+    float errorMagnitude = max(max(error.r, error.g), error.b);
+
+    // Scale error to 0-1 range with a sensitivity curve
+    // Small errors get less correction, large errors get full correction
+    // This prevents over-correction on nearly-unaffected colors
+    float weight = saturate(errorMagnitude * 2.0);
+
+    // Apply smoothstep for a more natural transition
+    return smoothstep(0.0, 1.0, weight);
+}
+
+// ============================================================================
 // LUT Correction Functions
 // ============================================================================
 
@@ -352,6 +420,16 @@ float GetWhiteProtectionFactor(float3 color, float threshold)
 float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
 {
     float3 result = color;
+
+    // Calculate simulation-guided weight if enabled
+    float simWeight = 1.0;
+    if (zone.SimulationGuidedEnabled > 0.5)
+    {
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        // If no significant error detected, skip correction entirely
+        if (simWeight < 0.001)
+            return color;
+    }
 
     bool applyRed = false;
     bool applyGreen = false;
@@ -380,6 +458,8 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone0_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
+        // Apply simulation-guided weight to modulate correction strength
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
     }
 
@@ -387,6 +467,7 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone0_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
     }
 
@@ -394,6 +475,7 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone0_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
     }
 
@@ -403,6 +485,15 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
 float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
 {
     float3 result = color;
+
+    // Calculate simulation-guided weight if enabled
+    float simWeight = 1.0;
+    if (zone.SimulationGuidedEnabled > 0.5)
+    {
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        if (simWeight < 0.001)
+            return color;
+    }
 
     bool applyRed = false;
     bool applyGreen = false;
@@ -431,6 +522,7 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone1_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
     }
 
@@ -438,6 +530,7 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone1_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
     }
 
@@ -445,6 +538,7 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone1_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
     }
 
@@ -454,6 +548,15 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
 float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
 {
     float3 result = color;
+
+    // Calculate simulation-guided weight if enabled
+    float simWeight = 1.0;
+    if (zone.SimulationGuidedEnabled > 0.5)
+    {
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        if (simWeight < 0.001)
+            return color;
+    }
 
     bool applyRed = false;
     bool applyGreen = false;
@@ -482,6 +585,7 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone2_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
     }
 
@@ -489,6 +593,7 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone2_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
     }
 
@@ -496,6 +601,7 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone2_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
     }
 
@@ -505,6 +611,15 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
 float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
 {
     float3 result = color;
+
+    // Calculate simulation-guided weight if enabled
+    float simWeight = 1.0;
+    if (zone.SimulationGuidedEnabled > 0.5)
+    {
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        if (simWeight < 0.001)
+            return color;
+    }
 
     bool applyRed = false;
     bool applyGreen = false;
@@ -533,6 +648,7 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone3_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
     }
 
@@ -540,6 +656,7 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone3_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
     }
 
@@ -547,6 +664,7 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
     {
         float3 lutColor = Zone3_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
+        effectiveStrength *= simWeight;
         result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
     }
 

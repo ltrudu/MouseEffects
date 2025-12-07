@@ -1108,3 +1108,233 @@ Output Corrected Color (R', G', B')
 | **Linear RGB** | Simple linear interpolation - fast, may have muddy midtones |
 | **Perceptual LAB** | Interpolate in LAB color space - perceptually uniform gradient |
 | **HSL** | Interpolate through hue - more vibrant gradient |
+
+---
+
+# Session State: 2025-12-07 (Simulation-Guided Correction)
+
+## Completed Tasks
+
+### Added Simulation-Guided Correction Mode to ColorBlindnessNG
+
+Implemented a new optional mode for correction filters that uses CVD simulation to detect which pixels are affected before applying LUT correction.
+
+**How It Works:**
+1. When enabled, the shader first simulates the selected CVD type on the original pixel
+2. Calculates the error between original and simulated colors
+3. Uses the error magnitude to determine a blend weight (0-1)
+4. Applies the LUT correction proportionally to the detected error
+5. Pixels with no CVD-related color loss receive no correction
+
+**Key Principle:** Only corrects pixels that would actually be affected by CVD, leaving unaffected colors unchanged.
+
+**Files Modified:**
+
+1. **ColorBlindnessNG.hlsl** (`plugins/MouseEffects.Effects.ColorBlindnessNG/Shaders/`)
+   - Added `SimulationGuidedEnabled` and `SimulationGuidedFilterType` to ZoneParams struct
+   - Added `GetSimulationError()` function - calculates per-channel error between original and simulated
+   - Added `GetSimulationGuidedWeight()` function - converts error to 0-1 blend weight
+   - Updated all 4 `ApplyLUTCorrectionZoneX()` functions to check for simulation-guided mode
+   - When enabled, modulates LUT correction strength by the simulation weight
+
+2. **ZoneSettings.cs** (`plugins/MouseEffects.Effects.ColorBlindnessNG/`)
+   - Added `SimulationGuidedEnabled` (bool) - enables simulation-guided detection
+   - Added `SimulationGuidedAlgorithm` (SimulationAlgorithm) - Machado or Strict
+   - Added `SimulationGuidedFilterType` (int) - CVD type to detect (1-6=Machado, 7-12=Strict, 13-14=Achro)
+   - Updated `Clone()` method to copy new properties
+
+3. **ColorBlindnessNGEffect.cs** (`plugins/MouseEffects.Effects.ColorBlindnessNG/`)
+   - Updated `ZoneParams` struct with `SimulationGuidedEnabled` and `SimulationGuidedFilterType` fields
+   - Updated `BuildConstantBuffer()` to calculate effective filter type and pass to shader
+   - Added configuration loading for `simGuidedEnabled`, `simGuidedAlgorithm`, `simGuidedFilterType`
+
+4. **ColorBlindnessNGSettingsControl.xaml** (`plugins/MouseEffects.Effects.ColorBlindnessNG/UI/`)
+   - Added Simulation-Guided Correction checkbox and settings panel to all 4 zones
+   - Panel includes: Algorithm selection (Machado/Strict), CVD Type dropdown
+   - CVD Type entries include color descriptions: "Protanopia (Red-Green blind)", etc.
+   - Panel visibility toggles based on checkbox state
+
+5. **ColorBlindnessNGSettingsControl.xaml.cs** (`plugins/MouseEffects.Effects.ColorBlindnessNG/UI/`)
+   - Added event handlers for all 4 zones: `Zone0SimGuided_Changed`, `Zone0SimGuidedAlgorithm_Changed`, `Zone0SimGuidedFilter_Changed`, etc.
+   - Updated `LoadZone0Settings()` and `LoadZone1Settings()` to restore simulation-guided settings
+   - Settings are persisted to configuration
+
+**UI Flow:**
+```
+Correction Mode > [x] Simulation-Guided Correction
+                      > Algorithm: ( ) Machado  (x) Strict
+                      > CVD Type:  [ Deuteranopia (Green-Red blind) v ]
+```
+
+**Technical Details:**
+
+The simulation-guided weight calculation:
+```hlsl
+float3 GetSimulationError(float3 color, float cvdType) {
+    float3 simLinearRGB = Simulate(linearRGB, cvdType);
+    float3 error = linearRGB - simLinearRGB;
+    return max(float3(0.0, 0.0, 0.0), error);  // Only positive errors
+}
+
+float GetSimulationGuidedWeight(float3 color, float cvdType) {
+    float3 error = GetSimulationError(color, cvdType);
+    float errorMagnitude = max(max(error.r, error.g), error.b);
+    float weight = saturate(errorMagnitude * 2.0);  // Scale to 0-1
+    return smoothstep(0.0, 1.0, weight);  // Smooth transition
+}
+```
+
+In the LUT correction functions:
+```hlsl
+float simWeight = 1.0;
+if (zone.SimulationGuidedEnabled > 0.5) {
+    simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+    if (simWeight < 0.001) return color;  // No correction needed
+}
+
+// Apply LUT with modulated strength
+effectiveStrength *= simWeight;
+```
+
+**Build Status:**
+- Build succeeded (0 errors, 1 pre-existing warning)
+
+---
+
+# Session State: 2025-12-07
+
+## Completed Tasks
+
+### 1. Fixed Overlay Topmost Issue
+
+**Problem**: When settings window or modal dialogs were opened and closed, other windows (e.g., Visual Studio) would appear on top of the overlay.
+
+**Solution**: Implemented a multi-layered approach:
+
+1. **Settings Window & Dialogs Set Themselves Topmost**
+   - Instead of suspending overlay topmost, make dialogs topmost to appear above overlay
+   - `SettingsWindow.xaml.cs`: Sets `Topmost = true` in `OnActivated()`
+
+2. **Topmost Enforcement Suspension**
+   - Added `SuspendTopmostEnforcement()` and `ResumeTopmostEnforcement()` to `OverlayManager`
+   - `GameLoop` checks `IsTopmostEnforcementSuspended` before enforcing
+   - Only `SettingsWindow` controls enforcement (not modal dialogs)
+
+3. **WinEventHook for Dialog Topmost**
+   - `DialogHelper.WithSuspendedTopmost()` uses `SetWinEventHook(EVENT_OBJECT_CREATE)` to catch new windows
+   - Automatically makes popup/dialog windows topmost without affecting enforcement
+
+4. **More Aggressive EnforceTopmost**
+   - `OverlayWindow.EnforceTopmost()` now cycles HWND_NOTOPMOST → BringWindowToTop → HWND_TOPMOST
+   - Added `SWP_SHOWWINDOW` flag for better z-order control
+
+**Files Modified:**
+- `src/MouseEffects.Core/UI/DialogHelper.cs` - WinEventHook implementation
+- `src/MouseEffects.App/OverlayManager.cs` - Enforcement suspension methods
+- `src/MouseEffects.App/Program.cs` - Static methods to access OverlayManager
+- `src/MouseEffects.App/UI/SettingsWindow.xaml.cs` - Suspend/resume on activate/close
+- `src/MouseEffects.App/GameLoop.cs` - Check suspension before enforcing
+- `src/MouseEffects.Overlay/OverlayWindow.cs` - Aggressive EnforceTopmost
+- `src/MouseEffects.Overlay/Win32/NativeMethods.cs` - Added BringWindowToTop, SetForegroundWindow
+
+### 2. White Protection Minimum Value
+
+**Change**: Set minimum value for white protection sliders to 0.01 (was 0.00)
+
+**Files Modified:**
+- `plugins/MouseEffects.Effects.ColorBlindnessNG/UI/CorrectionEditor.xaml` - Slider Minimum="0.01"
+- `plugins/MouseEffects.Effects.ColorBlindnessNG/ColorBlindnessNGEffect.cs` - ChannelLUTSettings default 0.01f
+- `plugins/MouseEffects.Effects.ColorBlindnessNG/CorrectionPresets.cs` - All preset WhiteProtection defaults 0.01f
+
+### 3. Preset Persistence for ColorBlindnessNG
+
+**Problem**: When selecting a custom preset and relaunching the app, "Custom" was selected instead of the saved preset.
+
+**Solution**:
+1. **Saving**: `ApplyPresetToZone()` now saves preset name to configuration:
+   ```csharp
+   _effect.Configuration.Set($"zone{zoneIndex}_presetName", presetName);
+   ```
+
+2. **Loading**: Added `RestoreSavedPresetSelections()` called after `PopulatePresetComboBoxes()`:
+   - Reads saved preset name from configuration
+   - Finds matching preset in combo (built-in or custom with "* " prefix)
+   - Selects it in the combo box
+
+3. **Fallback**: If saved preset not found:
+   - Shows error message: "Preset 'name' not found. Falling back to 'Passthrough'."
+   - Selects "Passthrough" preset
+   - Clears invalid saved preset name
+
+**Files Modified:**
+- `plugins/MouseEffects.Effects.ColorBlindnessNG/UI/ColorBlindnessNGSettingsControl.xaml.cs`:
+  - Added `RestoreSavedPresetSelections()`
+  - Added `RestorePresetSelectionForZone()`
+  - Added `FindPresetIndexByName()`
+  - Updated `OnLoaded()` to call restoration
+  - Updated `ApplyPresetToZone()` to save preset name
+
+### 4. Circle and Rectangle Display Modes (Previous Session)
+
+Added Circle and Rectangle display modes to ColorBlindnessNG:
+- **Circle Mode**: Circular shape centered on mouse cursor with configurable radius
+- **Rectangle Mode**: Rectangular shape with width/height and Square checkbox
+- **Edge Softness**: Configurable blend between inner and outer zones (0=hard, 1=soft)
+- **Zones**: Inner zone (inside shape) and Outer zone (outside shape) with full configuration
+
+**Files Modified:**
+- `ColorBlindnessNGEffect.cs` - SplitMode enum, shape properties, constant buffer
+- `ColorBlindnessNG.hlsl` - GetZoneInfo with circle/rectangle distance calculation
+- `ColorBlindnessNGSettingsControl.xaml` - Shape settings panel
+- `ColorBlindnessNGSettingsControl.xaml.cs` - Event handlers for shape controls
+
+## Build Status
+
+- **Last Build**: Successful (0 warnings, 0 errors)
+- **ColorBlindnessNG Plugin**: Builds independently
+
+## Pending Commit
+
+13 files modified with ~411 insertions, ~80 deletions:
+- Overlay topmost fixes
+- Preset persistence
+- White protection minimum
+- Circle/Rectangle modes
+
+## Technical Notes
+
+### DialogHelper WinEventHook Pattern
+```csharp
+private sealed class TopmostDialogHook : IDisposable
+{
+    public TopmostDialogHook()
+    {
+        _callback = WinEventProc;
+        _hook = SetWinEventHook(EVENT_OBJECT_CREATE, EVENT_OBJECT_CREATE,
+            nint.Zero, _callback, 0, 0, WINEVENT_OUTOFCONTEXT);
+    }
+
+    private void WinEventProc(nint hWinEventHook, uint eventType, nint hwnd, ...)
+    {
+        // Check if popup or dialog, make topmost
+        if ((isPopup || isDialog) && !isToolWindow)
+        {
+            SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+        }
+    }
+}
+```
+
+### Preset Restoration Flow
+```
+OnLoaded()
+  → LoadConfiguration()
+  → PopulatePresetComboBoxes()
+  → RestoreSavedPresetSelections()
+      → For each zone:
+          → Read zone{N}_presetName from config
+          → FindPresetIndexByName() in combo
+          → If found: select it
+          → If not found: show error, select Passthrough
+  → InitializeCorrectionEditors()
+```
