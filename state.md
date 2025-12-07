@@ -1334,7 +1334,270 @@ OnLoaded()
       → For each zone:
           → Read zone{N}_presetName from config
           → FindPresetIndexByName() in combo
-          → If found: select it
+          → If found: select it AND apply preset values
           → If not found: show error, select Passthrough
   → InitializeCorrectionEditors()
 ```
+
+---
+
+# Session State: 2025-12-07 (Configuration Fixes & Sensitivity Parameter)
+
+## Completed Tasks
+
+### 1. Added Sensitivity Parameter to Simulation-Guided Correction
+
+**Purpose**: Control how aggressively the simulation-guided detection identifies affected pixels.
+
+**Changes:**
+- **Shader (ColorBlindnessNG.hlsl)**:
+  - Added `SimulationGuidedSensitivity` to ZoneParams struct (expanded from 64 to 80 bytes)
+  - Updated `GetSimulationGuidedWeight()` to accept sensitivity parameter
+  - Sensitivity multiplies error magnitude: lower (0.5) = conservative, higher (5.0) = aggressive
+  - Default is 2.0 for balanced detection
+  - Updated all 4 zone LUT correction functions to pass sensitivity
+
+- **C# Code (ZoneSettings.cs)**:
+  - Added `SimulationGuidedSensitivity` property with default 2.0f
+  - Updated `Clone()` method
+
+- **Effect (ColorBlindnessNGEffect.cs)**:
+  - Updated `ZoneParams` struct (now 80 bytes with padding)
+  - Updated `ColorBlindnessNGParams` size from 304 to 368 bytes
+  - Added sensitivity to constant buffer and config loading
+
+- **UI (ColorBlindnessNGSettingsControl.xaml/.cs)**:
+  - Added sensitivity slider (0.5-5.0) with label for all 4 zones
+  - Added event handlers and config persistence
+
+### 2. Fixed PresetManager Saving to Wrong Location
+
+**Problem**: Custom presets were saved next to the plugin DLL instead of in AppData.
+
+**Fix** (PresetManager.cs):
+```csharp
+// Before: var pluginDir = Path.GetDirectoryName(typeof(PresetManager).Assembly.Location);
+// After:
+var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+_presetsFolder = Path.Combine(appDataFolder, "MouseEffects", "plugins", "ColorBlindnessNG_Presets");
+```
+
+### 3. Fixed WhiteProtection Configuration Key Mismatch
+
+**Problem**: UI saved with abbreviated keys but Effect loaded with full keys.
+
+| Save Key (UI) | Load Key (Effect) | Match? |
+|---------------|-------------------|--------|
+| `redWhiteProt` | `redWhiteProtection` | ❌ |
+| `greenWhiteProt` | `greenWhiteProtection` | ❌ |
+| `blueWhiteProt` | `blueWhiteProtection` | ❌ |
+
+**Fix** (ColorBlindnessNGSettingsControl.xaml.cs):
+Changed save keys to match load keys: `redWhiteProtection`, `greenWhiteProtection`, `blueWhiteProtection`
+
+### 4. Added Missing Zone2 and Zone3 Settings Loading
+
+**Problem**: `LoadConfiguration()` only called `LoadZone0Settings()` and `LoadZone1Settings()`, missing Zone2/Zone3.
+
+**Fix** (ColorBlindnessNGSettingsControl.xaml.cs):
+- Added `LoadZone2Settings()` and `LoadZone3Settings()` methods
+- Both methods load: mode, simulation filter, simulation-guided settings, panel visibility
+- Updated `LoadConfiguration()` to call all 4 zone loading methods
+
+### 5. Fixed Presets Not Applied on Load
+
+**Problem**: When app loads, preset combo box shows saved preset name but values weren't applied.
+
+**Fix** (ColorBlindnessNGSettingsControl.xaml.cs):
+- Updated `RestorePresetSelectionForZone()` to call `ApplyPresetToZoneByIndex()` after selection
+- Added `ApplyPresetToZoneByIndex()` method that:
+  1. Finds preset (built-in or custom) by combo index
+  2. Applies preset to zone via `zone.ApplyPreset(preset)`
+  3. Refreshes CorrectionEditor UI via `editor.LoadFromZone()`
+
+**Flow:**
+```
+RestoreSavedPresetSelections()
+  → RestorePresetSelectionForZone(zoneIndex, comboBox)
+      → Find preset index by name
+      → Select in combo box
+      → ApplyPresetToZoneByIndex(zoneIndex, comboBox, index)  ← NEW
+          → Get preset (built-in or custom)
+          → zone.ApplyPreset(preset)
+          → editor.LoadFromZone()  ← Refresh UI
+```
+
+## Files Modified
+
+1. **ColorBlindnessNG.hlsl** - Sensitivity parameter in shader
+2. **ZoneSettings.cs** - SimulationGuidedSensitivity property
+3. **ColorBlindnessNGEffect.cs** - Updated constant buffer struct
+4. **PresetManager.cs** - Fixed presets folder path to AppData
+5. **ColorBlindnessNGSettingsControl.xaml** - Sensitivity sliders for all zones
+6. **ColorBlindnessNGSettingsControl.xaml.cs**:
+   - Sensitivity event handlers
+   - Fixed WhiteProtection save keys
+   - Added LoadZone2Settings/LoadZone3Settings
+   - Added ApplyPresetToZoneByIndex for preset application on load
+
+## Build Status
+
+- **Last Build**: Successful (0 errors, 0 warnings for ColorBlindnessNG plugin)
+
+## Configuration Key Reference
+
+### Global Settings
+| Key | Type | Description |
+|-----|------|-------------|
+| `splitMode` | int | 0=Fullscreen, 1=Vertical, 2=Horizontal, 3=Quadrants, 4=Circle, 5=Rectangle |
+| `splitPosition` | float | Horizontal split position (0.1-0.9) |
+| `splitPositionV` | float | Vertical split position (0.1-0.9) |
+| `comparisonMode` | bool | Enable comparison mode |
+| `radius` | float | Circle mode radius |
+| `rectWidth` | float | Rectangle mode width |
+| `rectHeight` | float | Rectangle mode height |
+| `edgeSoftness` | float | Shape edge softness (0-1) |
+
+### Per-Zone Settings (prefix: zone0_, zone1_, zone2_, zone3_)
+| Key | Type | Description |
+|-----|------|-------------|
+| `mode` | int | 0=Original, 1=Simulation, 2=Correction |
+| `simAlgorithm` | int | 0=Machado, 1=Strict |
+| `simFilterType` | int | CVD filter type |
+| `appMode` | int | 0=Full, 1=Dominant, 2=Threshold |
+| `gradientType` | int | 0=LinearRGB, 1=LAB, 2=HSL |
+| `threshold` | float | Threshold value |
+| `intensity` | float | Zone intensity |
+| `simGuidedEnabled` | bool | Enable simulation-guided correction |
+| `simGuidedAlgorithm` | int | Algorithm for guided detection |
+| `simGuidedFilterType` | int | CVD type for guided detection |
+| `simGuidedSensitivity` | float | Sensitivity (0.5-5.0) |
+| `presetName` | string | Selected preset name |
+
+### Per-Channel Settings (prefix: zone0_red, zone0_green, zone0_blue, etc.)
+| Key | Type | Description |
+|-----|------|-------------|
+| `Enabled` | bool | Channel enabled |
+| `Strength` | float | Channel strength |
+| `WhiteProtection` | float | White protection threshold |
+| `StartColor` | string | Hex color (e.g., "#FF0000") |
+| `EndColor` | string | Hex color (e.g., "#00FFFF") |
+
+---
+
+# Session State: 2025-12-07 (Post-Correction Simulation Feature)
+
+## Completed Tasks
+
+### Added Post-Correction Simulation ("Re-simulate for Verification")
+
+**Purpose**: Allow non-colorblind users to verify correction effectiveness by seeing how corrected colors appear through CVD simulation.
+
+**Key Distinction:**
+- **Simulation-Guided Correction (existing)** - Uses simulation to DETECT which pixels need correction
+- **Post-Correction Simulation (new)** - Applies simulation AFTER correction for VISUALIZATION
+
+Both features coexist independently.
+
+**Use Case:**
+1. User applies color correction for deuteranopia
+2. Enables "Re-simulate for Verification" with deuteranopia simulation
+3. Screen now shows: Original → Correction → Simulation
+4. Non-colorblind user can see what a deuteranope would see after correction is applied
+5. Helps verify that corrected colors are now distinguishable
+
+### Files Modified
+
+1. **ColorBlindnessNG.hlsl** (`plugins/MouseEffects.Effects.ColorBlindnessNG/Shaders/`)
+   - Expanded ZoneParams struct from 80 to 96 bytes (6 rows of 16 bytes)
+   - Repurposed padding fields for: `PostCorrectionSimEnabled`, `PostCorrectionSimFilterType`, `PostCorrectionSimIntensity`
+   - Added new Row 6 with padding for future expansion
+   - Updated constant buffer comment: 48 + 96×4 = 432 bytes total
+   - Modified `ProcessZone()` function:
+     - In Correction mode, after applying LUT correction and intensity
+     - If `PostCorrectionSimEnabled > 0.5`, calls `ApplySimulation()` on corrected color
+     - Blends result with `PostCorrectionSimIntensity`
+
+2. **ZoneSettings.cs** (`plugins/MouseEffects.Effects.ColorBlindnessNG/`)
+   - Added 4 new properties:
+     - `PostCorrectionSimEnabled` (bool, default false)
+     - `PostCorrectionSimAlgorithm` (SimulationAlgorithm, default Machado)
+     - `PostCorrectionSimFilterType` (int, default 3 = Deuteranopia)
+     - `PostCorrectionSimIntensity` (float, default 1.0)
+   - Updated `Clone()` method to copy new properties
+
+3. **ColorBlindnessNGEffect.cs** (`plugins/MouseEffects.Effects.ColorBlindnessNG/`)
+   - Updated `ZoneParams` struct: added 3 new fields, new padding row (96 bytes total)
+   - Updated `ColorBlindnessNGParams` size from 368 to 432 bytes
+   - Updated `BuildConstantBuffer()`: calculates effective filter type and populates new fields
+   - Updated `LoadZoneConfiguration()`: loads `postSimEnabled`, `postSimAlgorithm`, `postSimFilterType`, `postSimIntensity`
+
+4. **ColorBlindnessNGSettingsControl.xaml** (`plugins/MouseEffects.Effects.ColorBlindnessNG/UI/`)
+   - Added Post-Correction Simulation section to all 4 zones (after CorrectionEditor)
+   - Each zone includes:
+     - Separator
+     - Checkbox: "Re-simulate for Verification"
+     - Collapsed StackPanel with:
+       - Algorithm selection (Machado/Strict radio buttons)
+       - CVD Type dropdown (8 types including Achromatopsia)
+       - Intensity slider (0-1) with label
+
+5. **ColorBlindnessNGSettingsControl.xaml.cs** (`plugins/MouseEffects.Effects.ColorBlindnessNG/UI/`)
+   - Added 16 event handlers (4 per zone):
+     - `ZoneNPostSim_Changed` - Toggle enabled, show/hide panel
+     - `ZoneNPostSimAlgorithm_Changed` - Update algorithm
+     - `ZoneNPostSimFilter_Changed` - Update CVD type (maps combo index 0-7 to filter 1-6, 13-14)
+     - `ZoneNPostSimIntensity_Changed` - Update intensity and label
+   - Updated `LoadZoneNSettings()` methods (all 4) to load post-correction simulation settings
+
+### Shader Pipeline Flow
+
+```
+Input Screen Color (sRGB)
+         │
+         ▼
+    ProcessZone(color, zone)
+         │
+         ├─ Mode = Original → Return color
+         │
+         ├─ Mode = Simulation → ApplySimulation() → Intensity blend → Return
+         │
+         └─ Mode = Correction
+              │
+              ▼
+         ApplyLUTCorrectionZoneX()
+              │  (optionally with Simulation-Guided detection)
+              │
+              ▼
+         Intensity Blend: lerp(original, corrected, intensity)
+              │
+              ▼
+         [NEW] Post-Correction Simulation Check
+              │
+              ├─ PostCorrectionSimEnabled = false → Return corrected
+              │
+              └─ PostCorrectionSimEnabled = true
+                   │
+                   ▼
+                 ApplySimulation(corrected, filterType)
+                   │
+                   ▼
+                 lerp(corrected, simulated, PostCorrectionSimIntensity)
+                   │
+                   ▼
+                 Return final color
+```
+
+### Configuration Keys Added
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `zone{N}_postSimEnabled` | bool | Enable post-correction simulation |
+| `zone{N}_postSimAlgorithm` | int | 0=Machado, 1=Strict |
+| `zone{N}_postSimFilterType` | int | CVD type (1-6 base, 13-14 Achro) |
+| `zone{N}_postSimIntensity` | float | Simulation intensity (0-1) |
+
+### Build Status
+
+- **Last Build**: Successful (0 errors, 1 pre-existing warning)
+- **Struct Sizes**: ZoneParams=96 bytes, ColorBlindnessNGParams=432 bytes

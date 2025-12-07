@@ -261,6 +261,19 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone0SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
         Zone0SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
 
+        // Post-correction simulation settings
+        Zone0PostSimCheckBox.IsChecked = zone.PostCorrectionSimEnabled;
+        Zone0PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone0PostSimMachadoRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
+        Zone0PostSimStrictRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
+        // Map filter type to combo index (1-6 -> 0-5, 13-14 -> 6-7)
+        int postSimFilterIndex = zone.PostCorrectionSimFilterType;
+        if (postSimFilterIndex >= 13) postSimFilterIndex = postSimFilterIndex - 7; // 13->6, 14->7
+        else if (postSimFilterIndex >= 1) postSimFilterIndex = postSimFilterIndex - 1; // 1->0, 6->5
+        Zone0PostSimFilterCombo.SelectedIndex = Math.Max(0, Math.Min(postSimFilterIndex, Zone0PostSimFilterCombo.Items.Count - 1));
+        Zone0PostSimIntensitySlider.Value = zone.PostCorrectionSimIntensity;
+        Zone0PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
+
         // Channel settings are loaded via CorrectionEditor in InitializeCorrectionEditors()
     }
 
@@ -292,6 +305,18 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone1SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone1SimGuidedFilterCombo.Items.Count - 1));
         Zone1SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
         Zone1SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+
+        // Post-correction simulation settings
+        Zone1PostSimCheckBox.IsChecked = zone.PostCorrectionSimEnabled;
+        Zone1PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone1PostSimMachadoRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
+        Zone1PostSimStrictRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
+        int postSimFilterIndex = zone.PostCorrectionSimFilterType;
+        if (postSimFilterIndex >= 13) postSimFilterIndex = postSimFilterIndex - 7;
+        else if (postSimFilterIndex >= 1) postSimFilterIndex = postSimFilterIndex - 1;
+        Zone1PostSimFilterCombo.SelectedIndex = Math.Max(0, Math.Min(postSimFilterIndex, Zone1PostSimFilterCombo.Items.Count - 1));
+        Zone1PostSimIntensitySlider.Value = zone.PostCorrectionSimIntensity;
+        Zone1PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
     }
 
     private void LoadZone2Settings()
@@ -320,6 +345,18 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone2SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone2SimGuidedFilterCombo.Items.Count - 1));
         Zone2SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
         Zone2SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+
+        // Post-correction simulation settings
+        Zone2PostSimCheckBox.IsChecked = zone.PostCorrectionSimEnabled;
+        Zone2PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone2PostSimMachadoRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
+        Zone2PostSimStrictRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
+        int postSimFilterIndex = zone.PostCorrectionSimFilterType;
+        if (postSimFilterIndex >= 13) postSimFilterIndex = postSimFilterIndex - 7;
+        else if (postSimFilterIndex >= 1) postSimFilterIndex = postSimFilterIndex - 1;
+        Zone2PostSimFilterCombo.SelectedIndex = Math.Max(0, Math.Min(postSimFilterIndex, Zone2PostSimFilterCombo.Items.Count - 1));
+        Zone2PostSimIntensitySlider.Value = zone.PostCorrectionSimIntensity;
+        Zone2PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
 
         // Update panel visibility based on mode
         Zone2SimulationPanel.Visibility = zone.Mode == ZoneMode.Simulation ? Visibility.Visible : Visibility.Collapsed;
@@ -352,6 +389,18 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone3SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone3SimGuidedFilterCombo.Items.Count - 1));
         Zone3SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
         Zone3SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+
+        // Post-correction simulation settings
+        Zone3PostSimCheckBox.IsChecked = zone.PostCorrectionSimEnabled;
+        Zone3PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone3PostSimMachadoRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
+        Zone3PostSimStrictRadio.IsChecked = zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
+        int postSimFilterIndex = zone.PostCorrectionSimFilterType;
+        if (postSimFilterIndex >= 13) postSimFilterIndex = postSimFilterIndex - 7;
+        else if (postSimFilterIndex >= 1) postSimFilterIndex = postSimFilterIndex - 1;
+        Zone3PostSimFilterCombo.SelectedIndex = Math.Max(0, Math.Min(postSimFilterIndex, Zone3PostSimFilterCombo.Items.Count - 1));
+        Zone3PostSimIntensitySlider.Value = zone.PostCorrectionSimIntensity;
+        Zone3PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
 
         // Update panel visibility based on mode
         Zone3SimulationPanel.Visibility = zone.Mode == ZoneMode.Simulation ? Visibility.Visible : Visibility.Collapsed;
@@ -965,6 +1014,195 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         zone.SimulationGuidedSensitivity = (float)Zone3SimGuidedSensitivitySlider.Value;
         Zone3SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
         _effect.Configuration.Set("zone3_simGuidedSensitivity", zone.SimulationGuidedSensitivity);
+    }
+
+    #endregion
+
+    #region Post-Correction Simulation Event Handlers
+
+    // Zone 0
+    private void Zone0PostSim_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.PostCorrectionSimEnabled = Zone0PostSimCheckBox.IsChecked == true;
+        Zone0PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone0_postSimEnabled", zone.PostCorrectionSimEnabled);
+    }
+
+    private void Zone0PostSimAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.PostCorrectionSimAlgorithm = Zone0PostSimStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone0_postSimAlgorithm", (int)zone.PostCorrectionSimAlgorithm);
+    }
+
+    private void Zone0PostSimFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        int index = Zone0PostSimFilterCombo.SelectedIndex;
+        // Map combo index (0-7) to filter type (1-6 for base types, 13-14 for Achro)
+        if (index <= 5)
+            zone.PostCorrectionSimFilterType = index + 1; // 0->1, 5->6
+        else
+            zone.PostCorrectionSimFilterType = index + 7; // 6->13, 7->14
+
+        _effect.Configuration.Set("zone0_postSimFilterType", zone.PostCorrectionSimFilterType);
+    }
+
+    private void Zone0PostSimIntensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.PostCorrectionSimIntensity = (float)Zone0PostSimIntensitySlider.Value;
+        Zone0PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
+        _effect.Configuration.Set("zone0_postSimIntensity", zone.PostCorrectionSimIntensity);
+    }
+
+    // Zone 1
+    private void Zone1PostSim_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.PostCorrectionSimEnabled = Zone1PostSimCheckBox.IsChecked == true;
+        Zone1PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone1_postSimEnabled", zone.PostCorrectionSimEnabled);
+    }
+
+    private void Zone1PostSimAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.PostCorrectionSimAlgorithm = Zone1PostSimStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone1_postSimAlgorithm", (int)zone.PostCorrectionSimAlgorithm);
+    }
+
+    private void Zone1PostSimFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        int index = Zone1PostSimFilterCombo.SelectedIndex;
+        if (index <= 5)
+            zone.PostCorrectionSimFilterType = index + 1;
+        else
+            zone.PostCorrectionSimFilterType = index + 7;
+
+        _effect.Configuration.Set("zone1_postSimFilterType", zone.PostCorrectionSimFilterType);
+    }
+
+    private void Zone1PostSimIntensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.PostCorrectionSimIntensity = (float)Zone1PostSimIntensitySlider.Value;
+        Zone1PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
+        _effect.Configuration.Set("zone1_postSimIntensity", zone.PostCorrectionSimIntensity);
+    }
+
+    // Zone 2
+    private void Zone2PostSim_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.PostCorrectionSimEnabled = Zone2PostSimCheckBox.IsChecked == true;
+        Zone2PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone2_postSimEnabled", zone.PostCorrectionSimEnabled);
+    }
+
+    private void Zone2PostSimAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.PostCorrectionSimAlgorithm = Zone2PostSimStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone2_postSimAlgorithm", (int)zone.PostCorrectionSimAlgorithm);
+    }
+
+    private void Zone2PostSimFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        int index = Zone2PostSimFilterCombo.SelectedIndex;
+        if (index <= 5)
+            zone.PostCorrectionSimFilterType = index + 1;
+        else
+            zone.PostCorrectionSimFilterType = index + 7;
+
+        _effect.Configuration.Set("zone2_postSimFilterType", zone.PostCorrectionSimFilterType);
+    }
+
+    private void Zone2PostSimIntensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.PostCorrectionSimIntensity = (float)Zone2PostSimIntensitySlider.Value;
+        Zone2PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
+        _effect.Configuration.Set("zone2_postSimIntensity", zone.PostCorrectionSimIntensity);
+    }
+
+    // Zone 3
+    private void Zone3PostSim_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.PostCorrectionSimEnabled = Zone3PostSimCheckBox.IsChecked == true;
+        Zone3PostSimPanel.Visibility = zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone3_postSimEnabled", zone.PostCorrectionSimEnabled);
+    }
+
+    private void Zone3PostSimAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.PostCorrectionSimAlgorithm = Zone3PostSimStrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone3_postSimAlgorithm", (int)zone.PostCorrectionSimAlgorithm);
+    }
+
+    private void Zone3PostSimFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        int index = Zone3PostSimFilterCombo.SelectedIndex;
+        if (index <= 5)
+            zone.PostCorrectionSimFilterType = index + 1;
+        else
+            zone.PostCorrectionSimFilterType = index + 7;
+
+        _effect.Configuration.Set("zone3_postSimFilterType", zone.PostCorrectionSimFilterType);
+    }
+
+    private void Zone3PostSimIntensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.PostCorrectionSimIntensity = (float)Zone3PostSimIntensitySlider.Value;
+        Zone3PostSimIntensityLabel.Text = $"Simulation Intensity ({zone.PostCorrectionSimIntensity:F2})";
+        _effect.Configuration.Set("zone3_postSimIntensity", zone.PostCorrectionSimIntensity);
     }
 
     #endregion

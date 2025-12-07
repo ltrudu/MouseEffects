@@ -196,6 +196,45 @@ Effects in MouseEffects can:
 | **Geometric Rendering** | Lines, circles, rectangles with shaders |
 | **Texture Sampling** | Use screen content as texture source |
 
+## Color Vision Accessibility (ColorBlindnessNG)
+
+The ColorBlindnessNG plugin provides advanced accessibility features for color vision deficiency (CVD):
+
+### Simulation Mode
+Simulates how people with various types of color blindness perceive colors:
+- **Machado Algorithm**: RGB-space matrices from Machado et al. (2009) research
+- **Strict LMS Algorithm**: Physiologically-accurate LMS colorspace processing
+- **8 CVD Types**: Protanopia, Protanomaly, Deuteranopia, Deuteranomaly, Tritanopia, Tritanomaly, Achromatopsia, Achromatomaly
+
+### Correction Mode
+Helps colorblind users distinguish colors using LUT-based remapping:
+- **Per-Channel Control**: Independent red, green, blue correction with customizable gradients
+- **Multiple Presets**: Built-in presets for common CVD types plus custom preset support
+- **Application Modes**: Full Channel, Dominant Only, or Threshold-based correction
+- **Gradient Interpolation**: Linear RGB, Perceptual LAB, or HSL color space blending
+
+### Advanced Features (v1.0.28+)
+
+#### Simulation-Guided Correction
+Uses CVD simulation to detect which pixels are affected before applying correction:
+- Only corrects pixels that would actually be impacted by the CVD type
+- Configurable sensitivity (0.5-5.0) controls detection aggressiveness
+- Leaves unaffected colors unchanged for more natural results
+
+#### Post-Correction Simulation (Re-simulate for Verification)
+Applies CVD simulation AFTER correction to verify effectiveness:
+- Non-colorblind users can see how corrected colors appear to CVD users
+- Helps validate that previously confusing colors are now distinguishable
+- Independent algorithm and intensity controls per zone
+
+### Display Modes
+- **Fullscreen**: Apply effect to entire screen
+- **Split Modes**: Vertical, Horizontal, or Quadrant splits for comparison
+- **Circle/Rectangle**: Cursor-following shapes with configurable size and soft edges
+- **Comparison Mode**: Duplicate screen in each zone with virtual cursor projection
+
+See [Plugins Reference](Plugins.md#color-blindness-ng) for complete settings documentation
+
 ## Extensibility
 
 ### Custom Effects

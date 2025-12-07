@@ -358,6 +358,9 @@ Next-generation color vision deficiency (CVD) simulation and correction plugin w
 - **Per-zone architecture**: Up to 4 independent zones, each configurable as Original, Simulation, or Correction
 - **14 CVD simulation types** across Machado (RGB) and Strict (LMS) algorithms
 - **LUT-based correction**: Per-channel color remapping with customizable gradients
+- **Simulation-Guided Correction** (v1.0.28+): Uses CVD simulation to detect affected pixels before applying correction
+- **Post-Correction Simulation** (v1.0.28+): Re-simulate CVD after correction to verify effectiveness
+- **Sensitivity control** (v1.0.28+): Adjustable detection sensitivity for simulation-guided correction
 - **Real comparison mode**: Full screen duplicated in each zone with virtual cursor projection
 - **Custom preset system**: Save, load, export, and import correction presets
 - **Multiple split modes**: Fullscreen, Split Vertical/Horizontal, Quadrants, Circle, Rectangle
@@ -459,7 +462,53 @@ Each zone has three channel LUTs (Red, Green, Blue) with these settings:
 | `zone{n}_{color}Strength` | float | 0-1 | 1.0 | Channel correction strength |
 | `zone{n}_{color}StartColor` | string | hex | varies | LUT gradient start color |
 | `zone{n}_{color}EndColor` | string | hex | varies | LUT gradient end color |
-| `zone{n}_{color}WhiteProtection` | float | 0-1 | 0.0 | Protect whites from correction |
+| `zone{n}_{color}WhiteProtection` | float | 0.01-1 | 0.01 | Protect whites from correction |
+
+### Simulation-Guided Correction (v1.0.28+)
+
+An optional mode that uses CVD simulation to detect which pixels are affected before applying LUT correction. This ensures only pixels that would actually be affected by CVD receive correction, leaving unaffected colors unchanged.
+
+**How It Works:**
+1. Simulates the selected CVD type on the original pixel
+2. Calculates the error between original and simulated colors
+3. Uses the error magnitude to determine a blend weight (0-1)
+4. Applies LUT correction proportionally to the detected error
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zone{n}_simGuidedEnabled` | bool | - | false | Enable simulation-guided detection |
+| `zone{n}_simGuidedAlgorithm` | int | 0-1 | 0 | 0=Machado, 1=Strict |
+| `zone{n}_simGuidedFilterType` | int | 1-14 | 3 | CVD type to detect |
+| `zone{n}_simGuidedSensitivity` | float | 0.5-5.0 | 2.0 | Detection sensitivity (higher = more aggressive) |
+
+**Sensitivity Guide:**
+- **0.5-1.0**: Conservative - only strong color differences trigger correction
+- **2.0**: Balanced default - moderate detection threshold
+- **3.0-5.0**: Aggressive - even subtle color differences trigger correction
+
+### Post-Correction Simulation (Re-simulate for Verification) (v1.0.28+)
+
+Applies CVD simulation AFTER correction to visualize how corrected colors appear to colorblind users. This helps non-colorblind users verify that corrections are effective.
+
+**Use Case:**
+1. Apply color correction for deuteranopia
+2. Enable "Re-simulate for Verification" with deuteranopia
+3. Screen shows: Original → Correction → Simulation
+4. See what a deuteranope would perceive after correction is applied
+5. Verify that previously confusing colors are now distinguishable
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `zone{n}_postSimEnabled` | bool | - | false | Enable post-correction simulation |
+| `zone{n}_postSimAlgorithm` | int | 0-1 | 0 | 0=Machado, 1=Strict |
+| `zone{n}_postSimFilterType` | int | 1-14 | 3 | CVD type to simulate |
+| `zone{n}_postSimIntensity` | float | 0-1 | 1.0 | Simulation blend intensity |
+
+**Key Distinction:**
+- **Simulation-Guided Correction**: Uses simulation to DETECT which pixels need correction
+- **Post-Correction Simulation**: Uses simulation AFTER correction for VISUALIZATION
+
+Both features can be enabled independently on the same zone
 
 #### Application Modes
 

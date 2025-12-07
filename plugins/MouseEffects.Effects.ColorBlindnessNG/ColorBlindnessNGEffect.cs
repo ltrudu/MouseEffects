@@ -391,6 +391,16 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         if (Configuration.TryGet($"{prefix}simGuidedSensitivity", out float simGuidedSensitivity))
             z.SimulationGuidedSensitivity = simGuidedSensitivity;
 
+        // Post-correction simulation settings
+        if (Configuration.TryGet($"{prefix}postSimEnabled", out bool postSimEnabled))
+            z.PostCorrectionSimEnabled = postSimEnabled;
+        if (Configuration.TryGet($"{prefix}postSimAlgorithm", out int postSimAlgorithm))
+            z.PostCorrectionSimAlgorithm = (SimulationAlgorithm)postSimAlgorithm;
+        if (Configuration.TryGet($"{prefix}postSimFilterType", out int postSimFilterType))
+            z.PostCorrectionSimFilterType = postSimFilterType;
+        if (Configuration.TryGet($"{prefix}postSimIntensity", out float postSimIntensity))
+            z.PostCorrectionSimIntensity = postSimIntensity;
+
         // Red channel
         bool needsUpdate = z.LutsNeedUpdate;
         LoadChannelConfiguration(z.RedChannel, $"{prefix}red", ref needsUpdate);
@@ -555,6 +565,14 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 effectiveSimGuidedFilterType = z.SimulationGuidedFilterType + 6;
             }
 
+            // Calculate effective filter type for post-correction simulation
+            int effectivePostSimFilterType = z.PostCorrectionSimFilterType;
+            if (z.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict &&
+                z.PostCorrectionSimFilterType > 0 && z.PostCorrectionSimFilterType <= 6)
+            {
+                effectivePostSimFilterType = z.PostCorrectionSimFilterType + 6;
+            }
+
             var zoneParams = new ZoneParams
             {
                 Mode = (float)z.Mode,
@@ -573,7 +591,10 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 BlueWhiteProtection = z.BlueChannel.WhiteProtection,
                 SimulationGuidedEnabled = z.SimulationGuidedEnabled ? 1.0f : 0.0f,
                 SimulationGuidedFilterType = effectiveSimGuidedFilterType,
-                SimulationGuidedSensitivity = z.SimulationGuidedSensitivity
+                SimulationGuidedSensitivity = z.SimulationGuidedSensitivity,
+                PostCorrectionSimEnabled = z.PostCorrectionSimEnabled ? 1.0f : 0.0f,
+                PostCorrectionSimFilterType = effectivePostSimFilterType,
+                PostCorrectionSimIntensity = z.PostCorrectionSimIntensity
             };
 
             switch (i)
@@ -627,7 +648,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Per-zone parameters packed for shader.
-    /// Size: 80 bytes (20 floats)
+    /// Size: 96 bytes (24 floats)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct ZoneParams
@@ -653,16 +674,21 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         public float SimulationGuidedFilterType; // CVD type for detection
 
         public float SimulationGuidedSensitivity; // Sensitivity multiplier for detection
-        public float _padding1;
+        public float PostCorrectionSimEnabled;    // 1.0 = apply CVD simulation AFTER correction
+        public float PostCorrectionSimFilterType; // CVD type for post-correction simulation
+        public float PostCorrectionSimIntensity;  // Intensity of post-correction simulation
+
+        public float _padding1;            // Padding for 16-byte alignment
         public float _padding2;
         public float _padding3;
+        public float _padding4;
     }
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 48 (global) + 4 * 80 (zones) = 368 bytes
+    /// Size: 48 (global) + 4 * 96 (zones) = 432 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 368)]
+    [StructLayout(LayoutKind.Sequential, Size = 432)]
     private struct ColorBlindnessNGParams
     {
         // Global parameters (48 bytes)

@@ -84,6 +84,30 @@ public class ZoneSettings
     /// </summary>
     public float SimulationGuidedSensitivity { get; set; } = 2.0f;
 
+    // ============ Post-Correction Simulation Settings ============
+
+    /// <summary>
+    /// When enabled, applies CVD simulation AFTER correction.
+    /// This allows non-colorblind users to verify how corrected colors appear to CVD users.
+    /// </summary>
+    public bool PostCorrectionSimEnabled { get; set; } = false;
+
+    /// <summary>
+    /// Algorithm to use for post-correction simulation.
+    /// </summary>
+    public SimulationAlgorithm PostCorrectionSimAlgorithm { get; set; } = SimulationAlgorithm.Machado;
+
+    /// <summary>
+    /// CVD filter type for post-correction simulation (1-6=Machado, 7-12=Strict, 13-14=Achro).
+    /// </summary>
+    public int PostCorrectionSimFilterType { get; set; } = 3; // Deuteranopia by default
+
+    /// <summary>
+    /// Intensity of post-correction simulation blend (0.0-1.0).
+    /// 0.0 = no simulation applied, 1.0 = full simulation.
+    /// </summary>
+    public float PostCorrectionSimIntensity { get; set; } = 1.0f;
+
     // ============ Per-Channel LUT Settings ============
 
     /// <summary>
@@ -136,6 +160,10 @@ public class ZoneSettings
             SimulationGuidedAlgorithm = SimulationGuidedAlgorithm,
             SimulationGuidedFilterType = SimulationGuidedFilterType,
             SimulationGuidedSensitivity = SimulationGuidedSensitivity,
+            PostCorrectionSimEnabled = PostCorrectionSimEnabled,
+            PostCorrectionSimAlgorithm = PostCorrectionSimAlgorithm,
+            PostCorrectionSimFilterType = PostCorrectionSimFilterType,
+            PostCorrectionSimIntensity = PostCorrectionSimIntensity,
             LutsNeedUpdate = LutsNeedUpdate
         };
 

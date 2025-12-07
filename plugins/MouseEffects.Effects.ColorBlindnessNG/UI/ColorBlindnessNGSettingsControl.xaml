@@ -248,6 +248,37 @@
                         <Separator Margin="0,8,0,8"/>
 
                         <local:CorrectionEditor x:Name="Zone0CorrectionEditor" Margin="0,8,0,0"/>
+
+                        <!-- Post-Correction Simulation (Re-simulate for Verification) -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone0PostSimCheckBox" Content="Re-simulate for Verification"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Apply CVD simulation AFTER correction to see how corrected colors appear to colorblind users"
+                                  Checked="Zone0PostSim_Changed" Unchecked="Zone0PostSim_Changed"/>
+                        <StackPanel x:Name="Zone0PostSimPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Simulation Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone0PostSimMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone0PostSimAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone0PostSimStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone0PostSimAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Simulate" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone0PostSimFilterCombo" SelectionChanged="Zone0PostSimFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone0PostSimIntensityLabel" Text="Simulation Intensity (1.00)" Style="{StaticResource LabelStyle}"
+                                       ToolTip="How strongly to apply the simulation (0 = off, 1 = full)"/>
+                            <Slider x:Name="Zone0PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone0PostSimIntensity_Changed"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Intensity -->
@@ -351,6 +382,37 @@
                         <Separator Margin="0,8,0,8"/>
 
                         <local:CorrectionEditor x:Name="Zone1CorrectionEditor" Margin="0,8,0,0"/>
+
+                        <!-- Post-Correction Simulation (Re-simulate for Verification) -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone1PostSimCheckBox" Content="Re-simulate for Verification"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Apply CVD simulation AFTER correction to see how corrected colors appear to colorblind users"
+                                  Checked="Zone1PostSim_Changed" Unchecked="Zone1PostSim_Changed"/>
+                        <StackPanel x:Name="Zone1PostSimPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Simulation Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone1PostSimMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone1PostSimAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone1PostSimStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone1PostSimAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Simulate" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone1PostSimFilterCombo" SelectionChanged="Zone1PostSimFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone1PostSimIntensityLabel" Text="Simulation Intensity (1.00)" Style="{StaticResource LabelStyle}"
+                                       ToolTip="How strongly to apply the simulation (0 = off, 1 = full)"/>
+                            <Slider x:Name="Zone1PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone1PostSimIntensity_Changed"/>
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="Zone1IntensityPanel" Visibility="Collapsed">
@@ -438,6 +500,37 @@
                         <Separator Margin="0,8,0,8"/>
 
                         <local:CorrectionEditor x:Name="Zone2CorrectionEditor" Margin="0,8,0,0"/>
+
+                        <!-- Post-Correction Simulation (Re-simulate for Verification) -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone2PostSimCheckBox" Content="Re-simulate for Verification"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Apply CVD simulation AFTER correction to see how corrected colors appear to colorblind users"
+                                  Checked="Zone2PostSim_Changed" Unchecked="Zone2PostSim_Changed"/>
+                        <StackPanel x:Name="Zone2PostSimPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Simulation Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone2PostSimMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone2PostSimAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone2PostSimStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone2PostSimAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Simulate" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone2PostSimFilterCombo" SelectionChanged="Zone2PostSimFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone2PostSimIntensityLabel" Text="Simulation Intensity (1.00)" Style="{StaticResource LabelStyle}"
+                                       ToolTip="How strongly to apply the simulation (0 = off, 1 = full)"/>
+                            <Slider x:Name="Zone2PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone2PostSimIntensity_Changed"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Expander>
@@ -519,6 +612,37 @@
                         <Separator Margin="0,8,0,8"/>
 
                         <local:CorrectionEditor x:Name="Zone3CorrectionEditor" Margin="0,8,0,0"/>
+
+                        <!-- Post-Correction Simulation (Re-simulate for Verification) -->
+                        <Separator Margin="0,12,0,8"/>
+                        <CheckBox x:Name="Zone3PostSimCheckBox" Content="Re-simulate for Verification"
+                                  Margin="0,0,0,4"
+                                  ToolTip="Apply CVD simulation AFTER correction to see how corrected colors appear to colorblind users"
+                                  Checked="Zone3PostSim_Changed" Unchecked="Zone3PostSim_Changed"/>
+                        <StackPanel x:Name="Zone3PostSimPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                            <TextBlock Text="Simulation Algorithm" Style="{StaticResource LabelStyle}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <RadioButton x:Name="Zone3PostSimMachadoRadio" Content="Machado" IsChecked="True"
+                                             Checked="Zone3PostSimAlgorithm_Changed" Margin="0,0,16,0"/>
+                                <RadioButton x:Name="Zone3PostSimStrictRadio" Content="Strict (LMS)"
+                                             Checked="Zone3PostSimAlgorithm_Changed"/>
+                            </StackPanel>
+                            <TextBlock Text="CVD Type to Simulate" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone3PostSimFilterCombo" SelectionChanged="Zone3PostSimFilter_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                                <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                                <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                                <ComboBoxItem Content="Achromatopsia (No color)"/>
+                                <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone3PostSimIntensityLabel" Text="Simulation Intensity (1.00)" Style="{StaticResource LabelStyle}"
+                                       ToolTip="How strongly to apply the simulation (0 = off, 1 = full)"/>
+                            <Slider x:Name="Zone3PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone3PostSimIntensity_Changed"/>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Expander>

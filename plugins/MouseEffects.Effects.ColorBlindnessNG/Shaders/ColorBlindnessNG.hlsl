@@ -13,7 +13,7 @@ struct PSInput
 };
 
 // ============================================================================
-// Per-Zone Parameters Structure (80 bytes each = 20 floats, 16-byte aligned)
+// Per-Zone Parameters Structure (96 bytes each = 24 floats, 16-byte aligned)
 // ============================================================================
 
 struct ZoneParams
@@ -39,13 +39,18 @@ struct ZoneParams
     float SimulationGuidedFilterType; // CVD type for detection (0=None, 1-6=Machado, 7-12=Strict)
 
     float SimulationGuidedSensitivity; // Sensitivity multiplier (0.5 = conservative, 5.0 = aggressive)
-    float _padding1;
+    float PostCorrectionSimEnabled;    // 1.0 = apply CVD simulation AFTER correction (for verification)
+    float PostCorrectionSimFilterType; // CVD type for post-correction simulation (1-14)
+    float PostCorrectionSimIntensity;  // Intensity of post-correction simulation (0-1)
+
+    float _padding1;            // Padding for 16-byte alignment
     float _padding2;
     float _padding3;
+    float _padding4;
 };
 
 // ============================================================================
-// Constant Buffer (48 + 80*4 = 368 bytes total)
+// Constant Buffer (48 + 96*4 = 432 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
@@ -695,23 +700,33 @@ float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
     if (zone.Mode < 1.5)
     {
         processedColor = ApplySimulation(color, zone.SimulationFilterType);
-    }
-    // Mode 2 = Correction
-    else
-    {
-        // Call zone-specific LUT function
-        if (zoneIndex == 0)
-            processedColor = ApplyLUTCorrectionZone0(color, zone);
-        else if (zoneIndex == 1)
-            processedColor = ApplyLUTCorrectionZone1(color, zone);
-        else if (zoneIndex == 2)
-            processedColor = ApplyLUTCorrectionZone2(color, zone);
-        else
-            processedColor = ApplyLUTCorrectionZone3(color, zone);
+        // Apply intensity blend for simulation mode
+        return lerp(color, processedColor, zone.Intensity);
     }
 
-    // Apply intensity blend
-    return lerp(color, processedColor, zone.Intensity);
+    // Mode 2 = Correction
+    // Call zone-specific LUT function
+    if (zoneIndex == 0)
+        processedColor = ApplyLUTCorrectionZone0(color, zone);
+    else if (zoneIndex == 1)
+        processedColor = ApplyLUTCorrectionZone1(color, zone);
+    else if (zoneIndex == 2)
+        processedColor = ApplyLUTCorrectionZone2(color, zone);
+    else
+        processedColor = ApplyLUTCorrectionZone3(color, zone);
+
+    // Apply intensity blend for correction
+    processedColor = lerp(color, processedColor, zone.Intensity);
+
+    // Post-correction simulation: Apply CVD simulation AFTER correction
+    // This allows non-colorblind users to verify how corrected colors appear to CVD users
+    if (zone.PostCorrectionSimEnabled > 0.5)
+    {
+        float3 simulated = ApplySimulation(processedColor, zone.PostCorrectionSimFilterType);
+        processedColor = lerp(processedColor, simulated, zone.PostCorrectionSimIntensity);
+    }
+
+    return processedColor;
 }
 
 // ============================================================================
