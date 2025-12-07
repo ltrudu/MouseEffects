@@ -13,7 +13,7 @@ struct PSInput
 };
 
 // ============================================================================
-// Per-Zone Parameters Structure (64 bytes each)
+// Per-Zone Parameters Structure (80 bytes each = 20 floats, 16-byte aligned)
 // ============================================================================
 
 struct ZoneParams
@@ -35,12 +35,17 @@ struct ZoneParams
 
     float BlueStrength;         // Blue channel strength
     float BlueWhiteProtection;  // Blue white protection
-    float SimulationGuidedEnabled;   // 1.0 = use simulation to detect affected pixels
+    float SimulationGuidedEnabled;    // 1.0 = use simulation to detect affected pixels
     float SimulationGuidedFilterType; // CVD type for detection (0=None, 1-6=Machado, 7-12=Strict)
+
+    float SimulationGuidedSensitivity; // Sensitivity multiplier (0.5 = conservative, 5.0 = aggressive)
+    float _padding1;
+    float _padding2;
+    float _padding3;
 };
 
 // ============================================================================
-// Constant Buffer (304 bytes total)
+// Constant Buffer (48 + 80*4 = 368 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
@@ -383,7 +388,8 @@ float3 GetSimulationError(float3 color, float cvdType)
 // Calculates a blend weight for simulation-guided correction.
 // Returns a value 0-1 indicating how much of the LUT correction to apply.
 // Higher error = more correction applied.
-float GetSimulationGuidedWeight(float3 color, float cvdType)
+// sensitivity: multiplier for error detection (0.5 = conservative, 2.0 = default, 5.0 = aggressive)
+float GetSimulationGuidedWeight(float3 color, float cvdType, float sensitivity)
 {
     float3 error = GetSimulationError(color, cvdType);
 
@@ -391,10 +397,10 @@ float GetSimulationGuidedWeight(float3 color, float cvdType)
     // Using max instead of sum to get the dominant error channel
     float errorMagnitude = max(max(error.r, error.g), error.b);
 
-    // Scale error to 0-1 range with a sensitivity curve
-    // Small errors get less correction, large errors get full correction
-    // This prevents over-correction on nearly-unaffected colors
-    float weight = saturate(errorMagnitude * 2.0);
+    // Scale error to 0-1 range with sensitivity adjustment
+    // Higher sensitivity = more pixels detected as needing correction
+    // Lower sensitivity = only strongly affected pixels get corrected
+    float weight = saturate(errorMagnitude * sensitivity);
 
     // Apply smoothstep for a more natural transition
     return smoothstep(0.0, 1.0, weight);
@@ -425,7 +431,7 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
     float simWeight = 1.0;
     if (zone.SimulationGuidedEnabled > 0.5)
     {
-        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType, zone.SimulationGuidedSensitivity);
         // If no significant error detected, skip correction entirely
         if (simWeight < 0.001)
             return color;
@@ -490,7 +496,7 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
     float simWeight = 1.0;
     if (zone.SimulationGuidedEnabled > 0.5)
     {
-        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType, zone.SimulationGuidedSensitivity);
         if (simWeight < 0.001)
             return color;
     }
@@ -553,7 +559,7 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
     float simWeight = 1.0;
     if (zone.SimulationGuidedEnabled > 0.5)
     {
-        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType, zone.SimulationGuidedSensitivity);
         if (simWeight < 0.001)
             return color;
     }
@@ -616,7 +622,7 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
     float simWeight = 1.0;
     if (zone.SimulationGuidedEnabled > 0.5)
     {
-        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType);
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType, zone.SimulationGuidedSensitivity);
         if (simWeight < 0.001)
             return color;
     }

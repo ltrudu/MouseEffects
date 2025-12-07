@@ -388,6 +388,8 @@ public sealed class ColorBlindnessNGEffect : EffectBase
             z.SimulationGuidedAlgorithm = (SimulationAlgorithm)simGuidedAlgorithm;
         if (Configuration.TryGet($"{prefix}simGuidedFilterType", out int simGuidedFilterType))
             z.SimulationGuidedFilterType = simGuidedFilterType;
+        if (Configuration.TryGet($"{prefix}simGuidedSensitivity", out float simGuidedSensitivity))
+            z.SimulationGuidedSensitivity = simGuidedSensitivity;
 
         // Red channel
         bool needsUpdate = z.LutsNeedUpdate;
@@ -570,7 +572,8 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 BlueStrength = z.BlueChannel.Strength,
                 BlueWhiteProtection = z.BlueChannel.WhiteProtection,
                 SimulationGuidedEnabled = z.SimulationGuidedEnabled ? 1.0f : 0.0f,
-                SimulationGuidedFilterType = effectiveSimGuidedFilterType
+                SimulationGuidedFilterType = effectiveSimGuidedFilterType,
+                SimulationGuidedSensitivity = z.SimulationGuidedSensitivity
             };
 
             switch (i)
@@ -624,7 +627,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Per-zone parameters packed for shader.
-    /// Size: 64 bytes (16 floats)
+    /// Size: 80 bytes (20 floats)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct ZoneParams
@@ -648,13 +651,18 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         public float BlueWhiteProtection;  // Blue white protection
         public float SimulationGuidedEnabled;    // 1.0 = use simulation to detect affected pixels
         public float SimulationGuidedFilterType; // CVD type for detection
+
+        public float SimulationGuidedSensitivity; // Sensitivity multiplier for detection
+        public float _padding1;
+        public float _padding2;
+        public float _padding3;
     }
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 48 (global) + 4 * 64 (zones) = 304 bytes
+    /// Size: 48 (global) + 4 * 80 (zones) = 368 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 304)]
+    [StructLayout(LayoutKind.Sequential, Size = 368)]
     private struct ColorBlindnessNGParams
     {
         // Global parameters (48 bytes)

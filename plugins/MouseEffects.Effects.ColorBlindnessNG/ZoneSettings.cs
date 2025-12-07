@@ -76,6 +76,14 @@ public class ZoneSettings
     /// </summary>
     public int SimulationGuidedFilterType { get; set; } = 3; // Deuteranopia by default
 
+    /// <summary>
+    /// Sensitivity multiplier for simulation-guided detection.
+    /// Lower values (0.5) = conservative, only strongly affected pixels get corrected.
+    /// Higher values (5.0) = aggressive, more pixels are detected as needing correction.
+    /// Default is 2.0 for balanced detection.
+    /// </summary>
+    public float SimulationGuidedSensitivity { get; set; } = 2.0f;
+
     // ============ Per-Channel LUT Settings ============
 
     /// <summary>
@@ -127,6 +135,7 @@ public class ZoneSettings
             SimulationGuidedEnabled = SimulationGuidedEnabled,
             SimulationGuidedAlgorithm = SimulationGuidedAlgorithm,
             SimulationGuidedFilterType = SimulationGuidedFilterType,
+            SimulationGuidedSensitivity = SimulationGuidedSensitivity,
             LutsNeedUpdate = LutsNeedUpdate
         };
 

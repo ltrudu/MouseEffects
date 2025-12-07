@@ -258,6 +258,8 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         if (simGuidedFilterIndex >= 13) simGuidedFilterIndex = simGuidedFilterIndex - 7; // 13->6, 14->7
         else if (simGuidedFilterIndex >= 1) simGuidedFilterIndex = simGuidedFilterIndex - 1; // 1->0, 6->5
         Zone0SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone0SimGuidedFilterCombo.Items.Count - 1));
+        Zone0SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
+        Zone0SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
 
         // Channel settings are loaded via CorrectionEditor in InitializeCorrectionEditors()
     }
@@ -288,6 +290,8 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         if (simGuidedFilterIndex >= 13) simGuidedFilterIndex = simGuidedFilterIndex - 7;
         else if (simGuidedFilterIndex >= 1) simGuidedFilterIndex = simGuidedFilterIndex - 1;
         Zone1SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone1SimGuidedFilterCombo.Items.Count - 1));
+        Zone1SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
+        Zone1SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
     }
 
     #region UI Event Handlers
@@ -856,6 +860,47 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             zone.SimulationGuidedFilterType = index + 7;
 
         _effect.Configuration.Set("zone3_simGuidedFilterType", zone.SimulationGuidedFilterType);
+    }
+
+    // Sensitivity sliders
+    private void Zone0SimGuidedSensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.SimulationGuidedSensitivity = (float)Zone0SimGuidedSensitivitySlider.Value;
+        Zone0SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+        _effect.Configuration.Set("zone0_simGuidedSensitivity", zone.SimulationGuidedSensitivity);
+    }
+
+    private void Zone1SimGuidedSensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.SimulationGuidedSensitivity = (float)Zone1SimGuidedSensitivitySlider.Value;
+        Zone1SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+        _effect.Configuration.Set("zone1_simGuidedSensitivity", zone.SimulationGuidedSensitivity);
+    }
+
+    private void Zone2SimGuidedSensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.SimulationGuidedSensitivity = (float)Zone2SimGuidedSensitivitySlider.Value;
+        Zone2SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+        _effect.Configuration.Set("zone2_simGuidedSensitivity", zone.SimulationGuidedSensitivity);
+    }
+
+    private void Zone3SimGuidedSensitivity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.SimulationGuidedSensitivity = (float)Zone3SimGuidedSensitivitySlider.Value;
+        Zone3SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+        _effect.Configuration.Set("zone3_simGuidedSensitivity", zone.SimulationGuidedSensitivity);
     }
 
     #endregion
