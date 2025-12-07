@@ -63,17 +63,6 @@ The easiest way to install MouseEffects with automatic updates:
 - Delta updates (only downloads changes)
 - Silent or notify update modes
 
-### From MSIX Package (Enterprise/Store)
-
-For enterprise deployment or Microsoft Store distribution:
-
-1. Download the latest `.msix` package from [Releases](../../releases)
-2. If prompted about untrusted publisher, install the development certificate first:
-   - Download `MouseEffects-Dev.cer`
-   - Double-click and select **Install Certificate**
-   - Choose **Local Machine** → **Trusted Root Certification Authorities**
-3. Double-click the `.msix` file to install
-
 ### Portable Version
 
 For a no-install portable version:
