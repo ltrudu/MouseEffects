@@ -19,8 +19,9 @@ public class PresetManager
 
     public PresetManager()
     {
-        var pluginDir = Path.GetDirectoryName(typeof(PresetManager).Assembly.Location);
-        _presetsFolder = Path.Combine(pluginDir!, "ColorBlindnessNG_Presets");
+        // Store presets in AppData/Roaming/MouseEffects/plugins/ColorBlindnessNG_Presets
+        var appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        _presetsFolder = Path.Combine(appDataFolder, "MouseEffects", "plugins", "ColorBlindnessNG_Presets");
         EnsurePresetsFolderExists();
     }
 

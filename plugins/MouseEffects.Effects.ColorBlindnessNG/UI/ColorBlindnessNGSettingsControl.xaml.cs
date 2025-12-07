@@ -64,19 +64,19 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         _effect.Configuration.Set(prefix + "redEnabled", zone.RedChannel.Enabled);
         _effect.Configuration.Set(prefix + "redStrength", zone.RedChannel.Strength);
-        _effect.Configuration.Set(prefix + "redWhiteProt", zone.RedChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "redWhiteProtection", zone.RedChannel.WhiteProtection);
         _effect.Configuration.Set(prefix + "redStartColor", CustomPreset.ToHexColor(zone.RedChannel.StartColor));
         _effect.Configuration.Set(prefix + "redEndColor", CustomPreset.ToHexColor(zone.RedChannel.EndColor));
 
         _effect.Configuration.Set(prefix + "greenEnabled", zone.GreenChannel.Enabled);
         _effect.Configuration.Set(prefix + "greenStrength", zone.GreenChannel.Strength);
-        _effect.Configuration.Set(prefix + "greenWhiteProt", zone.GreenChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "greenWhiteProtection", zone.GreenChannel.WhiteProtection);
         _effect.Configuration.Set(prefix + "greenStartColor", CustomPreset.ToHexColor(zone.GreenChannel.StartColor));
         _effect.Configuration.Set(prefix + "greenEndColor", CustomPreset.ToHexColor(zone.GreenChannel.EndColor));
 
         _effect.Configuration.Set(prefix + "blueEnabled", zone.BlueChannel.Enabled);
         _effect.Configuration.Set(prefix + "blueStrength", zone.BlueChannel.Strength);
-        _effect.Configuration.Set(prefix + "blueWhiteProt", zone.BlueChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "blueWhiteProtection", zone.BlueChannel.WhiteProtection);
         _effect.Configuration.Set(prefix + "blueStartColor", CustomPreset.ToHexColor(zone.BlueChannel.StartColor));
         _effect.Configuration.Set(prefix + "blueEndColor", CustomPreset.ToHexColor(zone.BlueChannel.EndColor));
     }
@@ -206,11 +206,11 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
                 UpdateEdgeSoftnessLabel();
             }
 
-            // Load zone 0 settings
+            // Load all zone settings
             LoadZone0Settings();
-
-            // Load zone 1 settings
             LoadZone1Settings();
+            LoadZone2Settings();
+            LoadZone3Settings();
 
             // Update UI visibility
             UpdateSplitModeUI((int)_effect.SplitMode);
@@ -292,6 +292,70 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone1SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone1SimGuidedFilterCombo.Items.Count - 1));
         Zone1SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
         Zone1SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+    }
+
+    private void LoadZone2Settings()
+    {
+        if (_effect == null) return;
+        var zone = _effect.GetZone(2);
+
+        Zone2ModeCombo.SelectedIndex = (int)zone.Mode;
+
+        // Zone2 uses simplified filter list: 0=None, 1=Protan, 2=Deutan, 3=Tritan
+        int filterIndex = zone.SimulationFilterType;
+        if (filterIndex == 0) filterIndex = 0;
+        else if (filterIndex <= 2) filterIndex = 1; // Protan
+        else if (filterIndex <= 4) filterIndex = 2; // Deutan
+        else filterIndex = 3; // Tritan
+        Zone2SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone2SimFilterCombo.Items.Count - 1);
+
+        // Simulation-guided correction settings
+        Zone2SimGuidedCheckBox.IsChecked = zone.SimulationGuidedEnabled;
+        Zone2SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone2SimGuidedMachadoRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Machado;
+        Zone2SimGuidedStrictRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Strict;
+        int simGuidedFilterIndex = zone.SimulationGuidedFilterType;
+        if (simGuidedFilterIndex >= 13) simGuidedFilterIndex = simGuidedFilterIndex - 7;
+        else if (simGuidedFilterIndex >= 1) simGuidedFilterIndex = simGuidedFilterIndex - 1;
+        Zone2SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone2SimGuidedFilterCombo.Items.Count - 1));
+        Zone2SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
+        Zone2SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+
+        // Update panel visibility based on mode
+        Zone2SimulationPanel.Visibility = zone.Mode == ZoneMode.Simulation ? Visibility.Visible : Visibility.Collapsed;
+        Zone2CorrectionPanel.Visibility = zone.Mode == ZoneMode.Correction ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void LoadZone3Settings()
+    {
+        if (_effect == null) return;
+        var zone = _effect.GetZone(3);
+
+        Zone3ModeCombo.SelectedIndex = (int)zone.Mode;
+
+        // Zone3 uses simplified filter list: 0=None, 1=Protan, 2=Deutan, 3=Tritan
+        int filterIndex = zone.SimulationFilterType;
+        if (filterIndex == 0) filterIndex = 0;
+        else if (filterIndex <= 2) filterIndex = 1; // Protan
+        else if (filterIndex <= 4) filterIndex = 2; // Deutan
+        else filterIndex = 3; // Tritan
+        Zone3SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone3SimFilterCombo.Items.Count - 1);
+
+        // Simulation-guided correction settings
+        Zone3SimGuidedCheckBox.IsChecked = zone.SimulationGuidedEnabled;
+        Zone3SimGuidedPanel.Visibility = zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+        Zone3SimGuidedMachadoRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Machado;
+        Zone3SimGuidedStrictRadio.IsChecked = zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Strict;
+        int simGuidedFilterIndex = zone.SimulationGuidedFilterType;
+        if (simGuidedFilterIndex >= 13) simGuidedFilterIndex = simGuidedFilterIndex - 7;
+        else if (simGuidedFilterIndex >= 1) simGuidedFilterIndex = simGuidedFilterIndex - 1;
+        Zone3SimGuidedFilterCombo.SelectedIndex = Math.Max(0, Math.Min(simGuidedFilterIndex, Zone3SimGuidedFilterCombo.Items.Count - 1));
+        Zone3SimGuidedSensitivitySlider.Value = zone.SimulationGuidedSensitivity;
+        Zone3SimGuidedSensitivityLabel.Text = $"Sensitivity ({zone.SimulationGuidedSensitivity:F2})";
+
+        // Update panel visibility based on mode
+        Zone3SimulationPanel.Visibility = zone.Mode == ZoneMode.Simulation ? Visibility.Visible : Visibility.Collapsed;
+        Zone3CorrectionPanel.Visibility = zone.Mode == ZoneMode.Correction ? Visibility.Visible : Visibility.Collapsed;
     }
 
     #region UI Event Handlers
@@ -1185,7 +1249,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     }
 
     /// <summary>
-    /// Restores the saved preset selection for a specific zone.
+    /// Restores the saved preset selection for a specific zone and applies the preset values.
     /// </summary>
     private void RestorePresetSelectionForZone(int zoneIndex, ComboBox presetCombo)
     {
@@ -1204,8 +1268,9 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
         if (foundIndex >= 0)
         {
-            // Found the preset, select it
+            // Found the preset, select it and apply the preset values
             presetCombo.SelectedIndex = foundIndex;
+            ApplyPresetToZoneByIndex(zoneIndex, presetCombo, foundIndex);
         }
         else
         {
@@ -1219,10 +1284,62 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             // Find and select Passthrough (should be at index 1)
             int passthroughIndex = FindPresetIndexByName(presetCombo, "Passthrough");
             presetCombo.SelectedIndex = passthroughIndex >= 0 ? passthroughIndex : 0;
+            if (passthroughIndex >= 0)
+            {
+                ApplyPresetToZoneByIndex(zoneIndex, presetCombo, passthroughIndex);
+            }
 
             // Clear the invalid saved preset name
             _effect.Configuration.Set($"zone{zoneIndex}_presetName", "Passthrough");
         }
+    }
+
+    /// <summary>
+    /// Applies a preset to a zone by combo box index (without saving config).
+    /// Used during startup to apply saved preset selections.
+    /// </summary>
+    private void ApplyPresetToZoneByIndex(int zoneIndex, ComboBox presetCombo, int selectedIndex)
+    {
+        if (_effect == null || selectedIndex < 0) return;
+
+        // Skip if separator selected
+        if (presetCombo.Items[selectedIndex] is Separator)
+            return;
+
+        CorrectionPreset? preset = null;
+
+        if (selectedIndex < _builtInPresetCount)
+        {
+            // Built-in preset
+            preset = CorrectionPresets.All[selectedIndex];
+        }
+        else if (selectedIndex > _builtInPresetCount && _presetManager.CustomPresets.Count > 0)
+        {
+            // Custom preset
+            int customIndex = selectedIndex - _builtInPresetCount - 1;
+            if (customIndex >= 0 && customIndex < _presetManager.CustomPresets.Count)
+            {
+                var customPreset = _presetManager.CustomPresets[customIndex];
+                preset = customPreset.ToCorrectionPreset();
+            }
+        }
+
+        if (preset == null) return;
+
+        // Apply preset to zone
+        var zone = _effect.GetZone(zoneIndex);
+        zone.ApplyPreset(preset);
+
+        // Refresh the correction editor UI to show the applied values
+        var editor = zoneIndex switch
+        {
+            0 => Zone0CorrectionEditor,
+            1 => Zone1CorrectionEditor,
+            2 => Zone2CorrectionEditor,
+            3 => Zone3CorrectionEditor,
+            _ => null
+        };
+        editor?.LoadFromZone();
     }
 
     /// <summary>
