@@ -13,22 +13,22 @@ public record CorrectionPreset
     // Red channel settings
     public bool RedEnabled { get; init; }
     public float RedStrength { get; init; } = 1.0f;
-    public Vector3 RedStartColor { get; init; } = new(1, 0, 0);
-    public Vector3 RedEndColor { get; init; } = new(0, 1, 1);
+    public Vector3 RedStartColor { get; init; } = new(0, 0, 0);  // Black - pixels with no red stay unchanged
+    public Vector3 RedEndColor { get; init; } = new(0, 1, 1);    // Cyan
     public float RedWhiteProtection { get; init; } = 0.01f;
 
     // Green channel settings
     public bool GreenEnabled { get; init; }
     public float GreenStrength { get; init; } = 1.0f;
-    public Vector3 GreenStartColor { get; init; } = new(0, 1, 0);
-    public Vector3 GreenEndColor { get; init; } = new(0, 1, 1);
+    public Vector3 GreenStartColor { get; init; } = new(0, 0, 0);  // Black - pixels with no green stay unchanged
+    public Vector3 GreenEndColor { get; init; } = new(0, 1, 1);    // Cyan
     public float GreenWhiteProtection { get; init; } = 0.01f;
 
     // Blue channel settings
     public bool BlueEnabled { get; init; }
     public float BlueStrength { get; init; } = 1.0f;
-    public Vector3 BlueStartColor { get; init; } = new(0, 0, 1);
-    public Vector3 BlueEndColor { get; init; } = new(1, 1, 0);
+    public Vector3 BlueStartColor { get; init; } = new(0, 0, 0);  // Black - pixels with no blue stay unchanged
+    public Vector3 BlueEndColor { get; init; } = new(1, 1, 0);    // Yellow
     public float BlueWhiteProtection { get; init; } = 0.01f;
 
     // Default intensity for this preset
@@ -82,7 +82,7 @@ public static class CorrectionPresets
         RedEnabled = false,
         GreenEnabled = true,
         GreenStrength = 1.0f,
-        GreenStartColor = new Vector3(0, 1, 0),     // Pure green
+        GreenStartColor = new Vector3(0, 0, 0),     // Black - no green stays unchanged
         GreenEndColor = new Vector3(0, 0.8f, 1),    // Cyan-blue
         BlueEnabled = false,
         DefaultIntensity = 1.0f,
@@ -100,7 +100,7 @@ public static class CorrectionPresets
         Description = "Red-blind (L-cone deficiency). Shifts reds to cyan.",
         RedEnabled = true,
         RedStrength = 1.0f,
-        RedStartColor = new Vector3(1, 0, 0),       // Pure red
+        RedStartColor = new Vector3(0, 0, 0),       // Black - no red stays unchanged
         RedEndColor = new Vector3(0, 0.8f, 1),      // Cyan-blue
         GreenEnabled = false,
         BlueEnabled = false,
@@ -121,7 +121,7 @@ public static class CorrectionPresets
         GreenEnabled = false,
         BlueEnabled = true,
         BlueStrength = 1.0f,
-        BlueStartColor = new Vector3(0, 0, 1),      // Pure blue
+        BlueStartColor = new Vector3(0, 0, 0),      // Black - no blue stays unchanged
         BlueEndColor = new Vector3(1, 0.9f, 0),     // Yellow-orange
         DefaultIntensity = 1.0f,
         RecommendedGradientType = GradientType.HSL,
@@ -139,7 +139,7 @@ public static class CorrectionPresets
         RedEnabled = false,
         GreenEnabled = true,
         GreenStrength = 0.5f,
-        GreenStartColor = new Vector3(0, 1, 0),     // Pure green
+        GreenStartColor = new Vector3(0, 0, 0),     // Black - pixels with no green stay unchanged
         GreenEndColor = new Vector3(0, 0.7f, 0.6f), // Teal
         BlueEnabled = false,
         DefaultIntensity = 0.5f,
@@ -157,7 +157,7 @@ public static class CorrectionPresets
         Description = "Red-weak (partial L-cone deficiency). Mild red to teal shift.",
         RedEnabled = true,
         RedStrength = 0.5f,
-        RedStartColor = new Vector3(1, 0, 0),       // Pure red
+        RedStartColor = new Vector3(0, 0, 0),       // Black - pixels with no red stay unchanged
         RedEndColor = new Vector3(0, 0.7f, 0.6f),   // Teal
         GreenEnabled = false,
         BlueEnabled = false,
@@ -178,7 +178,7 @@ public static class CorrectionPresets
         GreenEnabled = false,
         BlueEnabled = true,
         BlueStrength = 0.5f,
-        BlueStartColor = new Vector3(0, 0, 1),      // Pure blue
+        BlueStartColor = new Vector3(0, 0, 0),      // Black - pixels with no blue stay unchanged
         BlueEndColor = new Vector3(1, 0.9f, 0),     // Yellow
         DefaultIntensity = 0.5f,
         RecommendedGradientType = GradientType.PerceptualLAB,
@@ -195,11 +195,11 @@ public static class CorrectionPresets
         Description = "Combined red-green weakness. Shifts both to blue spectrum.",
         RedEnabled = true,
         RedStrength = 0.7f,
-        RedStartColor = new Vector3(1, 0, 0),       // Pure red
+        RedStartColor = new Vector3(0, 0, 0),       // Black - pixels with no red stay unchanged
         RedEndColor = new Vector3(0.3f, 0.3f, 1),   // Blue
         GreenEnabled = true,
         GreenStrength = 0.7f,
-        GreenStartColor = new Vector3(0, 1, 0),     // Pure green
+        GreenStartColor = new Vector3(0, 0, 0),     // Black - pixels with no green stay unchanged
         GreenEndColor = new Vector3(0.3f, 0.3f, 1), // Blue
         BlueEnabled = false,
         DefaultIntensity = 0.7f,
@@ -216,15 +216,15 @@ public static class CorrectionPresets
         Description = "Enhances color separation for general accessibility.",
         RedEnabled = true,
         RedStrength = 0.3f,
-        RedStartColor = new Vector3(1, 0, 0),
+        RedStartColor = new Vector3(0, 0, 0),       // Black - pixels with no red stay unchanged
         RedEndColor = new Vector3(1, 0.2f, 0.2f),
         GreenEnabled = true,
         GreenStrength = 0.3f,
-        GreenStartColor = new Vector3(0, 1, 0),
+        GreenStartColor = new Vector3(0, 0, 0),     // Black - pixels with no green stay unchanged
         GreenEndColor = new Vector3(0.2f, 1, 0.2f),
         BlueEnabled = true,
         BlueStrength = 0.3f,
-        BlueStartColor = new Vector3(0, 0, 1),
+        BlueStartColor = new Vector3(0, 0, 0),      // Black - pixels with no blue stay unchanged
         BlueEndColor = new Vector3(0.2f, 0.2f, 1),
         DefaultIntensity = 0.5f,
         RecommendedGradientType = GradientType.LinearRGB,
