@@ -38,7 +38,7 @@ struct ZoneParams
     float SimulationGuidedEnabled;    // 1.0 = use simulation to detect affected pixels
     float SimulationGuidedFilterType; // CVD type for detection (0=None, 1-6=Machado, 7-12=Strict)
 
-    float SimulationGuidedSensitivity; // Sensitivity multiplier (0.5 = conservative, 5.0 = aggressive)
+    float SimulationGuidedSensitivity; // Sensitivity multiplier (0.5 = conservative, 25.0 = aggressive)
     float PostCorrectionSimEnabled;    // 1.0 = apply CVD simulation AFTER correction (for verification)
     float PostCorrectionSimFilterType; // CVD type for post-correction simulation (1-14)
     float PostCorrectionSimIntensity;  // Intensity of post-correction simulation (0-1)

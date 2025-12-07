@@ -242,7 +242,7 @@
                             </ComboBox>
                             <TextBlock x:Name="Zone0SimGuidedSensitivityLabel" Text="Sensitivity (2.00)" Style="{StaticResource LabelStyle}"
                                        ToolTip="Lower = only strongly affected pixels, Higher = more pixels corrected"/>
-                            <Slider x:Name="Zone0SimGuidedSensitivitySlider" Minimum="0.5" Maximum="5" Value="2"
+                            <Slider x:Name="Zone0SimGuidedSensitivitySlider" Minimum="0.5" Maximum="25" Value="2"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone0SimGuidedSensitivity_Changed"/>
                         </StackPanel>
                         <Separator Margin="0,8,0,8"/>
@@ -376,7 +376,7 @@
                             </ComboBox>
                             <TextBlock x:Name="Zone1SimGuidedSensitivityLabel" Text="Sensitivity (2.00)" Style="{StaticResource LabelStyle}"
                                        ToolTip="Lower = only strongly affected pixels, Higher = more pixels corrected"/>
-                            <Slider x:Name="Zone1SimGuidedSensitivitySlider" Minimum="0.5" Maximum="5" Value="2"
+                            <Slider x:Name="Zone1SimGuidedSensitivitySlider" Minimum="0.5" Maximum="25" Value="2"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone1SimGuidedSensitivity_Changed"/>
                         </StackPanel>
                         <Separator Margin="0,8,0,8"/>
@@ -494,7 +494,7 @@
                             </ComboBox>
                             <TextBlock x:Name="Zone2SimGuidedSensitivityLabel" Text="Sensitivity (2.00)" Style="{StaticResource LabelStyle}"
                                        ToolTip="Lower = only strongly affected pixels, Higher = more pixels corrected"/>
-                            <Slider x:Name="Zone2SimGuidedSensitivitySlider" Minimum="0.5" Maximum="5" Value="2"
+                            <Slider x:Name="Zone2SimGuidedSensitivitySlider" Minimum="0.5" Maximum="25" Value="2"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone2SimGuidedSensitivity_Changed"/>
                         </StackPanel>
                         <Separator Margin="0,8,0,8"/>
@@ -606,7 +606,7 @@
                             </ComboBox>
                             <TextBlock x:Name="Zone3SimGuidedSensitivityLabel" Text="Sensitivity (2.00)" Style="{StaticResource LabelStyle}"
                                        ToolTip="Lower = only strongly affected pixels, Higher = more pixels corrected"/>
-                            <Slider x:Name="Zone3SimGuidedSensitivitySlider" Minimum="0.5" Maximum="5" Value="2"
+                            <Slider x:Name="Zone3SimGuidedSensitivitySlider" Minimum="0.5" Maximum="25" Value="2"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone3SimGuidedSensitivity_Changed"/>
                         </StackPanel>
                         <Separator Margin="0,8,0,8"/>
