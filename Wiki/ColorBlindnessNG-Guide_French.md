@@ -683,6 +683,43 @@ Comment les couleurs se melangent de la couleur de depart a la couleur d'arrivee
 
 ---
 
+### Modes de Fusion
+
+**Nouveau dans v1.0.29 !** Controlez COMMENT la couleur de correction LUT se melange avec le pixel original.
+
+| Mode | Comment ca Fonctionne | Ideal Pour |
+|------|----------------------|------------|
+| **Pondere par Canal** (defaut) | L'intensite du melange depend de l'intensite de la couleur | Couleurs pures/vives (bouton rouge, icone verte) |
+| **Direct** | Remplacement complet, controle uniquement par la force | Couleurs sombres, photos naturelles, forets vertes |
+| **Proportionnel** | Melange base sur la dominance relative du canal | Couleurs mixtes ou le canal n'est pas dominant |
+| **Additif** | Ajoute le decalage de couleur en preservant la luminosite | Corrections subtiles qui gardent la luminosite |
+| **Ecran** | Eclaircit les couleurs (comme le mode ecran de Photoshop) | Creer des effets plus clairs, delaves |
+
+**Le Probleme que les Modes de Fusion Resolvent :**
+
+La formule originale (Pondere par Canal) fonctionne bien pour les **couleurs pures et vives** comme :
+- Un bouton rouge (RVB : 255, 0, 0) → 100% de correction appliquee
+- Une icone verte (RVB : 0, 255, 0) → 100% de correction appliquee
+
+Mais elle est **faible pour les couleurs sombres ou mixtes** comme :
+- Un vert foret sombre (RVB : 60, 100, 50) → Seulement 40% de correction appliquee !
+- Un marron (RVB : 139, 90, 43) → Tres peu de correction
+
+**Solution :** Passez au mode de fusion **Direct** pour les photos et images naturelles.
+
+**Comment changer :**
+1. Dans les parametres de la zone, trouvez le menu deroulant "Mode de Fusion"
+2. Essayez "Direct" si les couleurs ne sont pas assez corrigees
+3. Experimentez avec d'autres modes pour trouver ce qui convient le mieux a votre contenu
+
+**Exemple Visuel :**
+
+*Image de foret originale avec des verts sombres :*
+- Pondere par Canal : Le vert change a peine (correction faible)
+- Direct : Le vert se decale clairement vers le cyan (correction complete)
+
+---
+
 ### Modes Cercle et Rectangle
 
 Au lieu d'affecter tout votre ecran, l'effet peut suivre votre souris :

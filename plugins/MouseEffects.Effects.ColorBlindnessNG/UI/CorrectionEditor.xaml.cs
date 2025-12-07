@@ -61,6 +61,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             RedStrengthLabel.Text = $"Strength ({_zone.RedChannel.Strength:F2})";
             RedWhiteProt.Value = _zone.RedChannel.WhiteProtection;
             RedWhiteProtLabel.Text = $"White Protection ({_zone.RedChannel.WhiteProtection:F2})";
+            RedDominance.Value = _zone.RedChannel.DominanceThreshold;
+            RedDominanceLabel.Text = FormatDominanceLabel(_zone.RedChannel.DominanceThreshold);
+            RedBlendModeCombo.SelectedIndex = (int)_zone.RedChannel.BlendMode;
             RedStart.Background = new SolidColorBrush(Vector3ToColor(_zone.RedChannel.StartColor));
             RedEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.RedChannel.EndColor));
             RedPanel.Visibility = _zone.RedChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -71,6 +74,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             GreenStrengthLabel.Text = $"Strength ({_zone.GreenChannel.Strength:F2})";
             GreenWhiteProt.Value = _zone.GreenChannel.WhiteProtection;
             GreenWhiteProtLabel.Text = $"White Protection ({_zone.GreenChannel.WhiteProtection:F2})";
+            GreenDominance.Value = _zone.GreenChannel.DominanceThreshold;
+            GreenDominanceLabel.Text = FormatDominanceLabel(_zone.GreenChannel.DominanceThreshold);
+            GreenBlendModeCombo.SelectedIndex = (int)_zone.GreenChannel.BlendMode;
             GreenStart.Background = new SolidColorBrush(Vector3ToColor(_zone.GreenChannel.StartColor));
             GreenEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.GreenChannel.EndColor));
             GreenPanel.Visibility = _zone.GreenChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -81,6 +87,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             BlueStrengthLabel.Text = $"Strength ({_zone.BlueChannel.Strength:F2})";
             BlueWhiteProt.Value = _zone.BlueChannel.WhiteProtection;
             BlueWhiteProtLabel.Text = $"White Protection ({_zone.BlueChannel.WhiteProtection:F2})";
+            BlueDominance.Value = _zone.BlueChannel.DominanceThreshold;
+            BlueDominanceLabel.Text = FormatDominanceLabel(_zone.BlueChannel.DominanceThreshold);
+            BlueBlendModeCombo.SelectedIndex = (int)_zone.BlueChannel.BlendMode;
             BlueStart.Background = new SolidColorBrush(Vector3ToColor(_zone.BlueChannel.StartColor));
             BlueEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.BlueChannel.EndColor));
             BluePanel.Visibility = _zone.BlueChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -111,18 +120,24 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             RedEnabled = _zone.RedChannel.Enabled,
             RedStrength = _zone.RedChannel.Strength,
             RedWhiteProtection = _zone.RedChannel.WhiteProtection,
+            RedDominanceThreshold = _zone.RedChannel.DominanceThreshold,
+            RedBlendMode = (int)_zone.RedChannel.BlendMode,
             RedStartColor = CustomPreset.ToHexColor(_zone.RedChannel.StartColor),
             RedEndColor = CustomPreset.ToHexColor(_zone.RedChannel.EndColor),
 
             GreenEnabled = _zone.GreenChannel.Enabled,
             GreenStrength = _zone.GreenChannel.Strength,
             GreenWhiteProtection = _zone.GreenChannel.WhiteProtection,
+            GreenDominanceThreshold = _zone.GreenChannel.DominanceThreshold,
+            GreenBlendMode = (int)_zone.GreenChannel.BlendMode,
             GreenStartColor = CustomPreset.ToHexColor(_zone.GreenChannel.StartColor),
             GreenEndColor = CustomPreset.ToHexColor(_zone.GreenChannel.EndColor),
 
             BlueEnabled = _zone.BlueChannel.Enabled,
             BlueStrength = _zone.BlueChannel.Strength,
             BlueWhiteProtection = _zone.BlueChannel.WhiteProtection,
+            BlueDominanceThreshold = _zone.BlueChannel.DominanceThreshold,
+            BlueBlendMode = (int)_zone.BlueChannel.BlendMode,
             BlueStartColor = CustomPreset.ToHexColor(_zone.BlueChannel.StartColor),
             BlueEndColor = CustomPreset.ToHexColor(_zone.BlueChannel.EndColor),
 
@@ -162,6 +177,33 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         OnSettingsChanged();
     }
 
+    private void RedBlendMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading || _zone == null) return;
+
+        _zone.RedChannel.BlendMode = (LutBlendMode)RedBlendModeCombo.SelectedIndex;
+
+        OnSettingsChanged();
+    }
+
+    private void GreenBlendMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading || _zone == null) return;
+
+        _zone.GreenChannel.BlendMode = (LutBlendMode)GreenBlendModeCombo.SelectedIndex;
+
+        OnSettingsChanged();
+    }
+
+    private void BlueBlendMode_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading || _zone == null) return;
+
+        _zone.BlueChannel.BlendMode = (LutBlendMode)BlueBlendModeCombo.SelectedIndex;
+
+        OnSettingsChanged();
+    }
+
     private void Channel_Changed(object sender, RoutedEventArgs e)
     {
         if (_isLoading || _zone == null) return;
@@ -170,22 +212,28 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         _zone.RedChannel.Enabled = RedEnabled.IsChecked == true;
         _zone.RedChannel.Strength = (float)RedStrength.Value;
         _zone.RedChannel.WhiteProtection = (float)RedWhiteProt.Value;
+        _zone.RedChannel.DominanceThreshold = (float)RedDominance.Value;
 
         _zone.GreenChannel.Enabled = GreenEnabled.IsChecked == true;
         _zone.GreenChannel.Strength = (float)GreenStrength.Value;
         _zone.GreenChannel.WhiteProtection = (float)GreenWhiteProt.Value;
+        _zone.GreenChannel.DominanceThreshold = (float)GreenDominance.Value;
 
         _zone.BlueChannel.Enabled = BlueEnabled.IsChecked == true;
         _zone.BlueChannel.Strength = (float)BlueStrength.Value;
         _zone.BlueChannel.WhiteProtection = (float)BlueWhiteProt.Value;
+        _zone.BlueChannel.DominanceThreshold = (float)BlueDominance.Value;
 
         // Update labels with current values
         RedStrengthLabel.Text = $"Strength ({_zone.RedChannel.Strength:F2})";
         RedWhiteProtLabel.Text = $"White Protection ({_zone.RedChannel.WhiteProtection:F2})";
+        RedDominanceLabel.Text = FormatDominanceLabel(_zone.RedChannel.DominanceThreshold);
         GreenStrengthLabel.Text = $"Strength ({_zone.GreenChannel.Strength:F2})";
         GreenWhiteProtLabel.Text = $"White Protection ({_zone.GreenChannel.WhiteProtection:F2})";
+        GreenDominanceLabel.Text = FormatDominanceLabel(_zone.GreenChannel.DominanceThreshold);
         BlueStrengthLabel.Text = $"Strength ({_zone.BlueChannel.Strength:F2})";
         BlueWhiteProtLabel.Text = $"White Protection ({_zone.BlueChannel.WhiteProtection:F2})";
+        BlueDominanceLabel.Text = FormatDominanceLabel(_zone.BlueChannel.DominanceThreshold);
 
         // Update panel visibility
         RedPanel.Visibility = _zone.RedChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
@@ -259,4 +307,11 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
 
     private static Vector3 ColorToVector3(WpfColor c) =>
         new(c.R / 255f, c.G / 255f, c.B / 255f);
+
+    private static string FormatDominanceLabel(float value)
+    {
+        if (value < 0.01f)
+            return "Dominance Threshold (Off)";
+        return $"Dominance Threshold ({value * 100:F0}%)";
+    }
 }

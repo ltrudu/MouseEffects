@@ -167,24 +167,30 @@ public class ZoneSettings
             LutsNeedUpdate = LutsNeedUpdate
         };
 
-        // Copy channel settings
+        // Copy channel settings (including per-channel blend modes)
         clone.RedChannel.Enabled = RedChannel.Enabled;
         clone.RedChannel.Strength = RedChannel.Strength;
         clone.RedChannel.StartColor = RedChannel.StartColor;
         clone.RedChannel.EndColor = RedChannel.EndColor;
         clone.RedChannel.WhiteProtection = RedChannel.WhiteProtection;
+        clone.RedChannel.DominanceThreshold = RedChannel.DominanceThreshold;
+        clone.RedChannel.BlendMode = RedChannel.BlendMode;
 
         clone.GreenChannel.Enabled = GreenChannel.Enabled;
         clone.GreenChannel.Strength = GreenChannel.Strength;
         clone.GreenChannel.StartColor = GreenChannel.StartColor;
         clone.GreenChannel.EndColor = GreenChannel.EndColor;
         clone.GreenChannel.WhiteProtection = GreenChannel.WhiteProtection;
+        clone.GreenChannel.DominanceThreshold = GreenChannel.DominanceThreshold;
+        clone.GreenChannel.BlendMode = GreenChannel.BlendMode;
 
         clone.BlueChannel.Enabled = BlueChannel.Enabled;
         clone.BlueChannel.Strength = BlueChannel.Strength;
         clone.BlueChannel.StartColor = BlueChannel.StartColor;
         clone.BlueChannel.EndColor = BlueChannel.EndColor;
         clone.BlueChannel.WhiteProtection = BlueChannel.WhiteProtection;
+        clone.BlueChannel.DominanceThreshold = BlueChannel.DominanceThreshold;
+        clone.BlueChannel.BlendMode = BlueChannel.BlendMode;
 
         return clone;
     }
@@ -199,18 +205,24 @@ public class ZoneSettings
         RedChannel.StartColor = preset.RedStartColor;
         RedChannel.EndColor = preset.RedEndColor;
         RedChannel.WhiteProtection = preset.RedWhiteProtection;
+        RedChannel.DominanceThreshold = preset.RedDominanceThreshold;
+        RedChannel.BlendMode = preset.RedBlendMode;
 
         GreenChannel.Enabled = preset.GreenEnabled;
         GreenChannel.Strength = preset.GreenStrength;
         GreenChannel.StartColor = preset.GreenStartColor;
         GreenChannel.EndColor = preset.GreenEndColor;
         GreenChannel.WhiteProtection = preset.GreenWhiteProtection;
+        GreenChannel.DominanceThreshold = preset.GreenDominanceThreshold;
+        GreenChannel.BlendMode = preset.GreenBlendMode;
 
         BlueChannel.Enabled = preset.BlueEnabled;
         BlueChannel.Strength = preset.BlueStrength;
         BlueChannel.StartColor = preset.BlueStartColor;
         BlueChannel.EndColor = preset.BlueEndColor;
         BlueChannel.WhiteProtection = preset.BlueWhiteProtection;
+        BlueChannel.DominanceThreshold = preset.BlueDominanceThreshold;
+        BlueChannel.BlendMode = preset.BlueBlendMode;
 
         GradientType = preset.RecommendedGradientType;
         ApplicationMode = preset.RecommendedApplicationMode;

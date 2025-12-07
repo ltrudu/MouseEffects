@@ -38,6 +38,46 @@ public enum GradientType
 }
 
 /// <summary>
+/// Blend mode for LUT correction - determines how LUT colors are blended with original.
+/// </summary>
+public enum LutBlendMode
+{
+    /// <summary>
+    /// Original formula: blend amount depends on channel intensity.
+    /// Best for pure/bright colors, weak for dark colors.
+    /// Formula: lerp(result, lerp(result, lut, channel), strength)
+    /// </summary>
+    ChannelWeighted = 0,
+
+    /// <summary>
+    /// Direct replacement controlled only by strength.
+    /// Works equally for all color intensities.
+    /// Formula: lerp(result, lut, strength)
+    /// </summary>
+    Direct = 1,
+
+    /// <summary>
+    /// Blend based on channel's relative dominance (channel/max).
+    /// Good for mixed colors where channel isn't dominant.
+    /// Formula: lerp(result, lut, (channel/maxChannel) * strength)
+    /// </summary>
+    Proportional = 2,
+
+    /// <summary>
+    /// Adds the color shift from start to LUT color.
+    /// Preserves luminosity better.
+    /// Formula: result + (lut - startColor) * channel * strength
+    /// </summary>
+    Additive = 3,
+
+    /// <summary>
+    /// Screen blend mode - brightens colors.
+    /// Formula: 1 - (1-result) * (1 - lut * channel * strength)
+    /// </summary>
+    Screen = 4
+}
+
+/// <summary>
 /// Split screen mode for comparing original vs corrected.
 /// </summary>
 public enum SplitMode
@@ -60,6 +100,17 @@ public class ChannelLUTSettings
     public Vector3 StartColor { get; set; } = new(1, 0, 0);
     public Vector3 EndColor { get; set; } = new(0, 1, 1);
     public float WhiteProtection { get; set; } = 0.01f;
+    /// <summary>
+    /// Dominance threshold: minimum percentage of total color (R+G+B) this channel must have
+    /// to apply LUT correction. 0.0 = disabled, 0.33 = equal distribution, 0.5+ = dominant.
+    /// Use to exclude colors like yellow (R+G) when only correcting pure reds.
+    /// </summary>
+    public float DominanceThreshold { get; set; } = 0.0f;
+    /// <summary>
+    /// Blend mode for this channel's LUT correction.
+    /// Determines how LUT colors are blended with the original pixel.
+    /// </summary>
+    public LutBlendMode BlendMode { get; set; } = LutBlendMode.ChannelWeighted;
 }
 
 /// <summary>
@@ -421,6 +472,10 @@ public sealed class ColorBlindnessNGEffect : EffectBase
             channel.Strength = strength;
         if (Configuration.TryGet($"{prefix}WhiteProtection", out float whiteProt))
             channel.WhiteProtection = whiteProt;
+        if (Configuration.TryGet($"{prefix}DominanceThreshold", out float dominanceThreshold))
+            channel.DominanceThreshold = dominanceThreshold;
+        if (Configuration.TryGet($"{prefix}BlendMode", out int blendMode))
+            channel.BlendMode = (LutBlendMode)blendMode;
         if (Configuration.TryGet($"{prefix}StartColor", out string? startColor) && startColor != null)
         {
             var newColor = ParseHexColor(startColor);
@@ -594,7 +649,13 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 SimulationGuidedSensitivity = z.SimulationGuidedSensitivity,
                 PostCorrectionSimEnabled = z.PostCorrectionSimEnabled ? 1.0f : 0.0f,
                 PostCorrectionSimFilterType = effectivePostSimFilterType,
-                PostCorrectionSimIntensity = z.PostCorrectionSimIntensity
+                PostCorrectionSimIntensity = z.PostCorrectionSimIntensity,
+                RedDominanceThreshold = z.RedChannel.DominanceThreshold,
+                GreenDominanceThreshold = z.GreenChannel.DominanceThreshold,
+                BlueDominanceThreshold = z.BlueChannel.DominanceThreshold,
+                RedBlendMode = (float)z.RedChannel.BlendMode,
+                GreenBlendMode = (float)z.GreenChannel.BlendMode,
+                BlueBlendMode = (float)z.BlueChannel.BlendMode
             };
 
             switch (i)
@@ -648,7 +709,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Per-zone parameters packed for shader.
-    /// Size: 96 bytes (24 floats)
+    /// Size: 112 bytes (28 floats)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct ZoneParams
@@ -678,17 +739,22 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         public float PostCorrectionSimFilterType; // CVD type for post-correction simulation
         public float PostCorrectionSimIntensity;  // Intensity of post-correction simulation
 
-        public float _padding1;            // Padding for 16-byte alignment
-        public float _padding2;
-        public float _padding3;
-        public float _padding4;
+        public float RedDominanceThreshold;   // Min % of R/(R+G+B) to apply red LUT
+        public float GreenDominanceThreshold; // Min % of G/(R+G+B) to apply green LUT
+        public float BlueDominanceThreshold;  // Min % of B/(R+G+B) to apply blue LUT
+        public float RedBlendMode;            // Per-channel blend mode for red
+
+        public float GreenBlendMode;          // Per-channel blend mode for green
+        public float BlueBlendMode;           // Per-channel blend mode for blue
+        public float _padding1;               // Padding for 16-byte alignment
+        public float _padding2;               // Padding for 16-byte alignment
     }
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 48 (global) + 4 * 96 (zones) = 432 bytes
+    /// Size: 48 (global) + 4 * 112 (zones) = 496 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 432)]
+    [StructLayout(LayoutKind.Sequential, Size = 496)]
     private struct ColorBlindnessNGParams
     {
         // Global parameters (48 bytes)

@@ -683,6 +683,43 @@ How colors blend from the start color to the end color:
 
 ---
 
+### Blend Modes
+
+**New in v1.0.29!** Control HOW the LUT correction color blends with the original pixel.
+
+| Mode | How It Works | Best For |
+|------|--------------|----------|
+| **Channel-Weighted** (default) | Blend amount depends on color intensity | Pure/bright colors (red button, green icon) |
+| **Direct** | Full replacement, controlled only by strength | Dark colors, natural photos, green forests |
+| **Proportional** | Blend based on channel's relative dominance | Mixed colors where the channel isn't dominant |
+| **Additive** | Adds color shift while preserving luminosity | Subtle corrections that keep brightness |
+| **Screen** | Brightens colors (like Photoshop screen blend) | Creating lighter, washed-out effects |
+
+**The Problem Blend Modes Solve:**
+
+The original formula (Channel-Weighted) works great for **pure, bright colors** like:
+- A red button (RGB: 255, 0, 0) → 100% correction applied
+- A green icon (RGB: 0, 255, 0) → 100% correction applied
+
+But it's **weak for dark or mixed colors** like:
+- A dark forest green (RGB: 60, 100, 50) → Only 40% correction applied!
+- A brown (RGB: 139, 90, 43) → Very little correction
+
+**Solution:** Switch to **Direct** blend mode for photos and natural images.
+
+**How to change:**
+1. In the zone settings, find "Blend Mode" dropdown
+2. Try "Direct" if colors aren't being corrected enough
+3. Experiment with other modes to find what looks best for your content
+
+**Visual Example:**
+
+*Original forest image with dark greens:*
+- Channel-Weighted: Green barely changes (correction is weak)
+- Direct: Green clearly shifts to cyan (full correction)
+
+---
+
 ### Circle and Rectangle Modes
 
 Instead of affecting your whole screen, the effect can follow your mouse:

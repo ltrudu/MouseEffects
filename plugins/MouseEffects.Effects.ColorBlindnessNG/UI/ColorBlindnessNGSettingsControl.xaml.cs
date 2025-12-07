@@ -65,18 +65,24 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         _effect.Configuration.Set(prefix + "redEnabled", zone.RedChannel.Enabled);
         _effect.Configuration.Set(prefix + "redStrength", zone.RedChannel.Strength);
         _effect.Configuration.Set(prefix + "redWhiteProtection", zone.RedChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "redDominanceThreshold", zone.RedChannel.DominanceThreshold);
+        _effect.Configuration.Set(prefix + "redBlendMode", (int)zone.RedChannel.BlendMode);
         _effect.Configuration.Set(prefix + "redStartColor", CustomPreset.ToHexColor(zone.RedChannel.StartColor));
         _effect.Configuration.Set(prefix + "redEndColor", CustomPreset.ToHexColor(zone.RedChannel.EndColor));
 
         _effect.Configuration.Set(prefix + "greenEnabled", zone.GreenChannel.Enabled);
         _effect.Configuration.Set(prefix + "greenStrength", zone.GreenChannel.Strength);
         _effect.Configuration.Set(prefix + "greenWhiteProtection", zone.GreenChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "greenDominanceThreshold", zone.GreenChannel.DominanceThreshold);
+        _effect.Configuration.Set(prefix + "greenBlendMode", (int)zone.GreenChannel.BlendMode);
         _effect.Configuration.Set(prefix + "greenStartColor", CustomPreset.ToHexColor(zone.GreenChannel.StartColor));
         _effect.Configuration.Set(prefix + "greenEndColor", CustomPreset.ToHexColor(zone.GreenChannel.EndColor));
 
         _effect.Configuration.Set(prefix + "blueEnabled", zone.BlueChannel.Enabled);
         _effect.Configuration.Set(prefix + "blueStrength", zone.BlueChannel.Strength);
         _effect.Configuration.Set(prefix + "blueWhiteProtection", zone.BlueChannel.WhiteProtection);
+        _effect.Configuration.Set(prefix + "blueDominanceThreshold", zone.BlueChannel.DominanceThreshold);
+        _effect.Configuration.Set(prefix + "blueBlendMode", (int)zone.BlueChannel.BlendMode);
         _effect.Configuration.Set(prefix + "blueStartColor", CustomPreset.ToHexColor(zone.BlueChannel.StartColor));
         _effect.Configuration.Set(prefix + "blueEndColor", CustomPreset.ToHexColor(zone.BlueChannel.EndColor));
     }
@@ -325,13 +331,13 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         var zone = _effect.GetZone(2);
 
         Zone2ModeCombo.SelectedIndex = (int)zone.Mode;
+        Zone2MachadoRadio.IsChecked = zone.SimulationAlgorithm == SimulationAlgorithm.Machado;
+        Zone2StrictRadio.IsChecked = zone.SimulationAlgorithm == SimulationAlgorithm.Strict;
 
-        // Zone2 uses simplified filter list: 0=None, 1=Protan, 2=Deutan, 3=Tritan
+        // Map simulation filter type to combo index (full list like Zone0/Zone1)
         int filterIndex = zone.SimulationFilterType;
-        if (filterIndex == 0) filterIndex = 0;
-        else if (filterIndex <= 2) filterIndex = 1; // Protan
-        else if (filterIndex <= 4) filterIndex = 2; // Deutan
-        else filterIndex = 3; // Tritan
+        if (filterIndex >= 13) filterIndex = filterIndex - 5; // Achro types
+        else if (filterIndex >= 7) filterIndex = filterIndex - 6; // Strict -> same display
         Zone2SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone2SimFilterCombo.Items.Count - 1);
 
         // Simulation-guided correction settings
@@ -369,13 +375,13 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         var zone = _effect.GetZone(3);
 
         Zone3ModeCombo.SelectedIndex = (int)zone.Mode;
+        Zone3MachadoRadio.IsChecked = zone.SimulationAlgorithm == SimulationAlgorithm.Machado;
+        Zone3StrictRadio.IsChecked = zone.SimulationAlgorithm == SimulationAlgorithm.Strict;
 
-        // Zone3 uses simplified filter list: 0=None, 1=Protan, 2=Deutan, 3=Tritan
+        // Map simulation filter type to combo index (full list like Zone0/Zone1)
         int filterIndex = zone.SimulationFilterType;
-        if (filterIndex == 0) filterIndex = 0;
-        else if (filterIndex <= 2) filterIndex = 1; // Protan
-        else if (filterIndex <= 4) filterIndex = 2; // Deutan
-        else filterIndex = 3; // Tritan
+        if (filterIndex >= 13) filterIndex = filterIndex - 5; // Achro types
+        else if (filterIndex >= 7) filterIndex = filterIndex - 6; // Strict -> same display
         Zone3SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone3SimFilterCombo.Items.Count - 1);
 
         // Simulation-guided correction settings
@@ -761,14 +767,28 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone2CorrectionPanel.Visibility = zone.Mode == ZoneMode.Correction ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void Zone2Algorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.SimulationAlgorithm = Zone2StrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone2_simAlgorithm", (int)zone.SimulationAlgorithm);
+    }
+
     private void Zone2SimFilter_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
 
         var zone = _effect.GetZone(2);
-        // Simplified filter list: 0=None, 1=Protan, 2=Deutan, 3=Tritan
         int index = Zone2SimFilterCombo.SelectedIndex;
-        zone.SimulationFilterType = index == 0 ? 0 : (index * 2 - 1); // 0, 1, 3, 5
+        // Full filter list: 0=None, 1-6=Normal types, 7-8=Achro
+        if (index <= 6)
+            zone.SimulationFilterType = index;
+        else
+            zone.SimulationFilterType = index + 5; // 7->13, 8->14
         _effect.Configuration.Set("zone2_simFilterType", zone.SimulationFilterType);
     }
 
@@ -791,13 +811,28 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone3CorrectionPanel.Visibility = zone.Mode == ZoneMode.Correction ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void Zone3Algorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.SimulationAlgorithm = Zone3StrictRadio.IsChecked == true
+            ? SimulationAlgorithm.Strict
+            : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set("zone3_simAlgorithm", (int)zone.SimulationAlgorithm);
+    }
+
     private void Zone3SimFilter_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
 
         var zone = _effect.GetZone(3);
         int index = Zone3SimFilterCombo.SelectedIndex;
-        zone.SimulationFilterType = index == 0 ? 0 : (index * 2 - 1);
+        // Full filter list: 0=None, 1-6=Normal types, 7-8=Achro
+        if (index <= 6)
+            zone.SimulationFilterType = index;
+        else
+            zone.SimulationFilterType = index + 5; // 7->13, 8->14
         _effect.Configuration.Set("zone3_simFilterType", zone.SimulationFilterType);
     }
 

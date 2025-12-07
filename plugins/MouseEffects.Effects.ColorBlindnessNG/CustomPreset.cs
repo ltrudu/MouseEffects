@@ -22,6 +22,8 @@ public class CustomPreset
     public string RedStartColor { get; set; } = "#FF0000";
     public string RedEndColor { get; set; } = "#00FFFF";
     public float RedWhiteProtection { get; set; } = 0.0f;
+    public float RedDominanceThreshold { get; set; } = 0.0f;
+    public int RedBlendMode { get; set; } = 0; // LutBlendMode as int for JSON
 
     // Green channel settings
     public bool GreenEnabled { get; set; }
@@ -29,6 +31,8 @@ public class CustomPreset
     public string GreenStartColor { get; set; } = "#00FF00";
     public string GreenEndColor { get; set; } = "#00FFFF";
     public float GreenWhiteProtection { get; set; } = 0.0f;
+    public float GreenDominanceThreshold { get; set; } = 0.0f;
+    public int GreenBlendMode { get; set; } = 0; // LutBlendMode as int for JSON
 
     // Blue channel settings
     public bool BlueEnabled { get; set; }
@@ -36,6 +40,8 @@ public class CustomPreset
     public string BlueStartColor { get; set; } = "#0000FF";
     public string BlueEndColor { get; set; } = "#FFFF00";
     public float BlueWhiteProtection { get; set; } = 0.0f;
+    public float BlueDominanceThreshold { get; set; } = 0.0f;
+    public int BlueBlendMode { get; set; } = 0; // LutBlendMode as int for JSON
 
     // Global settings
     public float DefaultIntensity { get; set; } = 1.0f;
@@ -59,18 +65,24 @@ public class CustomPreset
             RedStartColor = ToHexColor(preset.RedStartColor),
             RedEndColor = ToHexColor(preset.RedEndColor),
             RedWhiteProtection = preset.RedWhiteProtection,
+            RedDominanceThreshold = preset.RedDominanceThreshold,
+            RedBlendMode = (int)preset.RedBlendMode,
 
             GreenEnabled = preset.GreenEnabled,
             GreenStrength = preset.GreenStrength,
             GreenStartColor = ToHexColor(preset.GreenStartColor),
             GreenEndColor = ToHexColor(preset.GreenEndColor),
             GreenWhiteProtection = preset.GreenWhiteProtection,
+            GreenDominanceThreshold = preset.GreenDominanceThreshold,
+            GreenBlendMode = (int)preset.GreenBlendMode,
 
             BlueEnabled = preset.BlueEnabled,
             BlueStrength = preset.BlueStrength,
             BlueStartColor = ToHexColor(preset.BlueStartColor),
             BlueEndColor = ToHexColor(preset.BlueEndColor),
             BlueWhiteProtection = preset.BlueWhiteProtection,
+            BlueDominanceThreshold = preset.BlueDominanceThreshold,
+            BlueBlendMode = (int)preset.BlueBlendMode,
 
             DefaultIntensity = preset.DefaultIntensity,
             RecommendedGradientType = (int)preset.RecommendedGradientType,
@@ -93,18 +105,24 @@ public class CustomPreset
             RedStartColor = ParseHexColor(RedStartColor),
             RedEndColor = ParseHexColor(RedEndColor),
             RedWhiteProtection = RedWhiteProtection,
+            RedDominanceThreshold = RedDominanceThreshold,
+            RedBlendMode = (LutBlendMode)RedBlendMode,
 
             GreenEnabled = GreenEnabled,
             GreenStrength = GreenStrength,
             GreenStartColor = ParseHexColor(GreenStartColor),
             GreenEndColor = ParseHexColor(GreenEndColor),
             GreenWhiteProtection = GreenWhiteProtection,
+            GreenDominanceThreshold = GreenDominanceThreshold,
+            GreenBlendMode = (LutBlendMode)GreenBlendMode,
 
             BlueEnabled = BlueEnabled,
             BlueStrength = BlueStrength,
             BlueStartColor = ParseHexColor(BlueStartColor),
             BlueEndColor = ParseHexColor(BlueEndColor),
             BlueWhiteProtection = BlueWhiteProtection,
+            BlueDominanceThreshold = BlueDominanceThreshold,
+            BlueBlendMode = (LutBlendMode)BlueBlendMode,
 
             DefaultIntensity = DefaultIntensity,
             RecommendedGradientType = (GradientType)RecommendedGradientType,

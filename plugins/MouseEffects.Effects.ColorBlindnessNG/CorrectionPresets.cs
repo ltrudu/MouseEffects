@@ -16,6 +16,8 @@ public record CorrectionPreset
     public Vector3 RedStartColor { get; init; } = new(0, 0, 0);  // Black - pixels with no red stay unchanged
     public Vector3 RedEndColor { get; init; } = new(0, 1, 1);    // Cyan
     public float RedWhiteProtection { get; init; } = 0.01f;
+    public float RedDominanceThreshold { get; init; } = 0.0f;    // 0 = disabled
+    public LutBlendMode RedBlendMode { get; init; } = LutBlendMode.ChannelWeighted;
 
     // Green channel settings
     public bool GreenEnabled { get; init; }
@@ -23,6 +25,8 @@ public record CorrectionPreset
     public Vector3 GreenStartColor { get; init; } = new(0, 0, 0);  // Black - pixels with no green stay unchanged
     public Vector3 GreenEndColor { get; init; } = new(0, 1, 1);    // Cyan
     public float GreenWhiteProtection { get; init; } = 0.01f;
+    public float GreenDominanceThreshold { get; init; } = 0.0f;  // 0 = disabled
+    public LutBlendMode GreenBlendMode { get; init; } = LutBlendMode.ChannelWeighted;
 
     // Blue channel settings
     public bool BlueEnabled { get; init; }
@@ -30,6 +34,8 @@ public record CorrectionPreset
     public Vector3 BlueStartColor { get; init; } = new(0, 0, 0);  // Black - pixels with no blue stay unchanged
     public Vector3 BlueEndColor { get; init; } = new(1, 1, 0);    // Yellow
     public float BlueWhiteProtection { get; init; } = 0.01f;
+    public float BlueDominanceThreshold { get; init; } = 0.0f;   // 0 = disabled
+    public LutBlendMode BlueBlendMode { get; init; } = LutBlendMode.ChannelWeighted;
 
     // Default intensity for this preset
     public float DefaultIntensity { get; init; } = 1.0f;

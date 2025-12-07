@@ -437,11 +437,24 @@
                     </ComboBox>
 
                     <StackPanel x:Name="Zone2SimulationPanel" Visibility="Collapsed">
-                        <ComboBox x:Name="Zone2SimFilterCombo" SelectionChanged="Zone2SimFilter_Changed">
+                        <TextBlock Text="Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <RadioButton x:Name="Zone2MachadoRadio" Content="Machado" IsChecked="True"
+                                         Checked="Zone2Algorithm_Changed" Margin="0,0,16,0"/>
+                            <RadioButton x:Name="Zone2StrictRadio" Content="Strict (LMS)"
+                                         Checked="Zone2Algorithm_Changed"/>
+                        </StackPanel>
+                        <TextBlock Text="CVD Type" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone2SimFilterCombo" SelectionChanged="Zone2SimFilter_Changed" Margin="0,0,0,8">
                             <ComboBoxItem Content="None"/>
-                            <ComboBoxItem Content="Protanopia"/>
-                            <ComboBoxItem Content="Deuteranopia"/>
-                            <ComboBoxItem Content="Tritanopia"/>
+                            <ComboBoxItem Content="Protanopia (red-blind)"/>
+                            <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                            <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                            <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                            <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                            <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            <ComboBoxItem Content="Achromatopsia"/>
+                            <ComboBoxItem Content="Achromatomaly"/>
                         </ComboBox>
                     </StackPanel>
 
@@ -549,11 +562,24 @@
                     </ComboBox>
 
                     <StackPanel x:Name="Zone3SimulationPanel" Visibility="Collapsed">
-                        <ComboBox x:Name="Zone3SimFilterCombo" SelectionChanged="Zone3SimFilter_Changed">
+                        <TextBlock Text="Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <RadioButton x:Name="Zone3MachadoRadio" Content="Machado" IsChecked="True"
+                                         Checked="Zone3Algorithm_Changed" Margin="0,0,16,0"/>
+                            <RadioButton x:Name="Zone3StrictRadio" Content="Strict (LMS)"
+                                         Checked="Zone3Algorithm_Changed"/>
+                        </StackPanel>
+                        <TextBlock Text="CVD Type" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone3SimFilterCombo" SelectionChanged="Zone3SimFilter_Changed" Margin="0,0,0,8">
                             <ComboBoxItem Content="None"/>
-                            <ComboBoxItem Content="Protanopia"/>
-                            <ComboBoxItem Content="Deuteranopia"/>
-                            <ComboBoxItem Content="Tritanopia"/>
+                            <ComboBoxItem Content="Protanopia (red-blind)"/>
+                            <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                            <ComboBoxItem Content="Deuteranopia (green-blind)"/>
+                            <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                            <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                            <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            <ComboBoxItem Content="Achromatopsia"/>
+                            <ComboBoxItem Content="Achromatomaly"/>
                         </ComboBox>
                     </StackPanel>
 

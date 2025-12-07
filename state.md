@@ -1601,3 +1601,93 @@ Input Screen Color (sRGB)
 
 - **Last Build**: Successful (0 errors, 1 pre-existing warning)
 - **Struct Sizes**: ZoneParams=96 bytes, ColorBlindnessNGParams=432 bytes
+
+---
+
+# Session State: 2025-12-07 (Per-Channel Blend Modes & Preset Fixes)
+
+## Completed Tasks
+
+### 1. Per-Channel Blend Modes
+
+**Request**: Allow different blend modes per color channel instead of a single global blend mode.
+
+**Changes:**
+- **ChannelLUTSettings** (ColorBlindnessNGEffect.cs): Added `BlendMode` property to store per-channel blend mode
+- **ZoneParams struct** (ColorBlindnessNGEffect.cs):
+  - Replaced single `BlendMode` with `RedBlendMode`, `GreenBlendMode`, `BlueBlendMode`
+  - Added `RedDominanceThreshold`, `GreenDominanceThreshold`, `BlueDominanceThreshold`
+  - Struct grew from 96 bytes (24 floats) to 112 bytes (28 floats)
+  - Added padding for 16-byte alignment
+- **ColorBlindnessNGParams** (ColorBlindnessNGEffect.cs): Updated size from 432 to 496 bytes
+- **ColorBlindnessNG.hlsl**: Updated ZoneParams struct and all 4 zone correction functions to use per-channel blend modes
+- **CorrectionEditor.xaml**: Removed global Blend Mode dropdown, added dropdown inside each channel panel (Red, Green, Blue)
+- **CorrectionEditor.xaml.cs**: Added `RedBlendMode_Changed`, `GreenBlendMode_Changed`, `BlueBlendMode_Changed` handlers
+- **ColorBlindnessNGSettingsControl.xaml.cs**: Updated `SaveZoneConfiguration()` to save per-channel blend modes
+
+### 2. Fixed Preset Application (DominanceThreshold & BlendMode)
+
+**Problem**: When selecting and applying a preset, DominanceThreshold and BlendMode values weren't being applied to channels.
+
+**Root Cause**: `CorrectionPreset`, `CustomPreset`, and related methods were missing these properties.
+
+**Files Fixed:**
+1. **CorrectionPresets.cs** - Added per-channel properties:
+   - `RedDominanceThreshold`, `GreenDominanceThreshold`, `BlueDominanceThreshold`
+   - `RedBlendMode`, `GreenBlendMode`, `BlueBlendMode`
+
+2. **ZoneSettings.cs** - Updated `ApplyPreset()` to apply:
+   - `DominanceThreshold` per channel
+   - `BlendMode` per channel
+
+3. **CustomPreset.cs** - Added properties and updated conversion methods:
+   - `FromCorrectionPreset()` - copies DominanceThreshold/BlendMode from CorrectionPreset
+   - `ToCorrectionPreset()` - sets these values when converting back
+
+4. **CorrectionEditor.xaml.cs** - Updated `GetAsPreset()` to include DominanceThreshold/BlendMode
+
+### 3. Zone 3 & 4 Simulation Options Parity
+
+**Problem**: Zone 3 and Zone 4 had simplified simulation options (only 4 CVD types, no algorithm selection) compared to Zone 1 and Zone 2 (9 CVD types + algorithm selection).
+
+**Changes:**
+1. **ColorBlindnessNGSettingsControl.xaml**:
+   - Zone 2 simulation panel: Added Algorithm radio buttons (Machado/Strict), expanded CVD Type to 9 options
+   - Zone 3 simulation panel: Same additions
+
+2. **ColorBlindnessNGSettingsControl.xaml.cs**:
+   - Added `Zone2Algorithm_Changed` and `Zone3Algorithm_Changed` event handlers
+   - Updated `Zone2SimFilter_Changed` and `Zone3SimFilter_Changed` to use full filter mapping (0=None, 1-6=CVD, 7-8=Achro→13-14)
+   - Updated `LoadZone2Settings()` and `LoadZone3Settings()` to:
+     - Load algorithm radio button states
+     - Use full filter index mapping
+
+**CVD Type Options (all 4 zones now have):**
+| Index | Filter Name |
+|-------|-------------|
+| 0 | None |
+| 1 | Protanopia (red-blind) |
+| 2 | Protanomaly (red-weak) |
+| 3 | Deuteranopia (green-blind) |
+| 4 | Deuteranomaly (green-weak) |
+| 5 | Tritanopia (blue-blind) |
+| 6 | Tritanomaly (blue-weak) |
+| 7 | Achromatopsia |
+| 8 | Achromatomaly |
+
+## Files Modified This Session
+
+1. `ColorBlindnessNGEffect.cs` - Per-channel blend modes in struct, constant buffer
+2. `ZoneSettings.cs` - ApplyPreset() updated for DominanceThreshold/BlendMode
+3. `ColorBlindnessNG.hlsl` - Per-channel blend modes in shader
+4. `CorrectionPresets.cs` - Added per-channel DominanceThreshold/BlendMode properties
+5. `CustomPreset.cs` - Added properties, updated conversion methods
+6. `CorrectionEditor.xaml` - Per-channel blend mode dropdowns
+7. `CorrectionEditor.xaml.cs` - Per-channel event handlers, GetAsPreset() updated
+8. `ColorBlindnessNGSettingsControl.xaml` - Zone 2/3 simulation panel parity
+9. `ColorBlindnessNGSettingsControl.xaml.cs` - Zone 2/3 algorithm handlers, filter mapping, config save
+
+## Build Status
+
+- **Last Build**: Successful (0 errors, 0 warnings)
+- **Struct Sizes**: ZoneParams=112 bytes, ColorBlindnessNGParams=496 bytes

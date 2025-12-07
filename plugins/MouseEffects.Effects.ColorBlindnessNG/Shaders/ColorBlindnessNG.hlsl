@@ -13,7 +13,7 @@ struct PSInput
 };
 
 // ============================================================================
-// Per-Zone Parameters Structure (96 bytes each = 24 floats, 16-byte aligned)
+// Per-Zone Parameters Structure (112 bytes each = 28 floats, 16-byte aligned)
 // ============================================================================
 
 struct ZoneParams
@@ -43,14 +43,19 @@ struct ZoneParams
     float PostCorrectionSimFilterType; // CVD type for post-correction simulation (1-14)
     float PostCorrectionSimIntensity;  // Intensity of post-correction simulation (0-1)
 
-    float _padding1;            // Padding for 16-byte alignment
-    float _padding2;
-    float _padding3;
-    float _padding4;
+    float RedDominanceThreshold;   // Min % of R/(R+G+B) to apply red LUT (0.33-0.9)
+    float GreenDominanceThreshold; // Min % of G/(R+G+B) to apply green LUT (0.33-0.9)
+    float BlueDominanceThreshold;  // Min % of B/(R+G+B) to apply blue LUT (0.33-0.9)
+    float RedBlendMode;            // Per-channel blend mode: 0=ChannelWeighted, 1=Direct, 2=Proportional, 3=Additive, 4=Screen
+
+    float GreenBlendMode;          // Per-channel blend mode for green
+    float BlueBlendMode;           // Per-channel blend mode for blue
+    float _padding1;               // Padding for 16-byte alignment
+    float _padding2;               // Padding for 16-byte alignment
 };
 
 // ============================================================================
-// Constant Buffer (48 + 96*4 = 432 bytes total)
+// Constant Buffer (48 + 112*4 = 496 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
@@ -427,6 +432,64 @@ float GetWhiteProtectionFactor(float3 color, float threshold)
     return saturate(1.0 - (whiteness - threshold) / 0.1);
 }
 
+// Calculate channel dominance as percentage of total color
+// Returns true if channel passes dominance threshold
+// threshold: 0.0 = disabled, 0.33+ = channel must be this % of total
+bool PassesDominanceThreshold(float channelValue, float3 color, float threshold)
+{
+    // If threshold is very low (essentially disabled), always pass
+    if (threshold < 0.01) return true;
+
+    // Calculate total color intensity (avoid division by zero)
+    float total = color.r + color.g + color.b;
+    if (total < 0.001) return false; // Black pixels - no correction
+
+    // Calculate channel's percentage of total
+    float dominance = channelValue / total;
+
+    // Pass if dominance exceeds threshold
+    return dominance >= threshold;
+}
+
+// Apply blend mode for LUT correction
+// blendMode: 0=ChannelWeighted, 1=Direct, 2=Proportional, 3=Additive, 4=Screen
+float3 ApplyBlendMode(float3 result, float3 lutColor, float channelValue, float strength, float blendMode, float3 originalColor)
+{
+    float3 blended;
+
+    if (blendMode < 0.5) // ChannelWeighted (original)
+    {
+        // Blend amount depends on channel intensity - weak for dark colors
+        blended = lerp(result, lerp(result, lutColor, channelValue), strength);
+    }
+    else if (blendMode < 1.5) // Direct
+    {
+        // Full replacement controlled only by strength - works for all intensities
+        blended = lerp(result, lutColor, strength);
+    }
+    else if (blendMode < 2.5) // Proportional
+    {
+        // Blend based on channel's relative dominance
+        float maxChannel = max(max(originalColor.r, originalColor.g), originalColor.b);
+        float proportion = (maxChannel > 0.001) ? (channelValue / maxChannel) : 0.0;
+        blended = lerp(result, lutColor, proportion * strength);
+    }
+    else if (blendMode < 3.5) // Additive
+    {
+        // Add color shift - preserves luminosity better
+        float3 shift = (lutColor - result) * channelValue * strength;
+        blended = saturate(result + shift);
+    }
+    else // Screen
+    {
+        // Screen blend - brightens colors
+        float3 screenFactor = lutColor * channelValue * strength;
+        blended = 1.0 - (1.0 - result) * (1.0 - screenFactor);
+    }
+
+    return blended;
+}
+
 // Apply LUT correction for a specific zone
 float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
 {
@@ -465,13 +528,20 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
         applyBlue = zone.BlueEnabled > 0.5 && color.b > zone.Threshold;
     }
 
+    // Apply dominance threshold filter - only correct channels that are dominant enough
+    if (applyRed && !PassesDominanceThreshold(color.r, color, zone.RedDominanceThreshold))
+        applyRed = false;
+    if (applyGreen && !PassesDominanceThreshold(color.g, color, zone.GreenDominanceThreshold))
+        applyGreen = false;
+    if (applyBlue && !PassesDominanceThreshold(color.b, color, zone.BlueDominanceThreshold))
+        applyBlue = false;
+
     if (applyRed)
     {
         float3 lutColor = Zone0_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
-        // Apply simulation-guided weight to modulate correction strength
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.r, effectiveStrength, zone.RedBlendMode, color);
     }
 
     if (applyGreen)
@@ -479,7 +549,7 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
         float3 lutColor = Zone0_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.g, effectiveStrength, zone.GreenBlendMode, color);
     }
 
     if (applyBlue)
@@ -487,7 +557,7 @@ float3 ApplyLUTCorrectionZone0(float3 color, ZoneParams zone)
         float3 lutColor = Zone0_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.b, effectiveStrength, zone.BlueBlendMode, color);
     }
 
     return result;
@@ -529,12 +599,20 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
         applyBlue = zone.BlueEnabled > 0.5 && color.b > zone.Threshold;
     }
 
+    // Apply dominance threshold filter - only correct channels that are dominant enough
+    if (applyRed && !PassesDominanceThreshold(color.r, color, zone.RedDominanceThreshold))
+        applyRed = false;
+    if (applyGreen && !PassesDominanceThreshold(color.g, color, zone.GreenDominanceThreshold))
+        applyGreen = false;
+    if (applyBlue && !PassesDominanceThreshold(color.b, color, zone.BlueDominanceThreshold))
+        applyBlue = false;
+
     if (applyRed)
     {
         float3 lutColor = Zone1_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.r, effectiveStrength, zone.RedBlendMode, color);
     }
 
     if (applyGreen)
@@ -542,7 +620,7 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
         float3 lutColor = Zone1_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.g, effectiveStrength, zone.GreenBlendMode, color);
     }
 
     if (applyBlue)
@@ -550,7 +628,7 @@ float3 ApplyLUTCorrectionZone1(float3 color, ZoneParams zone)
         float3 lutColor = Zone1_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.b, effectiveStrength, zone.BlueBlendMode, color);
     }
 
     return result;
@@ -592,12 +670,20 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
         applyBlue = zone.BlueEnabled > 0.5 && color.b > zone.Threshold;
     }
 
+    // Apply dominance threshold filter - only correct channels that are dominant enough
+    if (applyRed && !PassesDominanceThreshold(color.r, color, zone.RedDominanceThreshold))
+        applyRed = false;
+    if (applyGreen && !PassesDominanceThreshold(color.g, color, zone.GreenDominanceThreshold))
+        applyGreen = false;
+    if (applyBlue && !PassesDominanceThreshold(color.b, color, zone.BlueDominanceThreshold))
+        applyBlue = false;
+
     if (applyRed)
     {
         float3 lutColor = Zone2_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.r, effectiveStrength, zone.RedBlendMode, color);
     }
 
     if (applyGreen)
@@ -605,7 +691,7 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
         float3 lutColor = Zone2_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.g, effectiveStrength, zone.GreenBlendMode, color);
     }
 
     if (applyBlue)
@@ -613,7 +699,7 @@ float3 ApplyLUTCorrectionZone2(float3 color, ZoneParams zone)
         float3 lutColor = Zone2_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.b, effectiveStrength, zone.BlueBlendMode, color);
     }
 
     return result;
@@ -655,12 +741,20 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
         applyBlue = zone.BlueEnabled > 0.5 && color.b > zone.Threshold;
     }
 
+    // Apply dominance threshold filter - only correct channels that are dominant enough
+    if (applyRed && !PassesDominanceThreshold(color.r, color, zone.RedDominanceThreshold))
+        applyRed = false;
+    if (applyGreen && !PassesDominanceThreshold(color.g, color, zone.GreenDominanceThreshold))
+        applyGreen = false;
+    if (applyBlue && !PassesDominanceThreshold(color.b, color, zone.BlueDominanceThreshold))
+        applyBlue = false;
+
     if (applyRed)
     {
         float3 lutColor = Zone3_RedLUT.Sample(PointSampler, float2(color.r, 0.5)).rgb;
         float effectiveStrength = zone.RedStrength * GetWhiteProtectionFactor(color, zone.RedWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.r), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.r, effectiveStrength, zone.RedBlendMode, color);
     }
 
     if (applyGreen)
@@ -668,7 +762,7 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
         float3 lutColor = Zone3_GreenLUT.Sample(PointSampler, float2(color.g, 0.5)).rgb;
         float effectiveStrength = zone.GreenStrength * GetWhiteProtectionFactor(color, zone.GreenWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.g), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.g, effectiveStrength, zone.GreenBlendMode, color);
     }
 
     if (applyBlue)
@@ -676,7 +770,7 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
         float3 lutColor = Zone3_BlueLUT.Sample(PointSampler, float2(color.b, 0.5)).rgb;
         float effectiveStrength = zone.BlueStrength * GetWhiteProtectionFactor(color, zone.BlueWhiteProtection);
         effectiveStrength *= simWeight;
-        result = lerp(result, lerp(result, lutColor, color.b), effectiveStrength);
+        result = ApplyBlendMode(result, lutColor, color.b, effectiveStrength, zone.BlueBlendMode, color);
     }
 
     return result;

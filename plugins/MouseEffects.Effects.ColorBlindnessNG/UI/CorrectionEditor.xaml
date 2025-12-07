@@ -66,6 +66,19 @@
             <TextBlock x:Name="RedWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
             <Slider x:Name="RedWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
+            <TextBlock x:Name="RedDominanceLabel" Text="Dominance Threshold (Off)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+                       ToolTip="Min % of total color this channel must have. Use to exclude yellows when correcting reds."/>
+            <Slider x:Name="RedDominance" Minimum="0" Maximum="0.9" Value="0"
+                    ValueChanged="Channel_Changed"/>
+            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+                       ToolTip="How LUT colors blend with original. Try 'Direct' for dark colors."/>
+            <ComboBox x:Name="RedBlendModeCombo" SelectionChanged="RedBlendMode_Changed" Margin="0,2,0,0">
+                <ComboBoxItem Content="Channel-Weighted" IsSelected="True" ToolTip="Blend depends on channel intensity"/>
+                <ComboBoxItem Content="Direct" ToolTip="Full replacement - best for dark colors"/>
+                <ComboBoxItem Content="Proportional" ToolTip="Based on channel dominance"/>
+                <ComboBoxItem Content="Additive" ToolTip="Preserves luminosity"/>
+                <ComboBoxItem Content="Screen" ToolTip="Brightens colors"/>
+            </ComboBox>
             <Grid Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -100,6 +113,19 @@
             <TextBlock x:Name="GreenWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
             <Slider x:Name="GreenWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
+            <TextBlock x:Name="GreenDominanceLabel" Text="Dominance Threshold (Off)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+                       ToolTip="Min % of total color this channel must have. Use to exclude cyans when correcting greens."/>
+            <Slider x:Name="GreenDominance" Minimum="0" Maximum="0.9" Value="0"
+                    ValueChanged="Channel_Changed"/>
+            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+                       ToolTip="How LUT colors blend with original. Try 'Direct' for dark colors."/>
+            <ComboBox x:Name="GreenBlendModeCombo" SelectionChanged="GreenBlendMode_Changed" Margin="0,2,0,0">
+                <ComboBoxItem Content="Channel-Weighted" IsSelected="True" ToolTip="Blend depends on channel intensity"/>
+                <ComboBoxItem Content="Direct" ToolTip="Full replacement - best for dark colors"/>
+                <ComboBoxItem Content="Proportional" ToolTip="Based on channel dominance"/>
+                <ComboBoxItem Content="Additive" ToolTip="Preserves luminosity"/>
+                <ComboBoxItem Content="Screen" ToolTip="Brightens colors"/>
+            </ComboBox>
             <Grid Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -134,6 +160,19 @@
             <TextBlock x:Name="BlueWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
             <Slider x:Name="BlueWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
+            <TextBlock x:Name="BlueDominanceLabel" Text="Dominance Threshold (Off)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+                       ToolTip="Min % of total color this channel must have. Use to exclude purples when correcting blues."/>
+            <Slider x:Name="BlueDominance" Minimum="0" Maximum="0.9" Value="0"
+                    ValueChanged="Channel_Changed"/>
+            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+                       ToolTip="How LUT colors blend with original. Try 'Direct' for dark colors."/>
+            <ComboBox x:Name="BlueBlendModeCombo" SelectionChanged="BlueBlendMode_Changed" Margin="0,2,0,0">
+                <ComboBoxItem Content="Channel-Weighted" IsSelected="True" ToolTip="Blend depends on channel intensity"/>
+                <ComboBoxItem Content="Direct" ToolTip="Full replacement - best for dark colors"/>
+                <ComboBoxItem Content="Proportional" ToolTip="Based on channel dominance"/>
+                <ComboBoxItem Content="Additive" ToolTip="Preserves luminosity"/>
+                <ComboBoxItem Content="Screen" ToolTip="Brightens colors"/>
+            </ComboBox>
             <Grid Margin="0,4,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
