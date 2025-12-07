@@ -109,6 +109,8 @@ Comprehensive documentation is available in the [Wiki](Wiki/Home.md):
 - [Certificate Management](Wiki/Certificates.md)
 - [Creating Custom Plugins](Wiki/Plugin-Development.md)
 - [Screen Capture Plugins](Wiki/Plugin-ScreenCapture.md)
+- [ColorBlindnessNG User Guide](Wiki/ColorBlindnessNG-Guide.md) (English)
+- [ColorBlindnessNG User Guide](Wiki/ColorBlindnessNG-Guide_French.md) (French)
 
 ## Project Structure
 
