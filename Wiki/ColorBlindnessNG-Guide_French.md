@@ -15,6 +15,19 @@ Bienvenue dans le guide d'utilisation de ColorBlindnessNG ! Ce document vous aid
 7. [Tutoriel : Corriger les Couleurs Etape par Etape](#tutoriel--corriger-les-couleurs-etape-par-etape)
 8. [Meilleures Couleurs pour Chaque Type de Daltonisme](#meilleures-couleurs-pour-chaque-type-de-daltonisme)
 9. [Fonctionnalites Avancees](#fonctionnalites-avancees)
+   - [Mode Re-simulation](#mode-re-simulation-nouveau-dans-v1031)
+   - [Algorithmes de Correction](#algorithmes-de-correction)
+     - [Correction par LUT](#1-correction-par-lut-par-defaut)
+     - [Daltonisation](#2-daltonisation)
+     - [Rotation de Teinte](#3-rotation-de-teinte-nouveau-dans-v1030)
+     - [Remappage CIELAB](#4-remappage-cielab-nouveau-dans-v1030)
+   - [Correction Guidee par Simulation](#correction-guidee-par-simulation)
+   - [Modes d'Application](#modes-dapplication)
+   - [Types de Degrade](#types-de-degrade)
+   - [Modes de Fusion](#modes-de-fusion)
+   - [Modes Cercle et Rectangle](#modes-cercle-et-rectangle)
+   - [Protection du Blanc](#protection-du-blanc)
+   - [Raccourcis Clavier](#raccourcis-clavier)
 10. [Questions Frequentes](#questions-frequentes)
 
 ---
@@ -226,6 +239,7 @@ Quand vous developpez ColorBlindnessNG, vous verrez :
 | **Original** | Pas de changement, couleurs normales | Reference/comparaison |
 | **Simulation** | Montre comment les daltoniens voient | Test/education |
 | **Correction** | Aide a distinguer les couleurs | Assistance quotidienne |
+| **Re-simulation** | Applique une simulation sur la correction d'une autre zone | Verifier que les corrections fonctionnent pour les daltoniens |
 
 ---
 
@@ -629,6 +643,206 @@ L'objectif de la correction est de decaler les couleurs confondues vers une gamm
 
 ## Fonctionnalites Avancees
 
+### Mode Re-simulation (Nouveau dans v1.0.31)
+
+**Ce que ca fait :** Applique une simulation de daltonisme sur la sortie corrigee d'une autre zone. Cela vous permet de previsualiser exactement comment vos corrections de couleurs apparaitront a une personne daltonienne.
+
+**Pourquoi l'utiliser :**
+- Verifier que vos corrections aident vraiment a distinguer les couleurs
+- Concevoir du contenu accessible en voyant le resultat final a travers les yeux des daltoniens
+- Affiner les parametres de correction avec un retour visuel immediat
+
+**Comment ca fonctionne :**
+1. La Zone A applique une **Correction** a l'ecran original
+2. La Zone B (en mode **Re-simulation**) prend la sortie corrigee de la Zone A
+3. La Zone B applique une **Simulation** par-dessus, montrant comment une personne daltonienne verrait les couleurs corrigees
+
+**Comment l'activer :**
+1. Configurez au moins 2 zones (utilisez le mode Division Verticale, Horizontale ou Quadrants)
+2. Mettez une zone en mode **Correction** et configurez votre preset de correction
+3. Mettez une autre zone en mode **Re-simulation**
+4. Dans les parametres de Re-simulation :
+   - **Zone Source** : Selectionnez la zone avec la Correction (ex: "Gauche", "Haut-Droit")
+   - **Type de DVC** : Choisissez le type de daltonisme a simuler
+   - **Intensite** : Force de l'effet de simulation
+
+**Exemple de Configuration (Quadrants) :**
+| Zone | Mode | Objectif |
+|------|------|----------|
+| Haut-Gauche | Original | Voir les couleurs normales |
+| Haut-Droit | Correction | Appliquer votre correction |
+| Bas-Gauche | Simulation | Voir comment les daltoniens voient l'original |
+| Bas-Droit | Re-simulation (source: Haut-Droit) | Voir comment les daltoniens voient votre correction |
+
+**Interpreter les Resultats :**
+- **Bon :** Bas-Gauche montre des couleurs confondues, Bas-Droit montre des couleurs distinguables
+- **Mauvais :** Les deux zones du bas se ressemblent → La correction n'aide pas, essayez des parametres plus forts
+
+**Notes Importantes :**
+- La Re-simulation ne peut sourcer que des zones en mode **Correction**
+- Si vous changez une zone source hors du mode Correction, vous verrez un avertissement
+- Les labels des zones sources utilisent des noms descriptifs (Gauche/Droite, Haut/Bas, etc.) au lieu de numeros
+
+---
+
+### Algorithmes de Correction
+
+ColorBlindnessNG offre quatre algorithmes de correction differents, chacun avec sa propre approche pour aider les utilisateurs daltoniens a distinguer les couleurs. Vous pouvez choisir l'algorithme dans le menu deroulant **Algorithme de Correction** en mode Correction.
+
+---
+
+#### 1. Correction par LUT (Par Defaut)
+
+**Ce que ca fait :** Utilise des Tables de Correspondance (LUT) pour remapper les couleurs canal par canal. C'est l'approche la plus personnalisable.
+
+**Comment ca fonctionne :**
+- Chaque canal de couleur (Rouge, Vert, Bleu) a son propre degrade d'une Couleur de Depart a une Couleur d'Arrivee
+- Quand un pixel contient du rouge, cette valeur de rouge determine ou echantillonner dans le degrade du canal Rouge
+- Cela decale les couleurs problematiques vers des couleurs plus distinguables
+
+**Ideal pour :** Les utilisateurs qui veulent un controle precis sur exactement comment chaque couleur est transformee.
+
+**Parametres :** Voir la section [Controles de Couleur LUT](#etape-2--comprendre-les-controles-de-couleur) pour une explication detaillee.
+
+---
+
+#### 2. Daltonisation
+
+**Ce que ca fait :** Un algorithme base sur la science qui simule quelles couleurs une personne daltonienne perdrait, puis redistribue cette information de couleur perdue vers des canaux qu'elle PEUT voir.
+
+**Comment ca fonctionne :**
+1. Simule la vue daltonienne du pixel
+2. Calcule l'"erreur" (quelle information de couleur a ete perdue)
+3. Rajoute cette information perdue en utilisant des couleurs que la personne peut percevoir
+
+**Ideal pour :** Une correction equilibree et automatique qui fonctionne bien pour la plupart des contenus sans ajustement.
+
+**Parametres :**
+| Parametre | Ce qu'il fait |
+|-----------|---------------|
+| **Type de DVC** | Quel type de daltonisme corriger |
+| **Force** | Quelle quantite de correction appliquer (0-100%) |
+
+---
+
+#### 3. Rotation de Teinte (Nouveau dans v1.0.30)
+
+**Ce que ca fait :** Fait pivoter les couleurs sur le "cercle chromatique" pour que les couleurs confondues se deplacent vers des positions plus faciles a distinguer.
+
+**Pensez-y comme ceci :** Imaginez toutes les couleurs disposees en cercle (le cercle chromatique). Les daltoniens rouge-vert ont du mal avec les couleurs proches sur certaines parties du cercle. La Rotation de Teinte "fait simplement tourner" ces couleurs problematiques vers une position differente ou elles paraissent differentes.
+
+```
+Avant :  Le Rouge et le Vert sont tous deux dans la "zone de confusion"
+         ↓
+Apres :  Le Rouge est pivote pour paraitre plus bleu/violet
+         Le Vert reste ou il est
+         Maintenant ils paraissent differents !
+```
+
+**Comment ca fonctionne :**
+1. Identifie les couleurs dans la "plage problematique" (ex: rouges et verts pour la deuteranopie)
+2. Fait pivoter uniquement ces couleurs d'un certain nombre de degres
+3. Les couleurs hors de la plage problematique restent inchangees
+
+**Ideal pour :** Des corrections naturelles qui preservent l'aspect general des images tout en rendant les couleurs problematiques distinguables.
+
+**Parametres Mode Simple :**
+| Parametre | Ce qu'il fait |
+|-----------|---------------|
+| **Type de DVC** | Configure automatiquement quelles teintes pivoter selon votre type de daltonisme |
+| **Force** | Quelle quantite de l'effet de rotation appliquer (0-100%) |
+
+**Mode Avance** (cochez "Mode Avance" pour voir ces options) :
+
+| Parametre | Plage | Ce que ca signifie |
+|-----------|-------|-------------------|
+| **Debut Source** | 0-360° | Ou la plage de couleurs affectee commence sur le cercle chromatique |
+| **Fin Source** | 0-360° | Ou la plage de couleurs affectee finit |
+| **Decalage** | -180° a +180° | De combien pivoter les couleurs (positif = sens horaire, negatif = sens anti-horaire) |
+| **Attenuation** | 0.0-1.0 | Douceur des limites (0 = coupure nette, 1 = fondu tres progressif) |
+
+**Comprendre le Cercle Chromatique (pour le Mode Avance) :**
+```
+        Jaune (60°)
+            |
+Vert (120°)-------- Rouge (0°/360°)
+            |
+        Bleu (240°)
+```
+
+**Exemple pour la Deuteranopie (aveugle au vert) :**
+- Debut Source : 0° (rouge)
+- Fin Source : 120° (vert)
+- Decalage : +60° (pivoter vers jaune/bleu)
+- Resultat : Les rouges virent vers le magenta, les verts vers le cyan
+
+---
+
+#### 4. Remappage CIELAB (Nouveau dans v1.0.30)
+
+**Ce que ca fait :** Utilise un espace colorimetrique special appele CIELAB qui est concu pour correspondre a la facon dont les humains percoivent reellement les couleurs. Il peut transferer l'information de couleur entre differents "axes" de perception.
+
+**Comprendre CIELAB (simplifie) :**
+
+Imaginez que les couleurs ont trois proprietes :
+- **L (Luminosite) :** A quel point c'est clair ou sombre (noir a blanc)
+- **a* (Axe Rouge-Vert) :** A quel point quelque chose est rouge ou vert
+- **b* (Axe Bleu-Jaune) :** A quel point quelque chose est bleu ou jaune
+
+```
+                    +a* (Rouge)
+                       |
+        +b* (Jaune)----+----−b* (Bleu)
+                       |
+                    −a* (Vert)
+```
+
+**Le Probleme :** Les daltoniens ont du mal a voir les differences sur certains axes :
+- Daltonisme rouge-vert : Ne peuvent pas bien voir les differences sur l'axe a*
+- Daltonisme bleu-jaune : Ne peuvent pas bien voir les differences sur l'axe b*
+
+**La Solution :** Le Remappage CIELAB peut :
+1. **Transferer** l'information de l'axe qu'ils ne voient pas vers un qu'ils peuvent voir
+2. **Amplifier** le contraste sur certains axes
+3. **Encoder** les differences de couleur comme differences de luminosite (tout le monde voit la luminosite !)
+
+**Ideal pour :** Des corrections sophistiquees qui fonctionnent au niveau perceptuel, particulierement bonnes pour les images complexes avec des variations de couleur subtiles.
+
+**Parametres Mode Simple :**
+| Parametre | Ce qu'il fait |
+|-----------|---------------|
+| **Type de DVC** | Configure automatiquement le remappage selon votre type de daltonisme |
+| **Force** | Quelle quantite de l'effet appliquer (0-100%) |
+
+**Mode Avance** (cochez "Mode Avance" pour voir ces options) :
+
+| Parametre | Plage | Ce que ca signifie |
+|-----------|-------|-------------------|
+| **Transfert A→B** | -1.0 a +1.0 | Transfere l'information rouge-vert vers l'axe bleu-jaune. Les valeurs positives signifient "prendre ce qui est sur l'axe rouge-vert et l'ajouter a bleu-jaune" |
+| **Transfert B→A** | -1.0 a +1.0 | Transfere l'information bleu-jaune vers l'axe rouge-vert |
+| **Amplification A** | 0.0 a 2.0 | Amplifie les differences rouge-vert. Valeurs >1 augmentent le contraste, <1 le reduisent |
+| **Amplification B** | 0.0 a 2.0 | Amplifie les differences bleu-jaune |
+| **Amplification L** | 0.0 a 1.0 | Convertit les differences de couleur en differences de luminosite. A 1.0, les couleurs differentes auront aussi une luminosite differente |
+
+**Exemple de Parametres pour la Deuteranopie :**
+- Transfert A→B : 0.5 (envoyer la moitie de l'info rouge-vert vers bleu-jaune, qu'ils PEUVENT voir)
+- Transfert B→A : 0.0 (ne pas transferer en retour)
+- Amplification A : 1.0 (garder rouge-vert tel quel)
+- Amplification B : 1.2 (booster legerement bleu-jaune pour plus de distinction)
+- Amplification L : 0.2 (ajouter un peu de difference de luminosite pour plus d'aide)
+
+**Quand utiliser quel algorithme :**
+
+| Situation | Algorithme Recommande |
+|-----------|----------------------|
+| Veut un controle maximum | Correction par LUT |
+| Veut "configurer et oublier" | Daltonisation |
+| Photos naturelles | Rotation de Teinte |
+| Graphiques/diagrammes complexes | Remappage CIELAB |
+| Pas sur | Essayez d'abord Daltonisation |
+
+---
+
 ### Correction Guidee par Simulation
 
 **Ce que ca fait :** Au lieu de corriger TOUTES les couleurs, cette fonctionnalite verifie d'abord quels pixels seraient reellement affectes par le daltonisme, puis corrige uniquement ces pixels specifiques.
@@ -839,8 +1053,9 @@ Vous pouvez aussi passer un test de daltonisme en ligne pour decouvrir votre typ
 |----------------|-----------------|-------------------|
 | Parametres par zone | Limite | Controle complet |
 | Presets personnalises | Non | Oui, avec export/import |
+| Algorithmes de correction | 1 (Daltonisation) | 4 (LUT, Daltonisation, Rotation Teinte, CIELAB) |
 | Correction Guidee | Non | Oui |
-| Mode verification | Non | Oui |
+| Mode Re-simulation | Non | Oui (previsualiser les corrections a travers les yeux des daltoniens) |
 | Modes de forme | Basique | Cercle & Rectangle |
 
 **Recommandation :** Utilisez Color Blindness NG pour la meilleure experience.

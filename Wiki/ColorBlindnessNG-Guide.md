@@ -15,6 +15,19 @@ Welcome to the ColorBlindnessNG user guide! This document will help you understa
 7. [Tutorial: Correcting Colors Step by Step](#tutorial-correcting-colors-step-by-step)
 8. [Best Colors for Each Type of Color Blindness](#best-colors-for-each-type-of-color-blindness)
 9. [Advanced Features](#advanced-features)
+   - [Re-simulation Mode](#re-simulation-mode-new-in-v1031)
+   - [Correction Algorithms](#correction-algorithms)
+     - [LUT-Based Correction](#1-lut-based-correction-default)
+     - [Daltonization](#2-daltonization)
+     - [Hue Rotation](#3-hue-rotation-new-in-v1030)
+     - [CIELAB Remapping](#4-cielab-remapping-new-in-v1030)
+   - [Simulation-Guided Correction](#simulation-guided-correction)
+   - [Application Modes](#application-modes)
+   - [Gradient Types](#gradient-types)
+   - [Blend Modes](#blend-modes)
+   - [Circle and Rectangle Modes](#circle-and-rectangle-modes)
+   - [White Protection](#white-protection)
+   - [Hotkeys](#hotkeys-keyboard-shortcuts)
 10. [Frequently Asked Questions](#frequently-asked-questions)
 
 ---
@@ -226,6 +239,7 @@ When you expand ColorBlindnessNG, you'll see:
 | **Original** | No changes, normal colors | Reference/comparison |
 | **Simulation** | Shows how colorblind people see | Testing/education |
 | **Correction** | Helps distinguish colors | Daily assistance |
+| **Re-simulation** | Applies simulation on top of another zone's correction | Verify corrections work for colorblind users |
 
 ---
 
@@ -629,6 +643,206 @@ The goal of correction is to shift confusing colors into a range that colorblind
 
 ## Advanced Features
 
+### Re-simulation Mode (New in v1.0.31)
+
+**What it does:** Applies CVD simulation on top of another zone's corrected output. This lets you preview exactly how your color corrections will appear to a colorblind person.
+
+**Why use it:**
+- Verify that your corrections actually help distinguish colors
+- Design accessible content by seeing the final result through colorblind eyes
+- Fine-tune correction settings with immediate visual feedback
+
+**How it works:**
+1. Zone A applies **Correction** to the original screen
+2. Zone B (in **Re-simulation** mode) takes Zone A's corrected output
+3. Zone B applies **Simulation** on top, showing how a colorblind person would see the corrected colors
+
+**How to enable:**
+1. Set up at least 2 zones (use Split Vertical, Horizontal, or Quadrants mode)
+2. Set one zone to **Correction** mode and configure your correction preset
+3. Set another zone to **Re-simulation** mode
+4. In the Re-simulation settings:
+   - **Source Zone**: Select the zone with Correction (e.g., "Left", "Top-Right")
+   - **CVD Type**: Choose the type of color blindness to simulate
+   - **Intensity**: How strong the simulation effect is
+
+**Example Setup (Quadrants):**
+| Zone | Mode | Purpose |
+|------|------|---------|
+| Top-Left | Original | See normal colors |
+| Top-Right | Correction | Apply your correction |
+| Bottom-Left | Simulation | See how colorblind people see the original |
+| Bottom-Right | Re-simulation (source: Top-Right) | See how colorblind people see your correction |
+
+**Interpreting Results:**
+- **Good:** Bottom-Left shows confused colors, Bottom-Right shows distinguishable colors
+- **Bad:** Both bottom zones look the same → Correction isn't helping, try stronger settings
+
+**Important Notes:**
+- Re-simulation can only source from zones in **Correction** mode
+- If you change a source zone away from Correction mode, you'll see a warning
+- Source zone labels use descriptive names (Left/Right, Top/Bottom, etc.) instead of zone numbers
+
+---
+
+### Correction Algorithms
+
+ColorBlindnessNG offers four different correction algorithms, each with its own approach to helping colorblind users distinguish colors. You can choose the algorithm in the **Correction Algorithm** dropdown when in Correction mode.
+
+---
+
+#### 1. LUT-Based Correction (Default)
+
+**What it does:** Uses Look-Up Tables to remap colors channel by channel. This is the most customizable approach.
+
+**How it works:**
+- Each color channel (Red, Green, Blue) has its own gradient from a Start Color to an End Color
+- When a pixel has red in it, that red value determines where to sample from the Red channel's gradient
+- This shifts problematic colors toward more distinguishable ones
+
+**Best for:** Users who want fine control over exactly how each color is transformed.
+
+**Settings:** See the [LUT Color Controls](#step-2-understand-the-color-controls) section for detailed explanation.
+
+---
+
+#### 2. Daltonization
+
+**What it does:** A scientifically-based algorithm that simulates what colors a colorblind person would lose, then redistributes that lost color information to channels they CAN see.
+
+**How it works:**
+1. Simulates the colorblind view of the pixel
+2. Calculates the "error" (what color information was lost)
+3. Adds that lost information back using colors the person can perceive
+
+**Best for:** A balanced, automatic correction that works well for most content without tweaking.
+
+**Settings:**
+| Setting | What it does |
+|---------|--------------|
+| **CVD Type** | Which type of color blindness to correct for |
+| **Strength** | How much correction to apply (0-100%) |
+
+---
+
+#### 3. Hue Rotation (New in v1.0.30)
+
+**What it does:** Rotates colors on the "color wheel" so that confusing colors move to positions that are easier to distinguish.
+
+**Think of it like this:** Imagine all colors arranged in a circle (the color wheel). Red-green colorblind people have trouble with colors that are close together on certain parts of the wheel. Hue Rotation simply "spins" those problem colors to a different position where they look different.
+
+```
+Before:  Red and Green are both in the "confusing zone"
+         ↓
+After:   Red is rotated to appear more blue/purple
+         Green stays where it is
+         Now they look different!
+```
+
+**How it works:**
+1. Identifies colors in the "problem range" (e.g., reds and greens for deuteranopia)
+2. Rotates just those colors by a certain number of degrees
+3. Colors outside the problem range stay unchanged
+
+**Best for:** Natural-looking corrections that preserve the overall feel of images while making problem colors distinguishable.
+
+**Simple Mode Settings:**
+| Setting | What it does |
+|---------|--------------|
+| **CVD Type** | Automatically configures which hues to rotate based on your color blindness type |
+| **Strength** | How much of the rotation effect to apply (0-100%) |
+
+**Advanced Mode** (check "Advanced Mode" to see these):
+
+| Parameter | Range | What it means |
+|-----------|-------|---------------|
+| **Source Start** | 0-360° | Where the affected color range begins on the color wheel |
+| **Source End** | 0-360° | Where the affected color range ends |
+| **Shift** | -180° to +180° | How far to rotate the colors (positive = clockwise, negative = counter-clockwise) |
+| **Falloff** | 0.0-1.0 | How soft the boundaries are (0 = sharp cutoff, 1 = very gradual blend) |
+
+**Understanding the Color Wheel (for Advanced Mode):**
+```
+        Yellow (60°)
+            |
+Green (120°)-------- Red (0°/360°)
+            |
+        Blue (240°)
+```
+
+**Example for Deuteranopia (green-blind):**
+- Source Start: 0° (red)
+- Source End: 120° (green)
+- Shift: +60° (rotate toward yellow/blue)
+- Result: Reds shift toward magenta, greens shift toward cyan
+
+---
+
+#### 4. CIELAB Remapping (New in v1.0.30)
+
+**What it does:** Uses a special color space called CIELAB that's designed to match how humans actually perceive colors. It can transfer color information between different "axes" of perception.
+
+**Understanding CIELAB (simplified):**
+
+Imagine colors have three properties:
+- **L (Lightness):** How bright or dark (black to white)
+- **a* (Red-Green axis):** How red or green something is
+- **b* (Blue-Yellow axis):** How blue or yellow something is
+
+```
+                    +a* (Red)
+                       |
+        +b* (Yellow)---+---−b* (Blue)
+                       |
+                    −a* (Green)
+```
+
+**The Problem:** Colorblind people have trouble seeing differences along certain axes:
+- Red-green colorblind: Can't see differences on the a* axis well
+- Blue-yellow colorblind: Can't see differences on the b* axis well
+
+**The Solution:** CIELAB Remapping can:
+1. **Transfer** information from the axis they can't see to one they can
+2. **Enhance** the contrast on certain axes
+3. **Encode** color differences as brightness differences (everyone can see brightness!)
+
+**Best for:** Sophisticated corrections that work at a perceptual level, especially good for complex images with subtle color variations.
+
+**Simple Mode Settings:**
+| Setting | What it does |
+|---------|--------------|
+| **CVD Type** | Automatically configures the remapping based on your color blindness type |
+| **Strength** | How much of the effect to apply (0-100%) |
+
+**Advanced Mode** (check "Advanced Mode" to see these):
+
+| Parameter | Range | What it means |
+|-----------|-------|---------------|
+| **A→B Transfer** | -1.0 to +1.0 | Transfer red-green information to the blue-yellow axis. Positive values mean "take what's on the red-green axis and add it to blue-yellow" |
+| **B→A Transfer** | -1.0 to +1.0 | Transfer blue-yellow information to the red-green axis |
+| **A Enhance** | 0.0 to 2.0 | Amplify the red-green differences. Values >1 increase contrast, <1 reduce it |
+| **B Enhance** | 0.0 to 2.0 | Amplify the blue-yellow differences |
+| **L Enhance** | 0.0 to 1.0 | Convert color differences into brightness differences. At 1.0, colors that were different will also have different brightness |
+
+**Example Settings for Deuteranopia:**
+- A→B Transfer: 0.5 (send half of red-green info to blue-yellow, which they CAN see)
+- B→A Transfer: 0.0 (don't transfer back)
+- A Enhance: 1.0 (keep red-green as-is)
+- B Enhance: 1.2 (slightly boost blue-yellow for extra distinction)
+- L Enhance: 0.2 (add a little brightness difference for extra help)
+
+**When to use which algorithm:**
+
+| Situation | Recommended Algorithm |
+|-----------|----------------------|
+| Want maximum control | LUT-Based |
+| Want "set and forget" | Daltonization |
+| Natural-looking photos | Hue Rotation |
+| Complex graphics/charts | CIELAB Remapping |
+| Not sure | Try Daltonization first |
+
+---
+
 ### Simulation-Guided Correction
 
 **What it does:** Instead of correcting ALL colors, this feature first checks which pixels would actually be affected by color blindness, then only corrects those specific pixels.
@@ -839,8 +1053,9 @@ You can also take an online color blindness test to find out your type.
 |---------|-----------------|-------------------|
 | Per-zone settings | Limited | Full control |
 | Custom presets | No | Yes, with export/import |
+| Correction algorithms | 1 (Daltonization) | 4 (LUT, Daltonization, Hue Rotation, CIELAB) |
 | Simulation-Guided | No | Yes |
-| Verification mode | No | Yes |
+| Re-simulation mode | No | Yes (preview corrections through colorblind eyes) |
 | Shape modes | Basic | Circle & Rectangle |
 
 **Recommendation:** Use Color Blindness NG for the best experience.
