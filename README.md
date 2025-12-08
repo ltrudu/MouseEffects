@@ -40,7 +40,12 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 
 ## Screenshots
 
-*Coming soon*
+<img width="225" height="325" alt="image" src="https://github.com/user-attachments/assets/08df3105-a2f9-4c02-9584-9ef014c08d6d" />
+
+#
+
+<img width="480" height="270" alt="image" src="https://github.com/user-attachments/assets/c8131cd1-99a5-4346-b538-af999316dcfc" />
+
 
 ## Installation
 
@@ -57,17 +62,6 @@ The easiest way to install MouseEffects with automatic updates:
 - Automatic background updates
 - Delta updates (only downloads changes)
 - Silent or notify update modes
-
-### From MSIX Package (Enterprise/Store)
-
-For enterprise deployment or Microsoft Store distribution:
-
-1. Download the latest `.msix` package from [Releases](../../releases)
-2. If prompted about untrusted publisher, install the development certificate first:
-   - Download `MouseEffects-Dev.cer`
-   - Double-click and select **Install Certificate**
-   - Choose **Local Machine** → **Trusted Root Certification Authorities**
-3. Double-click the `.msix` file to install
 
 ### Portable Version
 
