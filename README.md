@@ -66,7 +66,7 @@ The easiest way to install MouseEffects with automatic updates:
 ### Portable Version
 
 For a no-install portable version:
-
+ 
 1. Download `MouseEffects-{version}-win-full.nupkg` from [Releases](../../releases)
 2. Rename to `.zip` and extract to any folder
 3. Run `MouseEffects.App.exe`
