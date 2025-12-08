@@ -190,7 +190,85 @@
                         <ComboBox x:Name="Zone0CorrectionAlgorithmCombo" SelectionChanged="Zone0CorrectionAlgorithm_Changed" Margin="0,0,0,8">
                             <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
                             <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                            <ComboBoxItem Content="Hue Rotation (Color Shift)"/>
+                            <ComboBoxItem Content="CIELAB Remapping (Perceptual)"/>
                         </ComboBox>
+
+                        <!-- Hue Rotation Settings -->
+                        <StackPanel x:Name="Zone0HueRotationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Rotates problematic hue ranges to more distinguishable positions on the color wheel."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone0HueRotationCVDCombo" SelectionChanged="Zone0HueRotationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone0HueRotationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone0HueRotationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone0HueRotationStrength_Changed"/>
+                            <CheckBox x:Name="Zone0HueRotationAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone0HueRotationAdvanced_Changed" Unchecked="Zone0HueRotationAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone0HueRotationAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone0HueRotationSourceStartLabel" Text="Source Start (0°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone0HueRotationSourceStartSlider" Minimum="0" Maximum="360" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0HueRotationSourceStart_Changed"/>
+                                <TextBlock x:Name="Zone0HueRotationSourceEndLabel" Text="Source End (120°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone0HueRotationSourceEndSlider" Minimum="0" Maximum="360" Value="120"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0HueRotationSourceEnd_Changed"/>
+                                <TextBlock x:Name="Zone0HueRotationShiftLabel" Text="Hue Shift (+60°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone0HueRotationShiftSlider" Minimum="-180" Maximum="180" Value="60"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0HueRotationShift_Changed"/>
+                                <TextBlock x:Name="Zone0HueRotationFalloffLabel" Text="Edge Falloff (0.30)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone0HueRotationFalloffSlider" Minimum="0" Maximum="1" Value="0.3"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0HueRotationFalloff_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- CIELAB Remapping Settings -->
+                        <StackPanel x:Name="Zone0CIELABPanel" Visibility="Collapsed">
+                            <TextBlock Text="Transfers color information between perceptual axes (red-green to blue-yellow)."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone0CIELABCVDCombo" SelectionChanged="Zone0CIELABCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone0CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone0CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone0CIELABStrength_Changed"/>
+                            <CheckBox x:Name="Zone0CIELABAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone0CIELABAdvanced_Changed" Unchecked="Zone0CIELABAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone0CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone0CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"
+                                           ToolTip="Transfer red-green info to blue-yellow axis"/>
+                                <Slider x:Name="Zone0CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0CIELABAtoB_Changed"/>
+                                <TextBlock x:Name="Zone0CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Style="{StaticResource LabelStyle}"
+                                           ToolTip="Transfer blue-yellow info to red-green axis"/>
+                                <Slider x:Name="Zone0CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0CIELABBtoA_Changed"/>
+                                <TextBlock x:Name="Zone0CIELABAEnhanceLabel" Text="a* Enhancement (1.00)" Style="{StaticResource LabelStyle}"
+                                           ToolTip="Increase red-green contrast"/>
+                                <Slider x:Name="Zone0CIELABAEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0CIELABAEnhance_Changed"/>
+                                <TextBlock x:Name="Zone0CIELABBEnhanceLabel" Text="b* Enhancement (1.00)" Style="{StaticResource LabelStyle}"
+                                           ToolTip="Increase blue-yellow contrast"/>
+                                <Slider x:Name="Zone0CIELABBEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0CIELABBEnhance_Changed"/>
+                                <TextBlock x:Name="Zone0CIELABLEnhanceLabel" Text="Lightness Encoding (0.00)" Style="{StaticResource LabelStyle}"
+                                           ToolTip="Encode color differences as brightness differences"/>
+                                <Slider x:Name="Zone0CIELABLEnhanceSlider" Minimum="0" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone0CIELABLEnhance_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
 
                         <!-- Daltonization Settings -->
                         <StackPanel x:Name="Zone0DaltonizationPanel" Visibility="Collapsed">
@@ -238,8 +316,12 @@
                                     Click="ExportPresetButton_Click" Padding="8,4" Margin="0,0,4,0"
                                     ToolTip="Export selected preset to file"/>
                             <Button x:Name="ImportPresetButton" Content="Import"
-                                    Click="ImportPresetButton_Click" Padding="8,4"
+                                    Click="ImportPresetButton_Click" Padding="8,4" Margin="0,0,4,0"
                                     ToolTip="Import preset from file"/>
+                            <Button x:Name="DeletePresetButton" Content="Delete"
+                                    Click="DeletePresetButton_Click" Padding="8,4"
+                                    IsEnabled="False"
+                                    ToolTip="Delete the selected custom preset"/>
                         </StackPanel>
 
                         <!-- Simulation-Guided Correction -->
@@ -359,7 +441,80 @@
                         <ComboBox x:Name="Zone1CorrectionAlgorithmCombo" SelectionChanged="Zone1CorrectionAlgorithm_Changed" Margin="0,0,0,8">
                             <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
                             <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                            <ComboBoxItem Content="Hue Rotation (Color Shift)"/>
+                            <ComboBoxItem Content="CIELAB Remapping (Perceptual)"/>
                         </ComboBox>
+
+                        <!-- Hue Rotation Settings -->
+                        <StackPanel x:Name="Zone1HueRotationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Rotates problematic hue ranges to more distinguishable positions on the color wheel."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone1HueRotationCVDCombo" SelectionChanged="Zone1HueRotationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone1HueRotationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone1HueRotationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone1HueRotationStrength_Changed"/>
+                            <CheckBox x:Name="Zone1HueRotationAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone1HueRotationAdvanced_Changed" Unchecked="Zone1HueRotationAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone1HueRotationAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone1HueRotationSourceStartLabel" Text="Source Start (0°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1HueRotationSourceStartSlider" Minimum="0" Maximum="360" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1HueRotationSourceStart_Changed"/>
+                                <TextBlock x:Name="Zone1HueRotationSourceEndLabel" Text="Source End (120°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1HueRotationSourceEndSlider" Minimum="0" Maximum="360" Value="120"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1HueRotationSourceEnd_Changed"/>
+                                <TextBlock x:Name="Zone1HueRotationShiftLabel" Text="Hue Shift (+60°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1HueRotationShiftSlider" Minimum="-180" Maximum="180" Value="60"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1HueRotationShift_Changed"/>
+                                <TextBlock x:Name="Zone1HueRotationFalloffLabel" Text="Edge Falloff (0.30)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1HueRotationFalloffSlider" Minimum="0" Maximum="1" Value="0.3"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1HueRotationFalloff_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- CIELAB Remapping Settings -->
+                        <StackPanel x:Name="Zone1CIELABPanel" Visibility="Collapsed">
+                            <TextBlock Text="Transfers color information between perceptual axes (red-green to blue-yellow)."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone1CIELABCVDCombo" SelectionChanged="Zone1CIELABCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone1CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone1CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone1CIELABStrength_Changed"/>
+                            <CheckBox x:Name="Zone1CIELABAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone1CIELABAdvanced_Changed" Unchecked="Zone1CIELABAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone1CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone1CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1CIELABAtoB_Changed"/>
+                                <TextBlock x:Name="Zone1CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1CIELABBtoA_Changed"/>
+                                <TextBlock x:Name="Zone1CIELABAEnhanceLabel" Text="a* Enhancement (1.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1CIELABAEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1CIELABAEnhance_Changed"/>
+                                <TextBlock x:Name="Zone1CIELABBEnhanceLabel" Text="b* Enhancement (1.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1CIELABBEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1CIELABBEnhance_Changed"/>
+                                <TextBlock x:Name="Zone1CIELABLEnhanceLabel" Text="Lightness Encoding (0.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone1CIELABLEnhanceSlider" Minimum="0" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone1CIELABLEnhance_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
 
                         <!-- Daltonization Settings -->
                         <StackPanel x:Name="Zone1DaltonizationPanel" Visibility="Collapsed">
@@ -401,7 +556,11 @@
                             <Button x:Name="Zone1ExportPresetButton" Content="Export"
                                     Click="Zone1ExportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
                             <Button x:Name="Zone1ImportPresetButton" Content="Import"
-                                    Click="Zone1ImportPreset_Click" Padding="8,4"/>
+                                    Click="Zone1ImportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone1DeletePresetButton" Content="Delete"
+                                    Click="Zone1DeletePreset_Click" Padding="8,4"
+                                    IsEnabled="False"
+                                    ToolTip="Delete the selected custom preset"/>
                         </StackPanel>
 
                         <!-- Simulation-Guided Correction -->
@@ -520,7 +679,80 @@
                         <ComboBox x:Name="Zone2CorrectionAlgorithmCombo" SelectionChanged="Zone2CorrectionAlgorithm_Changed" Margin="0,0,0,8">
                             <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
                             <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                            <ComboBoxItem Content="Hue Rotation (Color Shift)"/>
+                            <ComboBoxItem Content="CIELAB Remapping (Perceptual)"/>
                         </ComboBox>
+
+                        <!-- Hue Rotation Settings -->
+                        <StackPanel x:Name="Zone2HueRotationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Rotates problematic hue ranges to more distinguishable positions."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone2HueRotationCVDCombo" SelectionChanged="Zone2HueRotationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone2HueRotationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone2HueRotationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone2HueRotationStrength_Changed"/>
+                            <CheckBox x:Name="Zone2HueRotationAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone2HueRotationAdvanced_Changed" Unchecked="Zone2HueRotationAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone2HueRotationAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone2HueRotationSourceStartLabel" Text="Source Start (0°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2HueRotationSourceStartSlider" Minimum="0" Maximum="360" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2HueRotationSourceStart_Changed"/>
+                                <TextBlock x:Name="Zone2HueRotationSourceEndLabel" Text="Source End (120°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2HueRotationSourceEndSlider" Minimum="0" Maximum="360" Value="120"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2HueRotationSourceEnd_Changed"/>
+                                <TextBlock x:Name="Zone2HueRotationShiftLabel" Text="Hue Shift (+60°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2HueRotationShiftSlider" Minimum="-180" Maximum="180" Value="60"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2HueRotationShift_Changed"/>
+                                <TextBlock x:Name="Zone2HueRotationFalloffLabel" Text="Edge Falloff (0.30)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2HueRotationFalloffSlider" Minimum="0" Maximum="1" Value="0.3"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2HueRotationFalloff_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- CIELAB Remapping Settings -->
+                        <StackPanel x:Name="Zone2CIELABPanel" Visibility="Collapsed">
+                            <TextBlock Text="Transfers color information between perceptual axes."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone2CIELABCVDCombo" SelectionChanged="Zone2CIELABCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone2CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone2CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone2CIELABStrength_Changed"/>
+                            <CheckBox x:Name="Zone2CIELABAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone2CIELABAdvanced_Changed" Unchecked="Zone2CIELABAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone2CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone2CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2CIELABAtoB_Changed"/>
+                                <TextBlock x:Name="Zone2CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2CIELABBtoA_Changed"/>
+                                <TextBlock x:Name="Zone2CIELABAEnhanceLabel" Text="a* Enhancement (1.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2CIELABAEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2CIELABAEnhance_Changed"/>
+                                <TextBlock x:Name="Zone2CIELABBEnhanceLabel" Text="b* Enhancement (1.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2CIELABBEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2CIELABBEnhance_Changed"/>
+                                <TextBlock x:Name="Zone2CIELABLEnhanceLabel" Text="Lightness Encoding (0.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone2CIELABLEnhanceSlider" Minimum="0" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone2CIELABLEnhance_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
 
                         <!-- Daltonization Settings -->
                         <StackPanel x:Name="Zone2DaltonizationPanel" Visibility="Collapsed">
@@ -561,7 +793,11 @@
                             <Button x:Name="Zone2ExportPresetButton" Content="Export"
                                     Click="Zone2ExportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
                             <Button x:Name="Zone2ImportPresetButton" Content="Import"
-                                    Click="Zone2ImportPreset_Click" Padding="8,4"/>
+                                    Click="Zone2ImportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone2DeletePresetButton" Content="Delete"
+                                    Click="Zone2DeletePreset_Click" Padding="8,4"
+                                    IsEnabled="False"
+                                    ToolTip="Delete the selected custom preset"/>
                         </StackPanel>
 
                         <!-- Simulation-Guided Correction -->
@@ -673,7 +909,80 @@
                         <ComboBox x:Name="Zone3CorrectionAlgorithmCombo" SelectionChanged="Zone3CorrectionAlgorithm_Changed" Margin="0,0,0,8">
                             <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
                             <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                            <ComboBoxItem Content="Hue Rotation (Color Shift)"/>
+                            <ComboBoxItem Content="CIELAB Remapping (Perceptual)"/>
                         </ComboBox>
+
+                        <!-- Hue Rotation Settings -->
+                        <StackPanel x:Name="Zone3HueRotationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Rotates problematic hue ranges to more distinguishable positions."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone3HueRotationCVDCombo" SelectionChanged="Zone3HueRotationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone3HueRotationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone3HueRotationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone3HueRotationStrength_Changed"/>
+                            <CheckBox x:Name="Zone3HueRotationAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone3HueRotationAdvanced_Changed" Unchecked="Zone3HueRotationAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone3HueRotationAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone3HueRotationSourceStartLabel" Text="Source Start (0°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3HueRotationSourceStartSlider" Minimum="0" Maximum="360" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3HueRotationSourceStart_Changed"/>
+                                <TextBlock x:Name="Zone3HueRotationSourceEndLabel" Text="Source End (120°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3HueRotationSourceEndSlider" Minimum="0" Maximum="360" Value="120"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3HueRotationSourceEnd_Changed"/>
+                                <TextBlock x:Name="Zone3HueRotationShiftLabel" Text="Hue Shift (+60°)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3HueRotationShiftSlider" Minimum="-180" Maximum="180" Value="60"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3HueRotationShift_Changed"/>
+                                <TextBlock x:Name="Zone3HueRotationFalloffLabel" Text="Edge Falloff (0.30)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3HueRotationFalloffSlider" Minimum="0" Maximum="1" Value="0.3"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3HueRotationFalloff_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- CIELAB Remapping Settings -->
+                        <StackPanel x:Name="Zone3CIELABPanel" Visibility="Collapsed">
+                            <TextBlock Text="Transfers color information between perceptual axes."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone3CIELABCVDCombo" SelectionChanged="Zone3CIELABCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone3CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone3CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone3CIELABStrength_Changed"/>
+                            <CheckBox x:Name="Zone3CIELABAdvancedCheckBox" Content="Advanced Options"
+                                      Margin="0,8,0,4" Checked="Zone3CIELABAdvanced_Changed" Unchecked="Zone3CIELABAdvanced_Changed"/>
+                            <StackPanel x:Name="Zone3CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                                <TextBlock x:Name="Zone3CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3CIELABAtoB_Changed"/>
+                                <TextBlock x:Name="Zone3CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3CIELABBtoA_Changed"/>
+                                <TextBlock x:Name="Zone3CIELABAEnhanceLabel" Text="a* Enhancement (1.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3CIELABAEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3CIELABAEnhance_Changed"/>
+                                <TextBlock x:Name="Zone3CIELABBEnhanceLabel" Text="b* Enhancement (1.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3CIELABBEnhanceSlider" Minimum="0" Maximum="2" Value="1"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3CIELABBEnhance_Changed"/>
+                                <TextBlock x:Name="Zone3CIELABLEnhanceLabel" Text="Lightness Encoding (0.00)" Style="{StaticResource LabelStyle}"/>
+                                <Slider x:Name="Zone3CIELABLEnhanceSlider" Minimum="0" Maximum="1" Value="0"
+                                        Style="{StaticResource SliderStyle}" ValueChanged="Zone3CIELABLEnhance_Changed"/>
+                            </StackPanel>
+                        </StackPanel>
 
                         <!-- Daltonization Settings -->
                         <StackPanel x:Name="Zone3DaltonizationPanel" Visibility="Collapsed">
@@ -714,7 +1023,11 @@
                             <Button x:Name="Zone3ExportPresetButton" Content="Export"
                                     Click="Zone3ExportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
                             <Button x:Name="Zone3ImportPresetButton" Content="Import"
-                                    Click="Zone3ImportPreset_Click" Padding="8,4"/>
+                                    Click="Zone3ImportPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
+                            <Button x:Name="Zone3DeletePresetButton" Content="Delete"
+                                    Click="Zone3DeletePreset_Click" Padding="8,4"
+                                    IsEnabled="False"
+                                    ToolTip="Delete the selected custom preset"/>
                         </StackPanel>
 
                         <!-- Simulation-Guided Correction -->

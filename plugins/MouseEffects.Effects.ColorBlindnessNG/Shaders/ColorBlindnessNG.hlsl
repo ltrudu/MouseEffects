@@ -54,13 +54,23 @@ struct ZoneParams
     float DaltonizationCVDType;    // CVD type for Daltonization (1-6=Machado, 7-12=Strict)
 
     float DaltonizationStrength;   // Strength of Daltonization correction (0-1)
-    float _padding1;               // Padding for 16-byte alignment
-    float _padding2;               // Padding for 16-byte alignment
-    float _padding3;               // Padding for 16-byte alignment
+    float HueRotationStrength;     // Hue rotation overall strength (0-1)
+    float HueRotationSourceStart;  // Start of source hue range (0-360 degrees)
+    float HueRotationSourceEnd;    // End of source hue range (0-360 degrees)
+
+    float HueRotationShift;        // Amount to shift hue (-180 to +180 degrees)
+    float HueRotationFalloff;      // Softness of hue range boundaries (0-1)
+    float CIELABStrength;          // CIELAB remapping overall strength (0-1)
+    float CIELABAtoB;              // Transfer factor from a* to b* axis (-1 to 1)
+
+    float CIELABBtoA;              // Transfer factor from b* to a* axis (-1 to 1)
+    float CIELABAEnhance;          // Enhancement multiplier for a* axis (0-2)
+    float CIELABBEnhance;          // Enhancement multiplier for b* axis (0-2)
+    float CIELABLEnhance;          // Encode color diff into lightness (0-1)
 };
 
 // ============================================================================
-// Constant Buffer (48 + 128*4 = 560 bytes total)
+// Constant Buffer (48 + 160*4 = 688 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
@@ -129,6 +139,168 @@ float3 sRGBToLinear3(float3 c)
 float3 linearToSRGB3(float3 c)
 {
     return float3(linearToSRGB(c.r), linearToSRGB(c.g), linearToSRGB(c.b));
+}
+
+// ============================================================================
+// HSL Color Space Conversion
+// ============================================================================
+
+// Convert RGB (0-1) to HSL (H: 0-360, S: 0-1, L: 0-1)
+float3 RGBToHSL(float3 rgb)
+{
+    float maxC = max(max(rgb.r, rgb.g), rgb.b);
+    float minC = min(min(rgb.r, rgb.g), rgb.b);
+    float delta = maxC - minC;
+
+    float h = 0.0;
+    float s = 0.0;
+    float l = (maxC + minC) * 0.5;
+
+    if (delta > 0.00001)
+    {
+        // Saturation
+        s = l > 0.5 ? delta / (2.0 - maxC - minC) : delta / (maxC + minC);
+
+        // Hue
+        if (maxC == rgb.r)
+        {
+            h = (rgb.g - rgb.b) / delta + (rgb.g < rgb.b ? 6.0 : 0.0);
+        }
+        else if (maxC == rgb.g)
+        {
+            h = (rgb.b - rgb.r) / delta + 2.0;
+        }
+        else
+        {
+            h = (rgb.r - rgb.g) / delta + 4.0;
+        }
+        h *= 60.0; // Convert to degrees
+    }
+
+    return float3(h, s, l);
+}
+
+// Helper function for HSL to RGB conversion
+float HueToRGB(float p, float q, float t)
+{
+    if (t < 0.0) t += 1.0;
+    if (t > 1.0) t -= 1.0;
+    if (t < 1.0/6.0) return p + (q - p) * 6.0 * t;
+    if (t < 0.5) return q;
+    if (t < 2.0/3.0) return p + (q - p) * (2.0/3.0 - t) * 6.0;
+    return p;
+}
+
+// Convert HSL (H: 0-360, S: 0-1, L: 0-1) to RGB (0-1)
+float3 HSLToRGB(float3 hsl)
+{
+    float h = hsl.x / 360.0; // Normalize to 0-1
+    float s = hsl.y;
+    float l = hsl.z;
+
+    if (s < 0.00001)
+    {
+        // Achromatic (gray)
+        return float3(l, l, l);
+    }
+
+    float q = l < 0.5 ? l * (1.0 + s) : l + s - l * s;
+    float p = 2.0 * l - q;
+
+    float r = HueToRGB(p, q, h + 1.0/3.0);
+    float g = HueToRGB(p, q, h);
+    float b = HueToRGB(p, q, h - 1.0/3.0);
+
+    return float3(r, g, b);
+}
+
+// ============================================================================
+// CIELAB Color Space Conversion (via XYZ)
+// ============================================================================
+
+// D65 reference white point
+static const float3 D65_WHITE = float3(0.95047, 1.00000, 1.08883);
+
+// Convert linear RGB to XYZ
+float3 LinearRGBToXYZ(float3 rgb)
+{
+    // sRGB to XYZ matrix (D65)
+    float x = 0.4124564 * rgb.r + 0.3575761 * rgb.g + 0.1804375 * rgb.b;
+    float y = 0.2126729 * rgb.r + 0.7151522 * rgb.g + 0.0721750 * rgb.b;
+    float z = 0.0193339 * rgb.r + 0.1191920 * rgb.g + 0.9503041 * rgb.b;
+    return float3(x, y, z);
+}
+
+// Convert XYZ to linear RGB
+float3 XYZToLinearRGB(float3 xyz)
+{
+    // XYZ to sRGB matrix (D65)
+    float r =  3.2404542 * xyz.x - 1.5371385 * xyz.y - 0.4985314 * xyz.z;
+    float g = -0.9692660 * xyz.x + 1.8760108 * xyz.y + 0.0415560 * xyz.z;
+    float b =  0.0556434 * xyz.x - 0.2040259 * xyz.y + 1.0572252 * xyz.z;
+    return float3(r, g, b);
+}
+
+// Lab helper function
+float LabF(float t)
+{
+    const float delta = 6.0 / 29.0;
+    const float delta3 = delta * delta * delta;
+    return t > delta3 ? pow(t, 1.0/3.0) : t / (3.0 * delta * delta) + 4.0/29.0;
+}
+
+// Inverse Lab helper function
+float LabFInverse(float t)
+{
+    const float delta = 6.0 / 29.0;
+    return t > delta ? t * t * t : 3.0 * delta * delta * (t - 4.0/29.0);
+}
+
+// Convert XYZ to CIELAB
+float3 XYZToLab(float3 xyz)
+{
+    float3 n = xyz / D65_WHITE;
+    float fx = LabF(n.x);
+    float fy = LabF(n.y);
+    float fz = LabF(n.z);
+
+    float L = 116.0 * fy - 16.0;
+    float a = 500.0 * (fx - fy);
+    float b = 200.0 * (fy - fz);
+
+    return float3(L, a, b);
+}
+
+// Convert CIELAB to XYZ
+float3 LabToXYZ(float3 lab)
+{
+    float fy = (lab.x + 16.0) / 116.0;
+    float fx = lab.y / 500.0 + fy;
+    float fz = fy - lab.z / 200.0;
+
+    float3 xyz;
+    xyz.x = D65_WHITE.x * LabFInverse(fx);
+    xyz.y = D65_WHITE.y * LabFInverse(fy);
+    xyz.z = D65_WHITE.z * LabFInverse(fz);
+
+    return xyz;
+}
+
+// Convert sRGB to CIELAB
+float3 sRGBToLab(float3 srgb)
+{
+    float3 linRGB = sRGBToLinear3(srgb);
+    float3 xyz = LinearRGBToXYZ(linRGB);
+    return XYZToLab(xyz);
+}
+
+// Convert CIELAB to sRGB
+float3 LabToSRGB(float3 lab)
+{
+    float3 xyz = LabToXYZ(lab);
+    float3 linRGB = XYZToLinearRGB(xyz);
+    linRGB = clamp(linRGB, 0.0, 1.0);
+    return linearToSRGB3(linRGB);
 }
 
 // ============================================================================
@@ -528,6 +700,170 @@ float3 ApplyDaltonization(float3 color, float cvdType, float strength)
 }
 
 // ============================================================================
+// Hue Rotation Correction Algorithm
+// ============================================================================
+// Rotates hues within a specified range to make them more distinguishable.
+// Works by:
+// 1. Converting RGB to HSL
+// 2. Identifying if the hue falls within the target range (with soft falloff)
+// 3. Shifting the hue by the specified amount
+// 4. Converting back to RGB
+//
+// Parameters:
+// - sourceStart/sourceEnd: hue range to affect (0-360 degrees)
+// - shift: amount to rotate hue (-180 to +180 degrees)
+// - falloff: softness of the transition at range boundaries (0-1)
+// - strength: overall effect intensity (0-1)
+
+// Calculate how much a hue value should be affected based on range
+float GetHueInfluence(float hue, float sourceStart, float sourceEnd, float falloff)
+{
+    // Handle wrap-around (e.g., sourceStart=350, sourceEnd=30)
+    bool wrapsAround = sourceEnd < sourceStart;
+
+    float influence = 0.0;
+
+    if (wrapsAround)
+    {
+        // Two ranges: [sourceStart, 360) and [0, sourceEnd]
+        if (hue >= sourceStart)
+        {
+            float normalizedPos = (hue - sourceStart) / (360.0 - sourceStart);
+            influence = 1.0;
+        }
+        else if (hue <= sourceEnd)
+        {
+            float normalizedPos = hue / sourceEnd;
+            influence = 1.0;
+        }
+    }
+    else
+    {
+        // Normal range
+        if (hue >= sourceStart && hue <= sourceEnd)
+        {
+            influence = 1.0;
+        }
+    }
+
+    // Apply soft falloff at boundaries
+    if (influence > 0.0 && falloff > 0.001)
+    {
+        float rangeSize = wrapsAround ? (360.0 - sourceStart + sourceEnd) : (sourceEnd - sourceStart);
+        float falloffWidth = rangeSize * falloff * 0.5;
+
+        float distFromStart, distFromEnd;
+
+        if (wrapsAround)
+        {
+            distFromStart = hue >= sourceStart ? (hue - sourceStart) : (hue + 360.0 - sourceStart);
+            distFromEnd = hue <= sourceEnd ? (sourceEnd - hue) : (sourceEnd + 360.0 - hue);
+        }
+        else
+        {
+            distFromStart = hue - sourceStart;
+            distFromEnd = sourceEnd - hue;
+        }
+
+        float edgeDist = min(distFromStart, distFromEnd);
+        if (edgeDist < falloffWidth)
+        {
+            influence = smoothstep(0.0, falloffWidth, edgeDist);
+        }
+    }
+
+    return influence;
+}
+
+// Apply Hue Rotation correction
+float3 ApplyHueRotation(float3 color, float sourceStart, float sourceEnd, float shift, float falloff, float strength)
+{
+    if (strength < 0.001) return color;
+
+    // Convert to HSL
+    float3 hsl = RGBToHSL(color);
+
+    // Skip achromatic colors (very low saturation)
+    if (hsl.y < 0.05) return color;
+
+    // Calculate influence based on hue position
+    float influence = GetHueInfluence(hsl.x, sourceStart, sourceEnd, falloff);
+
+    if (influence < 0.001) return color;
+
+    // Apply the hue shift
+    float newHue = hsl.x + shift * influence * strength;
+
+    // Wrap hue to 0-360 range
+    while (newHue < 0.0) newHue += 360.0;
+    while (newHue >= 360.0) newHue -= 360.0;
+
+    // Convert back to RGB
+    float3 result = HSLToRGB(float3(newHue, hsl.y, hsl.z));
+
+    return result;
+}
+
+// ============================================================================
+// CIELAB Remapping Correction Algorithm
+// ============================================================================
+// Operates in CIELAB perceptual color space to enhance color differences.
+// Works by:
+// 1. Converting RGB to CIELAB (L*, a*, b*)
+// 2. Transferring information between a* (red-green) and b* (blue-yellow) axes
+// 3. Enhancing axis contrast as needed
+// 4. Optionally encoding color differences into lightness
+// 5. Converting back to RGB
+//
+// Parameters:
+// - aToB: transfer factor from a* to b* (-1 to 1)
+// - bToA: transfer factor from b* to a* (-1 to 1)
+// - aEnhance: enhancement multiplier for a* (0 to 2)
+// - bEnhance: enhancement multiplier for b* (0 to 2)
+// - lEnhance: encode chroma difference into lightness (0 to 1)
+// - strength: overall effect intensity (0 to 1)
+
+float3 ApplyCIELABRemapping(float3 color, float aToB, float bToA, float aEnhance, float bEnhance, float lEnhance, float strength)
+{
+    if (strength < 0.001) return color;
+
+    // Convert to CIELAB
+    float3 lab = sRGBToLab(color);
+
+    float L = lab.x;
+    float a = lab.y;
+    float b = lab.z;
+
+    // Store original chroma for lightness encoding
+    float originalChroma = sqrt(a * a + b * b);
+
+    // Apply cross-axis transfers (transfer color info between axes)
+    float newA = a + b * bToA;
+    float newB = b + a * aToB;
+
+    // Apply axis enhancements (increase contrast)
+    newA *= aEnhance;
+    newB *= bEnhance;
+
+    // Apply lightness encoding (make color differences visible as brightness)
+    float newChroma = sqrt(newA * newA + newB * newB);
+    float chromaDiff = newChroma - originalChroma;
+    float newL = L + chromaDiff * lEnhance * 0.5;
+
+    // Clamp lightness to valid range
+    newL = clamp(newL, 0.0, 100.0);
+
+    // Create modified Lab color
+    float3 modifiedLab = float3(newL, newA, newB);
+
+    // Convert back to sRGB
+    float3 result = LabToSRGB(modifiedLab);
+
+    // Blend with original based on strength
+    return lerp(color, result, strength);
+}
+
+// ============================================================================
 // LUT Correction Functions
 // ============================================================================
 
@@ -910,13 +1246,9 @@ float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
     }
 
     // Mode 2 = Correction
-    // Check which correction algorithm to use
-    if (zone.CorrectionAlgorithm > 0.5)
-    {
-        // Daltonization algorithm
-        processedColor = ApplyDaltonization(color, zone.DaltonizationCVDType, zone.DaltonizationStrength);
-    }
-    else
+    // Check which correction algorithm to use:
+    // 0 = LUT-based, 1 = Daltonization, 2 = Hue Rotation, 3 = CIELAB Remapping
+    if (zone.CorrectionAlgorithm < 0.5)
     {
         // LUT-based correction (original algorithm)
         // Call zone-specific LUT function
@@ -928,6 +1260,36 @@ float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
             processedColor = ApplyLUTCorrectionZone2(color, zone);
         else
             processedColor = ApplyLUTCorrectionZone3(color, zone);
+    }
+    else if (zone.CorrectionAlgorithm < 1.5)
+    {
+        // Daltonization algorithm
+        processedColor = ApplyDaltonization(color, zone.DaltonizationCVDType, zone.DaltonizationStrength);
+    }
+    else if (zone.CorrectionAlgorithm < 2.5)
+    {
+        // Hue Rotation algorithm
+        processedColor = ApplyHueRotation(
+            color,
+            zone.HueRotationSourceStart,
+            zone.HueRotationSourceEnd,
+            zone.HueRotationShift,
+            zone.HueRotationFalloff,
+            zone.HueRotationStrength
+        );
+    }
+    else
+    {
+        // CIELAB Remapping algorithm
+        processedColor = ApplyCIELABRemapping(
+            color,
+            zone.CIELABAtoB,
+            zone.CIELABBtoA,
+            zone.CIELABAEnhance,
+            zone.CIELABBEnhance,
+            zone.CIELABLEnhance,
+            zone.CIELABStrength
+        );
     }
 
     // Apply intensity blend for correction

@@ -141,44 +141,46 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 
     private void Zone0PresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateSaveButtonState(Zone0PresetCombo, SavePresetButton);
+        UpdateSaveButtonState(Zone0PresetCombo, SavePresetButton, DeletePresetButton);
     }
 
     private void Zone1PresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateSaveButtonState(Zone1PresetCombo, Zone1SavePresetButton);
+        UpdateSaveButtonState(Zone1PresetCombo, Zone1SavePresetButton, Zone1DeletePresetButton);
     }
 
     private void Zone2PresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateSaveButtonState(Zone2PresetCombo, Zone2SavePresetButton);
+        UpdateSaveButtonState(Zone2PresetCombo, Zone2SavePresetButton, Zone2DeletePresetButton);
     }
 
     private void Zone3PresetCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        UpdateSaveButtonState(Zone3PresetCombo, Zone3SavePresetButton);
+        UpdateSaveButtonState(Zone3PresetCombo, Zone3SavePresetButton, Zone3DeletePresetButton);
     }
 
     private void UpdateAllSaveButtonStates()
     {
-        UpdateSaveButtonState(Zone0PresetCombo, SavePresetButton);
-        UpdateSaveButtonState(Zone1PresetCombo, Zone1SavePresetButton);
-        UpdateSaveButtonState(Zone2PresetCombo, Zone2SavePresetButton);
-        UpdateSaveButtonState(Zone3PresetCombo, Zone3SavePresetButton);
+        UpdateSaveButtonState(Zone0PresetCombo, SavePresetButton, DeletePresetButton);
+        UpdateSaveButtonState(Zone1PresetCombo, Zone1SavePresetButton, Zone1DeletePresetButton);
+        UpdateSaveButtonState(Zone2PresetCombo, Zone2SavePresetButton, Zone2DeletePresetButton);
+        UpdateSaveButtonState(Zone3PresetCombo, Zone3SavePresetButton, Zone3DeletePresetButton);
     }
 
-    private void UpdateSaveButtonState(ComboBox combo, Button saveButton)
+    private void UpdateSaveButtonState(ComboBox combo, Button saveButton, Button? deleteButton = null)
     {
         if (combo.SelectedItem is Separator)
         {
             saveButton.IsEnabled = false;
+            if (deleteButton != null) deleteButton.IsEnabled = false;
             return;
         }
 
-        // Enable Save button only for custom presets (after built-in count + separator)
+        // Enable Save/Delete buttons only for custom presets (after built-in count + separator)
         int selectedIndex = combo.SelectedIndex;
         bool isCustomPreset = selectedIndex > _builtInPresetCount && _presetManager.CustomPresets.Count > 0;
         saveButton.IsEnabled = isCustomPreset;
+        if (deleteButton != null) deleteButton.IsEnabled = isCustomPreset;
     }
 
     private void LoadConfiguration()
@@ -736,9 +738,147 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         if (Zone0DaltonizationPanel == null || Zone0LUTPanel == null) return;
 
-        bool isDaltonization = Zone0CorrectionAlgorithmCombo.SelectedIndex == 1;
-        Zone0DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
-        Zone0LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+        int algorithm = Zone0CorrectionAlgorithmCombo.SelectedIndex;
+        Zone0LUTPanel.Visibility = algorithm == 0 ? Visibility.Visible : Visibility.Collapsed;
+        Zone0DaltonizationPanel.Visibility = algorithm == 1 ? Visibility.Visible : Visibility.Collapsed;
+        Zone0HueRotationPanel.Visibility = algorithm == 2 ? Visibility.Visible : Visibility.Collapsed;
+        Zone0CIELABPanel.Visibility = algorithm == 3 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Zone 0 Hue Rotation handlers
+    private void Zone0HueRotationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationCVDType = (CVDCorrectionType)Zone0HueRotationCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone0_hueRotCVDType", (int)zone.HueRotationCVDType);
+    }
+
+    private void Zone0HueRotationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationStrength = (float)Zone0HueRotationStrengthSlider.Value;
+        Zone0HueRotationStrengthLabel.Text = $"Strength ({zone.HueRotationStrength:F2})";
+        _effect.Configuration.Set("zone0_hueRotStrength", zone.HueRotationStrength);
+    }
+
+    private void Zone0HueRotationAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationAdvancedMode = Zone0HueRotationAdvancedCheckBox.IsChecked == true;
+        Zone0HueRotationAdvancedPanel.Visibility = zone.HueRotationAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone0_hueRotAdvanced", zone.HueRotationAdvancedMode);
+    }
+
+    private void Zone0HueRotationSourceStart_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationSourceStart = (float)Zone0HueRotationSourceStartSlider.Value;
+        Zone0HueRotationSourceStartLabel.Text = $"Source Start ({zone.HueRotationSourceStart:F0}°)";
+        _effect.Configuration.Set("zone0_hueRotSourceStart", zone.HueRotationSourceStart);
+    }
+
+    private void Zone0HueRotationSourceEnd_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationSourceEnd = (float)Zone0HueRotationSourceEndSlider.Value;
+        Zone0HueRotationSourceEndLabel.Text = $"Source End ({zone.HueRotationSourceEnd:F0}°)";
+        _effect.Configuration.Set("zone0_hueRotSourceEnd", zone.HueRotationSourceEnd);
+    }
+
+    private void Zone0HueRotationShift_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationShift = (float)Zone0HueRotationShiftSlider.Value;
+        string sign = zone.HueRotationShift >= 0 ? "+" : "";
+        Zone0HueRotationShiftLabel.Text = $"Hue Shift ({sign}{zone.HueRotationShift:F0}°)";
+        _effect.Configuration.Set("zone0_hueRotShift", zone.HueRotationShift);
+    }
+
+    private void Zone0HueRotationFalloff_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.HueRotationFalloff = (float)Zone0HueRotationFalloffSlider.Value;
+        Zone0HueRotationFalloffLabel.Text = $"Edge Falloff ({zone.HueRotationFalloff:F2})";
+        _effect.Configuration.Set("zone0_hueRotFalloff", zone.HueRotationFalloff);
+    }
+
+    // Zone 0 CIELAB handlers
+    private void Zone0CIELABCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABCVDType = (CVDCorrectionType)Zone0CIELABCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone0_cielabCVDType", (int)zone.CIELABCVDType);
+    }
+
+    private void Zone0CIELABStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABStrength = (float)Zone0CIELABStrengthSlider.Value;
+        Zone0CIELABStrengthLabel.Text = $"Strength ({zone.CIELABStrength:F2})";
+        _effect.Configuration.Set("zone0_cielabStrength", zone.CIELABStrength);
+    }
+
+    private void Zone0CIELABAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABAdvancedMode = Zone0CIELABAdvancedCheckBox.IsChecked == true;
+        Zone0CIELABAdvancedPanel.Visibility = zone.CIELABAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone0_cielabAdvanced", zone.CIELABAdvancedMode);
+    }
+
+    private void Zone0CIELABAtoB_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABAtoB = (float)Zone0CIELABAtoBSlider.Value;
+        Zone0CIELABAtoBLabel.Text = $"a* → b* Transfer ({zone.CIELABAtoB:F2})";
+        _effect.Configuration.Set("zone0_cielabAtoB", zone.CIELABAtoB);
+    }
+
+    private void Zone0CIELABBtoA_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABBtoA = (float)Zone0CIELABBtoASlider.Value;
+        Zone0CIELABBtoALabel.Text = $"b* → a* Transfer ({zone.CIELABBtoA:F2})";
+        _effect.Configuration.Set("zone0_cielabBtoA", zone.CIELABBtoA);
+    }
+
+    private void Zone0CIELABAEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABAEnhance = (float)Zone0CIELABAEnhanceSlider.Value;
+        Zone0CIELABAEnhanceLabel.Text = $"a* Enhancement ({zone.CIELABAEnhance:F2})";
+        _effect.Configuration.Set("zone0_cielabAEnhance", zone.CIELABAEnhance);
+    }
+
+    private void Zone0CIELABBEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABBEnhance = (float)Zone0CIELABBEnhanceSlider.Value;
+        Zone0CIELABBEnhanceLabel.Text = $"b* Enhancement ({zone.CIELABBEnhance:F2})";
+        _effect.Configuration.Set("zone0_cielabBEnhance", zone.CIELABBEnhance);
+    }
+
+    private void Zone0CIELABLEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(0);
+        zone.CIELABLEnhance = (float)Zone0CIELABLEnhanceSlider.Value;
+        Zone0CIELABLEnhanceLabel.Text = $"Lightness Encoding ({zone.CIELABLEnhance:F2})";
+        _effect.Configuration.Set("zone0_cielabLEnhance", zone.CIELABLEnhance);
     }
 
     private void Zone0DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
@@ -840,9 +980,147 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         if (Zone1DaltonizationPanel == null || Zone1LUTPanel == null) return;
 
-        bool isDaltonization = Zone1CorrectionAlgorithmCombo.SelectedIndex == 1;
-        Zone1DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
-        Zone1LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+        int algorithm = Zone1CorrectionAlgorithmCombo.SelectedIndex;
+        Zone1LUTPanel.Visibility = algorithm == 0 ? Visibility.Visible : Visibility.Collapsed;
+        Zone1DaltonizationPanel.Visibility = algorithm == 1 ? Visibility.Visible : Visibility.Collapsed;
+        Zone1HueRotationPanel.Visibility = algorithm == 2 ? Visibility.Visible : Visibility.Collapsed;
+        Zone1CIELABPanel.Visibility = algorithm == 3 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Zone 1 Hue Rotation handlers
+    private void Zone1HueRotationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationCVDType = (CVDCorrectionType)Zone1HueRotationCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone1_hueRotCVDType", (int)zone.HueRotationCVDType);
+    }
+
+    private void Zone1HueRotationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationStrength = (float)Zone1HueRotationStrengthSlider.Value;
+        Zone1HueRotationStrengthLabel.Text = $"Strength ({zone.HueRotationStrength:F2})";
+        _effect.Configuration.Set("zone1_hueRotStrength", zone.HueRotationStrength);
+    }
+
+    private void Zone1HueRotationAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationAdvancedMode = Zone1HueRotationAdvancedCheckBox.IsChecked == true;
+        Zone1HueRotationAdvancedPanel.Visibility = zone.HueRotationAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone1_hueRotAdvanced", zone.HueRotationAdvancedMode);
+    }
+
+    private void Zone1HueRotationSourceStart_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationSourceStart = (float)Zone1HueRotationSourceStartSlider.Value;
+        Zone1HueRotationSourceStartLabel.Text = $"Source Start ({zone.HueRotationSourceStart:F0}°)";
+        _effect.Configuration.Set("zone1_hueRotSourceStart", zone.HueRotationSourceStart);
+    }
+
+    private void Zone1HueRotationSourceEnd_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationSourceEnd = (float)Zone1HueRotationSourceEndSlider.Value;
+        Zone1HueRotationSourceEndLabel.Text = $"Source End ({zone.HueRotationSourceEnd:F0}°)";
+        _effect.Configuration.Set("zone1_hueRotSourceEnd", zone.HueRotationSourceEnd);
+    }
+
+    private void Zone1HueRotationShift_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationShift = (float)Zone1HueRotationShiftSlider.Value;
+        string sign = zone.HueRotationShift >= 0 ? "+" : "";
+        Zone1HueRotationShiftLabel.Text = $"Hue Shift ({sign}{zone.HueRotationShift:F0}°)";
+        _effect.Configuration.Set("zone1_hueRotShift", zone.HueRotationShift);
+    }
+
+    private void Zone1HueRotationFalloff_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.HueRotationFalloff = (float)Zone1HueRotationFalloffSlider.Value;
+        Zone1HueRotationFalloffLabel.Text = $"Edge Falloff ({zone.HueRotationFalloff:F2})";
+        _effect.Configuration.Set("zone1_hueRotFalloff", zone.HueRotationFalloff);
+    }
+
+    // Zone 1 CIELAB handlers
+    private void Zone1CIELABCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABCVDType = (CVDCorrectionType)Zone1CIELABCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone1_cielabCVDType", (int)zone.CIELABCVDType);
+    }
+
+    private void Zone1CIELABStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABStrength = (float)Zone1CIELABStrengthSlider.Value;
+        Zone1CIELABStrengthLabel.Text = $"Strength ({zone.CIELABStrength:F2})";
+        _effect.Configuration.Set("zone1_cielabStrength", zone.CIELABStrength);
+    }
+
+    private void Zone1CIELABAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABAdvancedMode = Zone1CIELABAdvancedCheckBox.IsChecked == true;
+        Zone1CIELABAdvancedPanel.Visibility = zone.CIELABAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone1_cielabAdvanced", zone.CIELABAdvancedMode);
+    }
+
+    private void Zone1CIELABAtoB_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABAtoB = (float)Zone1CIELABAtoBSlider.Value;
+        Zone1CIELABAtoBLabel.Text = $"a* → b* Transfer ({zone.CIELABAtoB:F2})";
+        _effect.Configuration.Set("zone1_cielabAtoB", zone.CIELABAtoB);
+    }
+
+    private void Zone1CIELABBtoA_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABBtoA = (float)Zone1CIELABBtoASlider.Value;
+        Zone1CIELABBtoALabel.Text = $"b* → a* Transfer ({zone.CIELABBtoA:F2})";
+        _effect.Configuration.Set("zone1_cielabBtoA", zone.CIELABBtoA);
+    }
+
+    private void Zone1CIELABAEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABAEnhance = (float)Zone1CIELABAEnhanceSlider.Value;
+        Zone1CIELABAEnhanceLabel.Text = $"a* Enhancement ({zone.CIELABAEnhance:F2})";
+        _effect.Configuration.Set("zone1_cielabAEnhance", zone.CIELABAEnhance);
+    }
+
+    private void Zone1CIELABBEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABBEnhance = (float)Zone1CIELABBEnhanceSlider.Value;
+        Zone1CIELABBEnhanceLabel.Text = $"b* Enhancement ({zone.CIELABBEnhance:F2})";
+        _effect.Configuration.Set("zone1_cielabBEnhance", zone.CIELABBEnhance);
+    }
+
+    private void Zone1CIELABLEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(1);
+        zone.CIELABLEnhance = (float)Zone1CIELABLEnhanceSlider.Value;
+        Zone1CIELABLEnhanceLabel.Text = $"Lightness Encoding ({zone.CIELABLEnhance:F2})";
+        _effect.Configuration.Set("zone1_cielabLEnhance", zone.CIELABLEnhance);
     }
 
     private void Zone1DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
@@ -935,9 +1213,147 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         if (Zone2DaltonizationPanel == null || Zone2LUTPanel == null) return;
 
-        bool isDaltonization = Zone2CorrectionAlgorithmCombo.SelectedIndex == 1;
-        Zone2DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
-        Zone2LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+        int algorithm = Zone2CorrectionAlgorithmCombo.SelectedIndex;
+        Zone2LUTPanel.Visibility = algorithm == 0 ? Visibility.Visible : Visibility.Collapsed;
+        Zone2DaltonizationPanel.Visibility = algorithm == 1 ? Visibility.Visible : Visibility.Collapsed;
+        Zone2HueRotationPanel.Visibility = algorithm == 2 ? Visibility.Visible : Visibility.Collapsed;
+        Zone2CIELABPanel.Visibility = algorithm == 3 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Zone 2 Hue Rotation handlers
+    private void Zone2HueRotationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationCVDType = (CVDCorrectionType)Zone2HueRotationCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone2_hueRotCVDType", (int)zone.HueRotationCVDType);
+    }
+
+    private void Zone2HueRotationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationStrength = (float)Zone2HueRotationStrengthSlider.Value;
+        Zone2HueRotationStrengthLabel.Text = $"Strength ({zone.HueRotationStrength:F2})";
+        _effect.Configuration.Set("zone2_hueRotStrength", zone.HueRotationStrength);
+    }
+
+    private void Zone2HueRotationAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationAdvancedMode = Zone2HueRotationAdvancedCheckBox.IsChecked == true;
+        Zone2HueRotationAdvancedPanel.Visibility = zone.HueRotationAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone2_hueRotAdvanced", zone.HueRotationAdvancedMode);
+    }
+
+    private void Zone2HueRotationSourceStart_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationSourceStart = (float)Zone2HueRotationSourceStartSlider.Value;
+        Zone2HueRotationSourceStartLabel.Text = $"Source Start ({zone.HueRotationSourceStart:F0}°)";
+        _effect.Configuration.Set("zone2_hueRotSourceStart", zone.HueRotationSourceStart);
+    }
+
+    private void Zone2HueRotationSourceEnd_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationSourceEnd = (float)Zone2HueRotationSourceEndSlider.Value;
+        Zone2HueRotationSourceEndLabel.Text = $"Source End ({zone.HueRotationSourceEnd:F0}°)";
+        _effect.Configuration.Set("zone2_hueRotSourceEnd", zone.HueRotationSourceEnd);
+    }
+
+    private void Zone2HueRotationShift_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationShift = (float)Zone2HueRotationShiftSlider.Value;
+        string sign = zone.HueRotationShift >= 0 ? "+" : "";
+        Zone2HueRotationShiftLabel.Text = $"Hue Shift ({sign}{zone.HueRotationShift:F0}°)";
+        _effect.Configuration.Set("zone2_hueRotShift", zone.HueRotationShift);
+    }
+
+    private void Zone2HueRotationFalloff_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.HueRotationFalloff = (float)Zone2HueRotationFalloffSlider.Value;
+        Zone2HueRotationFalloffLabel.Text = $"Edge Falloff ({zone.HueRotationFalloff:F2})";
+        _effect.Configuration.Set("zone2_hueRotFalloff", zone.HueRotationFalloff);
+    }
+
+    // Zone 2 CIELAB handlers
+    private void Zone2CIELABCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABCVDType = (CVDCorrectionType)Zone2CIELABCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone2_cielabCVDType", (int)zone.CIELABCVDType);
+    }
+
+    private void Zone2CIELABStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABStrength = (float)Zone2CIELABStrengthSlider.Value;
+        Zone2CIELABStrengthLabel.Text = $"Strength ({zone.CIELABStrength:F2})";
+        _effect.Configuration.Set("zone2_cielabStrength", zone.CIELABStrength);
+    }
+
+    private void Zone2CIELABAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABAdvancedMode = Zone2CIELABAdvancedCheckBox.IsChecked == true;
+        Zone2CIELABAdvancedPanel.Visibility = zone.CIELABAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone2_cielabAdvanced", zone.CIELABAdvancedMode);
+    }
+
+    private void Zone2CIELABAtoB_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABAtoB = (float)Zone2CIELABAtoBSlider.Value;
+        Zone2CIELABAtoBLabel.Text = $"a* → b* Transfer ({zone.CIELABAtoB:F2})";
+        _effect.Configuration.Set("zone2_cielabAtoB", zone.CIELABAtoB);
+    }
+
+    private void Zone2CIELABBtoA_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABBtoA = (float)Zone2CIELABBtoASlider.Value;
+        Zone2CIELABBtoALabel.Text = $"b* → a* Transfer ({zone.CIELABBtoA:F2})";
+        _effect.Configuration.Set("zone2_cielabBtoA", zone.CIELABBtoA);
+    }
+
+    private void Zone2CIELABAEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABAEnhance = (float)Zone2CIELABAEnhanceSlider.Value;
+        Zone2CIELABAEnhanceLabel.Text = $"a* Enhancement ({zone.CIELABAEnhance:F2})";
+        _effect.Configuration.Set("zone2_cielabAEnhance", zone.CIELABAEnhance);
+    }
+
+    private void Zone2CIELABBEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABBEnhance = (float)Zone2CIELABBEnhanceSlider.Value;
+        Zone2CIELABBEnhanceLabel.Text = $"b* Enhancement ({zone.CIELABBEnhance:F2})";
+        _effect.Configuration.Set("zone2_cielabBEnhance", zone.CIELABBEnhance);
+    }
+
+    private void Zone2CIELABLEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(2);
+        zone.CIELABLEnhance = (float)Zone2CIELABLEnhanceSlider.Value;
+        Zone2CIELABLEnhanceLabel.Text = $"Lightness Encoding ({zone.CIELABLEnhance:F2})";
+        _effect.Configuration.Set("zone2_cielabLEnhance", zone.CIELABLEnhance);
     }
 
     private void Zone2DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
@@ -1017,9 +1433,147 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         if (Zone3DaltonizationPanel == null || Zone3LUTPanel == null) return;
 
-        bool isDaltonization = Zone3CorrectionAlgorithmCombo.SelectedIndex == 1;
-        Zone3DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
-        Zone3LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+        int algorithm = Zone3CorrectionAlgorithmCombo.SelectedIndex;
+        Zone3LUTPanel.Visibility = algorithm == 0 ? Visibility.Visible : Visibility.Collapsed;
+        Zone3DaltonizationPanel.Visibility = algorithm == 1 ? Visibility.Visible : Visibility.Collapsed;
+        Zone3HueRotationPanel.Visibility = algorithm == 2 ? Visibility.Visible : Visibility.Collapsed;
+        Zone3CIELABPanel.Visibility = algorithm == 3 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Zone 3 Hue Rotation handlers
+    private void Zone3HueRotationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationCVDType = (CVDCorrectionType)Zone3HueRotationCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone3_hueRotCVDType", (int)zone.HueRotationCVDType);
+    }
+
+    private void Zone3HueRotationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationStrength = (float)Zone3HueRotationStrengthSlider.Value;
+        Zone3HueRotationStrengthLabel.Text = $"Strength ({zone.HueRotationStrength:F2})";
+        _effect.Configuration.Set("zone3_hueRotStrength", zone.HueRotationStrength);
+    }
+
+    private void Zone3HueRotationAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationAdvancedMode = Zone3HueRotationAdvancedCheckBox.IsChecked == true;
+        Zone3HueRotationAdvancedPanel.Visibility = zone.HueRotationAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone3_hueRotAdvanced", zone.HueRotationAdvancedMode);
+    }
+
+    private void Zone3HueRotationSourceStart_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationSourceStart = (float)Zone3HueRotationSourceStartSlider.Value;
+        Zone3HueRotationSourceStartLabel.Text = $"Source Start ({zone.HueRotationSourceStart:F0}°)";
+        _effect.Configuration.Set("zone3_hueRotSourceStart", zone.HueRotationSourceStart);
+    }
+
+    private void Zone3HueRotationSourceEnd_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationSourceEnd = (float)Zone3HueRotationSourceEndSlider.Value;
+        Zone3HueRotationSourceEndLabel.Text = $"Source End ({zone.HueRotationSourceEnd:F0}°)";
+        _effect.Configuration.Set("zone3_hueRotSourceEnd", zone.HueRotationSourceEnd);
+    }
+
+    private void Zone3HueRotationShift_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationShift = (float)Zone3HueRotationShiftSlider.Value;
+        string sign = zone.HueRotationShift >= 0 ? "+" : "";
+        Zone3HueRotationShiftLabel.Text = $"Hue Shift ({sign}{zone.HueRotationShift:F0}°)";
+        _effect.Configuration.Set("zone3_hueRotShift", zone.HueRotationShift);
+    }
+
+    private void Zone3HueRotationFalloff_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.HueRotationFalloff = (float)Zone3HueRotationFalloffSlider.Value;
+        Zone3HueRotationFalloffLabel.Text = $"Edge Falloff ({zone.HueRotationFalloff:F2})";
+        _effect.Configuration.Set("zone3_hueRotFalloff", zone.HueRotationFalloff);
+    }
+
+    // Zone 3 CIELAB handlers
+    private void Zone3CIELABCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABCVDType = (CVDCorrectionType)Zone3CIELABCVDCombo.SelectedIndex;
+        _effect.Configuration.Set("zone3_cielabCVDType", (int)zone.CIELABCVDType);
+    }
+
+    private void Zone3CIELABStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABStrength = (float)Zone3CIELABStrengthSlider.Value;
+        Zone3CIELABStrengthLabel.Text = $"Strength ({zone.CIELABStrength:F2})";
+        _effect.Configuration.Set("zone3_cielabStrength", zone.CIELABStrength);
+    }
+
+    private void Zone3CIELABAdvanced_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABAdvancedMode = Zone3CIELABAdvancedCheckBox.IsChecked == true;
+        Zone3CIELABAdvancedPanel.Visibility = zone.CIELABAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
+        _effect.Configuration.Set("zone3_cielabAdvanced", zone.CIELABAdvancedMode);
+    }
+
+    private void Zone3CIELABAtoB_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABAtoB = (float)Zone3CIELABAtoBSlider.Value;
+        Zone3CIELABAtoBLabel.Text = $"a* → b* Transfer ({zone.CIELABAtoB:F2})";
+        _effect.Configuration.Set("zone3_cielabAtoB", zone.CIELABAtoB);
+    }
+
+    private void Zone3CIELABBtoA_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABBtoA = (float)Zone3CIELABBtoASlider.Value;
+        Zone3CIELABBtoALabel.Text = $"b* → a* Transfer ({zone.CIELABBtoA:F2})";
+        _effect.Configuration.Set("zone3_cielabBtoA", zone.CIELABBtoA);
+    }
+
+    private void Zone3CIELABAEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABAEnhance = (float)Zone3CIELABAEnhanceSlider.Value;
+        Zone3CIELABAEnhanceLabel.Text = $"a* Enhancement ({zone.CIELABAEnhance:F2})";
+        _effect.Configuration.Set("zone3_cielabAEnhance", zone.CIELABAEnhance);
+    }
+
+    private void Zone3CIELABBEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABBEnhance = (float)Zone3CIELABBEnhanceSlider.Value;
+        Zone3CIELABBEnhanceLabel.Text = $"b* Enhancement ({zone.CIELABBEnhance:F2})";
+        _effect.Configuration.Set("zone3_cielabBEnhance", zone.CIELABBEnhance);
+    }
+
+    private void Zone3CIELABLEnhance_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        var zone = _effect.GetZone(3);
+        zone.CIELABLEnhance = (float)Zone3CIELABLEnhanceSlider.Value;
+        Zone3CIELABLEnhanceLabel.Text = $"Lightness Encoding ({zone.CIELABLEnhance:F2})";
+        _effect.Configuration.Set("zone3_cielabLEnhance", zone.CIELABLEnhance);
     }
 
     private void Zone3DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
@@ -1046,18 +1600,21 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     private void Zone1SavePreset_Click(object sender, RoutedEventArgs e) => SavePresetForZone(1, Zone1PresetCombo);
     private void Zone1ExportPreset_Click(object sender, RoutedEventArgs e) => ExportPresetForZone(Zone1PresetCombo);
     private void Zone1ImportPreset_Click(object sender, RoutedEventArgs e) => ImportPreset();
+    private void Zone1DeletePreset_Click(object sender, RoutedEventArgs e) => DeletePresetForZone(Zone1PresetCombo);
 
     // Zone 2 custom preset handlers
     private void Zone2SaveAsPreset_Click(object sender, RoutedEventArgs e) => SaveAsPresetForZone(2);
     private void Zone2SavePreset_Click(object sender, RoutedEventArgs e) => SavePresetForZone(2, Zone2PresetCombo);
     private void Zone2ExportPreset_Click(object sender, RoutedEventArgs e) => ExportPresetForZone(Zone2PresetCombo);
     private void Zone2ImportPreset_Click(object sender, RoutedEventArgs e) => ImportPreset();
+    private void Zone2DeletePreset_Click(object sender, RoutedEventArgs e) => DeletePresetForZone(Zone2PresetCombo);
 
     // Zone 3 custom preset handlers
     private void Zone3SaveAsPreset_Click(object sender, RoutedEventArgs e) => SaveAsPresetForZone(3);
     private void Zone3SavePreset_Click(object sender, RoutedEventArgs e) => SavePresetForZone(3, Zone3PresetCombo);
     private void Zone3ExportPreset_Click(object sender, RoutedEventArgs e) => ExportPresetForZone(Zone3PresetCombo);
     private void Zone3ImportPreset_Click(object sender, RoutedEventArgs e) => ImportPreset();
+    private void Zone3DeletePreset_Click(object sender, RoutedEventArgs e) => DeletePresetForZone(Zone3PresetCombo);
 
     #endregion
 
@@ -1447,6 +2004,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     private void SavePresetButton_Click(object sender, RoutedEventArgs e) => SavePresetForZone(0, Zone0PresetCombo);
     private void ExportPresetButton_Click(object sender, RoutedEventArgs e) => ExportPresetForZone(Zone0PresetCombo);
     private void ImportPresetButton_Click(object sender, RoutedEventArgs e) => ImportPreset();
+    private void DeletePresetButton_Click(object sender, RoutedEventArgs e) => DeletePresetForZone(Zone0PresetCombo);
 
     /// <summary>
     /// Apply a preset (built-in or custom) to a specific zone.
@@ -1653,6 +2211,51 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
                 ShowTopmostMessageBox($"Failed to import preset: {ex.Message}", "Import Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+    }
+
+    /// <summary>
+    /// Delete the selected custom preset with confirmation.
+    /// </summary>
+    private void DeletePresetForZone(ComboBox presetCombo)
+    {
+        int selectedIndex = presetCombo.SelectedIndex;
+
+        // Verify a custom preset is selected
+        if (selectedIndex <= _builtInPresetCount || _presetManager.CustomPresets.Count == 0)
+            return;
+
+        // Get the custom preset name
+        int customIndex = selectedIndex - _builtInPresetCount - 1;
+        if (customIndex < 0 || customIndex >= _presetManager.CustomPresets.Count)
+            return;
+
+        var presetName = _presetManager.CustomPresets[customIndex].Name;
+
+        // Show confirmation dialog
+        var result = DialogHelper.WithSuspendedTopmost(() =>
+            System.Windows.MessageBox.Show(
+                $"Are you sure you want to delete the preset \"{presetName}\"?\n\nThis action cannot be undone.",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning));
+
+        if (result != MessageBoxResult.Yes)
+            return;
+
+        // Delete the preset
+        if (_presetManager.DeleteCustomPreset(presetName))
+        {
+            // Refresh all combo boxes
+            PopulatePresetComboBoxesRefresh();
+
+            ShowTopmostMessageBox($"Preset '{presetName}' deleted successfully.", "Preset Deleted",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        else
+        {
+            ShowTopmostMessageBox($"Failed to delete preset '{presetName}'.", "Delete Error",
+                MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

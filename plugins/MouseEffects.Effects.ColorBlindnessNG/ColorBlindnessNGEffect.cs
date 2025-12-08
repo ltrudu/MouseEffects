@@ -458,6 +458,40 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         if (Configuration.TryGet($"{prefix}postSimIntensity", out float postSimIntensity))
             z.PostCorrectionSimIntensity = postSimIntensity;
 
+        // Hue Rotation settings
+        if (Configuration.TryGet($"{prefix}hueRotCVDType", out int hueRotCVDType))
+            z.HueRotationCVDType = (CVDCorrectionType)hueRotCVDType;
+        if (Configuration.TryGet($"{prefix}hueRotStrength", out float hueRotStrength))
+            z.HueRotationStrength = hueRotStrength;
+        if (Configuration.TryGet($"{prefix}hueRotAdvanced", out bool hueRotAdvanced))
+            z.HueRotationAdvancedMode = hueRotAdvanced;
+        if (Configuration.TryGet($"{prefix}hueRotSourceStart", out float hueRotSourceStart))
+            z.HueRotationSourceStart = hueRotSourceStart;
+        if (Configuration.TryGet($"{prefix}hueRotSourceEnd", out float hueRotSourceEnd))
+            z.HueRotationSourceEnd = hueRotSourceEnd;
+        if (Configuration.TryGet($"{prefix}hueRotShift", out float hueRotShift))
+            z.HueRotationShift = hueRotShift;
+        if (Configuration.TryGet($"{prefix}hueRotFalloff", out float hueRotFalloff))
+            z.HueRotationFalloff = hueRotFalloff;
+
+        // CIELAB Remapping settings
+        if (Configuration.TryGet($"{prefix}cielabCVDType", out int cielabCVDType))
+            z.CIELABCVDType = (CVDCorrectionType)cielabCVDType;
+        if (Configuration.TryGet($"{prefix}cielabStrength", out float cielabStrength))
+            z.CIELABStrength = cielabStrength;
+        if (Configuration.TryGet($"{prefix}cielabAdvanced", out bool cielabAdvanced))
+            z.CIELABAdvancedMode = cielabAdvanced;
+        if (Configuration.TryGet($"{prefix}cielabAtoB", out float cielabAtoB))
+            z.CIELABAtoB = cielabAtoB;
+        if (Configuration.TryGet($"{prefix}cielabBtoA", out float cielabBtoA))
+            z.CIELABBtoA = cielabBtoA;
+        if (Configuration.TryGet($"{prefix}cielabAEnhance", out float cielabAEnhance))
+            z.CIELABAEnhance = cielabAEnhance;
+        if (Configuration.TryGet($"{prefix}cielabBEnhance", out float cielabBEnhance))
+            z.CIELABBEnhance = cielabBEnhance;
+        if (Configuration.TryGet($"{prefix}cielabLEnhance", out float cielabLEnhance))
+            z.CIELABLEnhance = cielabLEnhance;
+
         // Red channel
         bool needsUpdate = z.LutsNeedUpdate;
         LoadChannelConfiguration(z.RedChannel, $"{prefix}red", ref needsUpdate);
@@ -638,6 +672,88 @@ public sealed class ColorBlindnessNGEffect : EffectBase
             int effectiveDaltonizationCVDType = z.DaltonizationCVDType;
             // Note: DaltonizationCVDType follows same encoding as simulation filter types
 
+            // Get effective Hue Rotation parameters (auto-configure from CVD type if not in advanced mode)
+            float hueSourceStart = z.HueRotationSourceStart;
+            float hueSourceEnd = z.HueRotationSourceEnd;
+            float hueShift = z.HueRotationShift;
+            float hueFalloff = z.HueRotationFalloff;
+
+            if (!z.HueRotationAdvancedMode)
+            {
+                // Auto-configure based on CVD type
+                // Different hue ranges and shifts for each type based on confusion lines
+                switch (z.HueRotationCVDType)
+                {
+                    case CVDCorrectionType.Protanopia:
+                        // Red-blind (severe): Red appears darker, focus on red-green confusion
+                        // Rotate reds toward orange/yellow for better distinction
+                        hueSourceStart = 340f; hueSourceEnd = 60f; hueShift = 45f; hueFalloff = 0.35f;
+                        break;
+                    case CVDCorrectionType.Protanomaly:
+                        // Red-weak (mild): Smaller rotation needed
+                        hueSourceStart = 350f; hueSourceEnd = 40f; hueShift = 25f; hueFalloff = 0.3f;
+                        break;
+                    case CVDCorrectionType.Deuteranopia:
+                        // Green-blind (severe): Green confusion with red/brown
+                        // Rotate greens toward cyan/blue for distinction
+                        hueSourceStart = 60f; hueSourceEnd = 160f; hueShift = 50f; hueFalloff = 0.35f;
+                        break;
+                    case CVDCorrectionType.Deuteranomaly:
+                        // Green-weak (mild): Smaller rotation
+                        hueSourceStart = 80f; hueSourceEnd = 140f; hueShift = 30f; hueFalloff = 0.3f;
+                        break;
+                    case CVDCorrectionType.Tritanopia:
+                        // Blue-blind (severe): Blue-yellow confusion
+                        // Rotate blues toward magenta, yellows toward red
+                        hueSourceStart = 180f; hueSourceEnd = 280f; hueShift = -55f; hueFalloff = 0.35f;
+                        break;
+                    case CVDCorrectionType.Tritanomaly:
+                        // Blue-weak (mild): Smaller rotation
+                        hueSourceStart = 200f; hueSourceEnd = 260f; hueShift = -35f; hueFalloff = 0.3f;
+                        break;
+                }
+            }
+
+            // Get effective CIELAB parameters (auto-configure from CVD type if not in advanced mode)
+            float labAtoB = z.CIELABAtoB;
+            float labBtoA = z.CIELABBtoA;
+            float labAEnhance = z.CIELABAEnhance;
+            float labBEnhance = z.CIELABBEnhance;
+            float labLEnhance = z.CIELABLEnhance;
+
+            if (!z.CIELABAdvancedMode)
+            {
+                // Auto-configure based on CVD type
+                // Severity affects transfer amount: -opia (severe) = stronger, -anomaly (mild) = weaker
+                switch (z.CIELABCVDType)
+                {
+                    case CVDCorrectionType.Protanopia:
+                        // Red-blind (severe): Strong transfer a*→b*, slight red enhancement via L*
+                        labAtoB = 0.6f; labBtoA = 0f; labAEnhance = 0.9f; labBEnhance = 1.3f; labLEnhance = 0.15f;
+                        break;
+                    case CVDCorrectionType.Protanomaly:
+                        // Red-weak (mild): Moderate transfer, preserve more original color
+                        labAtoB = 0.35f; labBtoA = 0f; labAEnhance = 1f; labBEnhance = 1.15f; labLEnhance = 0.08f;
+                        break;
+                    case CVDCorrectionType.Deuteranopia:
+                        // Green-blind (severe): Strong transfer a*→b*
+                        labAtoB = 0.55f; labBtoA = 0f; labAEnhance = 1f; labBEnhance = 1.25f; labLEnhance = 0.12f;
+                        break;
+                    case CVDCorrectionType.Deuteranomaly:
+                        // Green-weak (mild): Moderate transfer
+                        labAtoB = 0.3f; labBtoA = 0f; labAEnhance = 1f; labBEnhance = 1.1f; labLEnhance = 0.05f;
+                        break;
+                    case CVDCorrectionType.Tritanopia:
+                        // Blue-blind (severe): Strong transfer b*→a*
+                        labAtoB = 0f; labBtoA = 0.55f; labAEnhance = 1.25f; labBEnhance = 0.9f; labLEnhance = 0.12f;
+                        break;
+                    case CVDCorrectionType.Tritanomaly:
+                        // Blue-weak (mild): Moderate transfer b*→a*
+                        labAtoB = 0f; labBtoA = 0.3f; labAEnhance = 1.1f; labBEnhance = 1f; labLEnhance = 0.05f;
+                        break;
+                }
+            }
+
             var zoneParams = new ZoneParams
             {
                 Mode = (float)z.Mode,
@@ -668,7 +784,20 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 BlueBlendMode = (float)z.BlueChannel.BlendMode,
                 CorrectionAlgorithm = (float)z.CorrectionAlgorithm,
                 DaltonizationCVDType = effectiveDaltonizationCVDType,
-                DaltonizationStrength = z.DaltonizationStrength
+                DaltonizationStrength = z.DaltonizationStrength,
+                // Hue Rotation parameters
+                HueRotationStrength = z.HueRotationStrength,
+                HueRotationSourceStart = hueSourceStart,
+                HueRotationSourceEnd = hueSourceEnd,
+                HueRotationShift = hueShift,
+                HueRotationFalloff = hueFalloff,
+                // CIELAB Remapping parameters
+                CIELABStrength = z.CIELABStrength,
+                CIELABAtoB = labAtoB,
+                CIELABBtoA = labBtoA,
+                CIELABAEnhance = labAEnhance,
+                CIELABBEnhance = labBEnhance,
+                CIELABLEnhance = labLEnhance
             };
 
             switch (i)
@@ -722,7 +851,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Per-zone parameters packed for shader.
-    /// Size: 128 bytes (32 floats)
+    /// Size: 160 bytes (40 floats)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct ZoneParams
@@ -759,20 +888,30 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
         public float GreenBlendMode;          // Per-channel blend mode for green
         public float BlueBlendMode;           // Per-channel blend mode for blue
-        public float CorrectionAlgorithm;     // 0=LUT-based, 1=Daltonization
+        public float CorrectionAlgorithm;     // 0=LUT-based, 1=Daltonization, 2=HueRotation, 3=CIELAB
         public float DaltonizationCVDType;    // CVD type for Daltonization (1-6=Machado, 7-12=Strict)
 
         public float DaltonizationStrength;   // Strength of Daltonization correction (0-1)
-        public float _padding1;               // Padding for 16-byte alignment
-        public float _padding2;               // Padding for 16-byte alignment
-        public float _padding3;               // Padding for 16-byte alignment
+        public float HueRotationStrength;     // Hue rotation overall strength (0-1)
+        public float HueRotationSourceStart;  // Start of source hue range (0-360 degrees)
+        public float HueRotationSourceEnd;    // End of source hue range (0-360 degrees)
+
+        public float HueRotationShift;        // Amount to shift hue (-180 to +180 degrees)
+        public float HueRotationFalloff;      // Softness of hue range boundaries (0-1)
+        public float CIELABStrength;          // CIELAB remapping overall strength (0-1)
+        public float CIELABAtoB;              // Transfer factor from a* to b* axis (-1 to 1)
+
+        public float CIELABBtoA;              // Transfer factor from b* to a* axis (-1 to 1)
+        public float CIELABAEnhance;          // Enhancement multiplier for a* axis (0-2)
+        public float CIELABBEnhance;          // Enhancement multiplier for b* axis (0-2)
+        public float CIELABLEnhance;          // Encode color diff into lightness (0-1)
     }
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 48 (global) + 4 * 128 (zones) = 560 bytes
+    /// Size: 48 (global) + 4 * 160 (zones) = 688 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 560)]
+    [StructLayout(LayoutKind.Sequential, Size = 688)]
     private struct ColorBlindnessNGParams
     {
         // Global parameters (48 bytes)

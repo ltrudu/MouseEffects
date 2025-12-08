@@ -26,7 +26,32 @@ public enum CorrectionAlgorithm
     /// Daltonization algorithm (error redistribution to visible channels).
     /// Based on scientific CVD simulation to calculate lost colors and redistribute them.
     /// </summary>
-    Daltonization = 1
+    Daltonization = 1,
+
+    /// <summary>
+    /// Hue Rotation in HSL color space.
+    /// Rotates problematic hue ranges to more distinguishable positions on the color wheel.
+    /// </summary>
+    HueRotation = 2,
+
+    /// <summary>
+    /// CIELAB perceptual color space remapping.
+    /// Transfers color information between perceptual axes (a*=red-green, b*=blue-yellow).
+    /// </summary>
+    CIELABRemapping = 3
+}
+
+/// <summary>
+/// CVD type for correction algorithms (simplified list for user selection).
+/// </summary>
+public enum CVDCorrectionType
+{
+    Protanopia = 0,    // Red-blind (severe)
+    Protanomaly = 1,   // Red-weak (mild)
+    Deuteranopia = 2,  // Green-blind (severe)
+    Deuteranomaly = 3, // Green-weak (mild)
+    Tritanopia = 4,    // Blue-blind (severe)
+    Tritanomaly = 5    // Blue-weak (mild)
 }
 
 /// <summary>
@@ -71,6 +96,94 @@ public class ZoneSettings
     /// Strength of the Daltonization correction (0.0-1.0).
     /// </summary>
     public float DaltonizationStrength { get; set; } = 1.0f;
+
+    // ============ Hue Rotation Settings ============
+
+    /// <summary>
+    /// CVD type to correct for (determines auto-configuration of hue ranges).
+    /// </summary>
+    public CVDCorrectionType HueRotationCVDType { get; set; } = CVDCorrectionType.Deuteranopia;
+
+    /// <summary>
+    /// Overall strength of the hue rotation effect (0.0-1.0).
+    /// </summary>
+    public float HueRotationStrength { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Enable advanced mode for manual control of hue rotation parameters.
+    /// </summary>
+    public bool HueRotationAdvancedMode { get; set; } = false;
+
+    /// <summary>
+    /// Start of the source hue range to rotate (0-360 degrees).
+    /// Only used when AdvancedMode is enabled.
+    /// </summary>
+    public float HueRotationSourceStart { get; set; } = 0f;
+
+    /// <summary>
+    /// End of the source hue range to rotate (0-360 degrees).
+    /// Only used when AdvancedMode is enabled.
+    /// </summary>
+    public float HueRotationSourceEnd { get; set; } = 120f;
+
+    /// <summary>
+    /// Amount to shift the hue (-180 to +180 degrees).
+    /// Only used when AdvancedMode is enabled.
+    /// </summary>
+    public float HueRotationShift { get; set; } = 60f;
+
+    /// <summary>
+    /// Softness of the hue range boundaries (0.0=hard, 1.0=very soft).
+    /// Only used when AdvancedMode is enabled.
+    /// </summary>
+    public float HueRotationFalloff { get; set; } = 0.3f;
+
+    // ============ CIELAB Remapping Settings ============
+
+    /// <summary>
+    /// CVD type to correct for (determines auto-configuration of CIELAB remapping).
+    /// </summary>
+    public CVDCorrectionType CIELABCVDType { get; set; } = CVDCorrectionType.Deuteranopia;
+
+    /// <summary>
+    /// Overall strength of the CIELAB remapping effect (0.0-1.0).
+    /// </summary>
+    public float CIELABStrength { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Enable advanced mode for manual control of CIELAB parameters.
+    /// </summary>
+    public bool CIELABAdvancedMode { get; set; } = false;
+
+    /// <summary>
+    /// Transfer factor from a* (red-green) to b* (blue-yellow) axis.
+    /// Positive values shift red-green info to blue-yellow. Range: -1.0 to 1.0.
+    /// </summary>
+    public float CIELABAtoB { get; set; } = 0.5f;
+
+    /// <summary>
+    /// Transfer factor from b* (blue-yellow) to a* (red-green) axis.
+    /// Positive values shift blue-yellow info to red-green. Range: -1.0 to 1.0.
+    /// </summary>
+    public float CIELABBtoA { get; set; } = 0.0f;
+
+    /// <summary>
+    /// Enhancement multiplier for a* (red-green) axis. Range: 0.0 to 2.0.
+    /// Values > 1.0 increase red-green contrast.
+    /// </summary>
+    public float CIELABAEnhance { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Enhancement multiplier for b* (blue-yellow) axis. Range: 0.0 to 2.0.
+    /// Values > 1.0 increase blue-yellow contrast.
+    /// </summary>
+    public float CIELABBEnhance { get; set; } = 1.0f;
+
+    /// <summary>
+    /// How much to encode color differences into lightness. Range: 0.0 to 1.0.
+    /// Higher values make color differences visible as brightness differences.
+    /// </summary>
+    public float CIELABLEnhance { get; set; } = 0.0f;
 
     // ============ LUT Correction Settings ============
 
@@ -204,7 +317,24 @@ public class ZoneSettings
             PostCorrectionSimAlgorithm = PostCorrectionSimAlgorithm,
             PostCorrectionSimFilterType = PostCorrectionSimFilterType,
             PostCorrectionSimIntensity = PostCorrectionSimIntensity,
-            LutsNeedUpdate = LutsNeedUpdate
+            LutsNeedUpdate = LutsNeedUpdate,
+            // Hue Rotation settings
+            HueRotationCVDType = HueRotationCVDType,
+            HueRotationStrength = HueRotationStrength,
+            HueRotationAdvancedMode = HueRotationAdvancedMode,
+            HueRotationSourceStart = HueRotationSourceStart,
+            HueRotationSourceEnd = HueRotationSourceEnd,
+            HueRotationShift = HueRotationShift,
+            HueRotationFalloff = HueRotationFalloff,
+            // CIELAB Remapping settings
+            CIELABCVDType = CIELABCVDType,
+            CIELABStrength = CIELABStrength,
+            CIELABAdvancedMode = CIELABAdvancedMode,
+            CIELABAtoB = CIELABAtoB,
+            CIELABBtoA = CIELABBtoA,
+            CIELABAEnhance = CIELABAEnhance,
+            CIELABBEnhance = CIELABBEnhance,
+            CIELABLEnhance = CIELABLEnhance
         };
 
         // Copy channel settings (including per-channel blend modes)
