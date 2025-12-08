@@ -28,6 +28,7 @@
             <ComboBoxItem Content="Original (no processing)"/>
             <ComboBoxItem Content="Simulation (show CVD view)"/>
             <ComboBoxItem Content="Correction (enhance colors)"/>
+            <ComboBoxItem x:Name="ReSimulationItem" Content="Re-simulation (apply to another zone)"/>
         </ComboBox>
 
         <!-- Simulation Settings -->
@@ -52,6 +53,38 @@
                 <ComboBoxItem Content="Achromatopsia"/>
                 <ComboBoxItem Content="Achromatomaly"/>
             </ComboBox>
+        </StackPanel>
+
+        <!-- Re-simulation Settings -->
+        <StackPanel x:Name="ReSimulationPanel" Visibility="Collapsed">
+            <TextBlock Text="Takes another zone's processed output and applies CVD simulation on top."
+                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+            <TextBlock Text="Source Zone" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="ReSimSourceZoneCombo" SelectionChanged="ReSimSourceZone_Changed" Margin="0,0,0,8"/>
+
+            <TextBlock Text="Algorithm" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <RadioButton x:Name="ReSimMachadoRadio" Content="Machado" IsChecked="True"
+                             Checked="ReSimAlgorithm_Changed" Margin="0,0,16,0"/>
+                <RadioButton x:Name="ReSimStrictRadio" Content="Strict (LMS)"
+                             Checked="ReSimAlgorithm_Changed"/>
+            </StackPanel>
+
+            <TextBlock Text="CVD Type" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="ReSimFilterCombo" SelectionChanged="ReSimFilter_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                <ComboBoxItem Content="Achromatopsia"/>
+                <ComboBoxItem Content="Achromatomaly"/>
+            </ComboBox>
+
+            <TextBlock x:Name="ReSimIntensityLabel" Text="Intensity (1.00)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ReSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ReSimIntensity_Changed"/>
         </StackPanel>
 
         <!-- Correction Settings -->

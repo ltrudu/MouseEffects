@@ -67,10 +67,15 @@ struct ZoneParams
     float CIELABAEnhance;          // Enhancement multiplier for a* axis (0-2)
     float CIELABBEnhance;          // Enhancement multiplier for b* axis (0-2)
     float CIELABLEnhance;          // Encode color diff into lightness (0-1)
+
+    float ReSimSourceZone;         // Source zone index for re-simulation (0-3)
+    float ReSimFilterType;         // CVD filter type for re-simulation (1-14)
+    float ReSimIntensity;          // Intensity of re-simulation blend (0-1)
+    float _Padding;                // Padding to maintain 16-byte alignment
 };
 
 // ============================================================================
-// Constant Buffer (48 + 160*4 = 688 bytes total)
+// Constant Buffer (48 + 176*4 = 752 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
@@ -1227,25 +1232,71 @@ float3 ApplyLUTCorrectionZone3(float3 color, ZoneParams zone)
 // Zone Processing
 // ============================================================================
 
-float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
-{
-    // Mode 0 = Original (no processing)
-    if (zone.Mode < 0.5)
-    {
-        return color;
-    }
+// Forward declarations
+float3 ProcessZoneInternal(float3 color, ZoneParams zone, int zoneIndex);
+ZoneParams GetZoneParams(int zoneIndex);
 
+// Apply correction ONLY (no post-correction simulation)
+// Used by Re-simulation mode to get the corrected output from source zone
+float3 ApplyCorrectionOnly(float3 color, ZoneParams zone, int zoneIndex)
+{
     float3 processedColor;
 
-    // Mode 1 = Simulation
-    if (zone.Mode < 1.5)
+    // Check which correction algorithm to use:
+    // 0 = LUT-based, 1 = Daltonization, 2 = Hue Rotation, 3 = CIELAB Remapping
+    if (zone.CorrectionAlgorithm < 0.5)
     {
-        processedColor = ApplySimulation(color, zone.SimulationFilterType);
-        // Apply intensity blend for simulation mode
-        return lerp(color, processedColor, zone.Intensity);
+        // LUT-based correction
+        if (zoneIndex == 0)
+            processedColor = ApplyLUTCorrectionZone0(color, zone);
+        else if (zoneIndex == 1)
+            processedColor = ApplyLUTCorrectionZone1(color, zone);
+        else if (zoneIndex == 2)
+            processedColor = ApplyLUTCorrectionZone2(color, zone);
+        else
+            processedColor = ApplyLUTCorrectionZone3(color, zone);
+    }
+    else if (zone.CorrectionAlgorithm < 1.5)
+    {
+        // Daltonization algorithm
+        processedColor = ApplyDaltonization(color, zone.DaltonizationCVDType, zone.DaltonizationStrength);
+    }
+    else if (zone.CorrectionAlgorithm < 2.5)
+    {
+        // Hue Rotation algorithm
+        processedColor = ApplyHueRotation(
+            color,
+            zone.HueRotationSourceStart,
+            zone.HueRotationSourceEnd,
+            zone.HueRotationShift,
+            zone.HueRotationFalloff,
+            zone.HueRotationStrength
+        );
+    }
+    else
+    {
+        // CIELAB Remapping algorithm
+        processedColor = ApplyCIELABRemapping(
+            color,
+            zone.CIELABAtoB,
+            zone.CIELABBtoA,
+            zone.CIELABAEnhance,
+            zone.CIELABBEnhance,
+            zone.CIELABLEnhance,
+            zone.CIELABStrength
+        );
     }
 
-    // Mode 2 = Correction
+    // Apply intensity blend for correction (but NO post-correction simulation)
+    return lerp(color, processedColor, zone.Intensity);
+}
+
+// Internal processing function for correction mode (Mode 2)
+// Includes post-correction simulation for verification
+float3 ProcessZoneInternal(float3 color, ZoneParams zone, int zoneIndex)
+{
+    float3 processedColor;
+
     // Check which correction algorithm to use:
     // 0 = LUT-based, 1 = Daltonization, 2 = Hue Rotation, 3 = CIELAB Remapping
     if (zone.CorrectionAlgorithm < 0.5)
@@ -1304,6 +1355,39 @@ float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
     }
 
     return processedColor;
+}
+
+// Entry point for zone processing - handles all modes directly (no recursion)
+float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
+{
+    // Mode 0 = Original (no processing)
+    if (zone.Mode < 0.5)
+        return color;
+
+    // Mode 1 = Simulation
+    if (zone.Mode < 1.5)
+    {
+        float3 simulated = ApplySimulation(color, zone.SimulationFilterType);
+        return lerp(color, simulated, zone.Intensity);
+    }
+
+    // Mode 2 = Correction
+    if (zone.Mode < 2.5)
+    {
+        return ProcessZoneInternal(color, zone, zoneIndex);
+    }
+
+    // Mode 3 = Re-simulation (source MUST be Correction mode - validated by UI)
+    // No recursion needed: apply source zone's correction, then this zone's simulation
+    int sourceIdx = (int)zone.ReSimSourceZone;
+    ZoneParams srcZone = GetZoneParams(sourceIdx);
+
+    // Apply source zone's correction (without post-correction sim)
+    float3 corrected = ApplyCorrectionOnly(color, srcZone, sourceIdx);
+
+    // Apply this zone's simulation on top
+    float3 simulated = ApplySimulation(corrected, zone.ReSimFilterType);
+    return lerp(corrected, simulated, zone.ReSimIntensity);
 }
 
 // ============================================================================

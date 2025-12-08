@@ -55,11 +55,7 @@ public class CustomPreset
     public int SimulationGuidedFilterType { get; set; } = 3;
     public float SimulationGuidedSensitivity { get; set; } = 2.0f;
 
-    // Post-Correction Simulation settings
-    public bool PostCorrectionSimEnabled { get; set; } = false;
-    public int PostCorrectionSimAlgorithm { get; set; } = 0;
-    public int PostCorrectionSimFilterType { get; set; } = 3;
-    public float PostCorrectionSimIntensity { get; set; } = 1.0f;
+    // Note: Post-simulation settings are NOT saved in presets (they are zone-specific, not part of correction)
 
     /// <summary>
     /// Creates a CustomPreset from a CorrectionPreset (built-in preset).
@@ -105,12 +101,7 @@ public class CustomPreset
             SimulationGuidedEnabled = preset.SimulationGuidedEnabled,
             SimulationGuidedAlgorithm = preset.SimulationGuidedAlgorithm,
             SimulationGuidedFilterType = preset.SimulationGuidedFilterType,
-            SimulationGuidedSensitivity = preset.SimulationGuidedSensitivity,
-
-            PostCorrectionSimEnabled = preset.PostCorrectionSimEnabled,
-            PostCorrectionSimAlgorithm = preset.PostCorrectionSimAlgorithm,
-            PostCorrectionSimFilterType = preset.PostCorrectionSimFilterType,
-            PostCorrectionSimIntensity = preset.PostCorrectionSimIntensity
+            SimulationGuidedSensitivity = preset.SimulationGuidedSensitivity
         };
     }
 
@@ -156,12 +147,7 @@ public class CustomPreset
             SimulationGuidedEnabled = SimulationGuidedEnabled,
             SimulationGuidedAlgorithm = SimulationGuidedAlgorithm,
             SimulationGuidedFilterType = SimulationGuidedFilterType,
-            SimulationGuidedSensitivity = SimulationGuidedSensitivity,
-
-            PostCorrectionSimEnabled = PostCorrectionSimEnabled,
-            PostCorrectionSimAlgorithm = PostCorrectionSimAlgorithm,
-            PostCorrectionSimFilterType = PostCorrectionSimFilterType,
-            PostCorrectionSimIntensity = PostCorrectionSimIntensity
+            SimulationGuidedSensitivity = SimulationGuidedSensitivity
         };
     }
 

@@ -150,13 +150,9 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             SimulationGuidedEnabled = _zone.SimulationGuidedEnabled,
             SimulationGuidedAlgorithm = (int)_zone.SimulationGuidedAlgorithm,
             SimulationGuidedFilterType = _zone.SimulationGuidedFilterType,
-            SimulationGuidedSensitivity = _zone.SimulationGuidedSensitivity,
+            SimulationGuidedSensitivity = _zone.SimulationGuidedSensitivity
 
-            // Post-Correction Simulation settings
-            PostCorrectionSimEnabled = _zone.PostCorrectionSimEnabled,
-            PostCorrectionSimAlgorithm = (int)_zone.PostCorrectionSimAlgorithm,
-            PostCorrectionSimFilterType = _zone.PostCorrectionSimFilterType,
-            PostCorrectionSimIntensity = _zone.PostCorrectionSimIntensity
+            // Note: Post-simulation settings are NOT saved in presets (they are zone-specific)
         };
     }
 

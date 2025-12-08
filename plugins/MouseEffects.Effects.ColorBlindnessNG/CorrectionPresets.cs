@@ -71,27 +71,7 @@ public record CorrectionPreset
     /// </summary>
     public float SimulationGuidedSensitivity { get; init; } = 2.0f;
 
-    // ============ Post-Correction Simulation Settings ============
-
-    /// <summary>
-    /// When enabled, applies CVD simulation AFTER correction.
-    /// </summary>
-    public bool PostCorrectionSimEnabled { get; init; } = false;
-
-    /// <summary>
-    /// Algorithm to use for post-correction simulation (0=Machado, 1=Strict).
-    /// </summary>
-    public int PostCorrectionSimAlgorithm { get; init; } = 0;
-
-    /// <summary>
-    /// CVD filter type for post-correction simulation.
-    /// </summary>
-    public int PostCorrectionSimFilterType { get; init; } = 3;
-
-    /// <summary>
-    /// Intensity of post-correction simulation blend (0.0-1.0).
-    /// </summary>
-    public float PostCorrectionSimIntensity { get; init; } = 1.0f;
+    // Note: Post-simulation settings are NOT saved in presets (they are zone-specific, not part of correction)
 }
 
 /// <summary>

@@ -492,6 +492,16 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         if (Configuration.TryGet($"{prefix}cielabLEnhance", out float cielabLEnhance))
             z.CIELABLEnhance = cielabLEnhance;
 
+        // Re-simulation settings
+        if (Configuration.TryGet($"{prefix}reSimSourceZone", out int reSimSourceZone))
+            z.ReSimulationSourceZone = reSimSourceZone;
+        if (Configuration.TryGet($"{prefix}reSimAlgorithm", out int reSimAlgorithm))
+            z.ReSimulationAlgorithm = (SimulationAlgorithm)reSimAlgorithm;
+        if (Configuration.TryGet($"{prefix}reSimFilterType", out int reSimFilterType))
+            z.ReSimulationFilterType = reSimFilterType;
+        if (Configuration.TryGet($"{prefix}reSimIntensity", out float reSimIntensity))
+            z.ReSimulationIntensity = reSimIntensity;
+
         // Red channel
         bool needsUpdate = z.LutsNeedUpdate;
         LoadChannelConfiguration(z.RedChannel, $"{prefix}red", ref needsUpdate);
@@ -563,6 +573,20 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         return Math.Abs(a.X - b.X) < tolerance &&
                Math.Abs(a.Y - b.Y) < tolerance &&
                Math.Abs(a.Z - b.Z) < tolerance;
+    }
+
+    /// <summary>
+    /// Calculates the effective filter type for re-simulation based on algorithm.
+    /// </summary>
+    private static int CalculateEffectiveReSimFilterType(ZoneSettings z)
+    {
+        int effectiveFilterType = z.ReSimulationFilterType;
+        if (z.ReSimulationAlgorithm == SimulationAlgorithm.Strict &&
+            z.ReSimulationFilterType > 0 && z.ReSimulationFilterType <= 6)
+        {
+            effectiveFilterType = z.ReSimulationFilterType + 6;
+        }
+        return effectiveFilterType;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -797,7 +821,11 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 CIELABBtoA = labBtoA,
                 CIELABAEnhance = labAEnhance,
                 CIELABBEnhance = labBEnhance,
-                CIELABLEnhance = labLEnhance
+                CIELABLEnhance = labLEnhance,
+                // Re-simulation parameters
+                ReSimSourceZone = z.ReSimulationSourceZone,
+                ReSimFilterType = CalculateEffectiveReSimFilterType(z),
+                ReSimIntensity = z.ReSimulationIntensity
             };
 
             switch (i)
@@ -851,7 +879,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Per-zone parameters packed for shader.
-    /// Size: 160 bytes (40 floats)
+    /// Size: 176 bytes (44 floats)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct ZoneParams
@@ -905,13 +933,18 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         public float CIELABAEnhance;          // Enhancement multiplier for a* axis (0-2)
         public float CIELABBEnhance;          // Enhancement multiplier for b* axis (0-2)
         public float CIELABLEnhance;          // Encode color diff into lightness (0-1)
+
+        public float ReSimSourceZone;         // Source zone index for re-simulation (0-3)
+        public float ReSimFilterType;         // CVD filter type for re-simulation (1-14)
+        public float ReSimIntensity;          // Intensity of re-simulation blend (0-1)
+        public float _Padding;                // Padding to maintain 16-byte alignment
     }
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 48 (global) + 4 * 160 (zones) = 688 bytes
+    /// Size: 48 (global) + 4 * 176 (zones) = 752 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 688)]
+    [StructLayout(LayoutKind.Sequential, Size = 752)]
     private struct ColorBlindnessNGParams
     {
         // Global parameters (48 bytes)

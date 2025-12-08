@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using MouseEffects.Core.Effects;
+using MouseEffects.Core.UI;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace MouseEffects.Effects.ColorBlindnessNG.UI;
@@ -38,13 +39,23 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             {
                 int zoneIndex = i; // Capture for closure
                 _zoneEditors[i].BindToZone(_effect.GetZone(i), i, _effect, _presetManager);
-                _zoneEditors[i].SettingsChanged += (s, args) => SaveZoneConfiguration(zoneIndex);
+                _zoneEditors[i].SettingsChanged += (s, args) =>
+                {
+                    SaveZoneConfiguration(zoneIndex);
+                    // Refresh Re-simulation dropdowns in all zones when any zone's settings change
+                    // (in case mode changed, which affects which zones can be sources)
+                    RefreshReSimSourceDropdowns();
+                };
                 _zoneEditors[i].PresetCreated += RefreshAllPresetDropdowns;
                 _zoneEditors[i].PresetDeleted += RefreshAllPresetDropdowns;
                 _zoneEditors[i].PresetUpdated += presetName => ReloadPresetInOtherZones(zoneIndex, presetName);
+                _zoneEditors[i].ModeChangingFromCorrection += OnZoneModeChangingFromCorrection;
             }
 
             LoadConfiguration();
+
+            // Initialize zone editors for the current split mode
+            UpdateZoneEditorsForSplitMode((int)_effect.SplitMode, _effect.ActiveZoneCount);
         }
     }
 
@@ -62,6 +73,90 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
             if (i != sourceZoneIndex)
                 _zoneEditors[i].ReloadIfPresetSelected(presetName);
         }
+    }
+
+    /// <summary>
+    /// Called when a zone is changing FROM Correction mode.
+    /// Returns true to allow the change, false to cancel.
+    /// </summary>
+    private bool OnZoneModeChangingFromCorrection(int zoneIndex)
+    {
+        if (_effect == null) return true;
+
+        // Check if any other zone depends on this zone for Re-simulation
+        var dependentZones = new List<int>();
+        int activeZoneCount = _effect.ActiveZoneCount;
+
+        for (int i = 0; i < activeZoneCount; i++)
+        {
+            if (i == zoneIndex) continue;
+
+            var zone = _effect.GetZone(i);
+            if (zone.Mode == ZoneMode.ReSimulation && zone.ReSimulationSourceZone == zoneIndex)
+            {
+                dependentZones.Add(i);
+            }
+        }
+
+        if (dependentZones.Count == 0)
+            return true; // No dependent zones, allow the change
+
+        // Show warning dialog
+        var zoneList = string.Join(", ", dependentZones.Select(z => $"Zone {z}"));
+        var result = DialogHelper.WithSuspendedTopmost(() =>
+            System.Windows.MessageBox.Show(
+                $"The following zones use Zone {zoneIndex} as their Re-simulation source:\n\n{zoneList}\n\nChanging Zone {zoneIndex} from Correction mode will reset these zones to Original mode.\n\nDo you want to continue?",
+                "Re-simulation Source Warning",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning));
+
+        if (result != MessageBoxResult.Yes)
+            return false; // User cancelled
+
+        // Reset dependent zones to Original mode
+        foreach (var dependentIndex in dependentZones)
+        {
+            var zone = _effect.GetZone(dependentIndex);
+            zone.Mode = ZoneMode.Original;
+            SaveZoneConfiguration(dependentIndex);
+
+            // Update the zone editor UI
+            if (dependentIndex < _zoneEditors.Length)
+            {
+                _isLoading = true;
+                // Force the editor to reload from the zone
+                _zoneEditors[dependentIndex].BindToZone(zone, dependentIndex, _effect, _presetManager);
+                _isLoading = false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Refreshes Re-simulation source dropdowns in all zone editors.
+    /// Called when zone modes change.
+    /// </summary>
+    private void RefreshReSimSourceDropdowns()
+    {
+        if (_effect == null) return;
+
+        int activeZoneCount = _effect.ActiveZoneCount;
+        int splitMode = (int)_effect.SplitMode;
+        foreach (var editor in _zoneEditors)
+        {
+            editor.PopulateReSimSourceZones(activeZoneCount, GetZoneMode, splitMode);
+        }
+    }
+
+    /// <summary>
+    /// Gets the mode of a zone by index.
+    /// </summary>
+    private ZoneMode GetZoneMode(int zoneIndex)
+    {
+        if (_effect == null || zoneIndex < 0 || zoneIndex >= 4)
+            return ZoneMode.Original;
+        return _effect.GetZone(zoneIndex).Mode;
     }
 
     private void SaveZoneConfiguration(int zoneIndex)
@@ -111,6 +206,12 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         _effect.Configuration.Set(prefix + "postSimAlgorithm", (int)zone.PostCorrectionSimAlgorithm);
         _effect.Configuration.Set(prefix + "postSimFilterType", zone.PostCorrectionSimFilterType);
         _effect.Configuration.Set(prefix + "postSimIntensity", zone.PostCorrectionSimIntensity);
+
+        // Re-simulation settings
+        _effect.Configuration.Set(prefix + "reSimSourceZone", zone.ReSimulationSourceZone);
+        _effect.Configuration.Set(prefix + "reSimAlgorithm", (int)zone.ReSimulationAlgorithm);
+        _effect.Configuration.Set(prefix + "reSimFilterType", zone.ReSimulationFilterType);
+        _effect.Configuration.Set(prefix + "reSimIntensity", zone.ReSimulationIntensity);
 
         // LUT channel settings
         _effect.Configuration.Set(prefix + "appMode", (int)zone.ApplicationMode);
@@ -215,10 +316,81 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         if (_effect == null || _isLoading) return;
 
-        int splitMode = SplitModeCombo.SelectedIndex;
-        _effect.SplitMode = (SplitMode)splitMode;
-        _effect.Configuration.Set("splitMode", splitMode);
-        UpdateSplitModeUI(splitMode);
+        int newSplitMode = SplitModeCombo.SelectedIndex;
+        int oldActiveZoneCount = _effect.ActiveZoneCount;
+        int newActiveZoneCount = GetActiveZoneCount((SplitMode)newSplitMode);
+
+        // Check if any zone is in Re-simulation mode with an invalid source
+        if (newActiveZoneCount < oldActiveZoneCount)
+        {
+            var invalidZones = new List<int>();
+            for (int i = 0; i < oldActiveZoneCount; i++)
+            {
+                var zone = _effect.GetZone(i);
+                if (zone.Mode == ZoneMode.ReSimulation && zone.ReSimulationSourceZone >= newActiveZoneCount)
+                {
+                    invalidZones.Add(i);
+                }
+            }
+
+            if (invalidZones.Count > 0)
+            {
+                var zoneList = string.Join(", ", invalidZones.Select(z => $"Zone {z}"));
+                var result = MouseEffects.Core.UI.DialogHelper.WithSuspendedTopmost(() =>
+                    System.Windows.MessageBox.Show(
+                        $"The following zones have Re-simulation sources that will become invalid in the new layout:\n\n{zoneList}\n\nThese zones will be reset to Original mode.\n\nDo you want to continue?",
+                        "Re-simulation Source Warning",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning));
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    // User cancelled - revert selection
+                    _isLoading = true;
+                    SplitModeCombo.SelectedIndex = (int)_effect.SplitMode;
+                    _isLoading = false;
+                    return;
+                }
+
+                // Reset invalid zones to Original mode
+                foreach (var zoneIndex in invalidZones)
+                {
+                    var zone = _effect.GetZone(zoneIndex);
+                    zone.Mode = ZoneMode.Original;
+                    SaveZoneConfiguration(zoneIndex);
+                }
+            }
+        }
+
+        _effect.SplitMode = (SplitMode)newSplitMode;
+        _effect.Configuration.Set("splitMode", newSplitMode);
+        UpdateSplitModeUI(newSplitMode);
+
+        // Update zone editors for the new split mode
+        UpdateZoneEditorsForSplitMode(newSplitMode, newActiveZoneCount);
+    }
+
+    private static int GetActiveZoneCount(SplitMode mode) => mode switch
+    {
+        SplitMode.Fullscreen => 1,
+        SplitMode.SplitVertical => 2,
+        SplitMode.SplitHorizontal => 2,
+        SplitMode.Quadrants => 4,
+        SplitMode.Circle => 2,
+        SplitMode.Rectangle => 2,
+        _ => 1
+    };
+
+    private void UpdateZoneEditorsForSplitMode(int splitMode, int activeZoneCount)
+    {
+        bool isFullscreen = splitMode == 0;
+
+        // Update each zone editor
+        for (int i = 0; i < _zoneEditors.Length; i++)
+        {
+            _zoneEditors[i].UpdateModeDropdownForSplitMode(isFullscreen);
+            _zoneEditors[i].PopulateReSimSourceZones(activeZoneCount, GetZoneMode, splitMode);
+        }
     }
 
     private void UpdateSplitModeUI(int splitMode)

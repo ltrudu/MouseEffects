@@ -7,9 +7,10 @@ namespace MouseEffects.Effects.ColorBlindnessNG;
 /// </summary>
 public enum ZoneMode
 {
-    Original = 0,    // No processing, show original screen
-    Simulation = 1,  // CVD simulation
-    Correction = 2   // Color correction (LUT-based or Daltonization)
+    Original = 0,       // No processing, show original screen
+    Simulation = 1,     // CVD simulation
+    Correction = 2,     // Color correction (LUT-based or Daltonization)
+    ReSimulation = 3    // Re-simulate another zone's output
 }
 
 /// <summary>
@@ -258,6 +259,29 @@ public class ZoneSettings
     /// </summary>
     public float PostCorrectionSimIntensity { get; set; } = 1.0f;
 
+    // ============ Re-simulation Settings ============
+
+    /// <summary>
+    /// Source zone index for re-simulation (0-3).
+    /// The output of this zone will be simulated again.
+    /// </summary>
+    public int ReSimulationSourceZone { get; set; } = 0;
+
+    /// <summary>
+    /// Algorithm to use for re-simulation.
+    /// </summary>
+    public SimulationAlgorithm ReSimulationAlgorithm { get; set; } = SimulationAlgorithm.Machado;
+
+    /// <summary>
+    /// CVD filter type for re-simulation (1-6=Machado, 7-12=Strict, 13-14=Achro).
+    /// </summary>
+    public int ReSimulationFilterType { get; set; } = 3; // Deuteranopia by default
+
+    /// <summary>
+    /// Intensity of re-simulation blend (0.0-1.0).
+    /// </summary>
+    public float ReSimulationIntensity { get; set; } = 1.0f;
+
     // ============ Per-Channel LUT Settings ============
 
     /// <summary>
@@ -317,6 +341,11 @@ public class ZoneSettings
             PostCorrectionSimAlgorithm = PostCorrectionSimAlgorithm,
             PostCorrectionSimFilterType = PostCorrectionSimFilterType,
             PostCorrectionSimIntensity = PostCorrectionSimIntensity,
+            // Re-simulation settings
+            ReSimulationSourceZone = ReSimulationSourceZone,
+            ReSimulationAlgorithm = ReSimulationAlgorithm,
+            ReSimulationFilterType = ReSimulationFilterType,
+            ReSimulationIntensity = ReSimulationIntensity,
             LutsNeedUpdate = LutsNeedUpdate,
             // Hue Rotation settings
             HueRotationCVDType = HueRotationCVDType,
@@ -405,11 +434,7 @@ public class ZoneSettings
         SimulationGuidedFilterType = preset.SimulationGuidedFilterType;
         SimulationGuidedSensitivity = preset.SimulationGuidedSensitivity;
 
-        // Post-Correction Simulation settings
-        PostCorrectionSimEnabled = preset.PostCorrectionSimEnabled;
-        PostCorrectionSimAlgorithm = (SimulationAlgorithm)preset.PostCorrectionSimAlgorithm;
-        PostCorrectionSimFilterType = preset.PostCorrectionSimFilterType;
-        PostCorrectionSimIntensity = preset.PostCorrectionSimIntensity;
+        // Note: Post-simulation settings are NOT applied from presets (they are zone-specific)
 
         LutsNeedUpdate = true;
     }

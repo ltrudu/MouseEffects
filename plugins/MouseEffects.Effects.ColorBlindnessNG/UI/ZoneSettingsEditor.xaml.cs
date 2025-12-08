@@ -38,6 +38,14 @@ public partial class ZoneSettingsEditor : UserControl
     /// </summary>
     public event Action<string>? PresetUpdated;
 
+    /// <summary>
+    /// Fired when a zone's mode is changing FROM Correction mode.
+    /// Parent should check if any zones depend on this zone for Re-simulation.
+    /// Parameter is the zone index that is changing.
+    /// Return true to allow the change, false to cancel.
+    /// </summary>
+    public event Func<int, bool>? ModeChangingFromCorrection;
+
     public ZoneSettingsEditor()
     {
         InitializeComponent();
@@ -222,6 +230,13 @@ public partial class ZoneSettingsEditor : UserControl
             PostSimIntensitySlider.Value = _zone.PostCorrectionSimIntensity;
             PostSimIntensityLabel.Text = $"Simulation Intensity ({_zone.PostCorrectionSimIntensity:F2})";
 
+            // Re-simulation
+            ReSimMachadoRadio.IsChecked = _zone.ReSimulationAlgorithm == SimulationAlgorithm.Machado;
+            ReSimStrictRadio.IsChecked = _zone.ReSimulationAlgorithm == SimulationAlgorithm.Strict;
+            ReSimFilterCombo.SelectedIndex = MapReSimFilterTypeToComboIndex(_zone.ReSimulationFilterType);
+            ReSimIntensitySlider.Value = _zone.ReSimulationIntensity;
+            ReSimIntensityLabel.Text = $"Intensity ({_zone.ReSimulationIntensity:F2})";
+
             // Intensity
             IntensitySlider.Value = _zone.Intensity;
             IntensityLabel.Text = $"Intensity ({_zone.Intensity:F2})";
@@ -237,7 +252,25 @@ public partial class ZoneSettingsEditor : UserControl
     private void ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_zone == null || _effect == null || _isLoading) return;
-        _zone.Mode = (ZoneMode)ModeCombo.SelectedIndex;
+
+        var oldMode = _zone.Mode;
+        var newMode = (ZoneMode)ModeCombo.SelectedIndex;
+
+        // Check if changing FROM Correction mode - other zones might depend on this zone
+        if (oldMode == ZoneMode.Correction && newMode != ZoneMode.Correction)
+        {
+            // Ask parent if this change is allowed (it will check for dependent zones)
+            if (ModeChangingFromCorrection?.Invoke(_zoneIndex) == false)
+            {
+                // Change was cancelled - revert selection
+                _isLoading = true;
+                ModeCombo.SelectedIndex = (int)oldMode;
+                _isLoading = false;
+                return;
+            }
+        }
+
+        _zone.Mode = newMode;
         _effect.Configuration.Set(ConfigKey("mode"), ModeCombo.SelectedIndex);
         UpdateModeUI();
         OnSettingsChanged();
@@ -248,7 +281,145 @@ public partial class ZoneSettingsEditor : UserControl
         int mode = ModeCombo.SelectedIndex;
         SimulationPanel.Visibility = mode == 1 ? Visibility.Visible : Visibility.Collapsed;
         CorrectionPanel.Visibility = mode == 2 ? Visibility.Visible : Visibility.Collapsed;
-        IntensityPanel.Visibility = mode > 0 ? Visibility.Visible : Visibility.Collapsed;
+        ReSimulationPanel.Visibility = mode == 3 ? Visibility.Visible : Visibility.Collapsed;
+        IntensityPanel.Visibility = mode > 0 && mode < 3 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    /// <summary>
+    /// Updates the mode dropdown to show/hide the Re-simulation option based on split mode.
+    /// Called by parent when split mode changes.
+    /// </summary>
+    public void UpdateModeDropdownForSplitMode(bool isFullscreen)
+    {
+        ReSimulationItem.Visibility = isFullscreen ? Visibility.Collapsed : Visibility.Visible;
+
+        // If currently in Re-simulation mode and switching to Fullscreen, reset to Original
+        if (isFullscreen && _zone != null && _zone.Mode == ZoneMode.ReSimulation)
+        {
+            _zone.Mode = ZoneMode.Original;
+            _isLoading = true;
+            ModeCombo.SelectedIndex = 0;
+            _isLoading = false;
+            UpdateModeUI();
+            OnSettingsChanged();
+        }
+    }
+
+    /// <summary>
+    /// Populates the source zone dropdown for re-simulation.
+    /// Only zones in Correction mode are shown (Re-simulation can only source from corrected zones).
+    /// </summary>
+    /// <param name="activeZoneCount">Number of active zones in current split mode</param>
+    /// <param name="getZoneMode">Function to get the mode of a zone by index</param>
+    /// <param name="splitMode">Current split mode for descriptive zone labels</param>
+    public void PopulateReSimSourceZones(int activeZoneCount, Func<int, ZoneMode>? getZoneMode = null, int splitMode = 0)
+    {
+        _isLoading = true;
+        try
+        {
+            ReSimSourceZoneCombo.Items.Clear();
+
+            for (int i = 0; i < activeZoneCount; i++)
+            {
+                // Skip self
+                if (i == _zoneIndex)
+                    continue;
+
+                // Only add zones in Correction mode (if we have the mode function)
+                if (getZoneMode != null && getZoneMode(i) != ZoneMode.Correction)
+                    continue;
+
+                string label = GetZoneLabel(i, splitMode);
+                ReSimSourceZoneCombo.Items.Add(new ComboBoxItem { Content = label, Tag = i });
+            }
+
+            // If no valid zones available, show message
+            if (ReSimSourceZoneCombo.Items.Count == 0)
+            {
+                ReSimSourceZoneCombo.Items.Add(new ComboBoxItem
+                {
+                    Content = "No corrected zones available",
+                    IsEnabled = false,
+                    Tag = -1
+                });
+                ReSimSourceZoneCombo.SelectedIndex = 0;
+                return;
+            }
+
+            // Select the saved source zone if valid
+            if (_zone != null && ReSimSourceZoneCombo.Items.Count > 0)
+            {
+                int sourceZone = _zone.ReSimulationSourceZone;
+                bool found = false;
+
+                for (int i = 0; i < ReSimSourceZoneCombo.Items.Count; i++)
+                {
+                    if (ReSimSourceZoneCombo.Items[i] is ComboBoxItem item && item.Tag is int tag && tag == sourceZone)
+                    {
+                        ReSimSourceZoneCombo.SelectedIndex = i;
+                        found = true;
+                        break;
+                    }
+                }
+
+                // Default to first valid item if source zone not found or invalid
+                if (!found && ReSimSourceZoneCombo.Items.Count > 0)
+                {
+                    ReSimSourceZoneCombo.SelectedIndex = 0;
+                    if (ReSimSourceZoneCombo.Items[0] is ComboBoxItem firstItem && firstItem.Tag is int firstTag && firstTag >= 0)
+                    {
+                        _zone.ReSimulationSourceZone = firstTag;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Gets a descriptive label for a zone based on split mode.
+    /// </summary>
+    private static string GetZoneLabel(int zoneIndex, int splitMode)
+    {
+        return splitMode switch
+        {
+            1 => zoneIndex switch // Split Vertical (Left/Right)
+            {
+                0 => "Left",
+                1 => "Right",
+                _ => $"Zone {zoneIndex}"
+            },
+            2 => zoneIndex switch // Split Horizontal (Top/Bottom)
+            {
+                0 => "Top",
+                1 => "Bottom",
+                _ => $"Zone {zoneIndex}"
+            },
+            3 => zoneIndex switch // Quadrants
+            {
+                0 => "Top-Left",
+                1 => "Top-Right",
+                2 => "Bottom-Left",
+                3 => "Bottom-Right",
+                _ => $"Zone {zoneIndex}"
+            },
+            4 => zoneIndex switch // Circle
+            {
+                0 => "Inner (inside circle)",
+                1 => "Outer (outside circle)",
+                _ => $"Zone {zoneIndex}"
+            },
+            5 => zoneIndex switch // Rectangle
+            {
+                0 => "Inner (inside rectangle)",
+                1 => "Outer (outside rectangle)",
+                _ => $"Zone {zoneIndex}"
+            },
+            _ => $"Zone {zoneIndex}" // Fullscreen or unknown
+        };
     }
 
     private void Algorithm_Changed(object sender, RoutedEventArgs e)
@@ -653,6 +824,46 @@ public partial class ZoneSettingsEditor : UserControl
 
     #endregion
 
+    #region Re-simulation Handlers
+
+    private void ReSimSourceZone_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_zone == null || _effect == null || _isLoading) return;
+        if (ReSimSourceZoneCombo.SelectedItem is ComboBoxItem item && item.Tag is int sourceZone)
+        {
+            _zone.ReSimulationSourceZone = sourceZone;
+            _effect.Configuration.Set(ConfigKey("reSimSourceZone"), sourceZone);
+            OnSettingsChanged();
+        }
+    }
+
+    private void ReSimAlgorithm_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_zone == null || _effect == null || _isLoading) return;
+        _zone.ReSimulationAlgorithm = ReSimStrictRadio.IsChecked == true ? SimulationAlgorithm.Strict : SimulationAlgorithm.Machado;
+        _effect.Configuration.Set(ConfigKey("reSimAlgorithm"), (int)_zone.ReSimulationAlgorithm);
+        OnSettingsChanged();
+    }
+
+    private void ReSimFilter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_zone == null || _effect == null || _isLoading) return;
+        _zone.ReSimulationFilterType = MapComboIndexToReSimFilterType(ReSimFilterCombo.SelectedIndex);
+        _effect.Configuration.Set(ConfigKey("reSimFilterType"), _zone.ReSimulationFilterType);
+        OnSettingsChanged();
+    }
+
+    private void ReSimIntensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_zone == null || _effect == null || _isLoading) return;
+        _zone.ReSimulationIntensity = (float)ReSimIntensitySlider.Value;
+        ReSimIntensityLabel.Text = $"Intensity ({_zone.ReSimulationIntensity:F2})";
+        _effect.Configuration.Set(ConfigKey("reSimIntensity"), _zone.ReSimulationIntensity);
+        OnSettingsChanged();
+    }
+
+    #endregion
+
     #region Preset Management
 
     private void PopulatePresetComboBox()
@@ -971,6 +1182,27 @@ public partial class ZoneSettingsEditor : UserControl
         if (comboIndex == 7) return 13;
         if (comboIndex == 8) return 14;
         return 0;
+    }
+
+    // Re-simulation filter mapping (no "None" option - always simulates)
+    // Combo: 0=Protanopia, 1=Protanomaly, 2=Deuteranopia, 3=Deuteranomaly, 4=Tritanopia, 5=Tritanomaly, 6=Achro, 7=Achromaly
+    // Filter types: 1-6=Machado, 7-12=Strict, 13=Achro, 14=Achromaly
+    private static int MapReSimFilterTypeToComboIndex(int filterType)
+    {
+        if (filterType >= 1 && filterType <= 6) return filterType - 1;     // Machado 1-6 -> combo 0-5
+        if (filterType >= 7 && filterType <= 12) return filterType - 7;    // Strict 7-12 -> combo 0-5
+        if (filterType == 13) return 6; // Achromatopsia
+        if (filterType == 14) return 7; // Achromatomaly
+        return 2; // Default to Deuteranopia (combo index 2)
+    }
+
+    private static int MapComboIndexToReSimFilterType(int comboIndex)
+    {
+        // Combo 0-5 -> filter types 1-6 (Machado), 6=Achro (13), 7=Achromaly (14)
+        if (comboIndex >= 0 && comboIndex <= 5) return comboIndex + 1;
+        if (comboIndex == 6) return 13;
+        if (comboIndex == 7) return 14;
+        return 3; // Default to Deuteranopia (filter type 3)
     }
 
     private static int MapDaltonizationCVDToComboIndex(int cvdType)
