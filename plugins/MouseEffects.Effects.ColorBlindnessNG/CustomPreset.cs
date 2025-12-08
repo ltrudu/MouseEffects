@@ -47,6 +47,19 @@ public class CustomPreset
     public float DefaultIntensity { get; set; } = 1.0f;
     public int RecommendedGradientType { get; set; } = 0;
     public int RecommendedApplicationMode { get; set; } = 0;
+    public float Threshold { get; set; } = 0.3f;
+
+    // Simulation-Guided Correction settings
+    public bool SimulationGuidedEnabled { get; set; } = false;
+    public int SimulationGuidedAlgorithm { get; set; } = 0;
+    public int SimulationGuidedFilterType { get; set; } = 3;
+    public float SimulationGuidedSensitivity { get; set; } = 2.0f;
+
+    // Post-Correction Simulation settings
+    public bool PostCorrectionSimEnabled { get; set; } = false;
+    public int PostCorrectionSimAlgorithm { get; set; } = 0;
+    public int PostCorrectionSimFilterType { get; set; } = 3;
+    public float PostCorrectionSimIntensity { get; set; } = 1.0f;
 
     /// <summary>
     /// Creates a CustomPreset from a CorrectionPreset (built-in preset).
@@ -86,7 +99,18 @@ public class CustomPreset
 
             DefaultIntensity = preset.DefaultIntensity,
             RecommendedGradientType = (int)preset.RecommendedGradientType,
-            RecommendedApplicationMode = (int)preset.RecommendedApplicationMode
+            RecommendedApplicationMode = (int)preset.RecommendedApplicationMode,
+            Threshold = preset.Threshold,
+
+            SimulationGuidedEnabled = preset.SimulationGuidedEnabled,
+            SimulationGuidedAlgorithm = preset.SimulationGuidedAlgorithm,
+            SimulationGuidedFilterType = preset.SimulationGuidedFilterType,
+            SimulationGuidedSensitivity = preset.SimulationGuidedSensitivity,
+
+            PostCorrectionSimEnabled = preset.PostCorrectionSimEnabled,
+            PostCorrectionSimAlgorithm = preset.PostCorrectionSimAlgorithm,
+            PostCorrectionSimFilterType = preset.PostCorrectionSimFilterType,
+            PostCorrectionSimIntensity = preset.PostCorrectionSimIntensity
         };
     }
 
@@ -126,7 +150,18 @@ public class CustomPreset
 
             DefaultIntensity = DefaultIntensity,
             RecommendedGradientType = (GradientType)RecommendedGradientType,
-            RecommendedApplicationMode = (ApplicationMode)RecommendedApplicationMode
+            RecommendedApplicationMode = (ApplicationMode)RecommendedApplicationMode,
+            Threshold = Threshold,
+
+            SimulationGuidedEnabled = SimulationGuidedEnabled,
+            SimulationGuidedAlgorithm = SimulationGuidedAlgorithm,
+            SimulationGuidedFilterType = SimulationGuidedFilterType,
+            SimulationGuidedSensitivity = SimulationGuidedSensitivity,
+
+            PostCorrectionSimEnabled = PostCorrectionSimEnabled,
+            PostCorrectionSimAlgorithm = PostCorrectionSimAlgorithm,
+            PostCorrectionSimFilterType = PostCorrectionSimFilterType,
+            PostCorrectionSimIntensity = PostCorrectionSimIntensity
         };
     }
 

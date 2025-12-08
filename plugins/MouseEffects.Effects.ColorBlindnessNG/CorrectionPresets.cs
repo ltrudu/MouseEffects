@@ -45,6 +45,53 @@ public record CorrectionPreset
 
     // Recommended application mode
     public ApplicationMode RecommendedApplicationMode { get; init; } = ApplicationMode.FullChannel;
+
+    // Threshold for threshold application mode
+    public float Threshold { get; init; } = 0.3f;
+
+    // ============ Simulation-Guided Correction Settings ============
+
+    /// <summary>
+    /// When enabled, uses CVD simulation to detect which pixels are affected.
+    /// </summary>
+    public bool SimulationGuidedEnabled { get; init; } = false;
+
+    /// <summary>
+    /// Algorithm to use for simulation-guided detection (0=Machado, 1=Strict).
+    /// </summary>
+    public int SimulationGuidedAlgorithm { get; init; } = 0;
+
+    /// <summary>
+    /// CVD filter type for simulation-guided detection.
+    /// </summary>
+    public int SimulationGuidedFilterType { get; init; } = 3;
+
+    /// <summary>
+    /// Sensitivity multiplier for simulation-guided detection.
+    /// </summary>
+    public float SimulationGuidedSensitivity { get; init; } = 2.0f;
+
+    // ============ Post-Correction Simulation Settings ============
+
+    /// <summary>
+    /// When enabled, applies CVD simulation AFTER correction.
+    /// </summary>
+    public bool PostCorrectionSimEnabled { get; init; } = false;
+
+    /// <summary>
+    /// Algorithm to use for post-correction simulation (0=Machado, 1=Strict).
+    /// </summary>
+    public int PostCorrectionSimAlgorithm { get; init; } = 0;
+
+    /// <summary>
+    /// CVD filter type for post-correction simulation.
+    /// </summary>
+    public int PostCorrectionSimFilterType { get; init; } = 3;
+
+    /// <summary>
+    /// Intensity of post-correction simulation blend (0.0-1.0).
+    /// </summary>
+    public float PostCorrectionSimIntensity { get; init; } = 1.0f;
 }
 
 /// <summary>

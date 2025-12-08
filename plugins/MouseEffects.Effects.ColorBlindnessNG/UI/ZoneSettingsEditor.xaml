@@ -81,8 +81,14 @@
                 <TextBlock x:Name="HueRotationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="HueRotationStrengthSlider" Minimum="0" Maximum="1" Value="1"
                         Style="{StaticResource SliderStyle}" ValueChanged="HueRotationStrength_Changed"/>
-                <CheckBox x:Name="HueRotationAdvancedCheckBox" Content="Advanced Options"
-                          Margin="0,8,0,4" Checked="HueRotationAdvanced_Changed" Unchecked="HueRotationAdvanced_Changed"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                    <CheckBox x:Name="HueRotationAdvancedCheckBox" Content="Advanced Options"
+                              VerticalAlignment="Center"
+                              Checked="HueRotationAdvanced_Changed" Unchecked="HueRotationAdvanced_Changed"/>
+                    <Button x:Name="HueRotationResetButton" Content="Reset" Margin="8,0,0,0"
+                            Padding="8,2" FontSize="11" Click="HueRotationReset_Click"
+                            ToolTip="Reset advanced values to defaults for the selected CVD type"/>
+                </StackPanel>
                 <StackPanel x:Name="HueRotationAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
                     <TextBlock x:Name="HueRotationSourceStartLabel" Text="Source Start (0°)" Style="{StaticResource LabelStyle}"/>
                     <Slider x:Name="HueRotationSourceStartSlider" Minimum="0" Maximum="360" Value="0"
@@ -115,8 +121,14 @@
                 <TextBlock x:Name="CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
                         Style="{StaticResource SliderStyle}" ValueChanged="CIELABStrength_Changed"/>
-                <CheckBox x:Name="CIELABAdvancedCheckBox" Content="Advanced Options"
-                          Margin="0,8,0,4" Checked="CIELABAdvanced_Changed" Unchecked="CIELABAdvanced_Changed"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
+                    <CheckBox x:Name="CIELABAdvancedCheckBox" Content="Advanced Options"
+                              VerticalAlignment="Center"
+                              Checked="CIELABAdvanced_Changed" Unchecked="CIELABAdvanced_Changed"/>
+                    <Button x:Name="CIELABResetButton" Content="Reset" Margin="8,0,0,0"
+                            Padding="8,2" FontSize="11" Click="CIELABReset_Click"
+                            ToolTip="Reset advanced values to defaults for the selected CVD type"/>
+                </StackPanel>
                 <StackPanel x:Name="CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
                     <TextBlock x:Name="CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"
                                ToolTip="Transfer red-green info to blue-yellow axis"/>

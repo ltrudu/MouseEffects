@@ -41,6 +41,7 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
                 _zoneEditors[i].SettingsChanged += (s, args) => SaveZoneConfiguration(zoneIndex);
                 _zoneEditors[i].PresetCreated += RefreshAllPresetDropdowns;
                 _zoneEditors[i].PresetDeleted += RefreshAllPresetDropdowns;
+                _zoneEditors[i].PresetUpdated += presetName => ReloadPresetInOtherZones(zoneIndex, presetName);
             }
 
             LoadConfiguration();
@@ -51,6 +52,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     {
         foreach (var editor in _zoneEditors)
             editor.RefreshPresetDropdown();
+    }
+
+    private void ReloadPresetInOtherZones(int sourceZoneIndex, string presetName)
+    {
+        // Reload the preset in all zones except the one that triggered the update
+        for (int i = 0; i < _zoneEditors.Length; i++)
+        {
+            if (i != sourceZoneIndex)
+                _zoneEditors[i].ReloadIfPresetSelected(presetName);
+        }
     }
 
     private void SaveZoneConfiguration(int zoneIndex)

@@ -397,6 +397,19 @@ public class ZoneSettings
         GradientType = preset.RecommendedGradientType;
         ApplicationMode = preset.RecommendedApplicationMode;
         Intensity = preset.DefaultIntensity;
+        Threshold = preset.Threshold;
+
+        // Simulation-Guided settings
+        SimulationGuidedEnabled = preset.SimulationGuidedEnabled;
+        SimulationGuidedAlgorithm = (SimulationAlgorithm)preset.SimulationGuidedAlgorithm;
+        SimulationGuidedFilterType = preset.SimulationGuidedFilterType;
+        SimulationGuidedSensitivity = preset.SimulationGuidedSensitivity;
+
+        // Post-Correction Simulation settings
+        PostCorrectionSimEnabled = preset.PostCorrectionSimEnabled;
+        PostCorrectionSimAlgorithm = (SimulationAlgorithm)preset.PostCorrectionSimAlgorithm;
+        PostCorrectionSimFilterType = preset.PostCorrectionSimFilterType;
+        PostCorrectionSimIntensity = preset.PostCorrectionSimIntensity;
 
         LutsNeedUpdate = true;
     }

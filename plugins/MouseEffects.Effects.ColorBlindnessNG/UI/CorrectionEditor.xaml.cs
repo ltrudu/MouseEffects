@@ -143,7 +143,20 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
 
             DefaultIntensity = _zone.Intensity,
             RecommendedGradientType = (int)_zone.GradientType,
-            RecommendedApplicationMode = (int)_zone.ApplicationMode
+            RecommendedApplicationMode = (int)_zone.ApplicationMode,
+            Threshold = _zone.Threshold,
+
+            // Simulation-Guided settings
+            SimulationGuidedEnabled = _zone.SimulationGuidedEnabled,
+            SimulationGuidedAlgorithm = (int)_zone.SimulationGuidedAlgorithm,
+            SimulationGuidedFilterType = _zone.SimulationGuidedFilterType,
+            SimulationGuidedSensitivity = _zone.SimulationGuidedSensitivity,
+
+            // Post-Correction Simulation settings
+            PostCorrectionSimEnabled = _zone.PostCorrectionSimEnabled,
+            PostCorrectionSimAlgorithm = (int)_zone.PostCorrectionSimAlgorithm,
+            PostCorrectionSimFilterType = _zone.PostCorrectionSimFilterType,
+            PostCorrectionSimIntensity = _zone.PostCorrectionSimIntensity
         };
     }
 

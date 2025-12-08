@@ -33,6 +33,11 @@ public partial class ZoneSettingsEditor : UserControl
     /// </summary>
     public event Action? PresetDeleted;
 
+    /// <summary>
+    /// Fired when a preset is updated (parent should reload in other zones if selected).
+    /// </summary>
+    public event Action<string>? PresetUpdated;
+
     public ZoneSettingsEditor()
     {
         InitializeComponent();
@@ -63,6 +68,79 @@ public partial class ZoneSettingsEditor : UserControl
     public void RefreshPresetDropdown()
     {
         PopulatePresetComboBox();
+    }
+
+    /// <summary>
+    /// Reload the preset if it's currently selected in this zone.
+    /// Called by parent when a preset is updated in another zone.
+    /// </summary>
+    public void ReloadIfPresetSelected(string presetName)
+    {
+        if (_zone == null || _effect == null || _presetManager == null) return;
+
+        // Check if this preset is currently selected
+        if (PresetCombo.SelectedItem is not ComboBoxItem item) return;
+
+        var itemContent = item.Content?.ToString() ?? "";
+        var cleanName = itemContent.StartsWith("★ ") ? itemContent.Substring(2) : itemContent;
+
+        if (cleanName != presetName) return;
+
+        // Find and apply the updated preset
+        var customPreset = _presetManager.CustomPresets.FirstOrDefault(p => p.Name == presetName);
+        if (customPreset == null) return;
+
+        var preset = customPreset.ToCorrectionPreset();
+        _zone.ApplyPreset(preset);
+
+        // Refresh the CorrectionEditor to show new values
+        CorrectionEditor.BindToZone(_zone);
+
+        // Refresh simulation-guided and post-simulation UI
+        RefreshSimulationGuidedUI();
+        RefreshPostSimulationUI();
+
+        OnSettingsChanged();
+    }
+
+    private void RefreshSimulationGuidedUI()
+    {
+        if (_zone == null) return;
+        _isLoading = true;
+        try
+        {
+            SimGuidedCheckBox.IsChecked = _zone.SimulationGuidedEnabled;
+            SimGuidedPanel.Visibility = _zone.SimulationGuidedEnabled ? Visibility.Visible : Visibility.Collapsed;
+            SimGuidedMachadoRadio.IsChecked = _zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Machado;
+            SimGuidedStrictRadio.IsChecked = _zone.SimulationGuidedAlgorithm == SimulationAlgorithm.Strict;
+            SimGuidedFilterCombo.SelectedIndex = MapFilterTypeToComboIndex(_zone.SimulationGuidedFilterType);
+            SimGuidedSensitivitySlider.Value = _zone.SimulationGuidedSensitivity;
+            SimGuidedSensitivityLabel.Text = $"Sensitivity ({_zone.SimulationGuidedSensitivity:F2})";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void RefreshPostSimulationUI()
+    {
+        if (_zone == null) return;
+        _isLoading = true;
+        try
+        {
+            PostSimCheckBox.IsChecked = _zone.PostCorrectionSimEnabled;
+            PostSimPanel.Visibility = _zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
+            PostSimMachadoRadio.IsChecked = _zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
+            PostSimStrictRadio.IsChecked = _zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
+            PostSimFilterCombo.SelectedIndex = MapFilterTypeToComboIndex(_zone.PostCorrectionSimFilterType);
+            PostSimIntensitySlider.Value = _zone.PostCorrectionSimIntensity;
+            PostSimIntensityLabel.Text = $"Simulation Intensity ({_zone.PostCorrectionSimIntensity:F2})";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     private string ConfigKey(string name) => $"zone{_zoneIndex}_{name}";
@@ -286,6 +364,62 @@ public partial class ZoneSettingsEditor : UserControl
         OnSettingsChanged();
     }
 
+    private void HueRotationReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_zone == null || _effect == null) return;
+
+        // Get defaults based on selected CVD type
+        var (sourceStart, sourceEnd, shift, falloff) = GetHueRotationDefaults(_zone.HueRotationCVDType);
+
+        _isLoading = true;
+        try
+        {
+            // Apply defaults
+            _zone.HueRotationSourceStart = sourceStart;
+            _zone.HueRotationSourceEnd = sourceEnd;
+            _zone.HueRotationShift = shift;
+            _zone.HueRotationFalloff = falloff;
+
+            // Update UI
+            HueRotationSourceStartSlider.Value = sourceStart;
+            HueRotationSourceStartLabel.Text = $"Source Start ({sourceStart:F0}°)";
+            HueRotationSourceEndSlider.Value = sourceEnd;
+            HueRotationSourceEndLabel.Text = $"Source End ({sourceEnd:F0}°)";
+            HueRotationShiftSlider.Value = shift;
+            HueRotationShiftLabel.Text = $"Hue Shift ({(shift >= 0 ? "+" : "")}{shift:F0}°)";
+            HueRotationFalloffSlider.Value = falloff;
+            HueRotationFalloffLabel.Text = $"Edge Falloff ({falloff:F2})";
+
+            // Save to config
+            _effect.Configuration.Set(ConfigKey("hueRotSourceStart"), sourceStart);
+            _effect.Configuration.Set(ConfigKey("hueRotSourceEnd"), sourceEnd);
+            _effect.Configuration.Set(ConfigKey("hueRotShift"), shift);
+            _effect.Configuration.Set(ConfigKey("hueRotFalloff"), falloff);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+        OnSettingsChanged();
+    }
+
+    private static (float sourceStart, float sourceEnd, float shift, float falloff) GetHueRotationDefaults(CVDCorrectionType cvdType)
+    {
+        return cvdType switch
+        {
+            // Protan (red-blind/weak): Rotate reds (0-60°) toward yellow/orange
+            CVDCorrectionType.Protanopia or CVDCorrectionType.Protanomaly
+                => (0f, 60f, 40f, 0.3f),
+            // Deutan (green-blind/weak): Rotate greens (60-150°) toward blue/cyan
+            CVDCorrectionType.Deuteranopia or CVDCorrectionType.Deuteranomaly
+                => (60f, 150f, 60f, 0.3f),
+            // Tritan (blue-blind/weak): Rotate blues (180-270°) toward cyan/green
+            CVDCorrectionType.Tritanopia or CVDCorrectionType.Tritanomaly
+                => (180f, 270f, -40f, 0.3f),
+            _ => (0f, 120f, 60f, 0.3f)
+        };
+    }
+
     #endregion
 
     #region CIELAB Handlers
@@ -359,6 +493,65 @@ public partial class ZoneSettingsEditor : UserControl
         CIELABLEnhanceLabel.Text = $"Lightness Encoding ({_zone.CIELABLEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabLEnhance"), _zone.CIELABLEnhance);
         OnSettingsChanged();
+    }
+
+    private void CIELABReset_Click(object sender, RoutedEventArgs e)
+    {
+        if (_zone == null || _effect == null) return;
+
+        // Get defaults based on selected CVD type
+        var (aToB, bToA, aEnhance, bEnhance, lEnhance) = GetCIELABDefaults(_zone.CIELABCVDType);
+
+        _isLoading = true;
+        try
+        {
+            // Apply defaults
+            _zone.CIELABAtoB = aToB;
+            _zone.CIELABBtoA = bToA;
+            _zone.CIELABAEnhance = aEnhance;
+            _zone.CIELABBEnhance = bEnhance;
+            _zone.CIELABLEnhance = lEnhance;
+
+            // Update UI
+            CIELABAtoBSlider.Value = aToB;
+            CIELABAtoBLabel.Text = $"a* → b* Transfer ({aToB:F2})";
+            CIELABBtoASlider.Value = bToA;
+            CIELABBtoALabel.Text = $"b* → a* Transfer ({bToA:F2})";
+            CIELABAEnhanceSlider.Value = aEnhance;
+            CIELABAEnhanceLabel.Text = $"a* Enhancement ({aEnhance:F2})";
+            CIELABBEnhanceSlider.Value = bEnhance;
+            CIELABBEnhanceLabel.Text = $"b* Enhancement ({bEnhance:F2})";
+            CIELABLEnhanceSlider.Value = lEnhance;
+            CIELABLEnhanceLabel.Text = $"Lightness Encoding ({lEnhance:F2})";
+
+            // Save to config
+            _effect.Configuration.Set(ConfigKey("cielabAtoB"), aToB);
+            _effect.Configuration.Set(ConfigKey("cielabBtoA"), bToA);
+            _effect.Configuration.Set(ConfigKey("cielabAEnhance"), aEnhance);
+            _effect.Configuration.Set(ConfigKey("cielabBEnhance"), bEnhance);
+            _effect.Configuration.Set(ConfigKey("cielabLEnhance"), lEnhance);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+        OnSettingsChanged();
+    }
+
+    private static (float aToB, float bToA, float aEnhance, float bEnhance, float lEnhance) GetCIELABDefaults(CVDCorrectionType cvdType)
+    {
+        return cvdType switch
+        {
+            // Protan/Deutan: Transfer a* (red-green) info to b* (blue-yellow), enhance b*
+            CVDCorrectionType.Protanopia or CVDCorrectionType.Protanomaly
+                => (0.5f, 0f, 1f, 1.2f, 0.1f),
+            CVDCorrectionType.Deuteranopia or CVDCorrectionType.Deuteranomaly
+                => (0.5f, 0f, 1f, 1.2f, 0.1f),
+            // Tritan: Transfer b* (blue-yellow) info to a* (red-green), enhance a*
+            CVDCorrectionType.Tritanopia or CVDCorrectionType.Tritanomaly
+                => (0f, 0.5f, 1.2f, 1f, 0.1f),
+            _ => (0.5f, 0f, 1f, 1f, 0f)
+        };
     }
 
     #endregion
@@ -602,8 +795,14 @@ public partial class ZoneSettingsEditor : UserControl
         updatedPreset.CreatedDate = existingPreset.CreatedDate;
         _presetManager.SaveCustomPreset(updatedPreset);
 
+        // Reload presets to get updated version
+        _presetManager.LoadCustomPresets();
+
         ShowTopmostMessageBox($"Preset '{presetName}' updated successfully.", "Preset Updated",
             MessageBoxButton.OK, MessageBoxImage.Information);
+
+        // Notify parent to reload this preset in other zones that have it selected
+        PresetUpdated?.Invoke(presetName);
     }
 
     private void ExportPreset_Click(object sender, RoutedEventArgs e)
