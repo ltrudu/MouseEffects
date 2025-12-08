@@ -21,10 +21,14 @@ public sealed class SystemTrayManager : IDisposable
     public event Action? ExitRequested;
     public event Action<bool>? EnabledChanged;
     public event Action<string, bool>? EffectToggled;
+    public event Action? MenuOpened;
+    public event Action? MenuClosed;
 
     public SystemTrayManager()
     {
         _contextMenu = new ContextMenuStrip();
+        _contextMenu.Opening += (s, e) => MenuOpened?.Invoke();
+        _contextMenu.Closed += (s, e) => MenuClosed?.Invoke();
 
         // Effects submenu (will be populated dynamically)
         _effectsMenu = new ToolStripMenuItem("Effects");

@@ -1,11 +1,16 @@
+using System.IO;
+using System.IO.Compression;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 using MouseEffects.App.Services;
 using MouseEffects.App.Settings;
+using MouseEffects.Core.Diagnostics;
 using MouseEffects.Core.Effects;
 using MouseEffects.DirectX.Graphics;
 using MouseEffects.Plugins;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace MouseEffects.App.UI;
 
@@ -605,10 +610,134 @@ public partial class SettingsWindow : Window
         });
     }
 
+    // ═══════════════════════════════════════════════════
+    // Settings Backup (Export/Import)
+    // ═══════════════════════════════════════════════════
+
+    private static readonly string SettingsFolder = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "MouseEffects");
+
+    private void ExportSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var saveDialog = new SaveFileDialog
+            {
+                Title = "Export MouseEffects Settings",
+                Filter = "MouseEffects Settings (*.me)|*.me",
+                DefaultExt = ".me",
+                FileName = $"MouseEffects_Settings_{DateTime.Now:yyyy-MM-dd}"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                ExportSettingsButton.IsEnabled = false;
+                BackupStatusText.Text = "Exporting settings...";
+
+                // Delete existing file if it exists (SaveFileDialog already prompted for overwrite)
+                if (File.Exists(saveDialog.FileName))
+                {
+                    File.Delete(saveDialog.FileName);
+                }
+
+                // Create the zip file with .me extension
+                if (Directory.Exists(SettingsFolder))
+                {
+                    ZipFile.CreateFromDirectory(SettingsFolder, saveDialog.FileName, CompressionLevel.Optimal, false);
+                    BackupStatusText.Text = $"Settings exported successfully to {Path.GetFileName(saveDialog.FileName)}";
+                    Logger.Log("SettingsWindow", $"Settings exported to: {saveDialog.FileName}");
+                }
+                else
+                {
+                    BackupStatusText.Text = "No settings folder found to export.";
+                }
+
+                ExportSettingsButton.IsEnabled = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            BackupStatusText.Text = $"Export failed: {ex.Message}";
+            Logger.Log("SettingsWindow", $"Export failed: {ex.Message}");
+            ExportSettingsButton.IsEnabled = true;
+        }
+    }
+
+    private void ImportSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var openDialog = new OpenFileDialog
+            {
+                Title = "Import MouseEffects Settings",
+                Filter = "MouseEffects Settings (*.me)|*.me",
+                DefaultExt = ".me"
+            };
+
+            if (openDialog.ShowDialog() == true)
+            {
+                // Validate the archive first
+                using (var archive = ZipFile.OpenRead(openDialog.FileName))
+                {
+                    var hasSettingsJson = archive.Entries.Any(entry =>
+                        entry.FullName.Equals("settings.json", StringComparison.OrdinalIgnoreCase));
+                    var hasPluginsFolder = archive.Entries.Any(entry =>
+                        entry.FullName.StartsWith("plugins/", StringComparison.OrdinalIgnoreCase) ||
+                        entry.FullName.StartsWith("plugins\\", StringComparison.OrdinalIgnoreCase));
+
+                    if (!hasSettingsJson && !hasPluginsFolder)
+                    {
+                        BackupStatusText.Text = "Invalid settings file: missing settings.json or plugins folder.";
+                        return;
+                    }
+                }
+
+                // Restart app with the .me file as argument - let command-line handler do the import
+                // This avoids file locking issues since the app will close first
+                var exePath = Environment.ProcessPath;
+                if (!string.IsNullOrEmpty(exePath))
+                {
+                    BackupStatusText.Text = "Restarting to import settings...";
+                    Logger.Log("SettingsWindow", $"Restarting to import: {openDialog.FileName}");
+
+                    System.Diagnostics.Process.Start(exePath, $"\"{openDialog.FileName}\"");
+                    System.Windows.Application.Current.Shutdown();
+                }
+                else
+                {
+                    BackupStatusText.Text = "Could not determine application path.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            BackupStatusText.Text = $"Import failed: {ex.Message}";
+            Logger.Log("SettingsWindow", $"Import failed: {ex.Message}");
+        }
+    }
+
+    protected override void OnStateChanged(EventArgs e)
+    {
+        base.OnStateChanged(e);
+
+        // Minimize to tray instead of taskbar
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+            HideToTray();
+        }
+    }
+
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
         // Hide instead of close to preserve window state
         e.Cancel = true;
+        HideToTray();
+    }
+
+    private void HideToTray()
+    {
         _fpsTimer.Stop();
 
         // Remove topmost from settings window when hidden

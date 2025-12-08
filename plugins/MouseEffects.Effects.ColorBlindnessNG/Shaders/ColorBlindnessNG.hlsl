@@ -13,7 +13,7 @@ struct PSInput
 };
 
 // ============================================================================
-// Per-Zone Parameters Structure (112 bytes each = 28 floats, 16-byte aligned)
+// Per-Zone Parameters Structure (128 bytes each = 32 floats, 16-byte aligned)
 // ============================================================================
 
 struct ZoneParams
@@ -50,12 +50,17 @@ struct ZoneParams
 
     float GreenBlendMode;          // Per-channel blend mode for green
     float BlueBlendMode;           // Per-channel blend mode for blue
+    float CorrectionAlgorithm;     // 0=LUT-based, 1=Daltonization
+    float DaltonizationCVDType;    // CVD type for Daltonization (1-6=Machado, 7-12=Strict)
+
+    float DaltonizationStrength;   // Strength of Daltonization correction (0-1)
     float _padding1;               // Padding for 16-byte alignment
     float _padding2;               // Padding for 16-byte alignment
+    float _padding3;               // Padding for 16-byte alignment
 };
 
 // ============================================================================
-// Constant Buffer (48 + 112*4 = 496 bytes total)
+// Constant Buffer (48 + 128*4 = 560 bytes total)
 // ============================================================================
 
 cbuffer ColorBlindnessNGParams : register(b0)
@@ -414,6 +419,112 @@ float GetSimulationGuidedWeight(float3 color, float cvdType, float sensitivity)
 
     // Apply smoothstep for a more natural transition
     return smoothstep(0.0, 1.0, weight);
+}
+
+// ============================================================================
+// Daltonization Algorithm
+// ============================================================================
+// Daltonization works by:
+// 1. Simulating how a CVD person sees the color
+// 2. Computing the error (difference between original and simulated)
+// 3. Redistributing the error into channels the CVD person CAN see
+// 4. Adding the redistributed error back to the original color
+//
+// Error redistribution matrices based on CVD type:
+// - Protanopia/Deuteranopia: R-G confusion, shift error to Blue channel
+// - Tritanopia: Blue confusion, shift error to R/G channels
+
+// Error redistribution matrix for Protanopia/Protanomaly
+// Shifts red-green error into the blue channel
+static const float3x3 DaltonizeProtanDeutan = float3x3(
+    0.0, 0.0, 0.0,
+    0.7, 1.0, 0.0,
+    0.7, 0.0, 1.0
+);
+
+// Error redistribution matrix for Tritanopia/Tritanomaly
+// Shifts blue-yellow error into red/green channels
+static const float3x3 DaltonizeTritan = float3x3(
+    1.0, 0.0, 0.7,
+    0.0, 1.0, 0.7,
+    0.0, 0.0, 0.0
+);
+
+// Apply Daltonization correction
+// cvdType: CVD type to correct for (1-6 Machado, 7-12 Strict)
+// strength: correction intensity (0-1)
+float3 ApplyDaltonization(float3 color, float cvdType, float strength)
+{
+    if (cvdType < 0.5) return color;
+    if (strength < 0.001) return color;
+
+    // Convert to linear RGB for accurate color math
+    float3 linearRGB = sRGBToLinear3(color);
+    float3 simLinearRGB;
+
+    // Simulate CVD
+    if (cvdType < 6.5)
+    {
+        // Machado simulation
+        simLinearRGB = SimulateMachado(linearRGB, cvdType);
+    }
+    else if (cvdType < 12.5)
+    {
+        // Strict LMS simulation
+        simLinearRGB = SimulateStrict(linearRGB, cvdType);
+    }
+    else if (cvdType < 13.5) // Achromatopsia
+    {
+        float gray = dot(linearRGB, GrayscaleWeights);
+        simLinearRGB = float3(gray, gray, gray);
+    }
+    else if (cvdType < 14.5) // Achromatomaly
+    {
+        float gray = dot(linearRGB, GrayscaleWeights);
+        simLinearRGB = lerp(float3(gray, gray, gray), linearRGB, 0.3);
+    }
+    else
+    {
+        return color;
+    }
+
+    simLinearRGB = clamp(simLinearRGB, 0.0, 1.0);
+
+    // Calculate error: what the CVD person is missing
+    float3 error = linearRGB - simLinearRGB;
+
+    // Choose redistribution matrix based on CVD type
+    float3 redistributedError;
+
+    // Determine if this is protan/deutan (R-G confusion) or tritan (B confusion)
+    // Machado: 1-4 = Protan/Deutan, 5-6 = Tritan
+    // Strict: 7-10 = Protan/Deutan, 11-12 = Tritan
+    bool isTritan = (cvdType > 4.5 && cvdType < 6.5) ||  // Machado Tritan (5-6)
+                    (cvdType > 10.5 && cvdType < 12.5);   // Strict Tritan (11-12)
+
+    if (isTritan)
+    {
+        // Tritan: shift blue error to red/green
+        redistributedError.r = dot(error, DaltonizeTritan[0]);
+        redistributedError.g = dot(error, DaltonizeTritan[1]);
+        redistributedError.b = dot(error, DaltonizeTritan[2]);
+    }
+    else
+    {
+        // Protan/Deutan: shift red-green error to blue
+        redistributedError.r = dot(error, DaltonizeProtanDeutan[0]);
+        redistributedError.g = dot(error, DaltonizeProtanDeutan[1]);
+        redistributedError.b = dot(error, DaltonizeProtanDeutan[2]);
+    }
+
+    // Apply correction with strength factor
+    float3 corrected = linearRGB + redistributedError * strength;
+
+    // Clamp to valid range
+    corrected = clamp(corrected, 0.0, 1.0);
+
+    // Convert back to sRGB
+    return linearToSRGB3(corrected);
 }
 
 // ============================================================================
@@ -799,15 +910,25 @@ float3 ProcessZone(float3 color, ZoneParams zone, int zoneIndex)
     }
 
     // Mode 2 = Correction
-    // Call zone-specific LUT function
-    if (zoneIndex == 0)
-        processedColor = ApplyLUTCorrectionZone0(color, zone);
-    else if (zoneIndex == 1)
-        processedColor = ApplyLUTCorrectionZone1(color, zone);
-    else if (zoneIndex == 2)
-        processedColor = ApplyLUTCorrectionZone2(color, zone);
+    // Check which correction algorithm to use
+    if (zone.CorrectionAlgorithm > 0.5)
+    {
+        // Daltonization algorithm
+        processedColor = ApplyDaltonization(color, zone.DaltonizationCVDType, zone.DaltonizationStrength);
+    }
     else
-        processedColor = ApplyLUTCorrectionZone3(color, zone);
+    {
+        // LUT-based correction (original algorithm)
+        // Call zone-specific LUT function
+        if (zoneIndex == 0)
+            processedColor = ApplyLUTCorrectionZone0(color, zone);
+        else if (zoneIndex == 1)
+            processedColor = ApplyLUTCorrectionZone1(color, zone);
+        else if (zoneIndex == 2)
+            processedColor = ApplyLUTCorrectionZone2(color, zone);
+        else
+            processedColor = ApplyLUTCorrectionZone3(color, zone);
+    }
 
     // Apply intensity blend for correction
     processedColor = lerp(color, processedColor, zone.Intensity);

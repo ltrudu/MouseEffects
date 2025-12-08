@@ -58,6 +58,11 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         var zone = _effect.GetZone(zoneIndex);
         var prefix = $"zone{zoneIndex}_";
 
+        // Correction algorithm settings
+        _effect.Configuration.Set(prefix + "correctionAlgorithm", (int)zone.CorrectionAlgorithm);
+        _effect.Configuration.Set(prefix + "daltonizationCVDType", zone.DaltonizationCVDType);
+        _effect.Configuration.Set(prefix + "daltonizationStrength", zone.DaltonizationStrength);
+
         _effect.Configuration.Set(prefix + "appMode", (int)zone.ApplicationMode);
         _effect.Configuration.Set(prefix + "threshold", zone.Threshold);
         _effect.Configuration.Set(prefix + "gradientType", (int)zone.GradientType);
@@ -251,6 +256,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         else if (filterIndex >= 7) filterIndex = filterIndex - 6; // Strict -> same display
         Zone0SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone0SimFilterCombo.Items.Count - 1);
 
+        // Correction algorithm settings
+        Zone0CorrectionAlgorithmCombo.SelectedIndex = (int)zone.CorrectionAlgorithm;
+        UpdateZone0CorrectionAlgorithmUI();
+
+        // Daltonization settings
+        int daltonCVDIndex = zone.DaltonizationCVDType - 1; // 1-6 -> 0-5
+        Zone0DaltonizationCVDCombo.SelectedIndex = Math.Max(0, Math.Min(daltonCVDIndex, 5));
+        Zone0DaltonizationStrengthSlider.Value = zone.DaltonizationStrength;
+        Zone0DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
+
         Zone0IntensitySlider.Value = zone.Intensity;
         Zone0IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
 
@@ -297,6 +312,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         else if (filterIndex >= 7) filterIndex = filterIndex - 6;
         Zone1SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone1SimFilterCombo.Items.Count - 1);
 
+        // Correction algorithm settings
+        Zone1CorrectionAlgorithmCombo.SelectedIndex = (int)zone.CorrectionAlgorithm;
+        UpdateZone1CorrectionAlgorithmUI();
+
+        // Daltonization settings
+        int daltonCVDIndex = zone.DaltonizationCVDType - 1;
+        Zone1DaltonizationCVDCombo.SelectedIndex = Math.Max(0, Math.Min(daltonCVDIndex, 5));
+        Zone1DaltonizationStrengthSlider.Value = zone.DaltonizationStrength;
+        Zone1DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
+
         Zone1IntensitySlider.Value = zone.Intensity;
         Zone1IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
 
@@ -339,6 +364,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         if (filterIndex >= 13) filterIndex = filterIndex - 5; // Achro types
         else if (filterIndex >= 7) filterIndex = filterIndex - 6; // Strict -> same display
         Zone2SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone2SimFilterCombo.Items.Count - 1);
+
+        // Correction algorithm settings
+        Zone2CorrectionAlgorithmCombo.SelectedIndex = (int)zone.CorrectionAlgorithm;
+        UpdateZone2CorrectionAlgorithmUI();
+
+        // Daltonization settings
+        int daltonCVDIndex = zone.DaltonizationCVDType - 1;
+        Zone2DaltonizationCVDCombo.SelectedIndex = Math.Max(0, Math.Min(daltonCVDIndex, 5));
+        Zone2DaltonizationStrengthSlider.Value = zone.DaltonizationStrength;
+        Zone2DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
 
         // Simulation-guided correction settings
         Zone2SimGuidedCheckBox.IsChecked = zone.SimulationGuidedEnabled;
@@ -383,6 +418,16 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         if (filterIndex >= 13) filterIndex = filterIndex - 5; // Achro types
         else if (filterIndex >= 7) filterIndex = filterIndex - 6; // Strict -> same display
         Zone3SimFilterCombo.SelectedIndex = Math.Min(filterIndex, Zone3SimFilterCombo.Items.Count - 1);
+
+        // Correction algorithm settings
+        Zone3CorrectionAlgorithmCombo.SelectedIndex = (int)zone.CorrectionAlgorithm;
+        UpdateZone3CorrectionAlgorithmUI();
+
+        // Daltonization settings
+        int daltonCVDIndex = zone.DaltonizationCVDType - 1;
+        Zone3DaltonizationCVDCombo.SelectedIndex = Math.Max(0, Math.Min(daltonCVDIndex, 5));
+        Zone3DaltonizationStrengthSlider.Value = zone.DaltonizationStrength;
+        Zone3DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
 
         // Simulation-guided correction settings
         Zone3SimGuidedCheckBox.IsChecked = zone.SimulationGuidedEnabled;
@@ -677,6 +722,45 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone0IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
     }
 
+    private void Zone0CorrectionAlgorithm_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.CorrectionAlgorithm = (CorrectionAlgorithm)Zone0CorrectionAlgorithmCombo.SelectedIndex;
+        _effect.Configuration.Set("zone0_correctionAlgorithm", (int)zone.CorrectionAlgorithm);
+        UpdateZone0CorrectionAlgorithmUI();
+    }
+
+    private void UpdateZone0CorrectionAlgorithmUI()
+    {
+        if (Zone0DaltonizationPanel == null || Zone0LUTPanel == null) return;
+
+        bool isDaltonization = Zone0CorrectionAlgorithmCombo.SelectedIndex == 1;
+        Zone0DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
+        Zone0LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void Zone0DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        // Map combo index (0-5) to CVD type (1-6 for Machado)
+        zone.DaltonizationCVDType = Zone0DaltonizationCVDCombo.SelectedIndex + 1;
+        _effect.Configuration.Set("zone0_daltonizationCVDType", zone.DaltonizationCVDType);
+    }
+
+    private void Zone0DaltonizationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(0);
+        zone.DaltonizationStrength = (float)Zone0DaltonizationStrengthSlider.Value;
+        _effect.Configuration.Set("zone0_daltonizationStrength", zone.DaltonizationStrength);
+        Zone0DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
+    }
+
     private void Zone0ApplyPreset_Click(object sender, RoutedEventArgs e)
     {
         ApplyPresetToZone(0, Zone0PresetCombo);
@@ -742,6 +826,44 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         Zone1IntensityLabel.Text = $"Intensity ({zone.Intensity:F2})";
     }
 
+    private void Zone1CorrectionAlgorithm_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.CorrectionAlgorithm = (CorrectionAlgorithm)Zone1CorrectionAlgorithmCombo.SelectedIndex;
+        _effect.Configuration.Set("zone1_correctionAlgorithm", (int)zone.CorrectionAlgorithm);
+        UpdateZone1CorrectionAlgorithmUI();
+    }
+
+    private void UpdateZone1CorrectionAlgorithmUI()
+    {
+        if (Zone1DaltonizationPanel == null || Zone1LUTPanel == null) return;
+
+        bool isDaltonization = Zone1CorrectionAlgorithmCombo.SelectedIndex == 1;
+        Zone1DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
+        Zone1LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void Zone1DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.DaltonizationCVDType = Zone1DaltonizationCVDCombo.SelectedIndex + 1;
+        _effect.Configuration.Set("zone1_daltonizationCVDType", zone.DaltonizationCVDType);
+    }
+
+    private void Zone1DaltonizationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(1);
+        zone.DaltonizationStrength = (float)Zone1DaltonizationStrengthSlider.Value;
+        _effect.Configuration.Set("zone1_daltonizationStrength", zone.DaltonizationStrength);
+        Zone1DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
+    }
+
     private void Zone1ApplyPreset_Click(object sender, RoutedEventArgs e)
     {
         ApplyPresetToZone(1, Zone1PresetCombo);
@@ -799,6 +921,44 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         SaveZoneConfiguration(2);
     }
 
+    private void Zone2CorrectionAlgorithm_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.CorrectionAlgorithm = (CorrectionAlgorithm)Zone2CorrectionAlgorithmCombo.SelectedIndex;
+        _effect.Configuration.Set("zone2_correctionAlgorithm", (int)zone.CorrectionAlgorithm);
+        UpdateZone2CorrectionAlgorithmUI();
+    }
+
+    private void UpdateZone2CorrectionAlgorithmUI()
+    {
+        if (Zone2DaltonizationPanel == null || Zone2LUTPanel == null) return;
+
+        bool isDaltonization = Zone2CorrectionAlgorithmCombo.SelectedIndex == 1;
+        Zone2DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
+        Zone2LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void Zone2DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.DaltonizationCVDType = Zone2DaltonizationCVDCombo.SelectedIndex + 1;
+        _effect.Configuration.Set("zone2_daltonizationCVDType", zone.DaltonizationCVDType);
+    }
+
+    private void Zone2DaltonizationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(2);
+        zone.DaltonizationStrength = (float)Zone2DaltonizationStrengthSlider.Value;
+        _effect.Configuration.Set("zone2_daltonizationStrength", zone.DaltonizationStrength);
+        Zone2DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
+    }
+
     private void Zone3ModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
@@ -841,6 +1001,44 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         ApplyPresetToZone(3, Zone3PresetCombo);
         Zone3CorrectionEditor.LoadFromZone();
         SaveZoneConfiguration(3);
+    }
+
+    private void Zone3CorrectionAlgorithm_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.CorrectionAlgorithm = (CorrectionAlgorithm)Zone3CorrectionAlgorithmCombo.SelectedIndex;
+        _effect.Configuration.Set("zone3_correctionAlgorithm", (int)zone.CorrectionAlgorithm);
+        UpdateZone3CorrectionAlgorithmUI();
+    }
+
+    private void UpdateZone3CorrectionAlgorithmUI()
+    {
+        if (Zone3DaltonizationPanel == null || Zone3LUTPanel == null) return;
+
+        bool isDaltonization = Zone3CorrectionAlgorithmCombo.SelectedIndex == 1;
+        Zone3DaltonizationPanel.Visibility = isDaltonization ? Visibility.Visible : Visibility.Collapsed;
+        Zone3LUTPanel.Visibility = isDaltonization ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void Zone3DaltonizationCVD_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.DaltonizationCVDType = Zone3DaltonizationCVDCombo.SelectedIndex + 1;
+        _effect.Configuration.Set("zone3_daltonizationCVDType", zone.DaltonizationCVDType);
+    }
+
+    private void Zone3DaltonizationStrength_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        var zone = _effect.GetZone(3);
+        zone.DaltonizationStrength = (float)Zone3DaltonizationStrengthSlider.Value;
+        _effect.Configuration.Set("zone3_daltonizationStrength", zone.DaltonizationStrength);
+        Zone3DaltonizationStrengthLabel.Text = $"Strength ({zone.DaltonizationStrength:F2})";
     }
 
     // Zone 1 custom preset handlers

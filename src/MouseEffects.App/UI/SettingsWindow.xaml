@@ -162,6 +162,37 @@
                 <!-- Dynamic Plugin Settings Container -->
                 <StackPanel x:Name="PluginSettingsContainer"/>
 
+                <!-- Settings Backup Section -->
+                <Border Style="{StaticResource EffectCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Settings Backup" Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock Text="Export or import all settings including plugin configurations"
+                                   Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="ExportSettingsButton" Grid.Column="0"
+                                    Content="Export Settings"
+                                    Height="32"
+                                    Click="ExportSettingsButton_Click"/>
+
+                            <Button x:Name="ImportSettingsButton" Grid.Column="2"
+                                    Content="Import Settings"
+                                    Height="32"
+                                    Click="ImportSettingsButton_Click"/>
+                        </Grid>
+
+                        <TextBlock x:Name="BackupStatusText"
+                                   Text="" Opacity="0.7" FontSize="11"
+                                   Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Updates Section -->
                 <Border Style="{StaticResource EffectCardStyle}">
                     <StackPanel>

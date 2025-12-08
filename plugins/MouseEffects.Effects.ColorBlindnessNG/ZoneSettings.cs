@@ -9,7 +9,24 @@ public enum ZoneMode
 {
     Original = 0,    // No processing, show original screen
     Simulation = 1,  // CVD simulation
-    Correction = 2   // LUT-based correction
+    Correction = 2   // Color correction (LUT-based or Daltonization)
+}
+
+/// <summary>
+/// Correction algorithm to use when Mode is Correction.
+/// </summary>
+public enum CorrectionAlgorithm
+{
+    /// <summary>
+    /// LUT-based color remapping (per-channel false coloring).
+    /// </summary>
+    LUTBased = 0,
+
+    /// <summary>
+    /// Daltonization algorithm (error redistribution to visible channels).
+    /// Based on scientific CVD simulation to calculate lost colors and redistribute them.
+    /// </summary>
+    Daltonization = 1
 }
 
 /// <summary>
@@ -36,6 +53,26 @@ public class ZoneSettings
     public int SimulationFilterType { get; set; } = 0;
 
     // ============ Correction Settings ============
+
+    /// <summary>
+    /// Which correction algorithm to use.
+    /// </summary>
+    public CorrectionAlgorithm CorrectionAlgorithm { get; set; } = CorrectionAlgorithm.LUTBased;
+
+    // ============ Daltonization Settings ============
+
+    /// <summary>
+    /// CVD type to correct for when using Daltonization.
+    /// Uses the same filter type values as simulation (1-6=Machado, 7-12=Strict).
+    /// </summary>
+    public int DaltonizationCVDType { get; set; } = 3; // Deuteranopia by default
+
+    /// <summary>
+    /// Strength of the Daltonization correction (0.0-1.0).
+    /// </summary>
+    public float DaltonizationStrength { get; set; } = 1.0f;
+
+    // ============ LUT Correction Settings ============
 
     /// <summary>
     /// LUT application mode.
@@ -152,6 +189,9 @@ public class ZoneSettings
             Mode = Mode,
             SimulationAlgorithm = SimulationAlgorithm,
             SimulationFilterType = SimulationFilterType,
+            CorrectionAlgorithm = CorrectionAlgorithm,
+            DaltonizationCVDType = DaltonizationCVDType,
+            DaltonizationStrength = DaltonizationStrength,
             ApplicationMode = ApplicationMode,
             GradientType = GradientType,
             Threshold = Threshold,

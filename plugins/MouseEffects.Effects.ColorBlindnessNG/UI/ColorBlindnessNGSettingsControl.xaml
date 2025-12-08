@@ -65,7 +65,7 @@
         </Grid>
 
         <!-- Description -->
-        <TextBlock Text="Per-zone CVD simulation and correction with LUT-based color remapping."
+        <TextBlock Text="Per-zone CVD simulation and correction with LUT-based remapping or Daltonization."
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
 
         <!-- Collapsible Content -->
@@ -185,8 +185,35 @@
 
                     <!-- Correction Settings -->
                     <StackPanel x:Name="Zone0CorrectionPanel" Visibility="Collapsed">
-                        <!-- Preset -->
-                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                        <!-- Correction Algorithm Selection -->
+                        <TextBlock Text="Correction Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone0CorrectionAlgorithmCombo" SelectionChanged="Zone0CorrectionAlgorithm_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
+                            <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                        </ComboBox>
+
+                        <!-- Daltonization Settings -->
+                        <StackPanel x:Name="Zone0DaltonizationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Daltonization corrects colors by simulating how a CVD person sees them, then redistributing the 'lost' color information into channels they can perceive."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone0DaltonizationCVDCombo" SelectionChanged="Zone0DaltonizationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone0DaltonizationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone0DaltonizationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone0DaltonizationStrength_Changed"/>
+                        </StackPanel>
+
+                        <!-- LUT-Based Settings (existing) -->
+                        <StackPanel x:Name="Zone0LUTPanel">
+                            <!-- Preset -->
+                            <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
@@ -279,6 +306,7 @@
                             <Slider x:Name="Zone0PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone0PostSimIntensity_Changed"/>
                         </StackPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <!-- Intensity -->
@@ -326,8 +354,35 @@
                     </StackPanel>
 
                     <StackPanel x:Name="Zone1CorrectionPanel" Visibility="Collapsed">
-                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
-                        <Grid>
+                        <!-- Correction Algorithm Selection -->
+                        <TextBlock Text="Correction Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone1CorrectionAlgorithmCombo" SelectionChanged="Zone1CorrectionAlgorithm_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
+                            <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                        </ComboBox>
+
+                        <!-- Daltonization Settings -->
+                        <StackPanel x:Name="Zone1DaltonizationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Daltonization corrects colors by simulating how a CVD person sees them, then redistributing the 'lost' color information into channels they can perceive."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone1DaltonizationCVDCombo" SelectionChanged="Zone1DaltonizationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone1DaltonizationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone1DaltonizationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone1DaltonizationStrength_Changed"/>
+                        </StackPanel>
+
+                        <!-- LUT-Based Settings -->
+                        <StackPanel x:Name="Zone1LUTPanel">
+                            <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                            <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
@@ -413,6 +468,7 @@
                             <Slider x:Name="Zone1PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone1PostSimIntensity_Changed"/>
                         </StackPanel>
+                        </StackPanel>
                     </StackPanel>
 
                     <StackPanel x:Name="Zone1IntensityPanel" Visibility="Collapsed">
@@ -459,16 +515,43 @@
                     </StackPanel>
 
                     <StackPanel x:Name="Zone2CorrectionPanel" Visibility="Collapsed">
-                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="Zone2PresetCombo" Grid.Column="0" Margin="0,0,8,0"
-                                      SelectionChanged="Zone2PresetCombo_SelectionChanged"/>
-                            <Button Content="Apply" Grid.Column="1" Click="Zone2ApplyPreset_Click" Padding="12,4"/>
-                        </Grid>
+                        <!-- Correction Algorithm Selection -->
+                        <TextBlock Text="Correction Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone2CorrectionAlgorithmCombo" SelectionChanged="Zone2CorrectionAlgorithm_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
+                            <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                        </ComboBox>
+
+                        <!-- Daltonization Settings -->
+                        <StackPanel x:Name="Zone2DaltonizationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Daltonization corrects colors by simulating how a CVD person sees them, then redistributing the 'lost' color information into channels they can perceive."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone2DaltonizationCVDCombo" SelectionChanged="Zone2DaltonizationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone2DaltonizationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone2DaltonizationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone2DaltonizationStrength_Changed"/>
+                        </StackPanel>
+
+                        <!-- LUT-Based Settings -->
+                        <StackPanel x:Name="Zone2LUTPanel">
+                            <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="Zone2PresetCombo" Grid.Column="0" Margin="0,0,8,0"
+                                          SelectionChanged="Zone2PresetCombo_SelectionChanged"/>
+                                <Button Content="Apply" Grid.Column="1" Click="Zone2ApplyPreset_Click" Padding="12,4"/>
+                            </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Button x:Name="Zone2SaveAsPresetButton" Content="Save As..."
                                     Click="Zone2SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
@@ -544,6 +627,7 @@
                             <Slider x:Name="Zone2PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone2PostSimIntensity_Changed"/>
                         </StackPanel>
+                        </StackPanel>
                     </StackPanel>
                 </StackPanel>
             </Expander>
@@ -584,16 +668,43 @@
                     </StackPanel>
 
                     <StackPanel x:Name="Zone3CorrectionPanel" Visibility="Collapsed">
-                        <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="Zone3PresetCombo" Grid.Column="0" Margin="0,0,8,0"
-                                      SelectionChanged="Zone3PresetCombo_SelectionChanged"/>
-                            <Button Content="Apply" Grid.Column="1" Click="Zone3ApplyPreset_Click" Padding="12,4"/>
-                        </Grid>
+                        <!-- Correction Algorithm Selection -->
+                        <TextBlock Text="Correction Algorithm" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="Zone3CorrectionAlgorithmCombo" SelectionChanged="Zone3CorrectionAlgorithm_Changed" Margin="0,0,0,8">
+                            <ComboBoxItem Content="LUT-Based (Color Remapping)" IsSelected="True"/>
+                            <ComboBoxItem Content="Daltonization (Error Redistribution)"/>
+                        </ComboBox>
+
+                        <!-- Daltonization Settings -->
+                        <StackPanel x:Name="Zone3DaltonizationPanel" Visibility="Collapsed">
+                            <TextBlock Text="Daltonization corrects colors by simulating how a CVD person sees them, then redistributing the 'lost' color information into channels they can perceive."
+                                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                            <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox x:Name="Zone3DaltonizationCVDCombo" SelectionChanged="Zone3DaltonizationCVD_Changed" Margin="0,0,0,8">
+                                <ComboBoxItem Content="Protanopia (red-blind)"/>
+                                <ComboBoxItem Content="Protanomaly (red-weak)"/>
+                                <ComboBoxItem Content="Deuteranopia (green-blind)" IsSelected="True"/>
+                                <ComboBoxItem Content="Deuteranomaly (green-weak)"/>
+                                <ComboBoxItem Content="Tritanopia (blue-blind)"/>
+                                <ComboBoxItem Content="Tritanomaly (blue-weak)"/>
+                            </ComboBox>
+                            <TextBlock x:Name="Zone3DaltonizationStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
+                            <Slider x:Name="Zone3DaltonizationStrengthSlider" Minimum="0" Maximum="1" Value="1"
+                                    Style="{StaticResource SliderStyle}" ValueChanged="Zone3DaltonizationStrength_Changed"/>
+                        </StackPanel>
+
+                        <!-- LUT-Based Settings -->
+                        <StackPanel x:Name="Zone3LUTPanel">
+                            <TextBlock Text="Preset" Style="{StaticResource LabelStyle}"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <ComboBox x:Name="Zone3PresetCombo" Grid.Column="0" Margin="0,0,8,0"
+                                          SelectionChanged="Zone3PresetCombo_SelectionChanged"/>
+                                <Button Content="Apply" Grid.Column="1" Click="Zone3ApplyPreset_Click" Padding="12,4"/>
+                            </Grid>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                             <Button x:Name="Zone3SaveAsPresetButton" Content="Save As..."
                                     Click="Zone3SaveAsPreset_Click" Padding="8,4" Margin="0,0,4,0"/>
@@ -668,6 +779,7 @@
                                        ToolTip="How strongly to apply the simulation (0 = off, 1 = full)"/>
                             <Slider x:Name="Zone3PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
                                     Style="{StaticResource SliderStyle}" ValueChanged="Zone3PostSimIntensity_Changed"/>
+                        </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </StackPanel>

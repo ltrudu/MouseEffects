@@ -1,4 +1,5 @@
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using MouseEffects.App.Services;
 using MouseEffects.App.Settings;
@@ -14,6 +15,9 @@ namespace MouseEffects.App;
 
 static partial class Program
 {
+    private const string MutexName = "MouseEffects_SingleInstance_Mutex";
+    private static Mutex? _singleInstanceMutex;
+
     private static GameLoop? _gameLoop;
     private static OverlayManager? _overlayManager;
     private static EffectManager? _effectManager;
@@ -28,7 +32,7 @@ static partial class Program
     private static readonly HashSet<string> _pressedHotkeys = new();
 
     [STAThread]
-    static void Main()
+    static void Main(string[] args)
     {
         // Velopack MUST be first - handles update apply/restart
         VelopackApp.Build().Run();
@@ -38,9 +42,32 @@ static partial class Program
         Logger.Initialize(logPath);
         Logger.Log("Application starting...");
 
+        // Check for command-line import of .me settings file
+        var isImporting = args.Length > 0 && File.Exists(args[0]) && args[0].EndsWith(".me", StringComparison.OrdinalIgnoreCase);
+
+        if (isImporting)
+        {
+            // Kill any existing instance before importing
+            KillExistingInstances();
+            HandleSettingsImport(args[0]);
+            return; // App will restart after import
+        }
+
+        // Single instance check - exit if another instance is already running
+        _singleInstanceMutex = new Mutex(true, MutexName, out bool createdNew);
+        if (!createdNew)
+        {
+            Log("Another instance is already running. Exiting.");
+            _singleInstanceMutex?.Dispose();
+            return;
+        }
+
         // Load settings early so we can apply theme
         _settings = AppSettings.Load();
         Log($"Loaded settings - Theme: {_settings.Theme}, GPU: {_settings.SelectedGpuName ?? "auto"}");
+
+        // Register .me file association (per-user, no admin required)
+        FileAssociationHelper.RegisterFileAssociation();
 
         // Create WPF Application with ModernWpf theming
         var wpfApp = new App();
@@ -64,6 +91,180 @@ static partial class Program
         finally
         {
             Shutdown();
+            _singleInstanceMutex?.ReleaseMutex();
+            _singleInstanceMutex?.Dispose();
+        }
+    }
+
+    /// <summary>
+    /// Kill any existing MouseEffects instances.
+    /// </summary>
+    private static void KillExistingInstances()
+    {
+        var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+        var processName = currentProcess.ProcessName;
+
+        foreach (var process in System.Diagnostics.Process.GetProcessesByName(processName))
+        {
+            if (process.Id != currentProcess.Id)
+            {
+                try
+                {
+                    Log($"Killing existing instance (PID: {process.Id})");
+                    process.Kill();
+                    process.WaitForExit(5000); // Wait up to 5 seconds
+                }
+                catch (Exception ex)
+                {
+                    Log($"Failed to kill process {process.Id}: {ex.Message}");
+                }
+            }
+        }
+
+        // Give a moment for file handles to be released
+        Thread.Sleep(500);
+    }
+
+    /// <summary>
+    /// Handle importing a .me settings file from command-line (double-click).
+    /// </summary>
+    private static void HandleSettingsImport(string filePath)
+    {
+        try
+        {
+            Log($"Importing settings from: {filePath}");
+
+            var settingsFolder = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "MouseEffects");
+
+            // Validate the archive
+            using (var archive = ZipFile.OpenRead(filePath))
+            {
+                var hasSettingsJson = archive.Entries.Any(entry =>
+                    entry.FullName.Equals("settings.json", StringComparison.OrdinalIgnoreCase));
+                var hasPluginsFolder = archive.Entries.Any(entry =>
+                    entry.FullName.StartsWith("plugins/", StringComparison.OrdinalIgnoreCase) ||
+                    entry.FullName.StartsWith("plugins\\", StringComparison.OrdinalIgnoreCase));
+
+                if (!hasSettingsJson && !hasPluginsFolder)
+                {
+                    MessageBox.Show(
+                        "Invalid settings file: missing settings.json or plugins folder.",
+                        "Import Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
+            // Confirm with user
+            var result = MessageBox.Show(
+                $"Import settings from:\n{Path.GetFileName(filePath)}\n\n" +
+                "This will replace all your current settings.\n\n" +
+                "Do you want to continue?",
+                "Import MouseEffects Settings",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+
+            if (result != DialogResult.Yes)
+            {
+                return;
+            }
+
+            // Delete existing settings with retry logic
+            if (Directory.Exists(settingsFolder))
+            {
+                DeleteDirectoryWithRetry(settingsFolder, maxRetries: 5, delayMs: 500);
+            }
+
+            // Create settings folder and extract
+            Directory.CreateDirectory(settingsFolder);
+            ZipFile.ExtractToDirectory(filePath, settingsFolder, overwriteFiles: true);
+
+            Log("Settings imported successfully");
+
+            // Show success and restart
+            MessageBox.Show(
+                "Settings imported successfully!\n\nMouseEffects will now start with the imported settings.",
+                "Import Complete",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            // Restart the application
+            var exePath = Environment.ProcessPath;
+            if (!string.IsNullOrEmpty(exePath))
+            {
+                System.Diagnostics.Process.Start(exePath);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("SettingsImport", ex);
+            MessageBox.Show(
+                $"Failed to import settings:\n{ex.Message}",
+                "Import Failed",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
+    }
+
+    /// <summary>
+    /// Delete a directory with retry logic for locked files.
+    /// </summary>
+    private static void DeleteDirectoryWithRetry(string path, int maxRetries, int delayMs)
+    {
+        for (int i = 0; i < maxRetries; i++)
+        {
+            try
+            {
+                // First try to delete all files
+                foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    try
+                    {
+                        File.SetAttributes(file, FileAttributes.Normal);
+                        File.Delete(file);
+                    }
+                    catch
+                    {
+                        // Will retry on next iteration
+                    }
+                }
+
+                // Then delete directories from deepest to shallowest
+                var dirs = Directory.GetDirectories(path, "*", SearchOption.AllDirectories)
+                    .OrderByDescending(d => d.Length)
+                    .ToList();
+
+                foreach (var dir in dirs)
+                {
+                    try
+                    {
+                        Directory.Delete(dir, false);
+                    }
+                    catch
+                    {
+                        // Will retry on next iteration
+                    }
+                }
+
+                // Finally delete the root
+                Directory.Delete(path, true);
+                return; // Success
+            }
+            catch (Exception ex)
+            {
+                Log($"Delete attempt {i + 1}/{maxRetries} failed: {ex.Message}");
+                if (i < maxRetries - 1)
+                {
+                    Thread.Sleep(delayMs);
+                }
+                else
+                {
+                    throw; // Final attempt failed
+                }
+            }
         }
     }
 
@@ -230,6 +431,8 @@ static partial class Program
             _trayManager.ExitRequested += OnExitRequested;
             _trayManager.EnabledChanged += OnEnabledChanged;
             _trayManager.EffectToggled += OnEffectToggled;
+            _trayManager.MenuOpened += OnTrayMenuOpened;
+            _trayManager.MenuClosed += OnTrayMenuClosed;
 
             // Populate the effects menu dynamically from loaded plugins
             PopulateTrayEffectsMenu();
@@ -593,6 +796,16 @@ static partial class Program
         {
             _effectManager.IsGloballyPaused = !enabled;
         }
+    }
+
+    private static void OnTrayMenuOpened()
+    {
+        SuspendTopmostEnforcement();
+    }
+
+    private static void OnTrayMenuClosed()
+    {
+        ResumeTopmostEnforcement();
     }
 
     private static void OnEffectToggled(string effectId, bool enabled)

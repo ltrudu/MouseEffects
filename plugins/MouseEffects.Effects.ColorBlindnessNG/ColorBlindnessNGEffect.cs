@@ -416,6 +416,12 @@ public sealed class ColorBlindnessNGEffect : EffectBase
             z.SimulationFilterType = filterType;
 
         // Correction settings
+        if (Configuration.TryGet($"{prefix}correctionAlgorithm", out int corrAlgo))
+            z.CorrectionAlgorithm = (CorrectionAlgorithm)corrAlgo;
+        if (Configuration.TryGet($"{prefix}daltonizationCVDType", out int daltonCVDType))
+            z.DaltonizationCVDType = daltonCVDType;
+        if (Configuration.TryGet($"{prefix}daltonizationStrength", out float daltonStrength))
+            z.DaltonizationStrength = daltonStrength;
         if (Configuration.TryGet($"{prefix}appMode", out int appMode))
             z.ApplicationMode = (ApplicationMode)appMode;
         if (Configuration.TryGet($"{prefix}gradientType", out int gradType))
@@ -628,6 +634,10 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 effectivePostSimFilterType = z.PostCorrectionSimFilterType + 6;
             }
 
+            // Calculate effective filter type for Daltonization
+            int effectiveDaltonizationCVDType = z.DaltonizationCVDType;
+            // Note: DaltonizationCVDType follows same encoding as simulation filter types
+
             var zoneParams = new ZoneParams
             {
                 Mode = (float)z.Mode,
@@ -655,7 +665,10 @@ public sealed class ColorBlindnessNGEffect : EffectBase
                 BlueDominanceThreshold = z.BlueChannel.DominanceThreshold,
                 RedBlendMode = (float)z.RedChannel.BlendMode,
                 GreenBlendMode = (float)z.GreenChannel.BlendMode,
-                BlueBlendMode = (float)z.BlueChannel.BlendMode
+                BlueBlendMode = (float)z.BlueChannel.BlendMode,
+                CorrectionAlgorithm = (float)z.CorrectionAlgorithm,
+                DaltonizationCVDType = effectiveDaltonizationCVDType,
+                DaltonizationStrength = z.DaltonizationStrength
             };
 
             switch (i)
@@ -709,7 +722,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
     /// <summary>
     /// Per-zone parameters packed for shader.
-    /// Size: 112 bytes (28 floats)
+    /// Size: 128 bytes (32 floats)
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct ZoneParams
@@ -746,15 +759,20 @@ public sealed class ColorBlindnessNGEffect : EffectBase
 
         public float GreenBlendMode;          // Per-channel blend mode for green
         public float BlueBlendMode;           // Per-channel blend mode for blue
+        public float CorrectionAlgorithm;     // 0=LUT-based, 1=Daltonization
+        public float DaltonizationCVDType;    // CVD type for Daltonization (1-6=Machado, 7-12=Strict)
+
+        public float DaltonizationStrength;   // Strength of Daltonization correction (0-1)
         public float _padding1;               // Padding for 16-byte alignment
         public float _padding2;               // Padding for 16-byte alignment
+        public float _padding3;               // Padding for 16-byte alignment
     }
 
     /// <summary>
     /// Full constant buffer for shader.
-    /// Size: 48 (global) + 4 * 112 (zones) = 496 bytes
+    /// Size: 48 (global) + 4 * 128 (zones) = 560 bytes
     /// </summary>
-    [StructLayout(LayoutKind.Sequential, Size = 496)]
+    [StructLayout(LayoutKind.Sequential, Size = 560)]
     private struct ColorBlindnessNGParams
     {
         // Global parameters (48 bytes)
