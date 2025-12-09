@@ -1242,11 +1242,23 @@ float3 ApplyCorrectionOnly(float3 color, ZoneParams zone, int zoneIndex)
 {
     float3 processedColor;
 
+    // Calculate simulation-guided weight for non-LUT algorithms
+    // (LUT functions handle this internally for per-channel control)
+    float simWeight = 1.0;
+    bool useSimGuided = zone.SimulationGuidedEnabled > 0.5 && zone.CorrectionAlgorithm > 0.5;
+    if (useSimGuided)
+    {
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType, zone.SimulationGuidedSensitivity);
+        // If no significant error detected, skip correction entirely
+        if (simWeight < 0.001)
+            return color;
+    }
+
     // Check which correction algorithm to use:
     // 0 = LUT-based, 1 = Daltonization, 2 = Hue Rotation, 3 = CIELAB Remapping
     if (zone.CorrectionAlgorithm < 0.5)
     {
-        // LUT-based correction
+        // LUT-based correction (handles simulation-guided internally)
         if (zoneIndex == 0)
             processedColor = ApplyLUTCorrectionZone0(color, zone);
         else if (zoneIndex == 1)
@@ -1288,7 +1300,13 @@ float3 ApplyCorrectionOnly(float3 color, ZoneParams zone, int zoneIndex)
     }
 
     // Apply intensity blend for correction (but NO post-correction simulation)
-    return lerp(color, processedColor, zone.Intensity);
+    // For non-LUT algorithms, also apply simulation-guided weight
+    float effectiveIntensity = zone.Intensity;
+    if (useSimGuided)
+    {
+        effectiveIntensity *= simWeight;
+    }
+    return lerp(color, processedColor, effectiveIntensity);
 }
 
 // Internal processing function for correction mode (Mode 2)
@@ -1297,12 +1315,24 @@ float3 ProcessZoneInternal(float3 color, ZoneParams zone, int zoneIndex)
 {
     float3 processedColor;
 
+    // Calculate simulation-guided weight for non-LUT algorithms
+    // (LUT functions handle this internally for per-channel control)
+    float simWeight = 1.0;
+    bool useSimGuided = zone.SimulationGuidedEnabled > 0.5 && zone.CorrectionAlgorithm > 0.5;
+    if (useSimGuided)
+    {
+        simWeight = GetSimulationGuidedWeight(color, zone.SimulationGuidedFilterType, zone.SimulationGuidedSensitivity);
+        // If no significant error detected, skip correction entirely
+        if (simWeight < 0.001)
+            return color;
+    }
+
     // Check which correction algorithm to use:
     // 0 = LUT-based, 1 = Daltonization, 2 = Hue Rotation, 3 = CIELAB Remapping
     if (zone.CorrectionAlgorithm < 0.5)
     {
         // LUT-based correction (original algorithm)
-        // Call zone-specific LUT function
+        // Call zone-specific LUT function (handles simulation-guided internally)
         if (zoneIndex == 0)
             processedColor = ApplyLUTCorrectionZone0(color, zone);
         else if (zoneIndex == 1)
@@ -1344,7 +1374,13 @@ float3 ProcessZoneInternal(float3 color, ZoneParams zone, int zoneIndex)
     }
 
     // Apply intensity blend for correction
-    processedColor = lerp(color, processedColor, zone.Intensity);
+    // For non-LUT algorithms, also apply simulation-guided weight
+    float effectiveIntensity = zone.Intensity;
+    if (useSimGuided)
+    {
+        effectiveIntensity *= simWeight;
+    }
+    processedColor = lerp(color, processedColor, effectiveIntensity);
 
     // Post-correction simulation: Apply CVD simulation AFTER correction
     // This allows non-colorblind users to verify how corrected colors appear to CVD users
