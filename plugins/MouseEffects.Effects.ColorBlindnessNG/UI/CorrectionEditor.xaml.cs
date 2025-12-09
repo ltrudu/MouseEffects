@@ -1,10 +1,7 @@
+using System;
 using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using MouseEffects.Core.UI;
-using WpfColor = System.Windows.Media.Color;
 
 namespace MouseEffects.Effects.ColorBlindnessNG.UI;
 
@@ -63,9 +60,12 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             RedWhiteProtLabel.Text = $"White Protection ({_zone.RedChannel.WhiteProtection:F2})";
             RedDominance.Value = _zone.RedChannel.DominanceThreshold;
             RedDominanceLabel.Text = FormatDominanceLabel(_zone.RedChannel.DominanceThreshold);
-            RedBlendModeCombo.SelectedIndex = (int)_zone.RedChannel.BlendMode;
-            RedStart.Background = new SolidColorBrush(Vector3ToColor(_zone.RedChannel.StartColor));
-            RedEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.RedChannel.EndColor));
+            RedGradient.StartColor = _zone.RedChannel.StartColor;
+            RedGradient.EndColor = _zone.RedChannel.EndColor;
+            RedGradient.GradientType = _zone.GradientType;
+            RedBlendMode.SelectedMode = _zone.RedChannel.BlendMode;
+            RedBlendMode.StartColor = _zone.RedChannel.StartColor;
+            RedBlendMode.EndColor = _zone.RedChannel.EndColor;
             RedPanel.Visibility = _zone.RedChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
 
             // Green channel
@@ -76,9 +76,12 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             GreenWhiteProtLabel.Text = $"White Protection ({_zone.GreenChannel.WhiteProtection:F2})";
             GreenDominance.Value = _zone.GreenChannel.DominanceThreshold;
             GreenDominanceLabel.Text = FormatDominanceLabel(_zone.GreenChannel.DominanceThreshold);
-            GreenBlendModeCombo.SelectedIndex = (int)_zone.GreenChannel.BlendMode;
-            GreenStart.Background = new SolidColorBrush(Vector3ToColor(_zone.GreenChannel.StartColor));
-            GreenEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.GreenChannel.EndColor));
+            GreenGradient.StartColor = _zone.GreenChannel.StartColor;
+            GreenGradient.EndColor = _zone.GreenChannel.EndColor;
+            GreenGradient.GradientType = _zone.GradientType;
+            GreenBlendMode.SelectedMode = _zone.GreenChannel.BlendMode;
+            GreenBlendMode.StartColor = _zone.GreenChannel.StartColor;
+            GreenBlendMode.EndColor = _zone.GreenChannel.EndColor;
             GreenPanel.Visibility = _zone.GreenChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
 
             // Blue channel
@@ -89,10 +92,16 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
             BlueWhiteProtLabel.Text = $"White Protection ({_zone.BlueChannel.WhiteProtection:F2})";
             BlueDominance.Value = _zone.BlueChannel.DominanceThreshold;
             BlueDominanceLabel.Text = FormatDominanceLabel(_zone.BlueChannel.DominanceThreshold);
-            BlueBlendModeCombo.SelectedIndex = (int)_zone.BlueChannel.BlendMode;
-            BlueStart.Background = new SolidColorBrush(Vector3ToColor(_zone.BlueChannel.StartColor));
-            BlueEnd.Background = new SolidColorBrush(Vector3ToColor(_zone.BlueChannel.EndColor));
+            BlueGradient.StartColor = _zone.BlueChannel.StartColor;
+            BlueGradient.EndColor = _zone.BlueChannel.EndColor;
+            BlueGradient.GradientType = _zone.GradientType;
+            BlueBlendMode.SelectedMode = _zone.BlueChannel.BlendMode;
+            BlueBlendMode.StartColor = _zone.BlueChannel.StartColor;
+            BlueBlendMode.EndColor = _zone.BlueChannel.EndColor;
             BluePanel.Visibility = _zone.BlueChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
+
+            // Update preview strip
+            UpdatePreviewStrip();
         }
         finally
         {
@@ -183,33 +192,75 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
 
         _zone.GradientType = (GradientType)GradientCombo.SelectedIndex;
 
+        // Update gradient editors with new interpolation type
+        RedGradient.GradientType = _zone.GradientType;
+        GreenGradient.GradientType = _zone.GradientType;
+        BlueGradient.GradientType = _zone.GradientType;
+
+        UpdatePreviewStrip();
         OnSettingsChanged();
     }
 
-    private void RedBlendMode_Changed(object sender, SelectionChangedEventArgs e)
+    private void RedBlendMode_SelectionChanged(object? sender, EventArgs e)
     {
         if (_isLoading || _zone == null) return;
 
-        _zone.RedChannel.BlendMode = (LutBlendMode)RedBlendModeCombo.SelectedIndex;
-
+        _zone.RedChannel.BlendMode = RedBlendMode.SelectedMode;
+        UpdatePreviewStrip();
         OnSettingsChanged();
     }
 
-    private void GreenBlendMode_Changed(object sender, SelectionChangedEventArgs e)
+    private void GreenBlendMode_SelectionChanged(object? sender, EventArgs e)
     {
         if (_isLoading || _zone == null) return;
 
-        _zone.GreenChannel.BlendMode = (LutBlendMode)GreenBlendModeCombo.SelectedIndex;
-
+        _zone.GreenChannel.BlendMode = GreenBlendMode.SelectedMode;
+        UpdatePreviewStrip();
         OnSettingsChanged();
     }
 
-    private void BlueBlendMode_Changed(object sender, SelectionChangedEventArgs e)
+    private void BlueBlendMode_SelectionChanged(object? sender, EventArgs e)
     {
         if (_isLoading || _zone == null) return;
 
-        _zone.BlueChannel.BlendMode = (LutBlendMode)BlueBlendModeCombo.SelectedIndex;
+        _zone.BlueChannel.BlendMode = BlueBlendMode.SelectedMode;
+        UpdatePreviewStrip();
+        OnSettingsChanged();
+    }
 
+    private void RedGradient_ValueChanged(object? sender, EventArgs e)
+    {
+        if (_isLoading || _zone == null) return;
+
+        _zone.RedChannel.StartColor = RedGradient.StartColor;
+        _zone.RedChannel.EndColor = RedGradient.EndColor;
+        RedBlendMode.StartColor = RedGradient.StartColor;
+        RedBlendMode.EndColor = RedGradient.EndColor;
+        UpdatePreviewStrip();
+        OnSettingsChanged();
+    }
+
+    private void GreenGradient_ValueChanged(object? sender, EventArgs e)
+    {
+        if (_isLoading || _zone == null) return;
+
+        _zone.GreenChannel.StartColor = GreenGradient.StartColor;
+        _zone.GreenChannel.EndColor = GreenGradient.EndColor;
+        GreenBlendMode.StartColor = GreenGradient.StartColor;
+        GreenBlendMode.EndColor = GreenGradient.EndColor;
+        UpdatePreviewStrip();
+        OnSettingsChanged();
+    }
+
+    private void BlueGradient_ValueChanged(object? sender, EventArgs e)
+    {
+        if (_isLoading || _zone == null) return;
+
+        _zone.BlueChannel.StartColor = BlueGradient.StartColor;
+        _zone.BlueChannel.EndColor = BlueGradient.EndColor;
+        BlueBlendMode.StartColor = BlueGradient.StartColor;
+        BlueBlendMode.EndColor = BlueGradient.EndColor;
+        UpdatePreviewStrip();
         OnSettingsChanged();
     }
 
@@ -249,6 +300,7 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         GreenPanel.Visibility = _zone.GreenChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
         BluePanel.Visibility = _zone.BlueChannel.Enabled ? Visibility.Visible : Visibility.Collapsed;
 
+        UpdatePreviewStrip();
         OnSettingsChanged();
     }
 
@@ -257,49 +309,18 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         Channel_Changed(sender, (RoutedEventArgs)e);
     }
 
-    private void RedStart_Click(object sender, MouseButtonEventArgs e) =>
-        PickColor(RedStart, c => { if (_zone != null) _zone.RedChannel.StartColor = ColorToVector3(c); });
-
-    private void RedEnd_Click(object sender, MouseButtonEventArgs e) =>
-        PickColor(RedEnd, c => { if (_zone != null) _zone.RedChannel.EndColor = ColorToVector3(c); });
-
-    private void GreenStart_Click(object sender, MouseButtonEventArgs e) =>
-        PickColor(GreenStart, c => { if (_zone != null) _zone.GreenChannel.StartColor = ColorToVector3(c); });
-
-    private void GreenEnd_Click(object sender, MouseButtonEventArgs e) =>
-        PickColor(GreenEnd, c => { if (_zone != null) _zone.GreenChannel.EndColor = ColorToVector3(c); });
-
-    private void BlueStart_Click(object sender, MouseButtonEventArgs e) =>
-        PickColor(BlueStart, c => { if (_zone != null) _zone.BlueChannel.StartColor = ColorToVector3(c); });
-
-    private void BlueEnd_Click(object sender, MouseButtonEventArgs e) =>
-        PickColor(BlueEnd, c => { if (_zone != null) _zone.BlueChannel.EndColor = ColorToVector3(c); });
-
-    private void PickColor(Border colorBorder, Action<WpfColor> updateZone)
+    private void UpdatePreviewStrip()
     {
-        var currentColor = ((SolidColorBrush)colorBorder.Background).Color;
+        if (_zone == null) return;
 
-        var dialog = new System.Windows.Forms.ColorDialog
-        {
-            Color = System.Drawing.Color.FromArgb(currentColor.R, currentColor.G, currentColor.B),
-            FullOpen = true
-        };
-
-        DialogHelper.SuspendOverlayTopmost();
-        try
-        {
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-            {
-                var newColor = WpfColor.FromRgb(dialog.Color.R, dialog.Color.G, dialog.Color.B);
-                colorBorder.Background = new SolidColorBrush(newColor);
-                updateZone(newColor);
-                OnSettingsChanged();
-            }
-        }
-        finally
-        {
-            DialogHelper.ResumeOverlayTopmost();
-        }
+        PreviewStrip.RedChannel = _zone.RedChannel;
+        PreviewStrip.GreenChannel = _zone.GreenChannel;
+        PreviewStrip.BlueChannel = _zone.BlueChannel;
+        PreviewStrip.GradientType = _zone.GradientType;
+        PreviewStrip.ApplicationMode = _zone.ApplicationMode;
+        PreviewStrip.Threshold = _zone.Threshold;
+        PreviewStrip.Intensity = _zone.Intensity;
+        PreviewStrip.Refresh();
     }
 
     private void OnSettingsChanged()
@@ -310,12 +331,6 @@ public partial class CorrectionEditor : System.Windows.Controls.UserControl
         }
         SettingsChanged?.Invoke(this, EventArgs.Empty);
     }
-
-    private static WpfColor Vector3ToColor(Vector3 v) =>
-        WpfColor.FromRgb((byte)(v.X * 255), (byte)(v.Y * 255), (byte)(v.Z * 255));
-
-    private static Vector3 ColorToVector3(WpfColor c) =>
-        new(c.R / 255f, c.G / 255f, c.B / 255f);
 
     private static string FormatDominanceLabel(float value)
     {

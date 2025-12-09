@@ -104,9 +104,8 @@ public partial class ZoneSettingsEditor : UserControl
         // Refresh the CorrectionEditor to show new values
         CorrectionEditor.BindToZone(_zone);
 
-        // Refresh simulation-guided and post-simulation UI
+        // Refresh simulation-guided UI
         RefreshSimulationGuidedUI();
-        RefreshPostSimulationUI();
 
         OnSettingsChanged();
     }
@@ -124,26 +123,6 @@ public partial class ZoneSettingsEditor : UserControl
             SimGuidedFilterCombo.SelectedIndex = MapFilterTypeToComboIndex(_zone.SimulationGuidedFilterType);
             SimGuidedSensitivitySlider.Value = _zone.SimulationGuidedSensitivity;
             SimGuidedSensitivityLabel.Text = $"Sensitivity ({_zone.SimulationGuidedSensitivity:F2})";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
-    }
-
-    private void RefreshPostSimulationUI()
-    {
-        if (_zone == null) return;
-        _isLoading = true;
-        try
-        {
-            PostSimCheckBox.IsChecked = _zone.PostCorrectionSimEnabled;
-            PostSimPanel.Visibility = _zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
-            PostSimMachadoRadio.IsChecked = _zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
-            PostSimStrictRadio.IsChecked = _zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
-            PostSimFilterCombo.SelectedIndex = MapFilterTypeToComboIndex(_zone.PostCorrectionSimFilterType);
-            PostSimIntensitySlider.Value = _zone.PostCorrectionSimIntensity;
-            PostSimIntensityLabel.Text = $"Simulation Intensity ({_zone.PostCorrectionSimIntensity:F2})";
         }
         finally
         {
@@ -181,12 +160,12 @@ public partial class ZoneSettingsEditor : UserControl
             HueRotationStrengthLabel.Text = $"Strength ({_zone.HueRotationStrength:F2})";
             HueRotationAdvancedCheckBox.IsChecked = _zone.HueRotationAdvancedMode;
             HueRotationAdvancedPanel.Visibility = _zone.HueRotationAdvancedMode ? Visibility.Visible : Visibility.Collapsed;
-            HueRotationSourceStartSlider.Value = _zone.HueRotationSourceStart;
-            HueRotationSourceStartLabel.Text = $"Source Start ({_zone.HueRotationSourceStart:F0}°)";
-            HueRotationSourceEndSlider.Value = _zone.HueRotationSourceEnd;
-            HueRotationSourceEndLabel.Text = $"Source End ({_zone.HueRotationSourceEnd:F0}°)";
-            HueRotationShiftSlider.Value = _zone.HueRotationShift;
-            HueRotationShiftLabel.Text = $"Hue Shift ({(_zone.HueRotationShift >= 0 ? "+" : "")}{_zone.HueRotationShift:F0}°)";
+            HueWheelControl.SourceStart = _zone.HueRotationSourceStart;
+            HueWheelControl.SourceEnd = _zone.HueRotationSourceEnd;
+            HueWheelControl.HueShift = _zone.HueRotationShift;
+            HueRotationSourceStartLabel.Text = $"Start: {_zone.HueRotationSourceStart:F0}°";
+            HueRotationSourceEndLabel.Text = $"End: {_zone.HueRotationSourceEnd:F0}°";
+            HueRotationShiftLabel.Text = $"Shift: {(_zone.HueRotationShift >= 0 ? "+" : "")}{_zone.HueRotationShift:F0}°";
             HueRotationFalloffSlider.Value = _zone.HueRotationFalloff;
             HueRotationFalloffLabel.Text = $"Edge Falloff ({_zone.HueRotationFalloff:F2})";
 
@@ -207,6 +186,14 @@ public partial class ZoneSettingsEditor : UserControl
             CIELABLEnhanceSlider.Value = _zone.CIELABLEnhance;
             CIELABLEnhanceLabel.Text = $"Lightness Encoding ({_zone.CIELABLEnhance:F2})";
 
+            // CIELAB visual controls
+            CIELABAxisControl.AtoBTransfer = _zone.CIELABAtoB;
+            CIELABAxisControl.BtoATransfer = _zone.CIELABBtoA;
+            CIELABAxisControl.AEnhance = _zone.CIELABAEnhance;
+            CIELABAxisControl.BEnhance = _zone.CIELABBEnhance;
+            CIELABAxisControl.LEnhance = _zone.CIELABLEnhance;
+            UpdateCIELABPreview();
+
             // Daltonization
             DaltonizationCVDCombo.SelectedIndex = MapDaltonizationCVDToComboIndex(_zone.DaltonizationCVDType);
             DaltonizationStrengthSlider.Value = _zone.DaltonizationStrength;
@@ -220,15 +207,6 @@ public partial class ZoneSettingsEditor : UserControl
             SimGuidedFilterCombo.SelectedIndex = MapFilterTypeToComboIndex(_zone.SimulationGuidedFilterType);
             SimGuidedSensitivitySlider.Value = _zone.SimulationGuidedSensitivity;
             SimGuidedSensitivityLabel.Text = $"Sensitivity ({_zone.SimulationGuidedSensitivity:F2})";
-
-            // Post-Simulation
-            PostSimCheckBox.IsChecked = _zone.PostCorrectionSimEnabled;
-            PostSimPanel.Visibility = _zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
-            PostSimMachadoRadio.IsChecked = _zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Machado;
-            PostSimStrictRadio.IsChecked = _zone.PostCorrectionSimAlgorithm == SimulationAlgorithm.Strict;
-            PostSimFilterCombo.SelectedIndex = MapFilterTypeToComboIndex(_zone.PostCorrectionSimFilterType);
-            PostSimIntensitySlider.Value = _zone.PostCorrectionSimIntensity;
-            PostSimIntensityLabel.Text = $"Simulation Intensity ({_zone.PostCorrectionSimIntensity:F2})";
 
             // Re-simulation
             ReSimMachadoRadio.IsChecked = _zone.ReSimulationAlgorithm == SimulationAlgorithm.Machado;
@@ -283,6 +261,8 @@ public partial class ZoneSettingsEditor : UserControl
         CorrectionPanel.Visibility = mode == 2 ? Visibility.Visible : Visibility.Collapsed;
         ReSimulationPanel.Visibility = mode == 3 ? Visibility.Visible : Visibility.Collapsed;
         IntensityPanel.Visibility = mode > 0 && mode < 3 ? Visibility.Visible : Visibility.Collapsed;
+        // Show simulation-guided options for all correction algorithms
+        SimGuidedSharedPanel.Visibility = mode == 2 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>
@@ -463,6 +443,14 @@ public partial class ZoneSettingsEditor : UserControl
     private void UpdateCorrectionAlgorithmUI()
     {
         int algorithm = CorrectionAlgorithmCombo.SelectedIndex;
+
+        // Show description for selected algorithm
+        LUTDescriptionText.Visibility = algorithm == 0 ? Visibility.Visible : Visibility.Collapsed;
+        DaltonizationDescriptionText.Visibility = algorithm == 1 ? Visibility.Visible : Visibility.Collapsed;
+        HueRotationDescriptionText.Visibility = algorithm == 2 ? Visibility.Visible : Visibility.Collapsed;
+        CIELABDescriptionText.Visibility = algorithm == 3 ? Visibility.Visible : Visibility.Collapsed;
+
+        // Show settings panel for selected algorithm
         LUTPanel.Visibility = algorithm == 0 ? Visibility.Visible : Visibility.Collapsed;
         DaltonizationPanel.Visibility = algorithm == 1 ? Visibility.Visible : Visibility.Collapsed;
         HueRotationPanel.Visibility = algorithm == 2 ? Visibility.Visible : Visibility.Collapsed;
@@ -478,6 +466,30 @@ public partial class ZoneSettingsEditor : UserControl
         if (_zone == null || _effect == null || _isLoading) return;
         _zone.HueRotationCVDType = (CVDCorrectionType)HueRotationCVDCombo.SelectedIndex;
         _effect.Configuration.Set(ConfigKey("hueRotCVDType"), (int)_zone.HueRotationCVDType);
+
+        // Apply defaults for the selected CVD type to the wheel
+        var (sourceStart, sourceEnd, shift, falloff) = GetHueRotationDefaults(_zone.HueRotationCVDType);
+        _zone.HueRotationSourceStart = sourceStart;
+        _zone.HueRotationSourceEnd = sourceEnd;
+        _zone.HueRotationShift = shift;
+        _zone.HueRotationFalloff = falloff;
+
+        // Update wheel and UI
+        HueWheelControl.SourceStart = sourceStart;
+        HueWheelControl.SourceEnd = sourceEnd;
+        HueWheelControl.HueShift = shift;
+        HueRotationSourceStartLabel.Text = $"Start: {sourceStart:F0}°";
+        HueRotationSourceEndLabel.Text = $"End: {sourceEnd:F0}°";
+        HueRotationShiftLabel.Text = $"Shift: {(shift >= 0 ? "+" : "")}{shift:F0}°";
+        HueRotationFalloffSlider.Value = falloff;
+        HueRotationFalloffLabel.Text = $"Edge Falloff ({falloff:F2})";
+
+        // Save to config
+        _effect.Configuration.Set(ConfigKey("hueRotSourceStart"), sourceStart);
+        _effect.Configuration.Set(ConfigKey("hueRotSourceEnd"), sourceEnd);
+        _effect.Configuration.Set(ConfigKey("hueRotShift"), shift);
+        _effect.Configuration.Set(ConfigKey("hueRotFalloff"), falloff);
+
         OnSettingsChanged();
     }
 
@@ -499,30 +511,25 @@ public partial class ZoneSettingsEditor : UserControl
         OnSettingsChanged();
     }
 
-    private void HueRotationSourceStart_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void HueWheel_ValueChanged(object? sender, EventArgs e)
     {
         if (_zone == null || _effect == null || _isLoading) return;
-        _zone.HueRotationSourceStart = (float)HueRotationSourceStartSlider.Value;
-        HueRotationSourceStartLabel.Text = $"Source Start ({_zone.HueRotationSourceStart:F0}°)";
+
+        // Update zone from wheel values
+        _zone.HueRotationSourceStart = (float)HueWheelControl.SourceStart;
+        _zone.HueRotationSourceEnd = (float)HueWheelControl.SourceEnd;
+        _zone.HueRotationShift = (float)HueWheelControl.HueShift;
+
+        // Update labels
+        HueRotationSourceStartLabel.Text = $"Start: {_zone.HueRotationSourceStart:F0}°";
+        HueRotationSourceEndLabel.Text = $"End: {_zone.HueRotationSourceEnd:F0}°";
+        HueRotationShiftLabel.Text = $"Shift: {(_zone.HueRotationShift >= 0 ? "+" : "")}{_zone.HueRotationShift:F0}°";
+
+        // Save to config
         _effect.Configuration.Set(ConfigKey("hueRotSourceStart"), _zone.HueRotationSourceStart);
-        OnSettingsChanged();
-    }
-
-    private void HueRotationSourceEnd_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_zone == null || _effect == null || _isLoading) return;
-        _zone.HueRotationSourceEnd = (float)HueRotationSourceEndSlider.Value;
-        HueRotationSourceEndLabel.Text = $"Source End ({_zone.HueRotationSourceEnd:F0}°)";
         _effect.Configuration.Set(ConfigKey("hueRotSourceEnd"), _zone.HueRotationSourceEnd);
-        OnSettingsChanged();
-    }
-
-    private void HueRotationShift_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_zone == null || _effect == null || _isLoading) return;
-        _zone.HueRotationShift = (float)HueRotationShiftSlider.Value;
-        HueRotationShiftLabel.Text = $"Hue Shift ({(_zone.HueRotationShift >= 0 ? "+" : "")}{_zone.HueRotationShift:F0}°)";
         _effect.Configuration.Set(ConfigKey("hueRotShift"), _zone.HueRotationShift);
+
         OnSettingsChanged();
     }
 
@@ -551,13 +558,15 @@ public partial class ZoneSettingsEditor : UserControl
             _zone.HueRotationShift = shift;
             _zone.HueRotationFalloff = falloff;
 
-            // Update UI
-            HueRotationSourceStartSlider.Value = sourceStart;
-            HueRotationSourceStartLabel.Text = $"Source Start ({sourceStart:F0}°)";
-            HueRotationSourceEndSlider.Value = sourceEnd;
-            HueRotationSourceEndLabel.Text = $"Source End ({sourceEnd:F0}°)";
-            HueRotationShiftSlider.Value = shift;
-            HueRotationShiftLabel.Text = $"Hue Shift ({(shift >= 0 ? "+" : "")}{shift:F0}°)";
+            // Update wheel control
+            HueWheelControl.SourceStart = sourceStart;
+            HueWheelControl.SourceEnd = sourceEnd;
+            HueWheelControl.HueShift = shift;
+
+            // Update labels
+            HueRotationSourceStartLabel.Text = $"Start: {sourceStart:F0}°";
+            HueRotationSourceEndLabel.Text = $"End: {sourceEnd:F0}°";
+            HueRotationShiftLabel.Text = $"Shift: {(shift >= 0 ? "+" : "")}{shift:F0}°";
             HueRotationFalloffSlider.Value = falloff;
             HueRotationFalloffLabel.Text = $"Edge Falloff ({falloff:F2})";
 
@@ -609,6 +618,7 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABStrength = (float)CIELABStrengthSlider.Value;
         CIELABStrengthLabel.Text = $"Strength ({_zone.CIELABStrength:F2})";
         _effect.Configuration.Set(ConfigKey("cielabStrength"), _zone.CIELABStrength);
+        UpdateCIELABPreview();
         OnSettingsChanged();
     }
 
@@ -645,6 +655,8 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABAEnhance = (float)CIELABAEnhanceSlider.Value;
         CIELABAEnhanceLabel.Text = $"a* Enhancement ({_zone.CIELABAEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabAEnhance"), _zone.CIELABAEnhance);
+        CIELABAxisControl.AEnhance = _zone.CIELABAEnhance;
+        UpdateCIELABPreview();
         OnSettingsChanged();
     }
 
@@ -654,6 +666,8 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABBEnhance = (float)CIELABBEnhanceSlider.Value;
         CIELABBEnhanceLabel.Text = $"b* Enhancement ({_zone.CIELABBEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabBEnhance"), _zone.CIELABBEnhance);
+        CIELABAxisControl.BEnhance = _zone.CIELABBEnhance;
+        UpdateCIELABPreview();
         OnSettingsChanged();
     }
 
@@ -663,7 +677,45 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABLEnhance = (float)CIELABLEnhanceSlider.Value;
         CIELABLEnhanceLabel.Text = $"Lightness Encoding ({_zone.CIELABLEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabLEnhance"), _zone.CIELABLEnhance);
+        CIELABAxisControl.LEnhance = _zone.CIELABLEnhance;
+        UpdateCIELABPreview();
         OnSettingsChanged();
+    }
+
+    private void CIELABAxis_ValueChanged(object? sender, EventArgs e)
+    {
+        if (_zone == null || _effect == null || _isLoading) return;
+
+        // Get values from the axis control
+        _zone.CIELABAtoB = (float)CIELABAxisControl.AtoBTransfer;
+        _zone.CIELABBtoA = (float)CIELABAxisControl.BtoATransfer;
+
+        // Update hidden sliders (for persistence)
+        CIELABAtoBSlider.Value = _zone.CIELABAtoB;
+        CIELABBtoASlider.Value = _zone.CIELABBtoA;
+
+        // Update labels
+        CIELABAtoBLabel.Text = $"a* → b* Transfer ({_zone.CIELABAtoB:F2})";
+        CIELABBtoALabel.Text = $"b* → a* Transfer ({_zone.CIELABBtoA:F2})";
+
+        // Save to config
+        _effect.Configuration.Set(ConfigKey("cielabAtoB"), _zone.CIELABAtoB);
+        _effect.Configuration.Set(ConfigKey("cielabBtoA"), _zone.CIELABBtoA);
+
+        UpdateCIELABPreview();
+        OnSettingsChanged();
+    }
+
+    private void UpdateCIELABPreview()
+    {
+        if (_zone == null) return;
+
+        CIELABPreview.AtoBTransfer = _zone.CIELABAtoB;
+        CIELABPreview.BtoATransfer = _zone.CIELABBtoA;
+        CIELABPreview.AEnhance = _zone.CIELABAEnhance;
+        CIELABPreview.BEnhance = _zone.CIELABBEnhance;
+        CIELABPreview.LEnhance = _zone.CIELABLEnhance;
+        CIELABPreview.Strength = _zone.CIELABStrength;
     }
 
     private void CIELABReset_Click(object sender, RoutedEventArgs e)
@@ -683,7 +735,7 @@ public partial class ZoneSettingsEditor : UserControl
             _zone.CIELABBEnhance = bEnhance;
             _zone.CIELABLEnhance = lEnhance;
 
-            // Update UI
+            // Update UI - sliders
             CIELABAtoBSlider.Value = aToB;
             CIELABAtoBLabel.Text = $"a* → b* Transfer ({aToB:F2})";
             CIELABBtoASlider.Value = bToA;
@@ -694,6 +746,14 @@ public partial class ZoneSettingsEditor : UserControl
             CIELABBEnhanceLabel.Text = $"b* Enhancement ({bEnhance:F2})";
             CIELABLEnhanceSlider.Value = lEnhance;
             CIELABLEnhanceLabel.Text = $"Lightness Encoding ({lEnhance:F2})";
+
+            // Update UI - visual controls
+            CIELABAxisControl.AtoBTransfer = aToB;
+            CIELABAxisControl.BtoATransfer = bToA;
+            CIELABAxisControl.AEnhance = aEnhance;
+            CIELABAxisControl.BEnhance = bEnhance;
+            CIELABAxisControl.LEnhance = lEnhance;
+            UpdateCIELABPreview();
 
             // Save to config
             _effect.Configuration.Set(ConfigKey("cielabAtoB"), aToB);
@@ -781,44 +841,6 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.SimulationGuidedSensitivity = (float)SimGuidedSensitivitySlider.Value;
         SimGuidedSensitivityLabel.Text = $"Sensitivity ({_zone.SimulationGuidedSensitivity:F2})";
         _effect.Configuration.Set(ConfigKey("simGuidedSensitivity"), _zone.SimulationGuidedSensitivity);
-        OnSettingsChanged();
-    }
-
-    #endregion
-
-    #region Post-Simulation Handlers
-
-    private void PostSim_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_zone == null || _effect == null || _isLoading) return;
-        _zone.PostCorrectionSimEnabled = PostSimCheckBox.IsChecked == true;
-        PostSimPanel.Visibility = _zone.PostCorrectionSimEnabled ? Visibility.Visible : Visibility.Collapsed;
-        _effect.Configuration.Set(ConfigKey("postSimEnabled"), _zone.PostCorrectionSimEnabled);
-        OnSettingsChanged();
-    }
-
-    private void PostSimAlgorithm_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_zone == null || _effect == null || _isLoading) return;
-        _zone.PostCorrectionSimAlgorithm = PostSimStrictRadio.IsChecked == true ? SimulationAlgorithm.Strict : SimulationAlgorithm.Machado;
-        _effect.Configuration.Set(ConfigKey("postSimAlgorithm"), (int)_zone.PostCorrectionSimAlgorithm);
-        OnSettingsChanged();
-    }
-
-    private void PostSimFilter_Changed(object sender, SelectionChangedEventArgs e)
-    {
-        if (_zone == null || _effect == null || _isLoading) return;
-        _zone.PostCorrectionSimFilterType = MapComboIndexToFilterType(PostSimFilterCombo.SelectedIndex);
-        _effect.Configuration.Set(ConfigKey("postSimFilterType"), _zone.PostCorrectionSimFilterType);
-        OnSettingsChanged();
-    }
-
-    private void PostSimIntensity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_zone == null || _effect == null || _isLoading) return;
-        _zone.PostCorrectionSimIntensity = (float)PostSimIntensitySlider.Value;
-        PostSimIntensityLabel.Text = $"Simulation Intensity ({_zone.PostCorrectionSimIntensity:F2})";
-        _effect.Configuration.Set(ConfigKey("postSimIntensity"), _zone.PostCorrectionSimIntensity);
         OnSettingsChanged();
     }
 

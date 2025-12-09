@@ -1,6 +1,7 @@
 <UserControl x:Class="MouseEffects.Effects.ColorBlindnessNG.UI.CorrectionEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MouseEffects.Effects.ColorBlindnessNG.UI">
     <UserControl.Resources>
         <Style x:Key="LabelStyle" TargetType="TextBlock">
             <Setter Property="FontWeight" Value="SemiBold"/>
@@ -46,6 +47,10 @@
             <ComboBoxItem Content="HSL"/>
         </ComboBox>
 
+        <!-- Color Transformation Preview -->
+        <TextBlock Text="Color Transformation Preview" Style="{StaticResource LabelStyle}"/>
+        <local:ColorPreviewStrip x:Name="PreviewStrip" Height="60" Margin="0,0,0,8"/>
+
         <Separator Margin="0,8,0,8"/>
 
         <!-- Red Channel -->
@@ -63,36 +68,23 @@
             <TextBlock x:Name="RedStrengthLabel" Text="Strength (1.00)" Style="{StaticResource SmallLabelStyle}"/>
             <Slider x:Name="RedStrength" Minimum="0" Maximum="1" Value="1"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock x:Name="RedWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
+
+            <!-- Color Mapping Gradient -->
+            <TextBlock Text="Color Mapping" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,4"/>
+            <local:GradientEditor x:Name="RedGradient" Height="32" ValueChanged="RedGradient_ValueChanged"/>
+
+            <TextBlock x:Name="RedWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,0"/>
             <Slider x:Name="RedWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
             <TextBlock x:Name="RedDominanceLabel" Text="Dominance Threshold (Off)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
                        ToolTip="Min % of total color this channel must have. Use to exclude yellows when correcting reds."/>
             <Slider x:Name="RedDominance" Minimum="0" Maximum="0.9" Value="0"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+
+            <!-- Blend Mode Visual Selection -->
+            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,4"
                        ToolTip="How LUT colors blend with original. Try 'Direct' for dark colors."/>
-            <ComboBox x:Name="RedBlendModeCombo" SelectionChanged="RedBlendMode_Changed" Margin="0,2,0,0">
-                <ComboBoxItem Content="Channel-Weighted" IsSelected="True" ToolTip="Blend depends on channel intensity"/>
-                <ComboBoxItem Content="Direct" ToolTip="Full replacement - best for dark colors"/>
-                <ComboBoxItem Content="Proportional" ToolTip="Based on channel dominance"/>
-                <ComboBoxItem Content="Additive" ToolTip="Preserves luminosity"/>
-                <ComboBoxItem Content="Screen" ToolTip="Brightens colors"/>
-            </ComboBox>
-            <Grid Margin="0,4,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Border x:Name="RedStart" Grid.Column="0" Height="20" Background="#FF0000"
-                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                        MouseLeftButtonDown="RedStart_Click"/>
-                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4" Foreground="White"/>
-                <Border x:Name="RedEnd" Grid.Column="2" Height="20" Background="#00FFFF"
-                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                        MouseLeftButtonDown="RedEnd_Click"/>
-            </Grid>
+            <local:BlendModePreview x:Name="RedBlendMode" Height="36" SelectionChanged="RedBlendMode_SelectionChanged"/>
         </StackPanel>
 
         <!-- Green Channel -->
@@ -110,36 +102,23 @@
             <TextBlock x:Name="GreenStrengthLabel" Text="Strength (1.00)" Style="{StaticResource SmallLabelStyle}"/>
             <Slider x:Name="GreenStrength" Minimum="0" Maximum="1" Value="1"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock x:Name="GreenWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
+
+            <!-- Color Mapping Gradient -->
+            <TextBlock Text="Color Mapping" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,4"/>
+            <local:GradientEditor x:Name="GreenGradient" Height="32" ValueChanged="GreenGradient_ValueChanged"/>
+
+            <TextBlock x:Name="GreenWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,0"/>
             <Slider x:Name="GreenWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
             <TextBlock x:Name="GreenDominanceLabel" Text="Dominance Threshold (Off)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
                        ToolTip="Min % of total color this channel must have. Use to exclude cyans when correcting greens."/>
             <Slider x:Name="GreenDominance" Minimum="0" Maximum="0.9" Value="0"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+
+            <!-- Blend Mode Visual Selection -->
+            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,4"
                        ToolTip="How LUT colors blend with original. Try 'Direct' for dark colors."/>
-            <ComboBox x:Name="GreenBlendModeCombo" SelectionChanged="GreenBlendMode_Changed" Margin="0,2,0,0">
-                <ComboBoxItem Content="Channel-Weighted" IsSelected="True" ToolTip="Blend depends on channel intensity"/>
-                <ComboBoxItem Content="Direct" ToolTip="Full replacement - best for dark colors"/>
-                <ComboBoxItem Content="Proportional" ToolTip="Based on channel dominance"/>
-                <ComboBoxItem Content="Additive" ToolTip="Preserves luminosity"/>
-                <ComboBoxItem Content="Screen" ToolTip="Brightens colors"/>
-            </ComboBox>
-            <Grid Margin="0,4,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Border x:Name="GreenStart" Grid.Column="0" Height="20" Background="#00FF00"
-                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                        MouseLeftButtonDown="GreenStart_Click"/>
-                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4" Foreground="White"/>
-                <Border x:Name="GreenEnd" Grid.Column="2" Height="20" Background="#00FFFF"
-                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                        MouseLeftButtonDown="GreenEnd_Click"/>
-            </Grid>
+            <local:BlendModePreview x:Name="GreenBlendMode" Height="36" SelectionChanged="GreenBlendMode_SelectionChanged"/>
         </StackPanel>
 
         <!-- Blue Channel -->
@@ -157,36 +136,23 @@
             <TextBlock x:Name="BlueStrengthLabel" Text="Strength (1.00)" Style="{StaticResource SmallLabelStyle}"/>
             <Slider x:Name="BlueStrength" Minimum="0" Maximum="1" Value="1"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock x:Name="BlueWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"/>
+
+            <!-- Color Mapping Gradient -->
+            <TextBlock Text="Color Mapping" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,4"/>
+            <local:GradientEditor x:Name="BlueGradient" Height="32" ValueChanged="BlueGradient_ValueChanged"/>
+
+            <TextBlock x:Name="BlueWhiteProtLabel" Text="White Protection (0.01)" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,0"/>
             <Slider x:Name="BlueWhiteProt" Minimum="0.01" Maximum="1" Value="0.01"
                     ValueChanged="Channel_Changed"/>
             <TextBlock x:Name="BlueDominanceLabel" Text="Dominance Threshold (Off)" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
                        ToolTip="Min % of total color this channel must have. Use to exclude purples when correcting blues."/>
             <Slider x:Name="BlueDominance" Minimum="0" Maximum="0.9" Value="0"
                     ValueChanged="Channel_Changed"/>
-            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,4,0,0"
+
+            <!-- Blend Mode Visual Selection -->
+            <TextBlock Text="Blend Mode" Style="{StaticResource SmallLabelStyle}" Margin="0,8,0,4"
                        ToolTip="How LUT colors blend with original. Try 'Direct' for dark colors."/>
-            <ComboBox x:Name="BlueBlendModeCombo" SelectionChanged="BlueBlendMode_Changed" Margin="0,2,0,0">
-                <ComboBoxItem Content="Channel-Weighted" IsSelected="True" ToolTip="Blend depends on channel intensity"/>
-                <ComboBoxItem Content="Direct" ToolTip="Full replacement - best for dark colors"/>
-                <ComboBoxItem Content="Proportional" ToolTip="Based on channel dominance"/>
-                <ComboBoxItem Content="Additive" ToolTip="Preserves luminosity"/>
-                <ComboBoxItem Content="Screen" ToolTip="Brightens colors"/>
-            </ComboBox>
-            <Grid Margin="0,4,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Border x:Name="BlueStart" Grid.Column="0" Height="20" Background="#0000FF"
-                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                        MouseLeftButtonDown="BlueStart_Click"/>
-                <TextBlock Grid.Column="1" Text="&#x2192;" VerticalAlignment="Center" Margin="4" Foreground="White"/>
-                <Border x:Name="BlueEnd" Grid.Column="2" Height="20" Background="#FFFF00"
-                        BorderBrush="Gray" BorderThickness="1" Cursor="Hand"
-                        MouseLeftButtonDown="BlueEnd_Click"/>
-            </Grid>
+            <local:BlendModePreview x:Name="BlueBlendMode" Height="36" SelectionChanged="BlueBlendMode_SelectionChanged"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

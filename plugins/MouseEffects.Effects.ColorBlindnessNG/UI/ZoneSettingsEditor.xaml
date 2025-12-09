@@ -58,7 +58,7 @@
         <!-- Re-simulation Settings -->
         <StackPanel x:Name="ReSimulationPanel" Visibility="Collapsed">
             <TextBlock Text="Takes another zone's processed output and applies CVD simulation on top."
-                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+                       TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="12" Margin="0,0,0,8"/>
             <TextBlock Text="Source Zone" Style="{StaticResource LabelStyle}"/>
             <ComboBox x:Name="ReSimSourceZoneCombo" SelectionChanged="ReSimSourceZone_Changed" Margin="0,0,0,8"/>
 
@@ -98,10 +98,55 @@
                 <ComboBoxItem Content="CIELAB Remapping (Perceptual)"/>
             </ComboBox>
 
+            <!-- Algorithm Descriptions (shown based on selected algorithm) -->
+            <TextBlock x:Name="LUTDescriptionText"
+                       Text="Remaps colors using per-channel gradients. Choose a preset or customize each color channel's transformation."
+                       TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="12" Margin="0,0,0,8"/>
+            <TextBlock x:Name="DaltonizationDescriptionText" Visibility="Collapsed"
+                       Text="Daltonization corrects colors by simulating how a CVD person sees them, then redistributing the 'lost' color information into channels they can perceive."
+                       TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="12" Margin="0,0,0,8"/>
+            <TextBlock x:Name="HueRotationDescriptionText" Visibility="Collapsed"
+                       Text="Rotates problematic hue ranges to more distinguishable positions on the color wheel."
+                       TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="12" Margin="0,0,0,8"/>
+            <TextBlock x:Name="CIELABDescriptionText" Visibility="Collapsed"
+                       Text="Transfers color information between perceptual axes (red-green to blue-yellow)."
+                       TextWrapping="Wrap" Foreground="#CCCCCC" FontSize="12" Margin="0,0,0,8"/>
+
+            <!-- Simulation-Guided Correction (shared by all algorithms) -->
+            <StackPanel x:Name="SimGuidedSharedPanel" Visibility="Collapsed">
+                <CheckBox x:Name="SimGuidedCheckBox" Content="Simulation-Guided Correction"
+                          Margin="0,0,0,4"
+                          ToolTip="Only apply correction to pixels that would be affected by CVD (detected via simulation)"
+                          Checked="SimGuided_Changed" Unchecked="SimGuided_Changed"/>
+                <StackPanel x:Name="SimGuidedPanel" Visibility="Collapsed" Margin="16,0,0,0">
+                    <TextBlock Text="Detection Algorithm" Style="{StaticResource LabelStyle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <RadioButton x:Name="SimGuidedMachadoRadio" Content="Machado" IsChecked="True"
+                                     Checked="SimGuidedAlgorithm_Changed" Margin="0,0,16,0"/>
+                        <RadioButton x:Name="SimGuidedStrictRadio" Content="Strict (LMS)"
+                                     Checked="SimGuidedAlgorithm_Changed"/>
+                    </StackPanel>
+                    <TextBlock Text="CVD Type to Detect" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="SimGuidedFilterCombo" SelectionChanged="SimGuidedFilter_Changed" Margin="0,0,0,8">
+                        <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
+                        <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
+                        <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
+                        <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
+                        <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
+                        <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
+                        <ComboBoxItem Content="Achromatopsia (No color)"/>
+                        <ComboBoxItem Content="Achromatomaly (Weak color)"/>
+                    </ComboBox>
+                    <TextBlock x:Name="SimGuidedSensitivityLabel" Text="Sensitivity (2.00)" Style="{StaticResource LabelStyle}"
+                               ToolTip="Lower = only strongly affected pixels, Higher = more pixels corrected"/>
+                    <Slider x:Name="SimGuidedSensitivitySlider" Minimum="0.5" Maximum="25" Value="2"
+                            Style="{StaticResource SliderStyle}" ValueChanged="SimGuidedSensitivity_Changed"/>
+                </StackPanel>
+                <Separator Margin="0,8,0,8"/>
+            </StackPanel>
+
             <!-- Hue Rotation Settings -->
             <StackPanel x:Name="HueRotationPanel" Visibility="Collapsed">
-                <TextBlock Text="Rotates problematic hue ranges to more distinguishable positions on the color wheel."
-                           TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
                 <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
                 <ComboBox x:Name="HueRotationCVDCombo" SelectionChanged="HueRotationCVD_Changed" Margin="0,0,0,8">
                     <ComboBoxItem Content="Protanopia (red-blind)"/>
@@ -122,16 +167,37 @@
                             Padding="8,2" FontSize="11" Click="HueRotationReset_Click"
                             ToolTip="Reset advanced values to defaults for the selected CVD type"/>
                 </StackPanel>
-                <StackPanel x:Name="HueRotationAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
-                    <TextBlock x:Name="HueRotationSourceStartLabel" Text="Source Start (0°)" Style="{StaticResource LabelStyle}"/>
-                    <Slider x:Name="HueRotationSourceStartSlider" Minimum="0" Maximum="360" Value="0"
-                            Style="{StaticResource SliderStyle}" ValueChanged="HueRotationSourceStart_Changed"/>
-                    <TextBlock x:Name="HueRotationSourceEndLabel" Text="Source End (120°)" Style="{StaticResource LabelStyle}"/>
-                    <Slider x:Name="HueRotationSourceEndSlider" Minimum="0" Maximum="360" Value="120"
-                            Style="{StaticResource SliderStyle}" ValueChanged="HueRotationSourceEnd_Changed"/>
-                    <TextBlock x:Name="HueRotationShiftLabel" Text="Hue Shift (+60°)" Style="{StaticResource LabelStyle}"/>
-                    <Slider x:Name="HueRotationShiftSlider" Minimum="-180" Maximum="180" Value="60"
-                            Style="{StaticResource SliderStyle}" ValueChanged="HueRotationShift_Changed"/>
+                <StackPanel x:Name="HueRotationAdvancedPanel" Visibility="Collapsed">
+                    <!-- Color Wheel Selector -->
+                    <TextBlock Text="Drag handles to adjust hue range and shift"
+                               FontSize="11" Foreground="#AAAAAA" Margin="0,4,0,4"/>
+                    <local:HueWheelSelector x:Name="HueWheelControl"
+                                            Height="180" Margin="0,4,0,8"
+                                            ValueChanged="HueWheel_ValueChanged"/>
+                    <!-- Legend -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                        <Ellipse Width="12" Height="12" Fill="LimeGreen" Margin="0,0,4,0"/>
+                        <TextBlock Text="Start" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Ellipse Width="12" Height="12" Fill="OrangeRed" Margin="0,0,4,0"/>
+                        <TextBlock Text="End" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Ellipse Width="12" Height="12" Fill="Gold" Margin="0,0,4,0"/>
+                        <TextBlock Text="Shift" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <!-- Value labels -->
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="HueRotationSourceStartLabel" Text="Start: 0°"
+                                   Grid.Column="0" FontSize="11" Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="HueRotationSourceEndLabel" Text="End: 120°"
+                                   Grid.Column="1" FontSize="11" Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                        <TextBlock x:Name="HueRotationShiftLabel" Text="Shift: +60°"
+                                   Grid.Column="2" FontSize="11" Foreground="#CCCCCC" HorizontalAlignment="Center"/>
+                    </Grid>
+                    <!-- Falloff slider (not easily shown on wheel) -->
                     <TextBlock x:Name="HueRotationFalloffLabel" Text="Edge Falloff (0.30)" Style="{StaticResource LabelStyle}"/>
                     <Slider x:Name="HueRotationFalloffSlider" Minimum="0" Maximum="1" Value="0.3"
                             Style="{StaticResource SliderStyle}" ValueChanged="HueRotationFalloff_Changed"/>
@@ -140,8 +206,6 @@
 
             <!-- CIELAB Remapping Settings -->
             <StackPanel x:Name="CIELABPanel" Visibility="Collapsed">
-                <TextBlock Text="Transfers color information between perceptual axes (red-green to blue-yellow)."
-                           TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
                 <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
                 <ComboBox x:Name="CIELABCVDCombo" SelectionChanged="CIELABCVD_Changed" Margin="0,0,0,8">
                     <ComboBoxItem Content="Protanopia (red-blind)"/>
@@ -154,6 +218,11 @@
                 <TextBlock x:Name="CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
                         Style="{StaticResource SliderStyle}" ValueChanged="CIELABStrength_Changed"/>
+
+                <!-- Color Transformation Preview -->
+                <TextBlock Text="Color Transformation Preview" Style="{StaticResource LabelStyle}" Margin="0,8,0,4"/>
+                <local:CIELABPreviewStrip x:Name="CIELABPreview" Height="60" Margin="0,0,0,8"/>
+
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
                     <CheckBox x:Name="CIELABAdvancedCheckBox" Content="Advanced Options"
                               VerticalAlignment="Center"
@@ -162,34 +231,54 @@
                             Padding="8,2" FontSize="11" Click="CIELABReset_Click"
                             ToolTip="Reset advanced values to defaults for the selected CVD type"/>
                 </StackPanel>
-                <StackPanel x:Name="CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
-                    <TextBlock x:Name="CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"
-                               ToolTip="Transfer red-green info to blue-yellow axis"/>
-                    <Slider x:Name="CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
-                            Style="{StaticResource SliderStyle}" ValueChanged="CIELABAtoB_Changed"/>
-                    <TextBlock x:Name="CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Style="{StaticResource LabelStyle}"
-                               ToolTip="Transfer blue-yellow info to red-green axis"/>
-                    <Slider x:Name="CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
-                            Style="{StaticResource SliderStyle}" ValueChanged="CIELABBtoA_Changed"/>
+                <StackPanel x:Name="CIELABAdvancedPanel" Visibility="Collapsed" Margin="0,0,0,0">
+                    <!-- Interactive a*b* Axis Control -->
+                    <TextBlock Text="Axis Transfer Control" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="Drag handles to adjust transfer between color axes"
+                               FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+                    <local:CIELABAxisControl x:Name="CIELABAxisControl"
+                                             Height="180" Width="180" Margin="0,4,0,8"
+                                             HorizontalAlignment="Left"
+                                             ValueChanged="CIELABAxis_ValueChanged"/>
+                    <!-- Legend -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Ellipse Width="12" Height="12" Fill="#FF9632" Margin="0,0,4,0"/>
+                        <TextBlock Text="a*→b*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Ellipse Width="12" Height="12" Fill="#3296FF" Margin="0,0,4,0"/>
+                        <TextBlock Text="b*→a*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Enhancement Sliders -->
+                    <Separator Margin="0,4,0,8"/>
+                    <TextBlock Text="Axis Enhancement" Style="{StaticResource LabelStyle}"/>
                     <TextBlock x:Name="CIELABAEnhanceLabel" Text="a* Enhancement (1.00)" Style="{StaticResource LabelStyle}"
+                               FontWeight="Normal" FontSize="12" Margin="0,4,0,2"
                                ToolTip="Increase red-green contrast"/>
                     <Slider x:Name="CIELABAEnhanceSlider" Minimum="0" Maximum="2" Value="1"
                             Style="{StaticResource SliderStyle}" ValueChanged="CIELABAEnhance_Changed"/>
                     <TextBlock x:Name="CIELABBEnhanceLabel" Text="b* Enhancement (1.00)" Style="{StaticResource LabelStyle}"
+                               FontWeight="Normal" FontSize="12" Margin="0,4,0,2"
                                ToolTip="Increase blue-yellow contrast"/>
                     <Slider x:Name="CIELABBEnhanceSlider" Minimum="0" Maximum="2" Value="1"
                             Style="{StaticResource SliderStyle}" ValueChanged="CIELABBEnhance_Changed"/>
                     <TextBlock x:Name="CIELABLEnhanceLabel" Text="Lightness Encoding (0.00)" Style="{StaticResource LabelStyle}"
+                               FontWeight="Normal" FontSize="12" Margin="0,4,0,2"
                                ToolTip="Encode color differences as brightness differences"/>
                     <Slider x:Name="CIELABLEnhanceSlider" Minimum="0" Maximum="1" Value="0"
                             Style="{StaticResource SliderStyle}" ValueChanged="CIELABLEnhance_Changed"/>
+
+                    <!-- Hidden sliders for transfer (values now controlled by axis control) -->
+                    <TextBlock x:Name="CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Visibility="Collapsed"/>
+                    <Slider x:Name="CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
+                            Visibility="Collapsed" ValueChanged="CIELABAtoB_Changed"/>
+                    <TextBlock x:Name="CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Visibility="Collapsed"/>
+                    <Slider x:Name="CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
+                            Visibility="Collapsed" ValueChanged="CIELABBtoA_Changed"/>
                 </StackPanel>
             </StackPanel>
 
             <!-- Daltonization Settings -->
             <StackPanel x:Name="DaltonizationPanel" Visibility="Collapsed">
-                <TextBlock Text="Daltonization corrects colors by simulating how a CVD person sees them, then redistributing the 'lost' color information into channels they can perceive."
-                           TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
                 <TextBlock Text="CVD Type to Correct" Style="{StaticResource LabelStyle}"/>
                 <ComboBox x:Name="DaltonizationCVDCombo" SelectionChanged="DaltonizationCVD_Changed" Margin="0,0,0,8">
                     <ComboBoxItem Content="Protanopia (red-blind)"/>
@@ -240,70 +329,7 @@
                             ToolTip="Delete the selected custom preset"/>
                 </StackPanel>
 
-                <!-- Simulation-Guided Correction -->
-                <Separator Margin="0,12,0,8"/>
-                <CheckBox x:Name="SimGuidedCheckBox" Content="Simulation-Guided Correction"
-                          Margin="0,0,0,4"
-                          ToolTip="Only apply correction to pixels that would be affected by CVD (detected via simulation)"
-                          Checked="SimGuided_Changed" Unchecked="SimGuided_Changed"/>
-                <StackPanel x:Name="SimGuidedPanel" Visibility="Collapsed" Margin="16,0,0,0">
-                    <TextBlock Text="Detection Algorithm" Style="{StaticResource LabelStyle}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <RadioButton x:Name="SimGuidedMachadoRadio" Content="Machado" IsChecked="True"
-                                     Checked="SimGuidedAlgorithm_Changed" Margin="0,0,16,0"/>
-                        <RadioButton x:Name="SimGuidedStrictRadio" Content="Strict (LMS)"
-                                     Checked="SimGuidedAlgorithm_Changed"/>
-                    </StackPanel>
-                    <TextBlock Text="CVD Type to Detect" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="SimGuidedFilterCombo" SelectionChanged="SimGuidedFilter_Changed" Margin="0,0,0,8">
-                        <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
-                        <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
-                        <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
-                        <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
-                        <ComboBoxItem Content="Achromatopsia (No color)"/>
-                        <ComboBoxItem Content="Achromatomaly (Weak color)"/>
-                    </ComboBox>
-                    <TextBlock x:Name="SimGuidedSensitivityLabel" Text="Sensitivity (2.00)" Style="{StaticResource LabelStyle}"
-                               ToolTip="Lower = only strongly affected pixels, Higher = more pixels corrected"/>
-                    <Slider x:Name="SimGuidedSensitivitySlider" Minimum="0.5" Maximum="25" Value="2"
-                            Style="{StaticResource SliderStyle}" ValueChanged="SimGuidedSensitivity_Changed"/>
-                </StackPanel>
-                <Separator Margin="0,8,0,8"/>
-
                 <local:CorrectionEditor x:Name="CorrectionEditor" Margin="0,8,0,0"/>
-
-                <!-- Post-Correction Simulation (Re-simulate for Verification) -->
-                <Separator Margin="0,12,0,8"/>
-                <CheckBox x:Name="PostSimCheckBox" Content="Re-simulate for Verification"
-                          Margin="0,0,0,4"
-                          ToolTip="Apply CVD simulation AFTER correction to see how corrected colors appear to colorblind users"
-                          Checked="PostSim_Changed" Unchecked="PostSim_Changed"/>
-                <StackPanel x:Name="PostSimPanel" Visibility="Collapsed" Margin="16,0,0,0">
-                    <TextBlock Text="Simulation Algorithm" Style="{StaticResource LabelStyle}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <RadioButton x:Name="PostSimMachadoRadio" Content="Machado" IsChecked="True"
-                                     Checked="PostSimAlgorithm_Changed" Margin="0,0,16,0"/>
-                        <RadioButton x:Name="PostSimStrictRadio" Content="Strict (LMS)"
-                                     Checked="PostSimAlgorithm_Changed"/>
-                    </StackPanel>
-                    <TextBlock Text="CVD Type to Simulate" Style="{StaticResource LabelStyle}"/>
-                    <ComboBox x:Name="PostSimFilterCombo" SelectionChanged="PostSimFilter_Changed" Margin="0,0,0,8">
-                        <ComboBoxItem Content="Protanopia (Red-Green blind)"/>
-                        <ComboBoxItem Content="Protanomaly (Red-Green weak)"/>
-                        <ComboBoxItem Content="Deuteranopia (Green-Red blind)" IsSelected="True"/>
-                        <ComboBoxItem Content="Deuteranomaly (Green-Red weak)"/>
-                        <ComboBoxItem Content="Tritanopia (Blue-Yellow blind)"/>
-                        <ComboBoxItem Content="Tritanomaly (Blue-Yellow weak)"/>
-                        <ComboBoxItem Content="Achromatopsia (No color)"/>
-                        <ComboBoxItem Content="Achromatomaly (Weak color)"/>
-                    </ComboBox>
-                    <TextBlock x:Name="PostSimIntensityLabel" Text="Simulation Intensity (1.00)" Style="{StaticResource LabelStyle}"
-                               ToolTip="How strongly to apply the simulation (0 = off, 1 = full)"/>
-                    <Slider x:Name="PostSimIntensitySlider" Minimum="0" Maximum="1" Value="1"
-                            Style="{StaticResource SliderStyle}" ValueChanged="PostSimIntensity_Changed"/>
-                </StackPanel>
             </StackPanel>
         </StackPanel>
 
