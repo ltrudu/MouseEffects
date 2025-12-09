@@ -75,7 +75,7 @@ Change les couleurs sur votre ecran pour aider les personnes daltoniennes a dist
 ### Etape 1 : Telecharger MouseEffects
 
 1. Allez sur la page de telechargement de MouseEffects :
-   **https://github.com/LeCaiss662/MouseEffects/releases**
+   **https://github.com/ltrudu/MouseEffects/releases**
 
 2. Trouvez la derniere version (en haut de la page)
 
