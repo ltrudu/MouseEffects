@@ -75,7 +75,7 @@ Changes colors on your screen to help people with color blindness tell colors ap
 ### Step 1: Download MouseEffects
 
 1. Go to the MouseEffects download page:
-   **https://github.com/LeCaiss662/MouseEffects/releases**
+   **https://github.com/ltrudu/MouseEffects/releases**
 
 2. Find the latest version (at the top of the page)
 
