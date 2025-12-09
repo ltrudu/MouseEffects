@@ -704,6 +704,49 @@ ColorBlindnessNG offers four different correction algorithms, each with its own 
 
 **Settings:** See the [LUT Color Controls](#step-2-understand-the-color-controls) section for detailed explanation.
 
+**Interactive Visual Controls (New in v1.0.31):**
+
+The LUT-Based correction now features intuitive visual controls that make it easier to understand and adjust your settings:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Color Transformation Preview                         │
+├─────────────────────────────────────────────────────┤
+│ Original:   [Rainbow spectrum: Red→Yellow→Green→...] │
+│ Corrected:  [Transformed spectrum showing changes]   │
+└─────────────────────────────────────────────────────┘
+```
+
+**1. Color Preview Strip** - Shows a live before/after comparison:
+- **Top strip:** Original color spectrum (rainbow)
+- **Bottom strip:** How colors look after your correction is applied
+- Updates in real-time as you adjust settings
+
+**2. Interactive Gradient Editor** - For each color channel:
+```
+┌─────────────────────────────────────────────────────┐
+│ [●]━━━━━━━━ Color Gradient ━━━━━━━━[●]             │
+│ Start                                   End         │
+│ (Click or drag handles to pick colors)              │
+└─────────────────────────────────────────────────────┘
+```
+- **Drag the handles** to open a color picker
+- **Visual gradient** shows the actual color transition
+- Supports different interpolation types (Linear RGB, Perceptual LAB, HSL)
+
+**3. Blend Mode Visual Selector** - Choose blend modes visually:
+```
+┌─────────────────────────────────────────────────────┐
+│ [CW]  [Direct]  [Prop]  [Add]  [Screen]             │
+│  ●       ○        ○       ○       ○                 │
+│ (Click a swatch to select that blend mode)          │
+└─────────────────────────────────────────────────────┘
+```
+- Each swatch shows a **preview** of how that blend mode affects colors
+- **Click** to select a blend mode
+- **Hover** to see a tooltip with description
+- Selected mode shown with gold border
+
 ---
 
 #### 2. Daltonization
@@ -754,6 +797,34 @@ After:   Red is rotated to appear more blue/purple
 
 **Advanced Mode** (check "Advanced Mode" to see these):
 
+**Interactive Hue Wheel Control:**
+
+Instead of just numeric sliders, you get an interactive color wheel where you can visually drag handles to adjust hue rotation:
+
+```
+            Yellow
+               ○
+        ╱           ╲
+      ╱       ●       ╲   [●] Gold = Shift handle
+    Green      │       Red  [●] Green = Start handle
+      ╲       ●       ╱   [●] Orange = End handle
+        ╲    ●      ╱
+               ○
+             Blue
+```
+
+**How to use the Hue Wheel:**
+- **Green handle (Start):** Drag around the wheel to set where the affected hue range begins
+- **Orange/Red handle (End):** Drag to set where the affected hue range ends
+- **Gold handle (Shift):** Drag to set how much to rotate the colors
+- The **colored arc** between Start and End shows which hues will be affected
+- Values update in real-time below the wheel
+
+**Legend:**
+- **Start (Green):** Beginning of affected hue range
+- **End (Red/Orange):** End of affected hue range
+- **Shift (Gold):** How far colors rotate on the wheel
+
 | Parameter | Range | What it means |
 |-----------|-------|---------------|
 | **Source Start** | 0-360° | Where the affected color range begins on the color wheel |
@@ -761,7 +832,7 @@ After:   Red is rotated to appear more blue/purple
 | **Shift** | -180° to +180° | How far to rotate the colors (positive = clockwise, negative = counter-clockwise) |
 | **Falloff** | 0.0-1.0 | How soft the boundaries are (0 = sharp cutoff, 1 = very gradual blend) |
 
-**Understanding the Color Wheel (for Advanced Mode):**
+**Understanding the Color Wheel:**
 ```
         Yellow (60°)
             |
@@ -814,7 +885,42 @@ Imagine colors have three properties:
 | **CVD Type** | Automatically configures the remapping based on your color blindness type |
 | **Strength** | How much of the effect to apply (0-100%) |
 
+**Color Transformation Preview:**
+
+The CIELAB panel includes a live preview strip showing how your settings affect colors:
+```
+┌─────────────────────────────────────────────────────┐
+│ Original:            [Rainbow spectrum]              │
+│ After CIELAB:        [Transformed spectrum]          │
+└─────────────────────────────────────────────────────┘
+```
+This updates in real-time as you adjust any parameter.
+
 **Advanced Mode** (check "Advanced Mode" to see these):
+
+**Interactive Axis Control (New in v1.0.31):**
+
+Instead of just sliders, you now get an interactive visual control showing the CIELAB color plane:
+
+```
+                    +b* (Yellow)
+                        ▲
+                        │
+         Green ◄────────●────────► Red  (+a*)
+         (-a*)          │
+                        ▼
+                    -b* (Blue)
+
+    [●] Orange handle = a*→b* transfer (drag up/down)
+    [●] Blue handle = b*→a* transfer (drag left/right)
+```
+
+**How to use the Axis Control:**
+- **Drag the orange handle** up/down to adjust a*→b* transfer
+- **Drag the blue handle** left/right to adjust b*→a* transfer
+- **Arrow lines** show the direction and magnitude of transfer
+- **Axis line thickness** changes to reflect enhancement values
+- The circular color wheel shows actual CIELAB colors for reference
 
 | Parameter | Range | What it means |
 |-----------|-------|---------------|
@@ -900,6 +1006,23 @@ How colors blend from the start color to the end color:
 ### Blend Modes
 
 **New in v1.0.29!** Control HOW the LUT correction color blends with the original pixel.
+
+**Visual Blend Mode Selector (New in v1.0.31):**
+
+Instead of a simple dropdown, you now get a visual selector showing how each blend mode affects colors:
+
+```
+┌─────────────────────────────────────────────────────┐
+│ [CW]  [Direct]  [Prop]  [Add]  [Screen]             │
+│  ██      ██       ██      ██      ██                │
+│ (Each swatch shows a preview of that blend mode)    │
+└─────────────────────────────────────────────────────┘
+```
+
+- **Click any swatch** to select that blend mode
+- **Hover** over a swatch to see its name and description
+- **Selected mode** is highlighted with a gold border
+- Swatches update based on your current Start/End colors
 
 | Mode | How It Works | Best For |
 |------|--------------|----------|
@@ -1054,6 +1177,7 @@ You can also take an online color blindness test to find out your type.
 | Per-zone settings | Limited | Full control |
 | Custom presets | No | Yes, with export/import |
 | Correction algorithms | 1 (Daltonization) | 4 (LUT, Daltonization, Hue Rotation, CIELAB) |
+| Interactive visual controls | No | Yes (gradient editor, color preview, blend swatches, hue wheel, CIELAB axis) |
 | Simulation-Guided | No | Yes |
 | Re-simulation mode | No | Yes (preview corrections through colorblind eyes) |
 | Shape modes | Basic | Circle & Rectangle |

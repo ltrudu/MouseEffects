@@ -704,6 +704,49 @@ ColorBlindnessNG offre quatre algorithmes de correction differents, chacun avec 
 
 **Parametres :** Voir la section [Controles de Couleur LUT](#etape-2--comprendre-les-controles-de-couleur) pour une explication detaillee.
 
+**Controles Visuels Interactifs (Nouveau dans v1.0.31) :**
+
+La correction par LUT dispose maintenant de controles visuels intuitifs qui facilitent la comprehension et l'ajustement de vos parametres :
+
+```
++-----------------------------------------------------+
+| Apercu de la Transformation des Couleurs             |
++-----------------------------------------------------+
+| Original:   [Spectre arc-en-ciel: Rouge→Jaune→Vert→...]|
+| Corrige:    [Spectre transforme montrant les changements]|
++-----------------------------------------------------+
+```
+
+**1. Bande d'Apercu des Couleurs** - Montre une comparaison avant/apres en direct :
+- **Bande superieure :** Spectre de couleurs original (arc-en-ciel)
+- **Bande inferieure :** Comment les couleurs apparaissent apres votre correction
+- Se met a jour en temps reel lorsque vous ajustez les parametres
+
+**2. Editeur de Degrade Interactif** - Pour chaque canal de couleur :
+```
++-----------------------------------------------------+
+| [●]━━━━━━━━ Degrade de Couleur ━━━━━━━━[●]          |
+| Depart                                   Arrivee    |
+| (Cliquez ou faites glisser les poignees pour choisir)|
++-----------------------------------------------------+
+```
+- **Faites glisser les poignees** pour ouvrir un selecteur de couleur
+- **Degrade visuel** montre la transition de couleur reelle
+- Supporte differents types d'interpolation (RGB Lineaire, LAB Perceptuel, HSL)
+
+**3. Selecteur Visuel de Mode de Fusion** - Choisissez les modes de fusion visuellement :
+```
++-----------------------------------------------------+
+| [PC]  [Direct]  [Prop]  [Add]  [Ecran]              |
+|  ●       ○        ○       ○       ○                 |
+| (Cliquez sur un echantillon pour selectionner ce mode)|
++-----------------------------------------------------+
+```
+- Chaque echantillon montre un **apercu** de comment ce mode de fusion affecte les couleurs
+- **Cliquez** pour selectionner un mode de fusion
+- **Survolez** pour voir une info-bulle avec la description
+- Le mode selectionne est mis en evidence avec une bordure doree
+
 ---
 
 #### 2. Daltonisation
@@ -754,6 +797,34 @@ Apres :  Le Rouge est pivote pour paraitre plus bleu/violet
 
 **Mode Avance** (cochez "Mode Avance" pour voir ces options) :
 
+**Controle Interactif du Cercle Chromatique :**
+
+Au lieu de simples curseurs numeriques, vous obtenez un cercle chromatique interactif ou vous pouvez visuellement faire glisser des poignees pour ajuster la rotation de teinte :
+
+```
+            Jaune
+               ○
+        ╱           ╲
+      ╱       ●       ╲   [●] Or = Poignee de Decalage
+    Vert      │       Rouge  [●] Vert = Poignee de Debut
+      ╲       ●       ╱   [●] Orange = Poignee de Fin
+        ╲    ●      ╱
+               ○
+             Bleu
+```
+
+**Comment utiliser le Cercle Chromatique :**
+- **Poignee verte (Debut) :** Faites glisser autour du cercle pour definir ou la plage de teinte affectee commence
+- **Poignee orange/rouge (Fin) :** Faites glisser pour definir ou la plage de teinte affectee finit
+- **Poignee or (Decalage) :** Faites glisser pour definir de combien pivoter les couleurs
+- L'**arc colore** entre Debut et Fin montre quelles teintes seront affectees
+- Les valeurs se mettent a jour en temps reel sous le cercle
+
+**Legende :**
+- **Debut (Vert) :** Debut de la plage de teinte affectee
+- **Fin (Rouge/Orange) :** Fin de la plage de teinte affectee
+- **Decalage (Or) :** De combien les couleurs pivotent sur le cercle
+
 | Parametre | Plage | Ce que ca signifie |
 |-----------|-------|-------------------|
 | **Debut Source** | 0-360° | Ou la plage de couleurs affectee commence sur le cercle chromatique |
@@ -761,7 +832,7 @@ Apres :  Le Rouge est pivote pour paraitre plus bleu/violet
 | **Decalage** | -180° a +180° | De combien pivoter les couleurs (positif = sens horaire, negatif = sens anti-horaire) |
 | **Attenuation** | 0.0-1.0 | Douceur des limites (0 = coupure nette, 1 = fondu tres progressif) |
 
-**Comprendre le Cercle Chromatique (pour le Mode Avance) :**
+**Comprendre le Cercle Chromatique :**
 ```
         Jaune (60°)
             |
@@ -814,7 +885,42 @@ Imaginez que les couleurs ont trois proprietes :
 | **Type de DVC** | Configure automatiquement le remappage selon votre type de daltonisme |
 | **Force** | Quelle quantite de l'effet appliquer (0-100%) |
 
+**Apercu de la Transformation des Couleurs :**
+
+Le panneau CIELAB inclut une bande d'apercu en direct montrant comment vos parametres affectent les couleurs :
+```
++-----------------------------------------------------+
+| Original:            [Spectre arc-en-ciel]           |
+| Apres CIELAB:        [Spectre transforme]            |
++-----------------------------------------------------+
+```
+Cela se met a jour en temps reel lorsque vous ajustez n'importe quel parametre.
+
 **Mode Avance** (cochez "Mode Avance" pour voir ces options) :
+
+**Controle Interactif des Axes (Nouveau dans v1.0.31) :**
+
+Au lieu de simples curseurs, vous obtenez maintenant un controle visuel interactif montrant le plan de couleur CIELAB :
+
+```
+                    +b* (Jaune)
+                        ▲
+                        │
+         Vert ◄─────────●─────────► Rouge  (+a*)
+         (-a*)          │
+                        ▼
+                    -b* (Bleu)
+
+    [●] Poignee orange = transfert a*→b* (glisser haut/bas)
+    [●] Poignee bleue = transfert b*→a* (glisser gauche/droite)
+```
+
+**Comment utiliser le Controle des Axes :**
+- **Faites glisser la poignee orange** haut/bas pour ajuster le transfert a*→b*
+- **Faites glisser la poignee bleue** gauche/droite pour ajuster le transfert b*→a*
+- **Les lignes flechees** montrent la direction et l'amplitude du transfert
+- **L'epaisseur des lignes d'axe** change pour refleter les valeurs d'amplification
+- Le cercle chromatique montre les vraies couleurs CIELAB pour reference
 
 | Parametre | Plage | Ce que ca signifie |
 |-----------|-------|-------------------|
@@ -900,6 +1006,23 @@ Comment les couleurs se melangent de la couleur de depart a la couleur d'arrivee
 ### Modes de Fusion
 
 **Nouveau dans v1.0.29 !** Controlez COMMENT la couleur de correction LUT se melange avec le pixel original.
+
+**Selecteur Visuel de Mode de Fusion (Nouveau dans v1.0.31) :**
+
+Au lieu d'un simple menu deroulant, vous obtenez maintenant un selecteur visuel montrant comment chaque mode de fusion affecte les couleurs :
+
+```
++-----------------------------------------------------+
+| [PC]  [Direct]  [Prop]  [Add]  [Ecran]              |
+|  ██      ██       ██      ██      ██                |
+| (Chaque echantillon montre un apercu de ce mode)    |
++-----------------------------------------------------+
+```
+
+- **Cliquez sur n'importe quel echantillon** pour selectionner ce mode de fusion
+- **Survolez** un echantillon pour voir son nom et sa description
+- Le **mode selectionne** est mis en evidence avec une bordure doree
+- Les echantillons se mettent a jour selon vos couleurs de Depart/Arrivee actuelles
 
 | Mode | Comment ca Fonctionne | Ideal Pour |
 |------|----------------------|------------|
@@ -1054,6 +1177,7 @@ Vous pouvez aussi passer un test de daltonisme en ligne pour decouvrir votre typ
 | Parametres par zone | Limite | Controle complet |
 | Presets personnalises | Non | Oui, avec export/import |
 | Algorithmes de correction | 1 (Daltonisation) | 4 (LUT, Daltonisation, Rotation Teinte, CIELAB) |
+| Controles visuels interactifs | Non | Oui (editeur de degrade, apercu couleurs, echantillons fusion, roue teinte, axe CIELAB) |
 | Correction Guidee | Non | Oui |
 | Mode Re-simulation | Non | Oui (previsualiser les corrections a travers les yeux des daltoniens) |
 | Modes de forme | Basique | Cercle & Rectangle |
