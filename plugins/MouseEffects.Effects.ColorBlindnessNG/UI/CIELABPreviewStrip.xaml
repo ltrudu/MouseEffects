@@ -1,0 +1,26 @@
+<UserControl x:Class="MouseEffects.Effects.ColorBlindnessNG.UI.CIELABPreviewStrip"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="80"
+             MinHeight="60">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Original" FontSize="10" Foreground="#AAAAAA" Margin="0,0,0,2"/>
+        <Border Grid.Row="1" BorderBrush="#555555" BorderThickness="1" CornerRadius="2">
+            <Image x:Name="OriginalStrip" Stretch="Fill"/>
+        </Border>
+
+        <TextBlock Grid.Row="2" Text="After CIELAB Correction" FontSize="10" Foreground="#AAAAAA" Margin="0,4,0,2"/>
+        <Border Grid.Row="3" BorderBrush="#555555" BorderThickness="1" CornerRadius="2">
+            <Image x:Name="CorrectedStrip" Stretch="Fill"/>
+        </Border>
+    </Grid>
+</UserControl>

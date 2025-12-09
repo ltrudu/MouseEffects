@@ -186,6 +186,14 @@ public partial class ZoneSettingsEditor : UserControl
             CIELABLEnhanceSlider.Value = _zone.CIELABLEnhance;
             CIELABLEnhanceLabel.Text = $"Lightness Encoding ({_zone.CIELABLEnhance:F2})";
 
+            // CIELAB visual controls
+            CIELABAxisControl.AtoBTransfer = _zone.CIELABAtoB;
+            CIELABAxisControl.BtoATransfer = _zone.CIELABBtoA;
+            CIELABAxisControl.AEnhance = _zone.CIELABAEnhance;
+            CIELABAxisControl.BEnhance = _zone.CIELABBEnhance;
+            CIELABAxisControl.LEnhance = _zone.CIELABLEnhance;
+            UpdateCIELABPreview();
+
             // Daltonization
             DaltonizationCVDCombo.SelectedIndex = MapDaltonizationCVDToComboIndex(_zone.DaltonizationCVDType);
             DaltonizationStrengthSlider.Value = _zone.DaltonizationStrength;
@@ -610,6 +618,7 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABStrength = (float)CIELABStrengthSlider.Value;
         CIELABStrengthLabel.Text = $"Strength ({_zone.CIELABStrength:F2})";
         _effect.Configuration.Set(ConfigKey("cielabStrength"), _zone.CIELABStrength);
+        UpdateCIELABPreview();
         OnSettingsChanged();
     }
 
@@ -646,6 +655,8 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABAEnhance = (float)CIELABAEnhanceSlider.Value;
         CIELABAEnhanceLabel.Text = $"a* Enhancement ({_zone.CIELABAEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabAEnhance"), _zone.CIELABAEnhance);
+        CIELABAxisControl.AEnhance = _zone.CIELABAEnhance;
+        UpdateCIELABPreview();
         OnSettingsChanged();
     }
 
@@ -655,6 +666,8 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABBEnhance = (float)CIELABBEnhanceSlider.Value;
         CIELABBEnhanceLabel.Text = $"b* Enhancement ({_zone.CIELABBEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabBEnhance"), _zone.CIELABBEnhance);
+        CIELABAxisControl.BEnhance = _zone.CIELABBEnhance;
+        UpdateCIELABPreview();
         OnSettingsChanged();
     }
 
@@ -664,7 +677,45 @@ public partial class ZoneSettingsEditor : UserControl
         _zone.CIELABLEnhance = (float)CIELABLEnhanceSlider.Value;
         CIELABLEnhanceLabel.Text = $"Lightness Encoding ({_zone.CIELABLEnhance:F2})";
         _effect.Configuration.Set(ConfigKey("cielabLEnhance"), _zone.CIELABLEnhance);
+        CIELABAxisControl.LEnhance = _zone.CIELABLEnhance;
+        UpdateCIELABPreview();
         OnSettingsChanged();
+    }
+
+    private void CIELABAxis_ValueChanged(object? sender, EventArgs e)
+    {
+        if (_zone == null || _effect == null || _isLoading) return;
+
+        // Get values from the axis control
+        _zone.CIELABAtoB = (float)CIELABAxisControl.AtoBTransfer;
+        _zone.CIELABBtoA = (float)CIELABAxisControl.BtoATransfer;
+
+        // Update hidden sliders (for persistence)
+        CIELABAtoBSlider.Value = _zone.CIELABAtoB;
+        CIELABBtoASlider.Value = _zone.CIELABBtoA;
+
+        // Update labels
+        CIELABAtoBLabel.Text = $"a* → b* Transfer ({_zone.CIELABAtoB:F2})";
+        CIELABBtoALabel.Text = $"b* → a* Transfer ({_zone.CIELABBtoA:F2})";
+
+        // Save to config
+        _effect.Configuration.Set(ConfigKey("cielabAtoB"), _zone.CIELABAtoB);
+        _effect.Configuration.Set(ConfigKey("cielabBtoA"), _zone.CIELABBtoA);
+
+        UpdateCIELABPreview();
+        OnSettingsChanged();
+    }
+
+    private void UpdateCIELABPreview()
+    {
+        if (_zone == null) return;
+
+        CIELABPreview.AtoBTransfer = _zone.CIELABAtoB;
+        CIELABPreview.BtoATransfer = _zone.CIELABBtoA;
+        CIELABPreview.AEnhance = _zone.CIELABAEnhance;
+        CIELABPreview.BEnhance = _zone.CIELABBEnhance;
+        CIELABPreview.LEnhance = _zone.CIELABLEnhance;
+        CIELABPreview.Strength = _zone.CIELABStrength;
     }
 
     private void CIELABReset_Click(object sender, RoutedEventArgs e)
@@ -684,7 +735,7 @@ public partial class ZoneSettingsEditor : UserControl
             _zone.CIELABBEnhance = bEnhance;
             _zone.CIELABLEnhance = lEnhance;
 
-            // Update UI
+            // Update UI - sliders
             CIELABAtoBSlider.Value = aToB;
             CIELABAtoBLabel.Text = $"a* → b* Transfer ({aToB:F2})";
             CIELABBtoASlider.Value = bToA;
@@ -695,6 +746,14 @@ public partial class ZoneSettingsEditor : UserControl
             CIELABBEnhanceLabel.Text = $"b* Enhancement ({bEnhance:F2})";
             CIELABLEnhanceSlider.Value = lEnhance;
             CIELABLEnhanceLabel.Text = $"Lightness Encoding ({lEnhance:F2})";
+
+            // Update UI - visual controls
+            CIELABAxisControl.AtoBTransfer = aToB;
+            CIELABAxisControl.BtoATransfer = bToA;
+            CIELABAxisControl.AEnhance = aEnhance;
+            CIELABAxisControl.BEnhance = bEnhance;
+            CIELABAxisControl.LEnhance = lEnhance;
+            UpdateCIELABPreview();
 
             // Save to config
             _effect.Configuration.Set(ConfigKey("cielabAtoB"), aToB);

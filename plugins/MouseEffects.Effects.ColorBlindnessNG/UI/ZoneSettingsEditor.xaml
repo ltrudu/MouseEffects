@@ -218,6 +218,11 @@
                 <TextBlock x:Name="CIELABStrengthLabel" Text="Strength (1.00)" Style="{StaticResource LabelStyle}"/>
                 <Slider x:Name="CIELABStrengthSlider" Minimum="0" Maximum="1" Value="1"
                         Style="{StaticResource SliderStyle}" ValueChanged="CIELABStrength_Changed"/>
+
+                <!-- Color Transformation Preview -->
+                <TextBlock Text="Color Transformation Preview" Style="{StaticResource LabelStyle}" Margin="0,8,0,4"/>
+                <local:CIELABPreviewStrip x:Name="CIELABPreview" Height="60" Margin="0,0,0,8"/>
+
                 <StackPanel Orientation="Horizontal" Margin="0,8,0,4">
                     <CheckBox x:Name="CIELABAdvancedCheckBox" Content="Advanced Options"
                               VerticalAlignment="Center"
@@ -226,27 +231,49 @@
                             Padding="8,2" FontSize="11" Click="CIELABReset_Click"
                             ToolTip="Reset advanced values to defaults for the selected CVD type"/>
                 </StackPanel>
-                <StackPanel x:Name="CIELABAdvancedPanel" Visibility="Collapsed" Margin="16,0,0,0">
-                    <TextBlock x:Name="CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Style="{StaticResource LabelStyle}"
-                               ToolTip="Transfer red-green info to blue-yellow axis"/>
-                    <Slider x:Name="CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
-                            Style="{StaticResource SliderStyle}" ValueChanged="CIELABAtoB_Changed"/>
-                    <TextBlock x:Name="CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Style="{StaticResource LabelStyle}"
-                               ToolTip="Transfer blue-yellow info to red-green axis"/>
-                    <Slider x:Name="CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
-                            Style="{StaticResource SliderStyle}" ValueChanged="CIELABBtoA_Changed"/>
+                <StackPanel x:Name="CIELABAdvancedPanel" Visibility="Collapsed" Margin="0,0,0,0">
+                    <!-- Interactive a*b* Axis Control -->
+                    <TextBlock Text="Axis Transfer Control" Style="{StaticResource LabelStyle}"/>
+                    <TextBlock Text="Drag handles to adjust transfer between color axes"
+                               FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,4"/>
+                    <local:CIELABAxisControl x:Name="CIELABAxisControl"
+                                             Height="180" Width="180" Margin="0,4,0,8"
+                                             HorizontalAlignment="Left"
+                                             ValueChanged="CIELABAxis_ValueChanged"/>
+                    <!-- Legend -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Ellipse Width="12" Height="12" Fill="#FF9632" Margin="0,0,4,0"/>
+                        <TextBlock Text="a*→b*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Ellipse Width="12" Height="12" Fill="#3296FF" Margin="0,0,4,0"/>
+                        <TextBlock Text="b*→a*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Enhancement Sliders -->
+                    <Separator Margin="0,4,0,8"/>
+                    <TextBlock Text="Axis Enhancement" Style="{StaticResource LabelStyle}"/>
                     <TextBlock x:Name="CIELABAEnhanceLabel" Text="a* Enhancement (1.00)" Style="{StaticResource LabelStyle}"
+                               FontWeight="Normal" FontSize="12" Margin="0,4,0,2"
                                ToolTip="Increase red-green contrast"/>
                     <Slider x:Name="CIELABAEnhanceSlider" Minimum="0" Maximum="2" Value="1"
                             Style="{StaticResource SliderStyle}" ValueChanged="CIELABAEnhance_Changed"/>
                     <TextBlock x:Name="CIELABBEnhanceLabel" Text="b* Enhancement (1.00)" Style="{StaticResource LabelStyle}"
+                               FontWeight="Normal" FontSize="12" Margin="0,4,0,2"
                                ToolTip="Increase blue-yellow contrast"/>
                     <Slider x:Name="CIELABBEnhanceSlider" Minimum="0" Maximum="2" Value="1"
                             Style="{StaticResource SliderStyle}" ValueChanged="CIELABBEnhance_Changed"/>
                     <TextBlock x:Name="CIELABLEnhanceLabel" Text="Lightness Encoding (0.00)" Style="{StaticResource LabelStyle}"
+                               FontWeight="Normal" FontSize="12" Margin="0,4,0,2"
                                ToolTip="Encode color differences as brightness differences"/>
                     <Slider x:Name="CIELABLEnhanceSlider" Minimum="0" Maximum="1" Value="0"
                             Style="{StaticResource SliderStyle}" ValueChanged="CIELABLEnhance_Changed"/>
+
+                    <!-- Hidden sliders for transfer (values now controlled by axis control) -->
+                    <TextBlock x:Name="CIELABAtoBLabel" Text="a* → b* Transfer (0.50)" Visibility="Collapsed"/>
+                    <Slider x:Name="CIELABAtoBSlider" Minimum="-1" Maximum="1" Value="0.5"
+                            Visibility="Collapsed" ValueChanged="CIELABAtoB_Changed"/>
+                    <TextBlock x:Name="CIELABBtoALabel" Text="b* → a* Transfer (0.00)" Visibility="Collapsed"/>
+                    <Slider x:Name="CIELABBtoASlider" Minimum="-1" Maximum="1" Value="0"
+                            Visibility="Collapsed" ValueChanged="CIELABBtoA_Changed"/>
                 </StackPanel>
             </StackPanel>
 
