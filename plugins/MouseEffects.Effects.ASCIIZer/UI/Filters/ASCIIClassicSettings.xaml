@@ -1,0 +1,307 @@
+<UserControl x:Class="MouseEffects.Effects.ASCIIZer.UI.Filters.ASCIIClassicSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,6,0,2"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SectionStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="Expander" x:Key="AdvancedExpanderStyle">
+            <Setter Property="Margin" Value="0,4,0,4"/>
+            <Setter Property="Padding" Value="4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- Mode Toggle -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <RadioButton x:Name="BasicModeRadio" Content="Basic" GroupName="SettingsMode"
+                         IsChecked="True" Checked="ModeRadio_Changed" Margin="0,0,16,0"/>
+            <RadioButton x:Name="AdvancedModeRadio" Content="Advanced" GroupName="SettingsMode"
+                         Checked="ModeRadio_Changed"/>
+        </StackPanel>
+
+        <!-- ======================== BASIC SETTINGS ======================== -->
+        <StackPanel x:Name="BasicSettingsPanel">
+
+            <!-- Layout Mode -->
+            <TextBlock Text="Layout Mode" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="LayoutModeCombo" SelectionChanged="LayoutModeCombo_Changed" Margin="0,0,0,4">
+                <ComboBoxItem Content="Fullscreen" IsSelected="True"/>
+                <ComboBoxItem Content="Circle (follows cursor)"/>
+                <ComboBoxItem Content="Rectangle (follows cursor)"/>
+            </ComboBox>
+
+            <!-- Circle Settings -->
+            <StackPanel x:Name="CircleSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Radius (pixels)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="RadiusSlider" Minimum="50" Maximum="500" Value="200"
+                        Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_Changed"/>
+                <TextBlock x:Name="RadiusValue" Text="200 px" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Rectangle Settings -->
+            <StackPanel x:Name="RectangleSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Width (pixels)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="RectWidthSlider" Minimum="100" Maximum="800" Value="400"
+                        Style="{StaticResource SliderStyle}" ValueChanged="RectWidthSlider_Changed"/>
+                <TextBlock x:Name="RectWidthValue" Text="400 px" Style="{StaticResource ValueStyle}"/>
+
+                <TextBlock Text="Height (pixels)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="RectHeightSlider" Minimum="100" Maximum="600" Value="300"
+                        Style="{StaticResource SliderStyle}" ValueChanged="RectHeightSlider_Changed"/>
+                <TextBlock x:Name="RectHeightValue" Text="300 px" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8"/>
+
+            <!-- Cell Size -->
+            <TextBlock Text="Cell Width (pixels)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="CellWidthSlider" Minimum="4" Maximum="32" Value="8"
+                    Style="{StaticResource SliderStyle}" ValueChanged="CellWidthSlider_Changed"/>
+            <TextBlock x:Name="CellWidthValue" Text="8 px" Style="{StaticResource ValueStyle}"/>
+
+            <TextBlock Text="Cell Height (pixels)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="CellHeightSlider" Minimum="8" Maximum="48" Value="16"
+                    Style="{StaticResource SliderStyle}" ValueChanged="CellHeightSlider_Changed"/>
+            <TextBlock x:Name="CellHeightValue" Text="16 px" Style="{StaticResource ValueStyle}"/>
+
+            <Separator Margin="0,8,0,8"/>
+
+            <!-- Character Set -->
+            <TextBlock Text="Character Set" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="CharsetCombo" SelectionChanged="CharsetCombo_Changed" Margin="0,0,0,4">
+                <ComboBoxItem Content="Standard (10 chars)" IsSelected="True"/>
+                <ComboBoxItem Content="Extended (70 chars)"/>
+                <ComboBoxItem Content="Blocks (Unicode)"/>
+                <ComboBoxItem Content="Simple Blocks"/>
+                <ComboBoxItem Content="Custom"/>
+            </ComboBox>
+
+            <!-- Custom Charset (only visible when Custom selected) -->
+            <StackPanel x:Name="CustomCharsetPanel" Visibility="Collapsed">
+                <TextBlock Text="Custom Characters (dark to light)" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="CustomCharsetTextBox" TextChanged="CustomCharsetTextBox_Changed"
+                         Margin="0,0,0,4" FontFamily="Consolas"/>
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8"/>
+
+            <!-- Color Mode -->
+            <TextBlock Text="Color Mode" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="ColorModeCombo" SelectionChanged="ColorModeCombo_Changed" Margin="0,0,0,4">
+                <ComboBoxItem Content="Colored" IsSelected="True"/>
+                <ComboBoxItem Content="Monochrome"/>
+                <ComboBoxItem Content="Palette"/>
+            </ComboBox>
+
+            <!-- Monochrome Colors (only visible when Monochrome or Palette selected) -->
+            <StackPanel x:Name="MonochromeColorsPanel" Visibility="Collapsed">
+                <TextBlock Text="Foreground Color" Style="{StaticResource LabelStyle}"/>
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="ForegroundColorTextBox" Text="#00FF00" TextChanged="ForegroundColorTextBox_Changed"/>
+                    <Rectangle x:Name="ForegroundColorPreview" Grid.Column="1" Width="24" Height="24" Margin="4,0,0,0"
+                               Fill="Lime" Stroke="White" StrokeThickness="1"/>
+                </Grid>
+
+                <TextBlock Text="Background Color" Style="{StaticResource LabelStyle}"/>
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="BackgroundColorTextBox" Text="#000000" TextChanged="BackgroundColorTextBox_Changed"/>
+                    <Rectangle x:Name="BackgroundColorPreview" Grid.Column="1" Width="24" Height="24" Margin="4,0,0,0"
+                               Fill="Black" Stroke="White" StrokeThickness="1"/>
+                </Grid>
+            </StackPanel>
+
+        </StackPanel>
+
+        <!-- ======================== ADVANCED SETTINGS ======================== -->
+        <StackPanel x:Name="AdvancedSettingsPanel" Visibility="Collapsed">
+
+            <!-- Character Settings -->
+            <Expander Header="Character Settings" Style="{StaticResource AdvancedExpanderStyle}" IsExpanded="True">
+                <StackPanel Margin="8,4,0,0">
+                    <TextBlock Text="Font Family" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="FontFamilyCombo" SelectionChanged="FontFamilyCombo_Changed" Margin="0,0,0,4">
+                        <ComboBoxItem Content="Consolas" IsSelected="True"/>
+                        <ComboBoxItem Content="Courier New"/>
+                        <ComboBoxItem Content="Lucida Console"/>
+                        <ComboBoxItem Content="Terminal"/>
+                    </ComboBox>
+
+                    <TextBlock Text="Font Weight" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="FontWeightCombo" SelectionChanged="FontWeightCombo_Changed" Margin="0,0,0,4">
+                        <ComboBoxItem Content="Normal" IsSelected="True"/>
+                        <ComboBoxItem Content="Bold"/>
+                    </ComboBox>
+                </StackPanel>
+            </Expander>
+
+            <!-- Brightness & Contrast -->
+            <Expander Header="Brightness &amp; Contrast" Style="{StaticResource AdvancedExpanderStyle}">
+                <StackPanel Margin="8,4,0,0">
+                    <TextBlock Text="Brightness" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="BrightnessSlider" Minimum="-1" Maximum="1" Value="0"
+                            Style="{StaticResource SliderStyle}" ValueChanged="BrightnessSlider_Changed"/>
+                    <TextBlock x:Name="BrightnessValue" Text="0.00" Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Text="Contrast" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="ContrastSlider" Minimum="0.5" Maximum="3" Value="1"
+                            Style="{StaticResource SliderStyle}" ValueChanged="ContrastSlider_Changed"/>
+                    <TextBlock x:Name="ContrastValue" Text="1.00" Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Text="Gamma" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="GammaSlider" Minimum="0.5" Maximum="2.5" Value="1"
+                            Style="{StaticResource SliderStyle}" ValueChanged="GammaSlider_Changed"/>
+                    <TextBlock x:Name="GammaValue" Text="1.00" Style="{StaticResource ValueStyle}"/>
+
+                    <CheckBox x:Name="InvertCheckBox" Content="Invert Brightness"
+                              Margin="0,8,0,0" Checked="InvertCheckBox_Changed" Unchecked="InvertCheckBox_Changed"/>
+                </StackPanel>
+            </Expander>
+
+            <!-- Color Settings -->
+            <Expander Header="Color Settings" Style="{StaticResource AdvancedExpanderStyle}">
+                <StackPanel Margin="8,4,0,0">
+                    <TextBlock Text="Saturation" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="SaturationSlider" Minimum="0" Maximum="2" Value="1"
+                            Style="{StaticResource SliderStyle}" ValueChanged="SaturationSlider_Changed"/>
+                    <TextBlock x:Name="SaturationValue" Text="100%" Style="{StaticResource ValueStyle}"/>
+
+                    <TextBlock Text="Quantize Levels (Palette mode)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="QuantizeLevelsSlider" Minimum="2" Maximum="256" Value="256"
+                            Style="{StaticResource SliderStyle}" ValueChanged="QuantizeLevelsSlider_Changed"/>
+                    <TextBlock x:Name="QuantizeLevelsValue" Text="256" Style="{StaticResource ValueStyle}"/>
+
+                    <CheckBox x:Name="PreserveLuminanceCheckBox" Content="Preserve Luminance"
+                              Margin="0,8,0,0" Checked="PreserveLuminanceCheckBox_Changed" Unchecked="PreserveLuminanceCheckBox_Changed"/>
+                </StackPanel>
+            </Expander>
+
+            <!-- Visual Effects -->
+            <Expander Header="Visual Effects" Style="{StaticResource AdvancedExpanderStyle}">
+                <StackPanel Margin="8,4,0,0">
+                    <!-- Scanlines -->
+                    <CheckBox x:Name="ScanlinesCheckBox" Content="Scanlines"
+                              Margin="0,0,0,4" Checked="ScanlinesCheckBox_Changed" Unchecked="ScanlinesCheckBox_Changed"/>
+                    <StackPanel x:Name="ScanlinesSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                        <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="ScanlineIntensitySlider" Minimum="0" Maximum="1" Value="0.3"
+                                Style="{StaticResource SliderStyle}" ValueChanged="ScanlineIntensitySlider_Changed"/>
+                        <TextBlock x:Name="ScanlineIntensityValue" Text="0.30" Style="{StaticResource ValueStyle}"/>
+                    </StackPanel>
+
+                    <!-- CRT Curvature -->
+                    <CheckBox x:Name="CrtCurvatureCheckBox" Content="CRT Curvature"
+                              Margin="0,0,0,4" Checked="CrtCurvatureCheckBox_Changed" Unchecked="CrtCurvatureCheckBox_Changed"/>
+                    <StackPanel x:Name="CrtSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                        <TextBlock Text="Curvature Amount" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="CrtAmountSlider" Minimum="0" Maximum="0.5" Value="0.1"
+                                Style="{StaticResource SliderStyle}" ValueChanged="CrtAmountSlider_Changed"/>
+                        <TextBlock x:Name="CrtAmountValue" Text="0.10" Style="{StaticResource ValueStyle}"/>
+                    </StackPanel>
+
+                    <!-- Vignette -->
+                    <CheckBox x:Name="VignetteCheckBox" Content="Vignette"
+                              Margin="0,0,0,4" Checked="VignetteCheckBox_Changed" Unchecked="VignetteCheckBox_Changed"/>
+                    <StackPanel x:Name="VignetteSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                        <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="VignetteIntensitySlider" Minimum="0" Maximum="1" Value="0.3"
+                                Style="{StaticResource SliderStyle}" ValueChanged="VignetteIntensitySlider_Changed"/>
+                        <TextBlock x:Name="VignetteIntensityValue" Text="0.30" Style="{StaticResource ValueStyle}"/>
+                    </StackPanel>
+
+                    <!-- Chromatic Aberration -->
+                    <CheckBox x:Name="ChromaticCheckBox" Content="Chromatic Aberration"
+                              Margin="0,0,0,4" Checked="ChromaticCheckBox_Changed" Unchecked="ChromaticCheckBox_Changed"/>
+                    <StackPanel x:Name="ChromaticSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                        <TextBlock Text="Offset (pixels)" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="ChromaticOffsetSlider" Minimum="0.5" Maximum="4" Value="1"
+                                Style="{StaticResource SliderStyle}" ValueChanged="ChromaticOffsetSlider_Changed"/>
+                        <TextBlock x:Name="ChromaticOffsetValue" Text="1.0 px" Style="{StaticResource ValueStyle}"/>
+                    </StackPanel>
+
+                    <!-- Noise -->
+                    <CheckBox x:Name="NoiseCheckBox" Content="Noise/Grain"
+                              Margin="0,0,0,4" Checked="NoiseCheckBox_Changed" Unchecked="NoiseCheckBox_Changed"/>
+                    <StackPanel x:Name="NoiseSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                        <TextBlock Text="Amount" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="NoiseAmountSlider" Minimum="0" Maximum="0.5" Value="0.1"
+                                Style="{StaticResource SliderStyle}" ValueChanged="NoiseAmountSlider_Changed"/>
+                        <TextBlock x:Name="NoiseAmountValue" Text="0.10" Style="{StaticResource ValueStyle}"/>
+                    </StackPanel>
+
+                    <!-- Flicker -->
+                    <CheckBox x:Name="FlickerCheckBox" Content="Flicker"
+                              Margin="0,0,0,4" Checked="FlickerCheckBox_Changed" Unchecked="FlickerCheckBox_Changed"/>
+                    <StackPanel x:Name="FlickerSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                        <TextBlock Text="Speed" Style="{StaticResource LabelStyle}"/>
+                        <Slider x:Name="FlickerSpeedSlider" Minimum="0.5" Maximum="5" Value="1"
+                                Style="{StaticResource SliderStyle}" ValueChanged="FlickerSpeedSlider_Changed"/>
+                        <TextBlock x:Name="FlickerSpeedValue" Text="1.0x" Style="{StaticResource ValueStyle}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
+            <!-- Character Rendering -->
+            <Expander Header="Character Rendering" Style="{StaticResource AdvancedExpanderStyle}">
+                <StackPanel Margin="8,4,0,0">
+                    <TextBlock Text="Anti-aliasing" Style="{StaticResource LabelStyle}"/>
+                    <ComboBox x:Name="AntialiasingCombo" SelectionChanged="AntialiasingCombo_Changed" Margin="0,0,0,4">
+                        <ComboBoxItem Content="None" IsSelected="True"/>
+                        <ComboBoxItem Content="2x (Bilinear)"/>
+                        <ComboBoxItem Content="4x (Supersampling)"/>
+                    </ComboBox>
+
+                    <!-- Character Shadow -->
+                    <CheckBox x:Name="CharShadowCheckBox" Content="Character Shadow"
+                              Margin="0,8,0,4" Checked="CharShadowCheckBox_Changed" Unchecked="CharShadowCheckBox_Changed"/>
+
+                    <!-- Grid Lines -->
+                    <CheckBox x:Name="GridLinesCheckBox" Content="Grid Lines"
+                              Margin="0,4,0,4" Checked="GridLinesCheckBox_Changed" Unchecked="GridLinesCheckBox_Changed"/>
+                </StackPanel>
+            </Expander>
+
+            <!-- Edge & Shape -->
+            <Expander Header="Edge &amp; Shape" Style="{StaticResource AdvancedExpanderStyle}">
+                <StackPanel Margin="8,4,0,0">
+                    <TextBlock Text="Edge Softness (pixels)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="100" Value="20"
+                            Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_Changed"/>
+                    <TextBlock x:Name="EdgeSoftnessValue" Text="20 px" Style="{StaticResource ValueStyle}"/>
+
+                    <!-- Inner Glow -->
+                    <CheckBox x:Name="InnerGlowCheckBox" Content="Inner Glow"
+                              Margin="0,8,0,4" Checked="InnerGlowCheckBox_Changed" Unchecked="InnerGlowCheckBox_Changed"/>
+                </StackPanel>
+            </Expander>
+
+        </StackPanel>
+
+    </StackPanel>
+</UserControl>
