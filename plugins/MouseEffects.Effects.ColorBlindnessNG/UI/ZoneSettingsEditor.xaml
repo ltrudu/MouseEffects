@@ -176,11 +176,20 @@
                                             ValueChanged="HueWheel_ValueChanged"/>
                     <!-- Legend -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
-                        <Ellipse Width="12" Height="12" Fill="LimeGreen" Margin="0,0,4,0"/>
-                        <TextBlock Text="Start" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <Ellipse Width="12" Height="12" Fill="OrangeRed" Margin="0,0,4,0"/>
-                        <TextBlock Text="End" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <Ellipse Width="12" Height="12" Fill="Gold" Margin="0,0,4,0"/>
+                        <Grid Width="14" Height="14" Margin="0,0,2,0">
+                            <Ellipse Fill="LimeGreen"/>
+                            <TextBlock Text="&gt;" FontSize="9" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                        </Grid>
+                        <TextBlock Text="Start" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Grid Width="14" Height="14" Margin="0,0,2,0">
+                            <Ellipse Fill="OrangeRed"/>
+                            <TextBlock Text="&lt;" FontSize="9" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                        </Grid>
+                        <TextBlock Text="End" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Grid Width="14" Height="14" Margin="0,0,2,0">
+                            <Ellipse Fill="Gold"/>
+                            <TextBlock Text="x" FontSize="9" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                        </Grid>
                         <TextBlock Text="Shift" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center"/>
                     </StackPanel>
                     <!-- Value labels -->
@@ -242,9 +251,12 @@
                                              ValueChanged="CIELABAxis_ValueChanged"/>
                     <!-- Legend -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <Ellipse Width="12" Height="12" Fill="#FF9632" Margin="0,0,4,0"/>
-                        <TextBlock Text="a*→b*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                        <Ellipse Width="12" Height="12" Fill="#3296FF" Margin="0,0,4,0"/>
+                        <Ellipse Width="14" Height="14" Fill="#FF9632" Margin="0,0,2,0"/>
+                        <TextBlock Text="a*→b*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Grid Width="14" Height="14" Margin="0,0,2,0">
+                            <Ellipse Fill="#3296FF"/>
+                            <TextBlock Text="x" FontSize="9" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                        </Grid>
                         <TextBlock Text="b*→a*" FontSize="10" Foreground="#AAAAAA" VerticalAlignment="Center"/>
                     </StackPanel>
 

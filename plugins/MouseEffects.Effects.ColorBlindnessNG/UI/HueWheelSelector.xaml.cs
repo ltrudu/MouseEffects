@@ -22,6 +22,9 @@ public partial class HueWheelSelector : System.Windows.Controls.UserControl
     private Ellipse? _startHandle;
     private Ellipse? _endHandle;
     private Ellipse? _shiftHandle;
+    private TextBlock? _startSymbol;
+    private TextBlock? _endSymbol;
+    private TextBlock? _shiftSymbol;
     private Path? _sourceArc;
     private Path? _targetArc;
     private Path? _shiftArrow;
@@ -173,6 +176,15 @@ public partial class HueWheelSelector : System.Windows.Controls.UserControl
         WheelCanvas.Children.Add(_startHandle);
         WheelCanvas.Children.Add(_endHandle);
         WheelCanvas.Children.Add(_shiftHandle);
+
+        // Create accessibility symbols (for colorblind users)
+        _startSymbol = CreateHandleSymbol(">");
+        _endSymbol = CreateHandleSymbol("<");
+        _shiftSymbol = CreateHandleSymbol("x");
+
+        WheelCanvas.Children.Add(_startSymbol);
+        WheelCanvas.Children.Add(_endSymbol);
+        WheelCanvas.Children.Add(_shiftSymbol);
     }
 
     private Ellipse CreateHandle(WpfColor color, string tooltip)
@@ -195,6 +207,19 @@ public partial class HueWheelSelector : System.Windows.Controls.UserControl
             Opacity = 0.5
         };
         return handle;
+    }
+
+    private TextBlock CreateHandleSymbol(string symbol)
+    {
+        return new TextBlock
+        {
+            Text = symbol,
+            Foreground = WpfBrushes.White,
+            FontSize = 10,
+            FontWeight = FontWeights.Bold,
+            IsHitTestVisible = false,
+            TextAlignment = TextAlignment.Center
+        };
     }
 
     private WpfImage CreateColorWheelImage()
@@ -289,6 +314,23 @@ public partial class HueWheelSelector : System.Windows.Controls.UserControl
         var shiftPos = AngleToPoint(shiftedMidAngle, _outerRadius + ShiftArrowOffset);
         Canvas.SetLeft(_shiftHandle, shiftPos.X - HandleRadius);
         Canvas.SetTop(_shiftHandle, shiftPos.Y - HandleRadius);
+
+        // Position accessibility symbols centered on handles
+        if (_startSymbol != null)
+        {
+            Canvas.SetLeft(_startSymbol, startPos.X - 4);
+            Canvas.SetTop(_startSymbol, startPos.Y - 7);
+        }
+        if (_endSymbol != null)
+        {
+            Canvas.SetLeft(_endSymbol, endPos.X - 4);
+            Canvas.SetTop(_endSymbol, endPos.Y - 7);
+        }
+        if (_shiftSymbol != null)
+        {
+            Canvas.SetLeft(_shiftSymbol, shiftPos.X - 4);
+            Canvas.SetTop(_shiftSymbol, shiftPos.Y - 7);
+        }
 
         // Update source arc
         _sourceArc.Data = CreateArcGeometry(SourceStart, SourceEnd, _handleRadius);

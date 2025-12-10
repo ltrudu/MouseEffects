@@ -24,6 +24,7 @@ public partial class CIELABAxisControl : System.Windows.Controls.UserControl
     private Path? _btoaArrow;
     private Ellipse? _atobHandle;
     private Ellipse? _btoaHandle;
+    private TextBlock? _btoaSymbol;
     private Line? _aAxis;
     private Line? _bAxis;
     private TextBlock? _aLabel;
@@ -214,6 +215,11 @@ public partial class CIELABAxisControl : System.Windows.Controls.UserControl
 
         AxisCanvas.Children.Add(_atobHandle);
         AxisCanvas.Children.Add(_btoaHandle);
+
+        // Create accessibility symbol for b*→a* handle (for colorblind users)
+        // a*→b* (orange) has no symbol, b*→a* (blue) has "x"
+        _btoaSymbol = CreateHandleSymbol("x");
+        AxisCanvas.Children.Add(_btoaSymbol);
     }
 
     private Ellipse CreateHandle(WpfColor color, string tooltip)
@@ -236,6 +242,19 @@ public partial class CIELABAxisControl : System.Windows.Controls.UserControl
             Opacity = 0.5
         };
         return handle;
+    }
+
+    private TextBlock CreateHandleSymbol(string symbol)
+    {
+        return new TextBlock
+        {
+            Text = symbol,
+            Foreground = WpfBrushes.White,
+            FontSize = 10,
+            FontWeight = FontWeights.Bold,
+            IsHitTestVisible = false,
+            TextAlignment = TextAlignment.Center
+        };
     }
 
     private WpfImage CreateColorPlaneImage()
@@ -327,9 +346,11 @@ public partial class CIELABAxisControl : System.Windows.Controls.UserControl
             _atobArrow.Visibility = Visibility.Collapsed;
         }
 
-        // Position A→B handle
-        Canvas.SetLeft(_atobHandle, _centerX + _radius * 0.3 - HandleRadius);
-        Canvas.SetTop(_atobHandle, _centerY - AtoBTransfer * _radius * 0.6 - HandleRadius);
+        // Position A→B handle (no symbol - orange handle has no accessibility marker)
+        double atobHandleX = _centerX + _radius * 0.3;
+        double atobHandleY = _centerY - AtoBTransfer * _radius * 0.6;
+        Canvas.SetLeft(_atobHandle, atobHandleX - HandleRadius);
+        Canvas.SetTop(_atobHandle, atobHandleY - HandleRadius);
 
         // B→A Transfer arrow (vertical to horizontal, on top)
         double btoaLength = Math.Abs(BtoATransfer) * _radius * 0.6;
@@ -348,8 +369,17 @@ public partial class CIELABAxisControl : System.Windows.Controls.UserControl
         }
 
         // Position B→A handle
-        Canvas.SetLeft(_btoaHandle, _centerX + BtoATransfer * _radius * 0.6 - HandleRadius);
-        Canvas.SetTop(_btoaHandle, _centerY - _radius * 0.3 - HandleRadius);
+        double btoaHandleX = _centerX + BtoATransfer * _radius * 0.6;
+        double btoaHandleY = _centerY - _radius * 0.3;
+        Canvas.SetLeft(_btoaHandle, btoaHandleX - HandleRadius);
+        Canvas.SetTop(_btoaHandle, btoaHandleY - HandleRadius);
+
+        // Position B→A symbol (x) centered on handle
+        if (_btoaSymbol != null)
+        {
+            Canvas.SetLeft(_btoaSymbol, btoaHandleX - 4);
+            Canvas.SetTop(_btoaSymbol, btoaHandleY - 7);
+        }
 
         // Update axis lines based on enhancement
         if (_aAxis != null && AEnhance != 1.0)
