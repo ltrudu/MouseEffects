@@ -37,7 +37,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 | **Zoom** | Magnifying lens effect with circle or rectangle shape and hotkey support |
 | **Firework** | Stunning firework explosions with rockets, trails, and secondary explosions |
 | **Space Invaders** | Defend against neon invaders with rockets - includes scoring and leaderboard |
-| **ASCIIZer** | Renders screen as ASCII art with 6 filter modes: ASCII Art Classic (luminance-to-character mapping), Matrix Rain (falling green characters), Dot Matrix (LED display simulation), Typewriter (mechanical typewriter with ink variations and wear effects), Braille (Unicode patterns with 2x4 dot grids), and Edge ASCII (Sobel edge detection with directional characters). Includes post-processing effects: scanlines, CRT curvature, vignette, chromatic aberration, noise, flicker, and phosphor glow. Supports fullscreen, circle, and rectangle cursor-following layouts |
+| **ASCIIZer** | Renders screen as ASCII art with 6 filter modes: ASCII Art Classic (luminance-to-character mapping), Matrix Rain (falling green characters), Dot Matrix (LED display simulation), Typewriter (mechanical typewriter with ink variations and wear effects), Braille (Unicode patterns with 2x4 dot grids), and Edge ASCII (Sobel edge detection with directional characters). Includes post-processing effects: scanlines, CRT curvature, vignette, chromatic aberration, noise, flicker, and phosphor glow. Supports fullscreen, circle, and rectangle cursor-following layouts | 
 
 ## Screenshots
 
