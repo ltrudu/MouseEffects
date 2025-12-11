@@ -1,0 +1,115 @@
+<UserControl x:Class="MouseEffects.Effects.ASCIIZer.UI.Filters.PostEffectsSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,6,0,2"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SectionStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Expander Header="Post Effects" IsExpanded="False" Margin="0,8,0,0">
+        <StackPanel Margin="8,8,0,0">
+            <TextBlock Text="Visual effects applied after the filter renders. These settings apply to all filter types."
+                       Opacity="0.6" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+            <!-- Scanlines -->
+            <CheckBox x:Name="ScanlinesCheckBox" Content="Scanlines"
+                      Margin="0,0,0,4" Checked="ScanlinesCheckBox_Changed" Unchecked="ScanlinesCheckBox_Changed"/>
+            <StackPanel x:Name="ScanlinesSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ScanlineIntensitySlider" Minimum="0" Maximum="1" Value="0.3"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ScanlineIntensitySlider_Changed"/>
+                <TextBlock x:Name="ScanlineIntensityValue" Text="0.30" Style="{StaticResource ValueStyle}"/>
+
+                <TextBlock Text="Spacing" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ScanlineSpacingSlider" Minimum="1" Maximum="4" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ScanlineSpacingSlider_Changed"
+                        IsSnapToTickEnabled="True" TickFrequency="1"/>
+                <TextBlock x:Name="ScanlineSpacingValue" Text="2 px" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- CRT Curvature -->
+            <CheckBox x:Name="CrtCurvatureCheckBox" Content="CRT Curvature"
+                      Margin="0,0,0,4" Checked="CrtCurvatureCheckBox_Changed" Unchecked="CrtCurvatureCheckBox_Changed"/>
+            <StackPanel x:Name="CrtSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Curvature Amount" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="CrtAmountSlider" Minimum="0" Maximum="0.5" Value="0.1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="CrtAmountSlider_Changed"/>
+                <TextBlock x:Name="CrtAmountValue" Text="0.10" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Phosphor Glow -->
+            <CheckBox x:Name="PhosphorGlowCheckBox" Content="Phosphor Glow"
+                      Margin="0,0,0,4" Checked="PhosphorGlowCheckBox_Changed" Unchecked="PhosphorGlowCheckBox_Changed"/>
+            <StackPanel x:Name="PhosphorGlowSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="PhosphorIntensitySlider" Minimum="0" Maximum="1" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="PhosphorIntensitySlider_Changed"/>
+                <TextBlock x:Name="PhosphorIntensityValue" Text="0.50" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Vignette -->
+            <CheckBox x:Name="VignetteCheckBox" Content="Vignette"
+                      Margin="0,0,0,4" Checked="VignetteCheckBox_Changed" Unchecked="VignetteCheckBox_Changed"/>
+            <StackPanel x:Name="VignetteSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="VignetteIntensitySlider" Minimum="0" Maximum="1" Value="0.3"
+                        Style="{StaticResource SliderStyle}" ValueChanged="VignetteIntensitySlider_Changed"/>
+                <TextBlock x:Name="VignetteIntensityValue" Text="0.30" Style="{StaticResource ValueStyle}"/>
+
+                <TextBlock Text="Radius" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="VignetteRadiusSlider" Minimum="0.3" Maximum="1" Value="0.8"
+                        Style="{StaticResource SliderStyle}" ValueChanged="VignetteRadiusSlider_Changed"/>
+                <TextBlock x:Name="VignetteRadiusValue" Text="0.80" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Chromatic Aberration -->
+            <CheckBox x:Name="ChromaticCheckBox" Content="Chromatic Aberration"
+                      Margin="0,0,0,4" Checked="ChromaticCheckBox_Changed" Unchecked="ChromaticCheckBox_Changed"/>
+            <StackPanel x:Name="ChromaticSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Offset (pixels)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ChromaticOffsetSlider" Minimum="0.5" Maximum="4" Value="1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ChromaticOffsetSlider_Changed"/>
+                <TextBlock x:Name="ChromaticOffsetValue" Text="1.0 px" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Noise -->
+            <CheckBox x:Name="NoiseCheckBox" Content="Noise/Grain"
+                      Margin="0,0,0,4" Checked="NoiseCheckBox_Changed" Unchecked="NoiseCheckBox_Changed"/>
+            <StackPanel x:Name="NoiseSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Amount" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="NoiseAmountSlider" Minimum="0" Maximum="0.5" Value="0.1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="NoiseAmountSlider_Changed"/>
+                <TextBlock x:Name="NoiseAmountValue" Text="0.10" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Flicker -->
+            <CheckBox x:Name="FlickerCheckBox" Content="Flicker"
+                      Margin="0,0,0,4" Checked="FlickerCheckBox_Changed" Unchecked="FlickerCheckBox_Changed"/>
+            <StackPanel x:Name="FlickerSettingsPanel" Visibility="Collapsed" Margin="16,0,0,8">
+                <TextBlock Text="Speed" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FlickerSpeedSlider" Minimum="0.5" Maximum="5" Value="1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FlickerSpeedSlider_Changed"/>
+                <TextBlock x:Name="FlickerSpeedValue" Text="1.0x" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+        </StackPanel>
+    </Expander>
+</UserControl>

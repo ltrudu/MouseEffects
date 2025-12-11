@@ -52,17 +52,20 @@
             <TextBlock Text="Effect Filter" Style="{StaticResource LabelStyle}"/>
             <ComboBox x:Name="FilterTypeCombo" SelectionChanged="FilterTypeCombo_SelectionChanged" Margin="0,0,0,8">
                 <ComboBoxItem Content="ASCII Art Classic" IsSelected="True"/>
-                <ComboBoxItem Content="Matrix Rain" IsEnabled="False"/>
-                <ComboBoxItem Content="Dot Matrix" IsEnabled="False"/>
-                <ComboBoxItem Content="Typewriter" IsEnabled="False"/>
-                <ComboBoxItem Content="Braille" IsEnabled="False"/>
-                <ComboBoxItem Content="Edge ASCII" IsEnabled="False"/>
+                <ComboBoxItem Content="Matrix Rain"/>
+                <ComboBoxItem Content="Dot Matrix"/>
+                <ComboBoxItem Content="Typewriter"/>
+                <ComboBoxItem Content="Braille"/>
+                <ComboBoxItem Content="Edge ASCII"/>
             </ComboBox>
 
             <Separator Margin="0,4,0,8"/>
 
             <!-- Filter-specific settings container -->
             <ContentControl x:Name="FilterSettingsHost"/>
+
+            <!-- Shared Post-Effects Settings (applies to all filters) -->
+            <filters:PostEffectsSettings x:Name="PostEffectsPanel"/>
 
         </StackPanel>
     </StackPanel>

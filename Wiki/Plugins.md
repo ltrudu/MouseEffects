@@ -15,6 +15,7 @@ This document provides detailed information about each built-in effect plugin.
 - [Zoom](#zoom)
 - [Firework](#firework)
 - [Space Invaders](#space-invaders)
+- [ASCIIZer](#asciizer)
 
 ---
 
@@ -1214,6 +1215,349 @@ A fully playable Space Invaders mini-game where you defend against waves of neon
 - **Blend Mode**: Additive (creates neon glow)
 - **Shader**: GPU instanced sprites with animation
 - **Entity Types**: Invaders (3 types), Rockets, Explosion Particles, Score Overlay
+
+---
+
+## ASCIIZer
+
+**ID**: `asciizer`
+**Screen Capture**: Yes (Continuous)
+
+Renders the screen as ASCII art with 6 different filter styles and extensive customization options. Each filter transforms screen content into text-based representations with unique aesthetic characteristics.
+
+### Features
+
+- 6 distinct ASCII filter modes with specialized rendering techniques
+- Comprehensive post-processing effects (scanlines, CRT curvature, chromatic aberration, etc.)
+- 3 layout modes: Fullscreen, Circle (cursor-following), Rectangle (cursor-following)
+- Advanced mode with granular control over character mapping, colors, and rendering
+- Real-time screen capture processing with GPU acceleration
+- Character atlas system with multiple font families and weights
+
+### Filter Types
+
+#### 1. ASCII Art Classic
+
+Traditional ASCII art using brightness-to-character mapping. Converts screen luminance to characters based on visual density.
+
+**Features:**
+- Customizable character sets (Standard, Extended, Blocks, Minimal, Custom)
+- Multiple color modes: Original (preserves screen colors), Monochrome (single color), Custom (foreground/background)
+- Font customization: Courier New, Consolas, Lucida Console, Cascadia Code, JetBrains Mono
+- Font weights: Light, Regular, Bold, Extra Bold
+- Adjustable cell size for character grid spacing
+
+**Settings:**
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `cellWidth` | float | 4-32 | 8 | Character cell width (px) |
+| `cellHeight` | float | 8-64 | 16 | Character cell height (px) |
+| `charsetPreset` | int | 0-4 | 0 | 0=Standard, 1=Extended, 2=Blocks, 3=Minimal, 4=Custom |
+| `customCharset` | string | - | "" | Custom character set (when preset=4) |
+| `colorMode` | int | 0-2 | 0 | 0=Original, 1=Monochrome, 2=Custom |
+| `foreground` | Color4 | - | Green (0,1,0,1) | Text color (monochrome/custom modes) |
+| `background` | Color4 | - | Black (0,0,0,1) | Background color (custom mode) |
+| `fontFamily` | int | 0-4 | 0 | Font selection |
+| `fontWeight` | int | 0-3 | 1 | Font weight |
+| `saturation` | float | 0-2 | 1.0 | Color saturation adjustment |
+| `quantizeLevels` | int | 2-256 | 256 | Color quantization levels |
+| `preserveLuminance` | bool | - | false | Maintain original brightness |
+| `brightness` | float | -1 to 1 | 0 | Brightness adjustment |
+| `contrast` | float | 0-2 | 1.0 | Contrast adjustment |
+| `gamma` | float | 0.5-2.5 | 1.0 | Gamma correction |
+| `invert` | bool | - | false | Invert colors |
+| `sampleMode` | int | 0-2 | 0 | Sampling mode for color picking |
+| `antialiasing` | int | 0-2 | 1 | Character rendering quality |
+| `charShadow` | bool | - | false | Enable character drop shadow |
+| `shadowOffset` | Vector2 | - | (1,1) | Shadow offset in pixels |
+| `shadowColor` | Color4 | - | (0,0,0,0.5) | Shadow color |
+| `glowOnBright` | bool | - | false | Glow effect on bright characters |
+| `glowThreshold` | float | 0-1 | 0.8 | Brightness threshold for glow |
+| `glowRadius` | float | 1-10 | 3.0 | Glow effect radius |
+| `gridLines` | bool | - | false | Show character grid overlay |
+| `gridThickness` | float | 0.5-3 | 1.0 | Grid line thickness |
+| `gridColor` | Color4 | - | (0.2,0.2,0.2,1) | Grid line color |
+
+**Character Sets:**
+- **Standard**: ` .:-=+*#%@` (10 characters, light to dark)
+- **Extended**: ` .'`^",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$` (70 characters)
+- **Blocks**: ` ░▒▓█` (5 block characters, increasing density)
+- **Minimal**: ` .:#` (4 characters, minimal set)
+- **Custom**: User-defined character set
+
+#### 2. Matrix Rain
+
+Falling green characters effect inspired by The Matrix movie. Simulates cascading digital rain with glowing leading characters.
+
+**Features:**
+- Animated falling character columns
+- Configurable fall speed and trail length
+- Column density control
+- Glow effects on leading characters
+- Classic Matrix green phosphor aesthetic
+- Character cycling animation
+
+**Settings:**
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `fallSpeed` | float | 0.5-10 | 2.0 | Character fall speed multiplier |
+| `trailLength` | float | 5-30 | 15 | Length of character trail |
+| `charCycleSpeed` | float | 0.1-5 | 1.0 | Character change animation speed |
+| `columnDensity` | float | 0.1-1 | 0.7 | Percentage of active columns |
+| `glowIntensity` | float | 0-2 | 0.8 | Glow effect strength on leading chars |
+| `cellWidth` | float | 4-32 | 10 | Character cell width (px) |
+| `cellHeight` | float | 8-64 | 16 | Character cell height (px) |
+| `primaryColor` | Color4 | - | (0,1,0.25,1) | Matrix green color |
+| `glowColor` | Color4 | - | (0.67,1,0.67,1) | Light green glow color |
+| `brightness` | float | -1 to 1 | 0 | Brightness adjustment |
+| `contrast` | float | 0-2 | 1.0 | Contrast adjustment |
+| `backgroundFade` | float | 0-1 | 0.3 | Background screen visibility |
+
+#### 3. Dot Matrix
+
+LED display simulation with configurable dot shapes and spacing. Recreates the aesthetic of old LED signs and displays.
+
+**Features:**
+- Multiple dot shapes: Circular, Square, Diamond
+- RGB sub-pixel mode for enhanced detail
+- Adjustable dot size and spacing
+- Gap control between dots
+- Brightness and color customization
+
+**Settings:**
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `dotShape` | int | 0-2 | 0 | 0=Circle, 1=Square, 2=Diamond |
+| `dotSize` | float | 0.3-1 | 0.7 | Dot size relative to cell |
+| `dotSpacing` | float | 1-20 | 4 | Space between dot centers (px) |
+| `gap` | float | 0.1-0.5 | 0.15 | Gap between dots (relative) |
+| `rgbSubpixel` | bool | - | false | RGB sub-pixel mode |
+| `brightness` | float | 0-2 | 1.0 | Overall brightness |
+| `ledColor` | Color4 | - | (1,0.2,0,1) | LED color (non-RGB mode) |
+| `useScreenColors` | bool | - | true | Use original screen colors |
+
+#### 4. Typewriter
+
+Simulates old mechanical typewriter output with realistic imperfections including ink variation, position jitter, and wear effects.
+
+**Features:**
+- Ink density variation for authentic typewriter look
+- Character position jitter (mechanical imprecision)
+- Double-strike effect simulation
+- Ribbon wear patterns
+- Age/wear intensity control
+- Customizable ink and paper colors
+- Character rotation variation
+
+**Settings:**
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `cellWidth` | float | 4-32 | 8 | Character cell width (px) |
+| `cellHeight` | float | 8-64 | 16 | Character cell height (px) |
+| `inkVariation` | float | 0-1 | 0.3 | Ink density variation amount |
+| `positionJitter` | float | 0-3 | 0.8 | Character position randomness (px) |
+| `doubleStrike` | float | 0-1 | 0.2 | Double-strike effect intensity |
+| `ribbonWear` | float | 0-1 | 0.4 | Ribbon wear pattern intensity |
+| `ageAmount` | float | 0-1 | 0.5 | Overall wear and tear |
+| `inkColor` | Color4 | - | (0.1,0.1,0.2,1) | Typewriter ink color |
+| `paperColor` | Color4 | - | (0.95,0.93,0.88,1) | Paper background color |
+| `brightness` | float | -1 to 1 | 0 | Brightness adjustment |
+| `contrast` | float | 0-2 | 1.0 | Contrast adjustment |
+| `rotationVariation` | float | 0-5 | 1.0 | Character rotation randomness (degrees) |
+
+#### 5. Braille
+
+Uses Unicode Braille patterns (U+2800-U+28FF) for high-resolution text representation. Each Braille character has a 2x4 dot grid providing 256 possible patterns.
+
+**Features:**
+- High resolution: 2x4 dots per character = 8 pixels per cell
+- Adaptive threshold for dot detection
+- Customizable dot rendering size
+- Inversion support for light-on-dark or dark-on-light
+- Color customization for dots and background
+
+**Settings:**
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `cellWidth` | float | 4-32 | 6 | Braille cell width (px) |
+| `cellHeight` | float | 8-64 | 12 | Braille cell height (px) |
+| `threshold` | float | 0-1 | 0.5 | Dot activation threshold |
+| `dotSize` | float | 0.3-1 | 0.8 | Dot rendering size (relative) |
+| `invert` | bool | - | false | Invert dot patterns |
+| `dotColor` | Color4 | - | (1,1,1,1) | Braille dot color |
+| `backgroundColor` | Color4 | - | (0,0,0,1) | Background color |
+| `useScreenColors` | bool | - | false | Use original screen colors |
+| `brightness` | float | -1 to 1 | 0 | Brightness adjustment |
+| `contrast` | float | 0-2 | 1.0 | Contrast adjustment |
+
+**Technical Details:**
+- Unicode range: U+2800 (⠀) to U+28FF (⣿)
+- Each Braille character represents 8 binary states (2⁸ = 256 patterns)
+- Higher resolution than standard ASCII art
+- Efficient for detailed image representation
+
+#### 6. Edge ASCII
+
+ASCII art based on Sobel edge detection. Maps edge direction to line characters for artistic edge-only representations.
+
+**Features:**
+- Sobel edge detection algorithm
+- Directional character mapping: - | / \ +
+- Corner detection with + character
+- Optional background image blending
+- Edge strength threshold control
+- Customizable character set for directions
+
+**Settings:**
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `cellWidth` | float | 4-32 | 8 | Character cell width (px) |
+| `cellHeight` | float | 8-64 | 16 | Character cell height (px) |
+| `edgeThreshold` | float | 0-1 | 0.2 | Edge detection sensitivity |
+| `showBackground` | bool | - | false | Blend with original image |
+| `backgroundAlpha` | float | 0-1 | 0.3 | Background blend amount |
+| `edgeColor` | Color4 | - | (1,1,1,1) | Edge character color |
+| `backgroundColor` | Color4 | - | (0,0,0,1) | Background color |
+| `useScreenColors` | bool | - | false | Use screen colors for edges |
+| `brightness` | float | -1 to 1 | 0 | Brightness adjustment |
+| `contrast` | float | 0-2 | 1.0 | Contrast adjustment |
+
+**Character Mapping:**
+- **Horizontal edges**: `-` (low vertical gradient)
+- **Vertical edges**: `|` (low horizontal gradient)
+- **Diagonal (↗↙)**: `/` (positive slope)
+- **Diagonal (↖↘)**: `\` (negative slope)
+- **Corners/junctions**: `+` (strong gradients in multiple directions)
+
+### Shared Post-Effects
+
+All filter types support these post-processing effects for enhanced retro/CRT aesthetics:
+
+#### Scanlines
+
+CRT monitor scanline simulation with adjustable intensity and spacing.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `scanlines` | bool | - | false | Enable scanline effect |
+| `scanlineIntensity` | float | 0-1 | 0.3 | Scanline darkness |
+| `scanlineSpacing` | int | 1-10 | 2 | Lines between scanlines |
+
+#### CRT Curvature
+
+Barrel distortion effect to simulate curved CRT screen.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `crtCurvature` | bool | - | false | Enable barrel distortion |
+| `crtAmount` | float | 0-0.5 | 0.1 | Curvature strength |
+
+#### Vignette
+
+Edge darkening effect for focus and atmosphere.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `vignette` | bool | - | false | Enable vignette |
+| `vignetteIntensity` | float | 0-1 | 0.3 | Edge darkening amount |
+| `vignetteRadius` | float | 0.3-1 | 0.8 | Vignette start radius |
+
+#### Chromatic Aberration
+
+RGB channel separation for lens distortion effect.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `chromatic` | bool | - | false | Enable chromatic aberration |
+| `chromaticOffset` | float | 0-5 | 1.0 | RGB channel offset (px) |
+
+#### Noise/Grain
+
+Film grain and analog noise effect.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `noise` | bool | - | false | Enable noise effect |
+| `noiseAmount` | float | 0-1 | 0.1 | Noise intensity |
+
+#### Flicker
+
+Brightness variation to simulate unstable phosphor or film.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `flicker` | bool | - | false | Enable flicker |
+| `flickerSpeed` | float | 0.1-5 | 1.0 | Flicker frequency |
+
+#### Phosphor Glow
+
+Bloom effect on bright areas for CRT phosphor simulation.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `phosphorGlow` | bool | - | false | Enable phosphor glow |
+| `phosphorIntensity` | float | 0-1 | 0.5 | Glow strength |
+
+### Layout Modes
+
+The effect can be applied in three different layout configurations:
+
+#### Fullscreen (Mode 0)
+
+Effect covers the entire screen with the selected filter.
+
+#### Circle (Mode 1)
+
+Effect follows the cursor in a circular area with soft edge blending.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `radius` | float | 50-1000 | 200 | Circle radius (px) |
+| `edgeSoftness` | float | 0-100 | 20 | Edge feather distance (px) |
+| `shapeFeather` | float | 0-1 | 0 | Additional shape feathering |
+| `innerGlow` | bool | - | false | Enable inner edge glow |
+| `innerGlowColor` | Color4 | - | (1,1,1,0.3) | Inner glow color |
+| `innerGlowSize` | float | 5-50 | 10 | Inner glow width (px) |
+
+#### Rectangle (Mode 2)
+
+Effect follows the cursor in a rectangular area with soft edge blending.
+
+| Setting | Type | Range | Default | Description |
+|---------|------|-------|---------|-------------|
+| `rectWidth` | float | 100-2000 | 400 | Rectangle width (px) |
+| `rectHeight` | float | 100-2000 | 300 | Rectangle height (px) |
+| `edgeSoftness` | float | 0-100 | 20 | Edge feather distance (px) |
+| `shapeFeather` | float | 0-1 | 0 | Additional shape feathering |
+| `innerGlow` | bool | - | false | Enable inner edge glow |
+| `innerGlowColor` | Color4 | - | (1,1,1,0.3) | Inner glow color |
+| `innerGlowSize` | float | 5-50 | 10 | Inner glow width (px) |
+
+### Advanced Mode
+
+Enabling advanced mode provides access to additional expert-level settings for fine-tuned control over character rendering, sampling methods, and visual effects. Settings vary by filter type.
+
+### Rendering
+
+- **Blend Mode**: Opaque (fullscreen), Alpha (circle/rectangle)
+- **Shader**: Per-filter specialized shaders with character atlas sampling
+- **Character Atlas**: Dynamic texture generation for font rendering
+- **Constant Buffers**: Split architecture - b0 for shared post-effects, b1 for filter-specific parameters
+
+### Use Cases
+
+- **Retro Aesthetic**: Create nostalgic terminal/CRT monitor effects
+- **Privacy Screen**: Obscure screen content while maintaining readability
+- **Artistic Visualization**: Transform desktop into living ASCII art
+- **Presentations**: Add unique visual flair to screen recordings
+- **Accessibility**: High-contrast Braille mode for alternative visualization
+- **Gaming**: Matrix Rain or Typewriter effects for thematic overlays
 
 ---
 

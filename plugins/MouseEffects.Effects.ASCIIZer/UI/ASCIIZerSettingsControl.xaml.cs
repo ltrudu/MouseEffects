@@ -18,6 +18,11 @@ public partial class ASCIIZerSettingsControl : UserControl
 
     // Filter-specific settings controls
     private ASCIIClassicSettings? _asciiClassicSettings;
+    private MatrixRainSettings? _matrixRainSettings;
+    private DotMatrixSettings? _dotMatrixSettings;
+    private BrailleSettings? _brailleSettings;
+    private TypewriterSettings? _typewriterSettings;
+    private EdgeASCIISettings? _edgeASCIISettings;
 
     public ASCIIZerSettingsControl()
     {
@@ -37,6 +42,9 @@ public partial class ASCIIZerSettingsControl : UserControl
             _effect = asciiEffect;
             LoadConfiguration();
             LoadFilterSettings();
+
+            // Initialize the shared post-effects panel
+            PostEffectsPanel.Initialize(_effect);
         }
     }
 
@@ -78,7 +86,56 @@ public partial class ASCIIZerSettingsControl : UserControl
                 _asciiClassicSettings.Initialize(_effect);
                 break;
 
-            // Future filters will be added here
+            case 1: // Matrix Rain
+                if (_matrixRainSettings == null)
+                {
+                    _matrixRainSettings = new MatrixRainSettings();
+                    _matrixRainSettings.DataContext = _effect;
+                }
+                FilterSettingsHost.Content = _matrixRainSettings;
+                _matrixRainSettings.Initialize(_effect);
+                break;
+
+            case 2: // Dot Matrix
+                if (_dotMatrixSettings == null)
+                {
+                    _dotMatrixSettings = new DotMatrixSettings();
+                    _dotMatrixSettings.DataContext = _effect;
+                }
+                FilterSettingsHost.Content = _dotMatrixSettings;
+                _dotMatrixSettings.Initialize(_effect);
+                break;
+
+            case 3: // Typewriter
+                if (_typewriterSettings == null)
+                {
+                    _typewriterSettings = new TypewriterSettings();
+                    _typewriterSettings.DataContext = _effect;
+                }
+                FilterSettingsHost.Content = _typewriterSettings;
+                _typewriterSettings.Initialize(_effect);
+                break;
+
+            case 4: // Braille
+                if (_brailleSettings == null)
+                {
+                    _brailleSettings = new BrailleSettings();
+                    _brailleSettings.DataContext = _effect;
+                }
+                FilterSettingsHost.Content = _brailleSettings;
+                _brailleSettings.Initialize(_effect);
+                break;
+
+            case 5: // Edge ASCII
+                if (_edgeASCIISettings == null)
+                {
+                    _edgeASCIISettings = new EdgeASCIISettings();
+                    _edgeASCIISettings.DataContext = _effect;
+                }
+                FilterSettingsHost.Content = _edgeASCIISettings;
+                _edgeASCIISettings.Initialize(_effect);
+                break;
+
             default:
                 FilterSettingsHost.Content = null;
                 break;
@@ -105,6 +162,7 @@ public partial class ASCIIZerSettingsControl : UserControl
         if (_effect == null || _isLoading) return;
 
         int filterType = FilterTypeCombo.SelectedIndex;
+        _effect.FilterType = (FilterType)filterType;
         _effect.Configuration.Set("filterType", filterType);
         LoadFilterSettings();
     }

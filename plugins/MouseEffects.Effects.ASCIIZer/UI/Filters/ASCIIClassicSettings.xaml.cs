@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using MouseEffects.Core.Effects;
 using UserControl = System.Windows.Controls.UserControl;
 using Color = System.Windows.Media.Color;
 
@@ -9,6 +10,8 @@ namespace MouseEffects.Effects.ASCIIZer.UI.Filters;
 
 /// <summary>
 /// Settings control for ASCII Art Classic filter.
+/// Uses the same pattern as ColorBlindnessNG: directly modify effect properties
+/// for real-time shader updates, and also update Configuration for JSON persistence.
 /// </summary>
 public partial class ASCIIClassicSettings : UserControl
 {
@@ -34,219 +37,80 @@ public partial class ASCIIClassicSettings : UserControl
         try
         {
             // Advanced mode
-            if (_effect.Configuration.TryGet("advancedMode", out bool advancedMode))
-            {
-                AdvancedModeRadio.IsChecked = advancedMode;
-                BasicModeRadio.IsChecked = !advancedMode;
-                UpdateSettingsPanelVisibility(advancedMode);
-            }
+            AdvancedModeRadio.IsChecked = _effect.AdvancedMode;
+            BasicModeRadio.IsChecked = !_effect.AdvancedMode;
+            UpdateSettingsPanelVisibility(_effect.AdvancedMode);
 
             // Layout
-            if (_effect.Configuration.TryGet("layoutMode", out int layoutMode))
-            {
-                LayoutModeCombo.SelectedIndex = layoutMode;
-                UpdateLayoutVisibility(layoutMode);
-            }
+            LayoutModeCombo.SelectedIndex = _effect.LayoutMode;
+            UpdateLayoutVisibility(_effect.LayoutMode);
 
-            if (_effect.Configuration.TryGet("radius", out float radius))
-            {
-                RadiusSlider.Value = radius;
-                RadiusValue.Text = $"{radius:F0} px";
-            }
+            RadiusSlider.Value = _effect.Radius;
+            RadiusValue.Text = $"{_effect.Radius:F0} px";
 
-            if (_effect.Configuration.TryGet("rectWidth", out float rectWidth))
-            {
-                RectWidthSlider.Value = rectWidth;
-                RectWidthValue.Text = $"{rectWidth:F0} px";
-            }
+            RectWidthSlider.Value = _effect.RectWidth;
+            RectWidthValue.Text = $"{_effect.RectWidth:F0} px";
 
-            if (_effect.Configuration.TryGet("rectHeight", out float rectHeight))
-            {
-                RectHeightSlider.Value = rectHeight;
-                RectHeightValue.Text = $"{rectHeight:F0} px";
-            }
+            RectHeightSlider.Value = _effect.RectHeight;
+            RectHeightValue.Text = $"{_effect.RectHeight:F0} px";
 
             // Cell size
-            if (_effect.Configuration.TryGet("cellWidth", out float cellWidth))
-            {
-                CellWidthSlider.Value = cellWidth;
-                CellWidthValue.Text = $"{cellWidth:F0} px";
-            }
+            CellWidthSlider.Value = _effect.CellWidth;
+            CellWidthValue.Text = $"{_effect.CellWidth:F0} px";
 
-            if (_effect.Configuration.TryGet("cellHeight", out float cellHeight))
-            {
-                CellHeightSlider.Value = cellHeight;
-                CellHeightValue.Text = $"{cellHeight:F0} px";
-            }
+            CellHeightSlider.Value = _effect.CellHeight;
+            CellHeightValue.Text = $"{_effect.CellHeight:F0} px";
 
             // Character set
-            if (_effect.Configuration.TryGet("charsetPreset", out int charsetPreset))
-            {
-                CharsetCombo.SelectedIndex = charsetPreset;
-                CustomCharsetPanel.Visibility = charsetPreset == 4 ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("customCharset", out string? customCharset))
-            {
-                CustomCharsetTextBox.Text = customCharset ?? "";
-            }
+            CharsetCombo.SelectedIndex = _effect.CharsetPreset;
+            CustomCharsetPanel.Visibility = _effect.CharsetPreset == 4 ? Visibility.Visible : Visibility.Collapsed;
+            CustomCharsetTextBox.Text = _effect.CustomCharset;
 
             // Color mode
-            if (_effect.Configuration.TryGet("colorMode", out int colorMode))
-            {
-                ColorModeCombo.SelectedIndex = colorMode;
-                MonochromeColorsPanel.Visibility = colorMode > 0 ? Visibility.Visible : Visibility.Collapsed;
-            }
+            ColorModeCombo.SelectedIndex = _effect.ColorMode;
+            MonochromeColorsPanel.Visibility = _effect.ColorMode > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-            if (_effect.Configuration.TryGet("foreground", out Vector4 foreground))
-            {
-                ForegroundColorTextBox.Text = Vector4ToHex(foreground);
-                ForegroundColorPreview.Fill = new SolidColorBrush(Vector4ToColor(foreground));
-            }
+            ForegroundColorTextBox.Text = Vector4ToHex(_effect.Foreground);
+            ForegroundColorPreview.Fill = new SolidColorBrush(Vector4ToColor(_effect.Foreground));
 
-            if (_effect.Configuration.TryGet("background", out Vector4 background))
-            {
-                BackgroundColorTextBox.Text = Vector4ToHex(background);
-                BackgroundColorPreview.Fill = new SolidColorBrush(Vector4ToColor(background));
-            }
+            BackgroundColorTextBox.Text = Vector4ToHex(_effect.Background);
+            BackgroundColorPreview.Fill = new SolidColorBrush(Vector4ToColor(_effect.Background));
 
             // Advanced: Font
-            if (_effect.Configuration.TryGet("fontFamily", out int fontFamily))
-                FontFamilyCombo.SelectedIndex = fontFamily;
-
-            if (_effect.Configuration.TryGet("fontWeight", out int fontWeight))
-                FontWeightCombo.SelectedIndex = fontWeight;
+            FontFamilyCombo.SelectedIndex = _effect.FontFamily;
+            FontWeightCombo.SelectedIndex = _effect.FontWeight;
 
             // Advanced: Brightness
-            if (_effect.Configuration.TryGet("brightness", out float brightness))
-            {
-                BrightnessSlider.Value = brightness;
-                BrightnessValue.Text = $"{brightness:F2}";
-            }
+            BrightnessSlider.Value = _effect.Brightness;
+            BrightnessValue.Text = $"{_effect.Brightness:F2}";
 
-            if (_effect.Configuration.TryGet("contrast", out float contrast))
-            {
-                ContrastSlider.Value = contrast;
-                ContrastValue.Text = $"{contrast:F2}";
-            }
+            ContrastSlider.Value = _effect.Contrast;
+            ContrastValue.Text = $"{_effect.Contrast:F2}";
 
-            if (_effect.Configuration.TryGet("gamma", out float gamma))
-            {
-                GammaSlider.Value = gamma;
-                GammaValue.Text = $"{gamma:F2}";
-            }
+            GammaSlider.Value = _effect.Gamma;
+            GammaValue.Text = $"{_effect.Gamma:F2}";
 
-            if (_effect.Configuration.TryGet("invert", out bool invert))
-                InvertCheckBox.IsChecked = invert;
+            InvertCheckBox.IsChecked = _effect.Invert;
 
             // Advanced: Color
-            if (_effect.Configuration.TryGet("saturation", out float saturation))
-            {
-                SaturationSlider.Value = saturation;
-                SaturationValue.Text = $"{saturation * 100:F0}%";
-            }
+            SaturationSlider.Value = _effect.Saturation;
+            SaturationValue.Text = $"{_effect.Saturation * 100:F0}%";
 
-            if (_effect.Configuration.TryGet("quantizeLevels", out int quantizeLevels))
-            {
-                QuantizeLevelsSlider.Value = quantizeLevels;
-                QuantizeLevelsValue.Text = $"{quantizeLevels}";
-            }
+            QuantizeLevelsSlider.Value = _effect.QuantizeLevels;
+            QuantizeLevelsValue.Text = $"{_effect.QuantizeLevels}";
 
-            if (_effect.Configuration.TryGet("preserveLuminance", out bool preserveLuminance))
-                PreserveLuminanceCheckBox.IsChecked = preserveLuminance;
-
-            // Advanced: Visual Effects
-            if (_effect.Configuration.TryGet("scanlines", out bool scanlines))
-            {
-                ScanlinesCheckBox.IsChecked = scanlines;
-                ScanlinesSettingsPanel.Visibility = scanlines ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("scanlineIntensity", out float scanlineIntensity))
-            {
-                ScanlineIntensitySlider.Value = scanlineIntensity;
-                ScanlineIntensityValue.Text = $"{scanlineIntensity:F2}";
-            }
-
-            if (_effect.Configuration.TryGet("crtCurvature", out bool crtCurvature))
-            {
-                CrtCurvatureCheckBox.IsChecked = crtCurvature;
-                CrtSettingsPanel.Visibility = crtCurvature ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("crtAmount", out float crtAmount))
-            {
-                CrtAmountSlider.Value = crtAmount;
-                CrtAmountValue.Text = $"{crtAmount:F2}";
-            }
-
-            if (_effect.Configuration.TryGet("vignette", out bool vignette))
-            {
-                VignetteCheckBox.IsChecked = vignette;
-                VignetteSettingsPanel.Visibility = vignette ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("vignetteIntensity", out float vignetteIntensity))
-            {
-                VignetteIntensitySlider.Value = vignetteIntensity;
-                VignetteIntensityValue.Text = $"{vignetteIntensity:F2}";
-            }
-
-            if (_effect.Configuration.TryGet("chromatic", out bool chromatic))
-            {
-                ChromaticCheckBox.IsChecked = chromatic;
-                ChromaticSettingsPanel.Visibility = chromatic ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("chromaticOffset", out float chromaticOffset))
-            {
-                ChromaticOffsetSlider.Value = chromaticOffset;
-                ChromaticOffsetValue.Text = $"{chromaticOffset:F1} px";
-            }
-
-            if (_effect.Configuration.TryGet("noise", out bool noise))
-            {
-                NoiseCheckBox.IsChecked = noise;
-                NoiseSettingsPanel.Visibility = noise ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("noiseAmount", out float noiseAmount))
-            {
-                NoiseAmountSlider.Value = noiseAmount;
-                NoiseAmountValue.Text = $"{noiseAmount:F2}";
-            }
-
-            if (_effect.Configuration.TryGet("flicker", out bool flicker))
-            {
-                FlickerCheckBox.IsChecked = flicker;
-                FlickerSettingsPanel.Visibility = flicker ? Visibility.Visible : Visibility.Collapsed;
-            }
-
-            if (_effect.Configuration.TryGet("flickerSpeed", out float flickerSpeed))
-            {
-                FlickerSpeedSlider.Value = flickerSpeed;
-                FlickerSpeedValue.Text = $"{flickerSpeed:F1}x";
-            }
+            PreserveLuminanceCheckBox.IsChecked = _effect.PreserveLuminance;
 
             // Advanced: Character Rendering
-            if (_effect.Configuration.TryGet("antialiasing", out int antialiasing))
-                AntialiasingCombo.SelectedIndex = antialiasing;
-
-            if (_effect.Configuration.TryGet("charShadow", out bool charShadow))
-                CharShadowCheckBox.IsChecked = charShadow;
-
-            if (_effect.Configuration.TryGet("gridLines", out bool gridLines))
-                GridLinesCheckBox.IsChecked = gridLines;
+            AntialiasingCombo.SelectedIndex = _effect.Antialiasing;
+            CharShadowCheckBox.IsChecked = _effect.CharShadow;
+            GridLinesCheckBox.IsChecked = _effect.GridLines;
 
             // Advanced: Edge
-            if (_effect.Configuration.TryGet("edgeSoftness", out float edgeSoftness))
-            {
-                EdgeSoftnessSlider.Value = edgeSoftness;
-                EdgeSoftnessValue.Text = $"{edgeSoftness:F0} px";
-            }
+            EdgeSoftnessSlider.Value = _effect.EdgeSoftness;
+            EdgeSoftnessValue.Text = $"{_effect.EdgeSoftness:F0} px";
 
-            if (_effect.Configuration.TryGet("innerGlow", out bool innerGlow))
-                InnerGlowCheckBox.IsChecked = innerGlow;
+            InnerGlowCheckBox.IsChecked = _effect.InnerGlow;
         }
         finally
         {
@@ -313,6 +177,7 @@ public partial class ASCIIClassicSettings : UserControl
         if (_effect == null || _isLoading) return;
 
         bool advanced = AdvancedModeRadio.IsChecked == true;
+        _effect.AdvancedMode = advanced;
         _effect.Configuration.Set("advancedMode", advanced);
         UpdateSettingsPanelVisibility(advanced);
     }
@@ -322,53 +187,64 @@ public partial class ASCIIClassicSettings : UserControl
         if (_effect == null || _isLoading) return;
 
         int layoutMode = LayoutModeCombo.SelectedIndex;
+        _effect.LayoutMode = layoutMode;
         _effect.Configuration.Set("layoutMode", layoutMode);
         UpdateLayoutVisibility(layoutMode);
     }
 
     private void RadiusSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (RadiusValue != null)
+            RadiusValue.Text = $"{e.NewValue:F0} px";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)RadiusSlider.Value;
-        _effect.Configuration.Set("radius", value);
-        RadiusValue.Text = $"{value:F0} px";
+        _effect.Radius = (float)e.NewValue;
+        _effect.Configuration.Set("radius", (float)e.NewValue);
     }
 
     private void RectWidthSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (RectWidthValue != null)
+            RectWidthValue.Text = $"{e.NewValue:F0} px";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)RectWidthSlider.Value;
-        _effect.Configuration.Set("rectWidth", value);
-        RectWidthValue.Text = $"{value:F0} px";
+        _effect.RectWidth = (float)e.NewValue;
+        _effect.Configuration.Set("rectWidth", (float)e.NewValue);
     }
 
     private void RectHeightSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (RectHeightValue != null)
+            RectHeightValue.Text = $"{e.NewValue:F0} px";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)RectHeightSlider.Value;
-        _effect.Configuration.Set("rectHeight", value);
-        RectHeightValue.Text = $"{value:F0} px";
+        _effect.RectHeight = (float)e.NewValue;
+        _effect.Configuration.Set("rectHeight", (float)e.NewValue);
     }
 
     private void CellWidthSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (CellWidthValue != null)
+            CellWidthValue.Text = $"{e.NewValue:F0} px";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)CellWidthSlider.Value;
-        _effect.Configuration.Set("cellWidth", value);
-        CellWidthValue.Text = $"{value:F0} px";
+        _effect.CellWidth = (float)e.NewValue;
+        _effect.Configuration.Set("cellWidth", (float)e.NewValue);
     }
 
     private void CellHeightSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (CellHeightValue != null)
+            CellHeightValue.Text = $"{e.NewValue:F0} px";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)CellHeightSlider.Value;
-        _effect.Configuration.Set("cellHeight", value);
-        CellHeightValue.Text = $"{value:F0} px";
+        _effect.CellHeight = (float)e.NewValue;
+        _effect.Configuration.Set("cellHeight", (float)e.NewValue);
     }
 
     private void CharsetCombo_Changed(object sender, SelectionChangedEventArgs e)
@@ -376,6 +252,7 @@ public partial class ASCIIClassicSettings : UserControl
         if (_effect == null || _isLoading) return;
 
         int preset = CharsetCombo.SelectedIndex;
+        _effect.CharsetPreset = preset;
         _effect.Configuration.Set("charsetPreset", preset);
         CustomCharsetPanel.Visibility = preset == 4 ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -384,7 +261,9 @@ public partial class ASCIIClassicSettings : UserControl
     {
         if (_effect == null || _isLoading) return;
 
-        _effect.Configuration.Set("customCharset", CustomCharsetTextBox.Text);
+        string charset = CustomCharsetTextBox.Text ?? "";
+        _effect.CustomCharset = charset;
+        _effect.Configuration.Set("customCharset", charset);
     }
 
     private void ColorModeCombo_Changed(object sender, SelectionChangedEventArgs e)
@@ -392,236 +271,173 @@ public partial class ASCIIClassicSettings : UserControl
         if (_effect == null || _isLoading) return;
 
         int colorMode = ColorModeCombo.SelectedIndex;
+        _effect.ColorMode = colorMode;
         _effect.Configuration.Set("colorMode", colorMode);
         MonochromeColorsPanel.Visibility = colorMode > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ForegroundColorTextBox_Changed(object sender, TextChangedEventArgs e)
     {
-        if (_effect == null || _isLoading) return;
+        if (_isLoading || ForegroundColorPreview == null) return;
 
         var color = HexToVector4(ForegroundColorTextBox.Text);
-        _effect.Configuration.Set("foreground", color);
         ForegroundColorPreview.Fill = new SolidColorBrush(Vector4ToColor(color));
+
+        if (_effect == null) return;
+
+        _effect.Foreground = color;
+        _effect.Configuration.Set("foreground", color);
     }
 
     private void BackgroundColorTextBox_Changed(object sender, TextChangedEventArgs e)
     {
-        if (_effect == null || _isLoading) return;
+        if (_isLoading || BackgroundColorPreview == null) return;
 
         var color = HexToVector4(BackgroundColorTextBox.Text);
-        _effect.Configuration.Set("background", color);
         BackgroundColorPreview.Fill = new SolidColorBrush(Vector4ToColor(color));
+
+        if (_effect == null) return;
+
+        _effect.Background = color;
+        _effect.Configuration.Set("background", color);
     }
 
     private void FontFamilyCombo_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("fontFamily", FontFamilyCombo.SelectedIndex);
+
+        int fontFamily = FontFamilyCombo.SelectedIndex;
+        _effect.FontFamily = fontFamily;
+        _effect.Configuration.Set("fontFamily", fontFamily);
     }
 
     private void FontWeightCombo_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("fontWeight", FontWeightCombo.SelectedIndex);
+
+        int fontWeight = FontWeightCombo.SelectedIndex;
+        _effect.FontWeight = fontWeight;
+        _effect.Configuration.Set("fontWeight", fontWeight);
     }
 
     private void BrightnessSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (BrightnessValue != null)
+            BrightnessValue.Text = $"{e.NewValue:F2}";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)BrightnessSlider.Value;
-        _effect.Configuration.Set("brightness", value);
-        BrightnessValue.Text = $"{value:F2}";
+        _effect.Brightness = (float)e.NewValue;
+        _effect.Configuration.Set("brightness", (float)e.NewValue);
     }
 
     private void ContrastSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (ContrastValue != null)
+            ContrastValue.Text = $"{e.NewValue:F2}";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)ContrastSlider.Value;
-        _effect.Configuration.Set("contrast", value);
-        ContrastValue.Text = $"{value:F2}";
+        _effect.Contrast = (float)e.NewValue;
+        _effect.Configuration.Set("contrast", (float)e.NewValue);
     }
 
     private void GammaSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (GammaValue != null)
+            GammaValue.Text = $"{e.NewValue:F2}";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)GammaSlider.Value;
-        _effect.Configuration.Set("gamma", value);
-        GammaValue.Text = $"{value:F2}";
+        _effect.Gamma = (float)e.NewValue;
+        _effect.Configuration.Set("gamma", (float)e.NewValue);
     }
 
     private void InvertCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("invert", InvertCheckBox.IsChecked == true);
+
+        bool invert = InvertCheckBox.IsChecked == true;
+        _effect.Invert = invert;
+        _effect.Configuration.Set("invert", invert);
     }
 
     private void SaturationSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (SaturationValue != null)
+            SaturationValue.Text = $"{e.NewValue * 100:F0}%";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)SaturationSlider.Value;
-        _effect.Configuration.Set("saturation", value);
-        SaturationValue.Text = $"{value * 100:F0}%";
+        _effect.Saturation = (float)e.NewValue;
+        _effect.Configuration.Set("saturation", (float)e.NewValue);
     }
 
     private void QuantizeLevelsSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (QuantizeLevelsValue != null)
+            QuantizeLevelsValue.Text = $"{(int)e.NewValue}";
+
         if (_effect == null || _isLoading) return;
 
-        int value = (int)QuantizeLevelsSlider.Value;
-        _effect.Configuration.Set("quantizeLevels", value);
-        QuantizeLevelsValue.Text = $"{value}";
+        _effect.QuantizeLevels = (int)e.NewValue;
+        _effect.Configuration.Set("quantizeLevels", (int)e.NewValue);
     }
 
     private void PreserveLuminanceCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("preserveLuminance", PreserveLuminanceCheckBox.IsChecked == true);
-    }
 
-    private void ScanlinesCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        bool enabled = ScanlinesCheckBox.IsChecked == true;
-        _effect.Configuration.Set("scanlines", enabled);
-        ScanlinesSettingsPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void ScanlineIntensitySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        float value = (float)ScanlineIntensitySlider.Value;
-        _effect.Configuration.Set("scanlineIntensity", value);
-        ScanlineIntensityValue.Text = $"{value:F2}";
-    }
-
-    private void CrtCurvatureCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        bool enabled = CrtCurvatureCheckBox.IsChecked == true;
-        _effect.Configuration.Set("crtCurvature", enabled);
-        CrtSettingsPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void CrtAmountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        float value = (float)CrtAmountSlider.Value;
-        _effect.Configuration.Set("crtAmount", value);
-        CrtAmountValue.Text = $"{value:F2}";
-    }
-
-    private void VignetteCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        bool enabled = VignetteCheckBox.IsChecked == true;
-        _effect.Configuration.Set("vignette", enabled);
-        VignetteSettingsPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void VignetteIntensitySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        float value = (float)VignetteIntensitySlider.Value;
-        _effect.Configuration.Set("vignetteIntensity", value);
-        VignetteIntensityValue.Text = $"{value:F2}";
-    }
-
-    private void ChromaticCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        bool enabled = ChromaticCheckBox.IsChecked == true;
-        _effect.Configuration.Set("chromatic", enabled);
-        ChromaticSettingsPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void ChromaticOffsetSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        float value = (float)ChromaticOffsetSlider.Value;
-        _effect.Configuration.Set("chromaticOffset", value);
-        ChromaticOffsetValue.Text = $"{value:F1} px";
-    }
-
-    private void NoiseCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        bool enabled = NoiseCheckBox.IsChecked == true;
-        _effect.Configuration.Set("noise", enabled);
-        NoiseSettingsPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void NoiseAmountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        float value = (float)NoiseAmountSlider.Value;
-        _effect.Configuration.Set("noiseAmount", value);
-        NoiseAmountValue.Text = $"{value:F2}";
-    }
-
-    private void FlickerCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        bool enabled = FlickerCheckBox.IsChecked == true;
-        _effect.Configuration.Set("flicker", enabled);
-        FlickerSettingsPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void FlickerSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-
-        float value = (float)FlickerSpeedSlider.Value;
-        _effect.Configuration.Set("flickerSpeed", value);
-        FlickerSpeedValue.Text = $"{value:F1}x";
+        bool preserve = PreserveLuminanceCheckBox.IsChecked == true;
+        _effect.PreserveLuminance = preserve;
+        _effect.Configuration.Set("preserveLuminance", preserve);
     }
 
     private void AntialiasingCombo_Changed(object sender, SelectionChangedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("antialiasing", AntialiasingCombo.SelectedIndex);
+
+        int antialiasing = AntialiasingCombo.SelectedIndex;
+        _effect.Antialiasing = antialiasing;
+        _effect.Configuration.Set("antialiasing", antialiasing);
     }
 
     private void CharShadowCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("charShadow", CharShadowCheckBox.IsChecked == true);
+
+        bool charShadow = CharShadowCheckBox.IsChecked == true;
+        _effect.CharShadow = charShadow;
+        _effect.Configuration.Set("charShadow", charShadow);
     }
 
     private void GridLinesCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("gridLines", GridLinesCheckBox.IsChecked == true);
+
+        bool gridLines = GridLinesCheckBox.IsChecked == true;
+        _effect.GridLines = gridLines;
+        _effect.Configuration.Set("gridLines", gridLines);
     }
 
     private void EdgeSoftnessSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (EdgeSoftnessValue != null)
+            EdgeSoftnessValue.Text = $"{e.NewValue:F0} px";
+
         if (_effect == null || _isLoading) return;
 
-        float value = (float)EdgeSoftnessSlider.Value;
-        _effect.Configuration.Set("edgeSoftness", value);
-        EdgeSoftnessValue.Text = $"{value:F0} px";
+        _effect.EdgeSoftness = (float)e.NewValue;
+        _effect.Configuration.Set("edgeSoftness", (float)e.NewValue);
     }
 
     private void InnerGlowCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.Configuration.Set("innerGlow", InnerGlowCheckBox.IsChecked == true);
+
+        bool innerGlow = InnerGlowCheckBox.IsChecked == true;
+        _effect.InnerGlow = innerGlow;
+        _effect.Configuration.Set("innerGlow", innerGlow);
     }
 
     #endregion
