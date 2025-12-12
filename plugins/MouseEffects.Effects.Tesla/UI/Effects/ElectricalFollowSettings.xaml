@@ -1,0 +1,277 @@
+<UserControl x:Class="MouseEffects.Effects.Tesla.UI.Effects.ElectricalFollowSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="1200" d:DesignWidth="300"
+             Foreground="White">
+    <UserControl.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,8,0,4" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="ValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="SectionStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,12,0,8" />
+            <Setter Property="Foreground" Value="#89B4FA" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="SliderStyle" TargetType="Slider">
+            <Setter Property="Margin" Value="0,0,0,2" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- ===== TRIGGER SETTINGS ===== -->
+        <TextBlock Text="Trigger Settings" Style="{StaticResource SectionStyle}" />
+
+        <CheckBox x:Name="MouseMoveEnabledCheckBox" Content="Enable on Mouse Move"
+                  Margin="0,4,0,4" IsChecked="True"
+                  Checked="MouseMoveEnabledCheckBox_Changed" Unchecked="MouseMoveEnabledCheckBox_Changed" />
+
+        <TextBlock Text="Distance Threshold (pixels)" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="DistanceThresholdSlider" Minimum="2" Maximum="30" Value="8"
+                Style="{StaticResource SliderStyle}" ValueChanged="DistanceThresholdSlider_Changed" />
+        <TextBlock x:Name="DistanceThresholdValue" Text="8 px" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== TRAIL GENERAL ===== -->
+        <TextBlock Text="Trail General" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Max Trail Points" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MaxPointsSlider" Minimum="50" Maximum="1000" Value="512"
+                Style="{StaticResource SliderStyle}" ValueChanged="MaxPointsSlider_Changed"
+                IsSnapToTickEnabled="True" TickFrequency="50" />
+        <TextBlock x:Name="MaxPointsValue" Text="512" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Point Lifetime (seconds)" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="LifetimeSlider" Minimum="0.1" Maximum="5" Value="1.5"
+                Style="{StaticResource SliderStyle}" ValueChanged="LifetimeSlider_Changed" />
+        <TextBlock x:Name="LifetimeValue" Text="1.5 s" Style="{StaticResource ValueStyle}" />
+
+        <CheckBox x:Name="RandomLifetimeCheckBox" Content="Random lifetime"
+                  Margin="0,8,0,4" Checked="RandomLifetimeCheckBox_Changed" Unchecked="RandomLifetimeCheckBox_Changed" />
+
+        <StackPanel x:Name="RandomLifetimePanel" Visibility="Collapsed">
+            <TextBlock Text="Min Lifetime (seconds)" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="MinLifetimeSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinLifetimeSlider_Changed" />
+            <TextBlock x:Name="MinLifetimeValue" Text="0.5 s" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Max Lifetime (seconds)" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="MaxLifetimeSlider" Minimum="0.5" Maximum="5" Value="2.0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxLifetimeSlider_Changed" />
+            <TextBlock x:Name="MaxLifetimeValue" Text="2.0 s" Style="{StaticResource ValueStyle}" />
+        </StackPanel>
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== TRAIL APPEARANCE ===== -->
+        <TextBlock Text="Trail Appearance" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Line Thickness" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="LineThicknessSlider" Minimum="0.5" Maximum="5" Value="1.5"
+                Style="{StaticResource SliderStyle}" ValueChanged="LineThicknessSlider_Changed" />
+        <TextBlock x:Name="LineThicknessValue" Text="1.5" Style="{StaticResource ValueStyle}" />
+
+        <CheckBox x:Name="RandomThicknessCheckBox" Content="Random thickness"
+                  Margin="0,8,0,4" Checked="RandomThicknessCheckBox_Changed" Unchecked="RandomThicknessCheckBox_Changed" />
+
+        <StackPanel x:Name="RandomThicknessPanel" Visibility="Collapsed">
+            <TextBlock Text="Min Thickness" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="MinThicknessSlider" Minimum="0.3" Maximum="2" Value="0.8"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinThicknessSlider_Changed" />
+            <TextBlock x:Name="MinThicknessValue" Text="0.8" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Max Thickness" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="MaxThicknessSlider" Minimum="1" Maximum="5" Value="2.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxThicknessSlider_Changed" />
+            <TextBlock x:Name="MaxThicknessValue" Text="2.5" Style="{StaticResource ValueStyle}" />
+        </StackPanel>
+
+        <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="GlowIntensitySlider" Minimum="0" Maximum="3" Value="1.0"
+                Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_Changed" />
+        <TextBlock x:Name="GlowIntensityValue" Text="1.0" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== TRAIL FLICKER ===== -->
+        <TextBlock Text="Trail Flicker" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Flicker Speed" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="FlickerSpeedSlider" Minimum="1" Maximum="60" Value="20"
+                Style="{StaticResource SliderStyle}" ValueChanged="FlickerSpeedSlider_Changed" />
+        <TextBlock x:Name="FlickerSpeedValue" Text="20" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Flicker Intensity" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="FlickerIntensitySlider" Minimum="0" Maximum="1" Value="0.6"
+                Style="{StaticResource SliderStyle}" ValueChanged="FlickerIntensitySlider_Changed" />
+        <TextBlock x:Name="FlickerIntensityValue" Text="0.6" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== TRAIL CRACKLE ===== -->
+        <TextBlock Text="Trail Crackle" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Crackle Intensity" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="CrackleIntensitySlider" Minimum="0" Maximum="2" Value="0.8"
+                Style="{StaticResource SliderStyle}" ValueChanged="CrackleIntensitySlider_Changed" />
+        <TextBlock x:Name="CrackleIntensityValue" Text="0.8" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Noise Scale" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="NoiseScaleSlider" Minimum="0.1" Maximum="3" Value="1.0"
+                Style="{StaticResource SliderStyle}" ValueChanged="NoiseScaleSlider_Changed" />
+        <TextBlock x:Name="NoiseScaleValue" Text="1.0" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== BRANCH BOLTS ===== -->
+        <TextBlock Text="Branch Bolts" Style="{StaticResource SectionStyle}" />
+
+        <CheckBox x:Name="BranchBoltEnabledCheckBox" Content="Enable Branch Bolts" IsChecked="True"
+                  Margin="0,4,0,4" Checked="BranchBoltEnabledCheckBox_Changed" Unchecked="BranchBoltEnabledCheckBox_Changed" />
+
+        <StackPanel x:Name="BranchBoltPanel">
+            <TextBlock Text="Branch Count" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="BranchCountSlider" Minimum="1" Maximum="8" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="BranchCountSlider_Changed"
+                    IsSnapToTickEnabled="True" TickFrequency="1" />
+            <TextBlock x:Name="BranchCountValue" Text="3" Style="{StaticResource ValueStyle}" />
+
+            <CheckBox x:Name="RandomBranchCountCheckBox" Content="Random count"
+                      Margin="0,8,0,4" Checked="RandomBranchCountCheckBox_Changed" Unchecked="RandomBranchCountCheckBox_Changed" />
+
+            <StackPanel x:Name="RandomBranchCountPanel" Visibility="Collapsed">
+                <TextBlock Text="Min Count" Style="{StaticResource LabelStyle}" />
+                <Slider x:Name="MinBranchCountSlider" Minimum="1" Maximum="5" Value="1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MinBranchCountSlider_Changed"
+                        IsSnapToTickEnabled="True" TickFrequency="1" />
+                <TextBlock x:Name="MinBranchCountValue" Text="1" Style="{StaticResource ValueStyle}" />
+
+                <TextBlock Text="Max Count" Style="{StaticResource LabelStyle}" />
+                <Slider x:Name="MaxBranchCountSlider" Minimum="2" Maximum="8" Value="5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MaxBranchCountSlider_Changed"
+                        IsSnapToTickEnabled="True" TickFrequency="1" />
+                <TextBlock x:Name="MaxBranchCountValue" Text="5" Style="{StaticResource ValueStyle}" />
+            </StackPanel>
+
+            <TextBlock Text="Branch Length" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="BranchLengthSlider" Minimum="5" Maximum="80" Value="25"
+                    Style="{StaticResource SliderStyle}" ValueChanged="BranchLengthSlider_Changed" />
+            <TextBlock x:Name="BranchLengthValue" Text="25 px" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Branch Thickness" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="BranchThicknessSlider" Minimum="0.3" Maximum="3" Value="1.0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="BranchThicknessSlider_Changed" />
+            <TextBlock x:Name="BranchThicknessValue" Text="1.0" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Branch Spread (degrees)" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="BranchSpreadSlider" Minimum="30" Maximum="180" Value="90"
+                    Style="{StaticResource SliderStyle}" ValueChanged="BranchSpreadSlider_Changed" />
+            <TextBlock x:Name="BranchSpreadValue" Text="90 deg" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Branch Color" Style="{StaticResource LabelStyle}" />
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="BranchColorPreview" Width="24" Height="24"
+                        BorderThickness="1" BorderBrush="Gray" Background="#99CCFF" Margin="0,0,8,0" />
+                <Button Content="Pick Color..." Click="BranchColorButton_Click" />
+            </StackPanel>
+            <CheckBox x:Name="UseBranchColorCheckBox" Content="Use custom color (otherwise use trail color)"
+                      Margin="0,4,0,4" Checked="UseBranchColorCheckBox_Changed" Unchecked="UseBranchColorCheckBox_Changed" />
+        </StackPanel>
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== SPARKLES ===== -->
+        <TextBlock Text="Sparkles" Style="{StaticResource SectionStyle}" />
+
+        <CheckBox x:Name="SparkleEnabledCheckBox" Content="Enable Sparkles" IsChecked="True"
+                  Margin="0,4,0,4" Checked="SparkleEnabledCheckBox_Changed" Unchecked="SparkleEnabledCheckBox_Changed" />
+
+        <StackPanel x:Name="SparklePanel">
+            <TextBlock Text="Sparkle Count" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="SparkleCountSlider" Minimum="1" Maximum="12" Value="5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleCountSlider_Changed"
+                    IsSnapToTickEnabled="True" TickFrequency="1" />
+            <TextBlock x:Name="SparkleCountValue" Text="5" Style="{StaticResource ValueStyle}" />
+
+            <CheckBox x:Name="RandomSparkleCountCheckBox" Content="Random count"
+                      Margin="0,8,0,4" Checked="RandomSparkleCountCheckBox_Changed" Unchecked="RandomSparkleCountCheckBox_Changed" />
+
+            <StackPanel x:Name="RandomSparkleCountPanel" Visibility="Collapsed">
+                <TextBlock Text="Min Count" Style="{StaticResource LabelStyle}" />
+                <Slider x:Name="MinSparkleCountSlider" Minimum="1" Maximum="6" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MinSparkleCountSlider_Changed"
+                        IsSnapToTickEnabled="True" TickFrequency="1" />
+                <TextBlock x:Name="MinSparkleCountValue" Text="2" Style="{StaticResource ValueStyle}" />
+
+                <TextBlock Text="Max Count" Style="{StaticResource LabelStyle}" />
+                <Slider x:Name="MaxSparkleCountSlider" Minimum="3" Maximum="12" Value="8"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MaxSparkleCountSlider_Changed"
+                        IsSnapToTickEnabled="True" TickFrequency="1" />
+                <TextBlock x:Name="MaxSparkleCountValue" Text="8" Style="{StaticResource ValueStyle}" />
+            </StackPanel>
+
+            <TextBlock Text="Sparkle Size" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="SparkleSizeSlider" Minimum="1" Maximum="10" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleSizeSlider_Changed" />
+            <TextBlock x:Name="SparkleSizeValue" Text="3 px" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Sparkle Intensity" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="SparkleIntensitySlider" Minimum="0.1" Maximum="3" Value="1.0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="SparkleIntensitySlider_Changed" />
+            <TextBlock x:Name="SparkleIntensityValue" Text="1.0" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Sparkle Color" Style="{StaticResource LabelStyle}" />
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="SparkleColorPreview" Width="24" Height="24"
+                        BorderThickness="1" BorderBrush="Gray" Background="#FFFFFF" Margin="0,0,8,0" />
+                <Button Content="Pick Color..." Click="SparkleColorButton_Click" />
+            </StackPanel>
+            <CheckBox x:Name="UseSparkleColorCheckBox" Content="Use custom color (otherwise use trail color)"
+                      Margin="0,4,0,4" Checked="UseSparkleColorCheckBox_Changed" Unchecked="UseSparkleColorCheckBox_Changed" />
+        </StackPanel>
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== TRAIL COLORS ===== -->
+        <TextBlock Text="Trail Colors" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Primary Color" Style="{StaticResource LabelStyle}" />
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+            <Border x:Name="PrimaryColorPreview" Width="24" Height="24"
+                    BorderThickness="1" BorderBrush="Gray" Background="#6699FF" Margin="0,0,8,0" />
+            <Button Content="Pick Color..." Click="PrimaryColorButton_Click" />
+        </StackPanel>
+
+        <TextBlock Text="Secondary Color" Style="{StaticResource LabelStyle}" />
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+            <Border x:Name="SecondaryColorPreview" Width="24" Height="24"
+                    BorderThickness="1" BorderBrush="Gray" Background="#CCE6FF" Margin="0,0,8,0" />
+            <Button Content="Pick Color..." Click="SecondaryColorButton_Click" />
+        </StackPanel>
+
+        <CheckBox x:Name="RandomColorVariationCheckBox" Content="Random color variation"
+                  Margin="0,8,0,4" Checked="RandomColorVariationCheckBox_Changed" Unchecked="RandomColorVariationCheckBox_Changed" />
+
+        <CheckBox x:Name="RainbowModeCheckBox" Content="Rainbow mode"
+                  Margin="0,4,0,4" Checked="RainbowModeCheckBox_Changed" Unchecked="RainbowModeCheckBox_Changed" />
+
+        <StackPanel x:Name="RainbowSpeedPanel" Visibility="Collapsed">
+            <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="2" Value="0.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_Changed" />
+            <TextBlock x:Name="RainbowSpeedValue" Text="0.3" Style="{StaticResource ValueStyle}" />
+        </StackPanel>
+
+    </StackPanel>
+</UserControl>
