@@ -611,12 +611,111 @@ public partial class SettingsWindow : Window
     }
 
     // ═══════════════════════════════════════════════════
-    // Settings Backup (Export/Import)
+    // Manage Settings (Save/Reload/Export/Import)
     // ═══════════════════════════════════════════════════
 
     private static readonly string SettingsFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "MouseEffects");
+
+    private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            SaveSettingsButton.IsEnabled = false;
+            BackupStatusText.Text = "Saving settings...";
+
+            // Save app settings
+            Program.Settings.Save();
+
+            // Save all plugin settings
+            foreach (var effect in _effectManager.Effects)
+            {
+                Program.SavePluginSettings(effect.Metadata.Id);
+            }
+
+            BackupStatusText.Text = $"Settings saved successfully at {DateTime.Now:HH:mm:ss}";
+            Logger.Log("SettingsWindow", "All settings saved");
+        }
+        catch (Exception ex)
+        {
+            BackupStatusText.Text = $"Save failed: {ex.Message}";
+            Logger.Log("SettingsWindow", $"Save failed: {ex.Message}");
+        }
+        finally
+        {
+            SaveSettingsButton.IsEnabled = true;
+        }
+    }
+
+    private void ReloadSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ReloadSettingsButton.IsEnabled = false;
+            BackupStatusText.Text = "Reloading settings...";
+
+            _isInitializing = true;
+
+            // Reload app settings from disk
+            var settings = AppSettings.Load();
+
+            // Apply app settings to UI
+            ThemeSelector.SelectedIndex = settings.Theme switch
+            {
+                AppTheme.System => 0,
+                AppTheme.Light => 1,
+                AppTheme.Dark => 2,
+                _ => 0
+            };
+
+            FrameRateSlider.Value = settings.TargetFrameRate;
+            FrameRateValue.Text = $"{settings.TargetFrameRate} fps";
+
+            ShowFpsCheckBox.IsChecked = settings.ShowFpsCounter;
+            ShowFpsOverlayCheckBox.IsChecked = settings.ShowFpsOverlay;
+            UpdateFpsCounterVisibility(settings.ShowFpsCounter);
+
+            ToggleHotkeyCheckBox.IsChecked = settings.EnableToggleHotkey;
+            SettingsHotkeyCheckBox.IsChecked = settings.EnableSettingsHotkey;
+            ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
+
+            // Apply settings to game loop
+            var gameLoop = Program.GameLoop;
+            if (gameLoop != null)
+            {
+                gameLoop.TargetFrameRate = settings.TargetFrameRate;
+            }
+
+            // Reload plugin settings from disk and apply to effects
+            foreach (var effect in _effectManager.Effects)
+            {
+                var pluginSettings = PluginSettings.Load(effect.Metadata.Id);
+                pluginSettings.ApplyToEffect(effect);
+            }
+
+            // Refresh plugin UI controls
+            LoadPluginSettings();
+
+            // Sync tray menu with reloaded states
+            Program.SyncTrayWithEffects();
+
+            _isInitializing = false;
+
+            BackupStatusText.Text = $"Settings reloaded successfully at {DateTime.Now:HH:mm:ss}";
+            Logger.Log("SettingsWindow", "All settings reloaded from disk");
+        }
+        catch (Exception ex)
+        {
+            BackupStatusText.Text = $"Reload failed: {ex.Message}";
+            Logger.Log("SettingsWindow", $"Reload failed: {ex.Message}");
+            _isInitializing = false;
+        }
+        finally
+        {
+            ReloadSettingsButton.IsEnabled = true;
+        }
+    }
 
     private void ExportSettingsButton_Click(object sender, RoutedEventArgs e)
     {

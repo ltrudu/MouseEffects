@@ -212,5 +212,24 @@
                 Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_Changed" />
         <TextBlock x:Name="GlowIntensityValue" Text="0.8" Style="{StaticResource ValueStyle}" />
 
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== PERFORMANCE ===== -->
+        <TextBlock Text="Performance" Style="{StaticResource SectionStyle}" Foreground="#F9E2AF" />
+
+        <TextBlock Text="Max Active Bolts" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MaxActiveBoltsSlider" Minimum="16" Maximum="256" Value="64"
+                Style="{StaticResource SliderStyle}" ValueChanged="MaxActiveBoltsSlider_Changed"
+                IsSnapToTickEnabled="True" TickFrequency="16" />
+        <TextBlock x:Name="MaxActiveBoltsValue" Text="64" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Max Bolts Per Second" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MaxBoltsPerSecondSlider" Minimum="10" Maximum="100" Value="30"
+                Style="{StaticResource SliderStyle}" ValueChanged="MaxBoltsPerSecondSlider_Changed"
+                IsSnapToTickEnabled="True" TickFrequency="10" />
+        <TextBlock x:Name="MaxBoltsPerSecondValue" Text="30" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Lower values = better performance" FontSize="10" Opacity="0.5" Margin="0,4,0,0" />
+
     </StackPanel>
 </UserControl>

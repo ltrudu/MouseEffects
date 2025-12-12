@@ -193,6 +193,12 @@ public sealed class TeslaEffect : EffectBase
     // Glow
     private float _glowIntensity = 0.8f;
 
+    // Performance settings
+    private int _maxActiveBolts = 64;
+    private int _maxBoltsPerSecond = 30;
+    private float _lastSpawnSecond;
+    private int _boltsSpawnedThisSecond;
+
     // ===== Electrical Follow Configuration =====
     // General
     private int _efMaxPieces = 512;
@@ -313,6 +319,10 @@ public sealed class TeslaEffect : EffectBase
     public float FadeDuration { get => _fadeDuration; set => _fadeDuration = value; }
     public float GlowIntensity { get => _glowIntensity; set => _glowIntensity = value; }
 
+    // Performance properties
+    public int MaxActiveBolts { get => _maxActiveBolts; set => _maxActiveBolts = value; }
+    public int MaxBoltsPerSecond { get => _maxBoltsPerSecond; set => _maxBoltsPerSecond = value; }
+
     // Electrical Follow properties
     public int EfMaxPieces { get => _efMaxPieces; set => _efMaxPieces = value; }
     public float EfPieceSize { get => _efPieceSize; set => _efPieceSize = value; }
@@ -387,7 +397,7 @@ public sealed class TeslaEffect : EffectBase
         _viewportSize = context.ViewportSize;
 
         // Load and compile Lightning Bolt shaders
-        string shaderSource = LoadEmbeddedShader("TeslaShader.hlsl");
+        string shaderSource = LoadEmbeddedShader("LightningBoltShader.hlsl");
         _vertexShader = context.CompileShader(shaderSource, "VSMain", ShaderStage.Vertex);
         _pixelShader = context.CompileShader(shaderSource, "PSMain", ShaderStage.Pixel);
 
@@ -523,6 +533,12 @@ public sealed class TeslaEffect : EffectBase
         // Glow settings
         if (Configuration.TryGet("glow_intensity", out float glowInt))
             _glowIntensity = glowInt;
+
+        // Performance settings
+        if (Configuration.TryGet("perf_maxActiveBolts", out int maxActive))
+            _maxActiveBolts = Math.Clamp(maxActive, 16, MaxBolts);
+        if (Configuration.TryGet("perf_maxBoltsPerSecond", out int maxPerSec))
+            _maxBoltsPerSecond = Math.Clamp(maxPerSec, 10, 100);
 
         // ===== Electrical Follow Configuration =====
         // General
@@ -764,10 +780,31 @@ public sealed class TeslaEffect : EffectBase
 
     private void SpawnLightning(Vector2 position, Vector2? velocity, float time, bool isClick)
     {
+        // Performance: Check rate limiting
+        float currentSecond = MathF.Floor(time);
+        if (currentSecond != _lastSpawnSecond)
+        {
+            _lastSpawnSecond = currentSecond;
+            _boltsSpawnedThisSecond = 0;
+        }
+
+        // Performance: Check if we've hit the rate limit
+        if (_boltsSpawnedThisSecond >= _maxBoltsPerSecond)
+            return;
+
+        // Performance: Check active bolt count
+        if (_activeBoltCount >= _maxActiveBolts)
+            return;
+
         // Determine bolt count
         int boltCount = _randomBoltCount
             ? Random.Shared.Next(_minBoltCount, _maxBoltCount + 1)
             : _fixedBoltCount;
+
+        // Performance: Limit bolt count to not exceed limits
+        int remainingRate = _maxBoltsPerSecond - _boltsSpawnedThisSecond;
+        int remainingActive = _maxActiveBolts - _activeBoltCount;
+        boltCount = Math.Min(boltCount, Math.Min(remainingRate, remainingActive));
 
         // Determine direction mode
         DirectionMode dirMode = isClick ? _clickDirectionMode : _moveDirectionMode;
@@ -827,6 +864,7 @@ public sealed class TeslaEffect : EffectBase
             bolt.Padding = 0f;
 
             _nextBoltIndex = (_nextBoltIndex + 1) % MaxBolts;
+            _boltsSpawnedThisSecond++;
         }
     }
 

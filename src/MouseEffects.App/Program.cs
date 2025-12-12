@@ -387,11 +387,17 @@ static partial class Program
             var primaryOverlay = _overlayManager.Overlays[0];
             _effectManager = new EffectManager(primaryOverlay.RenderContext);
 
-            // Load plugins from plugins directory
+            // Load plugins from plugins directory (async for parallel loading)
             var pluginsPath = Path.Combine(AppContext.BaseDirectory, "plugins");
             Log($"Loading plugins from: {pluginsPath}");
             _pluginLoader = new PluginLoader(pluginsPath);
-            _pluginLoader.LoadPlugins();
+
+            // Subscribe to progress events for logging
+            _pluginLoader.PluginLoaded += (name, current, total) =>
+                Log($"  Loaded plugin {current}/{total}: {name}");
+
+            // Load plugins asynchronously (parallel assembly loading)
+            _pluginLoader.LoadPluginsAsync().GetAwaiter().GetResult();
 
             // Register discovered effect factories
             Log($"Registering {_pluginLoader.Factories.Count} effect factories...");

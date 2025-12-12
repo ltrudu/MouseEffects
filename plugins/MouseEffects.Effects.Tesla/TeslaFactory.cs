@@ -80,6 +80,10 @@ public sealed class TeslaFactory : IEffectFactory
         // Glow
         config.Set("glow_intensity", 1.62f);
 
+        // Performance settings (perf_ prefix)
+        config.Set("perf_maxActiveBolts", 64);
+        config.Set("perf_maxBoltsPerSecond", 30);
+
         // ===== Electrical Follow Configuration (ef_ prefix) =====
         // General
         config.Set("ef_maxPieces", 100);
@@ -465,6 +469,26 @@ public sealed class TeslaFactory : IEffectFactory
                     MaxValue = 2f,
                     DefaultValue = 0.8f,
                     Step = 0.1f
+                },
+
+                // Performance Settings
+                new IntParameter
+                {
+                    Key = "perf_maxActiveBolts",
+                    DisplayName = "Max Active Bolts",
+                    Description = "Maximum number of bolts that can be active at once (lower = better performance)",
+                    MinValue = 16,
+                    MaxValue = 256,
+                    DefaultValue = 64
+                },
+                new IntParameter
+                {
+                    Key = "perf_maxBoltsPerSecond",
+                    DisplayName = "Max Bolts/Second",
+                    Description = "Maximum bolts that can spawn per second (lower = better performance)",
+                    MinValue = 10,
+                    MaxValue = 100,
+                    DefaultValue = 30
                 },
 
                 // ===== Electrical Follow Settings =====

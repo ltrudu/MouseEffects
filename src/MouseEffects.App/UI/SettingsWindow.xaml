@@ -162,13 +162,33 @@
                 <!-- Dynamic Plugin Settings Container -->
                 <StackPanel x:Name="PluginSettingsContainer"/>
 
-                <!-- Settings Backup Section -->
+                <!-- Manage Settings Section -->
                 <Border Style="{StaticResource EffectCardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Settings Backup" Style="{StaticResource HeaderStyle}" Margin="0"/>
-                        <TextBlock Text="Export or import all settings including plugin configurations"
+                        <TextBlock Text="Manage Settings" Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock Text="Save, reload, export or import all settings including plugin configurations"
                                    Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
 
+                        <!-- Save / Reload buttons -->
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Button x:Name="SaveSettingsButton" Grid.Column="0"
+                                    Content="Save Settings"
+                                    Height="32"
+                                    Click="SaveSettingsButton_Click"/>
+
+                            <Button x:Name="ReloadSettingsButton" Grid.Column="2"
+                                    Content="Reload Settings"
+                                    Height="32"
+                                    Click="ReloadSettingsButton_Click"/>
+                        </Grid>
+
+                        <!-- Export / Import buttons -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

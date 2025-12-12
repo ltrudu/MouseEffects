@@ -1,5 +1,6 @@
-// Tesla Lightning Effect Shader
+// Lightning Bolt Effect Shader
 // Renders procedural lightning bolts at mouse position
+// Optimized for GPU performance
 
 static const float TAU = 6.28318530718;
 static const float PI = 3.14159265359;
@@ -68,27 +69,37 @@ float RandomFloat(float2 seed)
     return frac(seed.x * seed.y);
 }
 
+// Optimized noise function - fixed 2 octaves for performance
 float SimpleNoise(float2 uv, float octaves)
 {
     float sn = 0.0;
     float amplitude = 3.0;
     float deno = 0.0;
-    octaves = clamp(octaves, 1.0, 6.0);
 
-    for (float i = 1.0; i <= octaves; i++)
-    {
-        float2 grid = smoothstep(0.0, 1.0, frac(uv));
-        float2 id = floor(uv);
-        float2 offs = float2(0.0, 1.0);
-        float bl = RandomFloat(id);
-        float br = RandomFloat(id + offs.yx);
-        float tl = RandomFloat(id + offs);
-        float tr = RandomFloat(id + offs.yy);
-        sn += lerp(lerp(bl, br, grid.x), lerp(tl, tr, grid.x), grid.y) * amplitude;
-        deno += amplitude;
-        uv *= 3.5;
-        amplitude *= 0.5;
-    }
+    // Fixed 2 octaves for consistent performance
+    // First octave
+    float2 grid = smoothstep(0.0, 1.0, frac(uv));
+    float2 id = floor(uv);
+    float2 offs = float2(0.0, 1.0);
+    float bl = RandomFloat(id);
+    float br = RandomFloat(id + offs.yx);
+    float tl = RandomFloat(id + offs);
+    float tr = RandomFloat(id + offs.yy);
+    sn += lerp(lerp(bl, br, grid.x), lerp(tl, tr, grid.x), grid.y) * amplitude;
+    deno += amplitude;
+
+    // Second octave
+    uv *= 3.5;
+    amplitude *= 0.5;
+    grid = smoothstep(0.0, 1.0, frac(uv));
+    id = floor(uv);
+    bl = RandomFloat(id);
+    br = RandomFloat(id + offs.yx);
+    tl = RandomFloat(id + offs);
+    tr = RandomFloat(id + offs.yy);
+    sn += lerp(lerp(bl, br, grid.x), lerp(tl, tr, grid.x), grid.y) * amplitude;
+    deno += amplitude;
+
     return sn / deno;
 }
 
@@ -104,7 +115,8 @@ float3 RenderBoltSegment(float2 uv, float len, float seed, float3 color, float b
     float thickness = BoltThickness * 0.001;
     float3 l = LineSDF(uv, float2(0.0, 0.0), float2(0.0, len), thickness);
     l = BoltIntensity / max(0.001, l) * color;
-    l = saturate(1.0 - exp(l * -0.02)) * smoothstep(len - 0.01, 0.0, abs(uv.y));
+    // Fast approximation: saturate(x / (1 + x)) instead of saturate(1 - exp(-x))
+    l = saturate(l * 0.02 / (1.0 + l * 0.02)) * smoothstep(len - 0.01, 0.0, abs(uv.y));
     float3 bolt = l;
 
     // Secondary branch (diagonal)
@@ -116,7 +128,8 @@ float3 RenderBoltSegment(float2 uv, float len, float seed, float3 color, float b
         float branchLen = len * 0.5;
         l = LineSDF(branchUV, float2(0.0, 0.0), float2(0.0, branchLen), thickness * 0.8);
         l = (BoltIntensity * 0.7) / max(0.001, l) * color;
-        l = saturate(1.0 - exp(l * -0.03)) * smoothstep(branchLen * 0.7, 0.0, abs(branchUV.y));
+        // Fast approximation for branch
+        l = saturate(l * 0.03 / (1.0 + l * 0.03)) * smoothstep(branchLen * 0.7, 0.0, abs(branchUV.y));
         bolt += l;
     }
 
@@ -194,10 +207,11 @@ float4 PSMain(VSOutput input) : SV_TARGET
         float coreNormRadius = CoreRadius / ViewportSize.y;
 
         // Animated core with noise
-        float r = coreNormRadius * SimpleNoise(coreUV * 50.0 - float2(0.0, fmod(Time, 200.0) * 5.0), 3.0);
+        float r = coreNormRadius * SimpleNoise(coreUV * 50.0 - float2(0.0, fmod(Time, 200.0) * 5.0), 2.0);
         float coreDist = CircleSDF(coreUV, r);
         float3 core = GlowIntensity / max(0.001, coreDist) * CoreColor.rgb;
-        core = 1.0 - exp(core * -0.05);
+        // Fast approximation for core glow
+        core = saturate(core * 0.05 / (1.0 + core * 0.05));
         finalColor += core * CoreColor.a;
     }
 

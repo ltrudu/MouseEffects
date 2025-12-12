@@ -90,6 +90,12 @@ public partial class LightningBoltSettings : System.Windows.Controls.UserControl
             // Glow
             GlowIntensitySlider.Value = _effect.GlowIntensity;
             GlowIntensityValue.Text = $"{_effect.GlowIntensity:F1}";
+
+            // Performance
+            MaxActiveBoltsSlider.Value = _effect.MaxActiveBolts;
+            MaxActiveBoltsValue.Text = _effect.MaxActiveBolts.ToString();
+            MaxBoltsPerSecondSlider.Value = _effect.MaxBoltsPerSecond;
+            MaxBoltsPerSecondValue.Text = _effect.MaxBoltsPerSecond.ToString();
         }
         finally
         {
@@ -352,5 +358,22 @@ public partial class LightningBoltSettings : System.Windows.Controls.UserControl
         _effect.GlowIntensity = (float)GlowIntensitySlider.Value;
         _effect.Configuration.Set("glow_intensity", _effect.GlowIntensity);
         GlowIntensityValue.Text = $"{_effect.GlowIntensity:F1}";
+    }
+
+    // ===== Performance =====
+    private void MaxActiveBoltsSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MaxActiveBolts = (int)MaxActiveBoltsSlider.Value;
+        _effect.Configuration.Set("perf_maxActiveBolts", _effect.MaxActiveBolts);
+        MaxActiveBoltsValue.Text = _effect.MaxActiveBolts.ToString();
+    }
+
+    private void MaxBoltsPerSecondSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MaxBoltsPerSecond = (int)MaxBoltsPerSecondSlider.Value;
+        _effect.Configuration.Set("perf_maxBoltsPerSecond", _effect.MaxBoltsPerSecond);
+        MaxBoltsPerSecondValue.Text = _effect.MaxBoltsPerSecond.ToString();
     }
 }
