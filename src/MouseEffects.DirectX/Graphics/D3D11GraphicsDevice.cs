@@ -267,57 +267,65 @@ public sealed class D3D11GraphicsDevice : IDisposable
         width = Math.Max(1, width);
         height = Math.Max(1, height);
 
-        // HDR requires FlipSequential swap effect and R16G16B16A16_Float format
-        // Non-HDR uses FlipDiscard with premultiplied alpha for transparency
-        var format = hdrEnabled ? Format.R16G16B16A16_Float : Format.B8G8R8A8_UNorm;
-        var swapEffect = hdrEnabled ? SwapEffect.FlipSequential : SwapEffect.FlipDiscard;
-        var alphaMode = AlphaMode.Premultiplied;  // Per-pixel transparency for overlay
-        var flags = hdrEnabled ? SwapChainFlags.AllowTearing : SwapChainFlags.None;
+        // HDR mode requires flip model with specific format
+        if (hdrEnabled)
+        {
+            var hdrDesc = new SwapChainDescription1
+            {
+                Width = (uint)width,
+                Height = (uint)height,
+                Format = Format.R16G16B16A16_Float,
+                Stereo = false,
+                SampleDescription = new SampleDescription(1, 0),
+                BufferUsage = Usage.RenderTargetOutput,
+                BufferCount = 2,
+                Scaling = Scaling.Stretch,
+                SwapEffect = SwapEffect.FlipSequential,
+                AlphaMode = AlphaMode.Premultiplied,
+                Flags = SwapChainFlags.AllowTearing
+            };
 
-        var swapChainDesc = new SwapChainDescription1
+            try
+            {
+                Log($"Creating HDR swap chain (FlipSequential, R16G16B16A16_Float, Premultiplied)...");
+                var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, hdrDesc);
+                Log("HDR SwapChain created successfully");
+                return swapChain;
+            }
+            catch (Exception ex)
+            {
+                Log($"HDR swap chain failed ({ex.Message}), falling back to SDR...");
+            }
+        }
+
+        // Standard SDR mode - use legacy blit model for maximum compatibility
+        // This works on all configurations including hybrid GPU setups
+        var sdrDesc = new SwapChainDescription1
         {
             Width = (uint)width,
             Height = (uint)height,
-            Format = format,
+            Format = Format.B8G8R8A8_UNorm,
             Stereo = false,
             SampleDescription = new SampleDescription(1, 0),
             BufferUsage = Usage.RenderTargetOutput,
             BufferCount = 2,
             Scaling = Scaling.Stretch,
-            SwapEffect = swapEffect,
-            AlphaMode = alphaMode,
-            Flags = flags
+            SwapEffect = SwapEffect.Discard,
+            AlphaMode = AlphaMode.Unspecified,
+            Flags = SwapChainFlags.None
         };
 
         try
         {
-            Log($"Calling CreateSwapChainForHwnd (format: {format}, swapEffect: {swapEffect}, alphaMode: {alphaMode})...");
-            var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, swapChainDesc);
-            Log($"SwapChain created successfully (HDR: {hdrEnabled})");
+            Log($"Creating SDR swap chain (Discard, B8G8R8A8_UNorm)...");
+            var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, sdrDesc);
+            Log("SDR SwapChain created successfully");
             return swapChain;
         }
         catch (Exception ex)
         {
-            Log($"Modern swap chain failed ({ex.Message}), falling back to legacy blit model...");
-
-            // Fallback to legacy blit model (works on all configurations including hybrid GPU)
-            swapChainDesc.Format = Format.B8G8R8A8_UNorm;  // Fallback to standard format
-            swapChainDesc.SwapEffect = SwapEffect.Discard;
-            swapChainDesc.AlphaMode = AlphaMode.Unspecified;
-            swapChainDesc.Flags = SwapChainFlags.None;
-
-            try
-            {
-                Log($"Calling CreateSwapChainForHwnd (format: {swapChainDesc.Format}, swapEffect: Discard, alphaMode: Unspecified)...");
-                var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, swapChainDesc);
-                Log("SwapChain created successfully with legacy blit model");
-                return swapChain;
-            }
-            catch (Exception fallbackEx)
-            {
-                Log($"CreateSwapChainForHwnd failed: {fallbackEx.Message}");
-                throw;
-            }
+            Log($"CreateSwapChainForHwnd failed: {ex.Message}");
+            throw;
         }
     }
 

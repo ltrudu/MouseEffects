@@ -26,7 +26,7 @@ public sealed class GameLoop : IDisposable
     private bool _disposed;
     private bool _wasAnyEffectEnabled;
     private double _lastTopmostEnforceTime;
-    private const double TopmostEnforceInterval = 0.5; // Enforce topmost every 0.5 seconds
+    private const double TopmostEnforceInterval = 0.1; // Enforce topmost every 100ms for aggressive apps like VLC
 
     public bool IsRunning => _running;
     public double CurrentFps { get; private set; }

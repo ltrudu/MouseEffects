@@ -27,6 +27,8 @@ internal static partial class NativeMethods
     public const uint WM_DESTROY = 0x0002;
     public const uint WM_NCHITTEST = 0x0084;
     public const uint WM_DISPLAYCHANGE = 0x007E;
+    public const uint WM_WINDOWPOSCHANGING = 0x0046;
+    public const uint WM_WINDOWPOSCHANGED = 0x0047;
 
     // Hit test results
     public const nint HTTRANSPARENT = -1;
@@ -41,6 +43,8 @@ internal static partial class NativeMethods
     public const uint SWP_NOACTIVATE = 0x0010;
     public const uint SWP_SHOWWINDOW = 0x0040;
     public const uint SWP_FRAMECHANGED = 0x0020;
+    public const uint SWP_NOZORDER = 0x0004;
+    public const uint SWP_NOOWNERZORDER = 0x0200;
 
     public static readonly nint HWND_TOP = new(0);
     public static readonly nint HWND_TOPMOST = new(-1);
@@ -115,6 +119,18 @@ internal static partial class NativeMethods
     {
         public int x;
         public int y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct WINDOWPOS
+    {
+        public nint hwnd;
+        public nint hwndInsertAfter;
+        public int x;
+        public int y;
+        public int cx;
+        public int cy;
+        public uint flags;
     }
 
     // Note: WNDCLASSEX contains string fields that LibraryImport can't marshal automatically
@@ -211,4 +227,22 @@ internal static partial class NativeMethods
 
     [LibraryImport("user32.dll")]
     public static partial nint GetForegroundWindow();
+
+    [LibraryImport("user32.dll")]
+    public static partial nint GetWindow(nint hWnd, uint uCmd);
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AttachThreadInput(uint idAttach, uint idAttachTo, [MarshalAs(UnmanagedType.Bool)] bool fAttach);
+
+    [LibraryImport("kernel32.dll")]
+    public static partial uint GetCurrentThreadId();
+
+    // GetWindow commands
+    public const uint GW_HWNDPREV = 3;
+    public const uint GW_HWNDNEXT = 2;
+    public const uint GW_HWNDFIRST = 0;
 }

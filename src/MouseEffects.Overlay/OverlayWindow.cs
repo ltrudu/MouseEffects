@@ -217,8 +217,49 @@ public sealed class OverlayWindow : IDisposable
     {
         if (!_topmostSuspended && _isTopmost)
         {
-            // Aggressive enforcement: cycle topmost state to force Z-order recalculation
-            // This ensures the overlay stays on top even if other topmost windows appear
+            // Check if we're already at the top of the Z-order
+            var prevWindow = NativeMethods.GetWindow(_hwnd, NativeMethods.GW_HWNDPREV);
+            if (prevWindow == nint.Zero)
+            {
+                // Already at top, just ensure topmost flag is set
+                NativeMethods.SetWindowPos(
+                    _hwnd,
+                    NativeMethods.HWND_TOPMOST,
+                    0, 0, 0, 0,
+                    NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
+                );
+                return;
+            }
+
+            // Use AttachThreadInput trick for aggressive Z-order control
+            var foregroundHwnd = NativeMethods.GetForegroundWindow();
+            if (foregroundHwnd != nint.Zero && foregroundHwnd != _hwnd)
+            {
+                var foregroundThread = NativeMethods.GetWindowThreadProcessId(foregroundHwnd, out _);
+                var currentThread = NativeMethods.GetCurrentThreadId();
+
+                if (foregroundThread != currentThread)
+                {
+                    // Temporarily attach to foreground thread to gain Z-order control
+                    NativeMethods.AttachThreadInput(currentThread, foregroundThread, true);
+
+                    // Now we can manipulate Z-order more reliably
+                    NativeMethods.SetWindowPos(
+                        _hwnd,
+                        NativeMethods.HWND_TOPMOST,
+                        0, 0, 0, 0,
+                        NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW
+                    );
+
+                    NativeMethods.BringWindowToTop(_hwnd);
+
+                    // Detach from foreground thread
+                    NativeMethods.AttachThreadInput(currentThread, foregroundThread, false);
+                    return;
+                }
+            }
+
+            // Fallback: cycle topmost state to force Z-order recalculation
             NativeMethods.SetWindowPos(
                 _hwnd,
                 NativeMethods.HWND_NOTOPMOST,
@@ -289,6 +330,14 @@ public sealed class OverlayWindow : IDisposable
                 // Return HTTRANSPARENT to make clicks pass through to windows below
                 return NativeMethods.HTTRANSPARENT;
 
+            case NativeMethods.WM_WINDOWPOSCHANGING:
+                // Intercept Z-order changes to maintain topmost status
+                if (_isTopmost && !_topmostSuspended)
+                {
+                    HandleWindowPosChanging(lParam);
+                }
+                break;
+
             case NativeMethods.WM_DESTROY:
                 NativeMethods.PostQuitMessage(0);
                 return nint.Zero;
@@ -300,6 +349,25 @@ public sealed class OverlayWindow : IDisposable
         }
 
         return NativeMethods.DefWindowProcW(hwnd, msg, wParam, lParam);
+    }
+
+    private static void HandleWindowPosChanging(nint lParam)
+    {
+        // Get the WINDOWPOS structure
+        var pos = Marshal.PtrToStructure<NativeMethods.WINDOWPOS>(lParam);
+
+        // If something is trying to change our Z-order and we should stay topmost
+        if ((pos.flags & NativeMethods.SWP_NOZORDER) == 0)
+        {
+            // Check if we're being moved below HWND_TOPMOST
+            if (pos.hwndInsertAfter != NativeMethods.HWND_TOPMOST &&
+                pos.hwndInsertAfter != NativeMethods.HWND_TOP)
+            {
+                // Force HWND_TOPMOST and set NOZORDER to prevent the change
+                pos.hwndInsertAfter = NativeMethods.HWND_TOPMOST;
+                Marshal.StructureToPtr(pos, lParam, false);
+            }
+        }
     }
 
     private void OnDisplayChange()
