@@ -37,7 +37,8 @@ public sealed class TeslaEffect : EffectBase
         public float FlickerSpeed;        // 4 bytes = 32
         public float GlowIntensity;       // 4 bytes
         public float FadeDuration;        // 4 bytes
-        public Vector2 Padding;           // 8 bytes = 48
+        public float HdrMultiplier;       // 4 bytes - HDR peak brightness
+        public float Padding;             // 4 bytes = 48
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 48)]
@@ -54,7 +55,7 @@ public sealed class TeslaEffect : EffectBase
     }
 
     // Trail Constants for Electrical Follow effect
-    [StructLayout(LayoutKind.Sequential, Size = 144)]
+    [StructLayout(LayoutKind.Sequential, Size = 160)]
     private struct TrailConstants
     {
         public Vector2 ViewportSize;      // 8 bytes
@@ -80,6 +81,8 @@ public sealed class TeslaEffect : EffectBase
         public float SparkleIntensity;    // 4 bytes = 112
         public Vector4 BranchBoltColor;   // 16 bytes = 128
         public Vector4 SparkleColor;      // 16 bytes = 144
+        public float HdrMultiplier;       // 4 bytes - HDR peak brightness
+        public Vector3 Padding2;          // 12 bytes = 160
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 32)]
@@ -1017,7 +1020,8 @@ public sealed class TeslaEffect : EffectBase
             FlickerSpeed = _flickerSpeed,
             GlowIntensity = _glowIntensity,
             FadeDuration = _fadeDuration,
-            Padding = Vector2.Zero
+            HdrMultiplier = context.HdrPeakBrightness,
+            Padding = 0f
         };
         context.UpdateBuffer(_constantBuffer!, constants);
 
@@ -1122,7 +1126,9 @@ public sealed class TeslaEffect : EffectBase
             SparkleSize = sparkleSize,
             SparkleIntensity = sparkleIntensity,
             BranchBoltColor = _efBranchBoltColor,
-            SparkleColor = _efSparkleColor
+            SparkleColor = _efSparkleColor,
+            HdrMultiplier = context.HdrPeakBrightness,
+            Padding2 = Vector3.Zero
         };
         context.UpdateBuffer(_trailConstantBuffer!, trailConstants);
 

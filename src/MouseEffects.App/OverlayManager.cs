@@ -13,16 +13,33 @@ public sealed partial class OverlayManager : IDisposable
 {
     private readonly List<OverlayWindow> _overlays = [];
     private readonly D3D11GraphicsDevice _sharedDevice;
+    private readonly bool _hdrEnabled;
+    private readonly float _hdrPeakBrightness;
     private bool _disposed;
 
     public IReadOnlyList<OverlayWindow> Overlays => _overlays;
     public D3D11GraphicsDevice SharedDevice => _sharedDevice;
+    public bool IsHdrEnabled => _hdrEnabled;
+    public float HdrPeakBrightness => _hdrPeakBrightness;
+    public bool IsHdrSupported => _sharedDevice.IsHdrSupported();
 
-    public OverlayManager(string? preferredGpu = null)
+    public OverlayManager(string? preferredGpu = null, bool hdrEnabled = false, float hdrPeakBrightness = 4.0f)
     {
         Log($"Creating D3D11GraphicsDevice (preferred GPU: {preferredGpu ?? "auto"})...");
         _sharedDevice = new D3D11GraphicsDevice(preferredGpu);
         Log($"D3D11GraphicsDevice created successfully using: {_sharedDevice.AdapterName}");
+
+        // Only enable HDR if requested AND supported
+        _hdrEnabled = hdrEnabled && _sharedDevice.IsHdrSupported();
+        _hdrPeakBrightness = _hdrEnabled ? hdrPeakBrightness : 1.0f;
+        if (hdrEnabled && !_hdrEnabled)
+        {
+            Log("HDR requested but not supported on this display");
+        }
+        else if (_hdrEnabled)
+        {
+            Log($"HDR mode enabled (peak brightness: {_hdrPeakBrightness}x)");
+        }
     }
 
     public string CurrentGpuName => _sharedDevice.AdapterName;
@@ -54,9 +71,9 @@ public sealed partial class OverlayManager : IDisposable
 
             try
             {
-                var overlay = new OverlayWindow(monitor, _sharedDevice);
+                var overlay = new OverlayWindow(monitor, _sharedDevice, _hdrEnabled, _hdrPeakBrightness);
                 _overlays.Add(overlay);
-                Log($"Overlay created successfully");
+                Log($"Overlay created successfully (HDR: {_hdrEnabled})");
             }
             catch (Exception ex)
             {

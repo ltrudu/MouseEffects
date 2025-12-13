@@ -82,6 +82,22 @@ public class AppSettings
     public bool EnableSettingsHotkey { get; set; } = true;
 
     // ═══════════════════════════════════════════════════
+    // HDR Settings
+    // ═══════════════════════════════════════════════════
+
+    /// <summary>
+    /// Whether to enable HDR rendering mode.
+    /// Requires an HDR-capable display and Windows HDR mode enabled.
+    /// </summary>
+    public bool EnableHdr { get; set; } = false;
+
+    /// <summary>
+    /// HDR peak brightness multiplier (1.0 - 10.0).
+    /// Higher values make bright effects more intense on HDR displays.
+    /// </summary>
+    public float HdrPeakBrightness { get; set; } = 4.0f;
+
+    // ═══════════════════════════════════════════════════
     // Update Settings
     // ═══════════════════════════════════════════════════
 

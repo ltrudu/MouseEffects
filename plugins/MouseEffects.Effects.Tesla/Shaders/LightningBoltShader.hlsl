@@ -15,7 +15,8 @@ cbuffer TeslaConstants : register(b0)
     float FlickerSpeed;
     float GlowIntensity;
     float FadeDuration;
-    float2 Padding;  // Padding for 16-byte alignment
+    float HdrMultiplier;  // HDR peak brightness multiplier (1.0 for SDR)
+    float Padding;        // Padding for 16-byte alignment
 };
 
 struct BoltInstance
@@ -200,6 +201,9 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     if (alpha < 0.01)
         discard;
+
+    // Apply HDR multiplier for bright highlights
+    finalColor *= HdrMultiplier;
 
     return float4(finalColor, alpha);
 }

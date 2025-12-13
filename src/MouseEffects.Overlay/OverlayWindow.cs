@@ -26,8 +26,9 @@ public sealed class OverlayWindow : IDisposable
     public Rectangle Bounds { get; private set; }
     public int Width => Bounds.Width;
     public int Height => Bounds.Height;
+    public bool IsHdrEnabled => _swapChain.IsHdrEnabled;
 
-    public OverlayWindow(Rectangle bounds, D3D11GraphicsDevice? sharedDevice = null)
+    public OverlayWindow(Rectangle bounds, D3D11GraphicsDevice? sharedDevice = null, bool hdrEnabled = false, float hdrPeakBrightness = 4.0f)
     {
         // Validate bounds
         if (bounds.Width <= 0 || bounds.Height <= 0)
@@ -50,8 +51,8 @@ public sealed class OverlayWindow : IDisposable
 
         // Initialize DirectX (use shared device if provided)
         _graphicsDevice = sharedDevice ?? new D3D11GraphicsDevice();
-        _swapChain = new SwapChainManager(_graphicsDevice, _hwnd, bounds.Width, bounds.Height);
-        _renderContext = new D3D11RenderContext(_graphicsDevice, bounds.Width, bounds.Height);
+        _swapChain = new SwapChainManager(_graphicsDevice, _hwnd, bounds.Width, bounds.Height, hdrEnabled);
+        _renderContext = new D3D11RenderContext(_graphicsDevice, bounds.Width, bounds.Height, hdrEnabled, hdrPeakBrightness);
 
         // Make window click-through and topmost
         SetClickThrough(true);

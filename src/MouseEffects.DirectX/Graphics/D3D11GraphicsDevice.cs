@@ -259,32 +259,38 @@ public sealed class D3D11GraphicsDevice : IDisposable
     /// <summary>
     /// Create a swap chain for a window.
     /// </summary>
-    public IDXGISwapChain1 CreateSwapChain(nint hwnd, int width, int height)
+    public IDXGISwapChain1 CreateSwapChain(nint hwnd, int width, int height, bool hdrEnabled = false)
     {
-        Log($"CreateSwapChain: hwnd={hwnd}, width={width}, height={height}");
+        Log($"CreateSwapChain: hwnd={hwnd}, width={width}, height={height}, hdr={hdrEnabled}");
 
         // Ensure valid dimensions
         width = Math.Max(1, width);
         height = Math.Max(1, height);
 
+        // HDR requires FlipSequential swap effect and R16G16B16A16_Float format
+        var format = hdrEnabled ? Format.R16G16B16A16_Float : Format.B8G8R8A8_UNorm;
+        var swapEffect = hdrEnabled ? SwapEffect.FlipSequential : SwapEffect.Discard;
+        var alphaMode = hdrEnabled ? AlphaMode.Premultiplied : AlphaMode.Unspecified;
+        var flags = hdrEnabled ? SwapChainFlags.AllowTearing : SwapChainFlags.None;
+
         var swapChainDesc = new SwapChainDescription1
         {
             Width = (uint)width,
             Height = (uint)height,
-            Format = Format.B8G8R8A8_UNorm,
+            Format = format,
             Stereo = false,
             SampleDescription = new SampleDescription(1, 0),
             BufferUsage = Usage.RenderTargetOutput,
             BufferCount = 2,
             Scaling = Scaling.Stretch,
-            SwapEffect = SwapEffect.Discard,  // Legacy blit model - works better cross-adapter
-            AlphaMode = AlphaMode.Unspecified,  // Unspecified works with legacy swap effect
-            Flags = SwapChainFlags.None
+            SwapEffect = swapEffect,
+            AlphaMode = alphaMode,
+            Flags = flags
         };
 
         try
         {
-            Log("Calling CreateSwapChainForHwnd...");
+            Log($"Calling CreateSwapChainForHwnd (format: {format}, swapEffect: {swapEffect})...");
             var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, swapChainDesc);
             Log("SwapChain created successfully");
             return swapChain;
@@ -294,6 +300,42 @@ public sealed class D3D11GraphicsDevice : IDisposable
             Log($"CreateSwapChainForHwnd failed: {ex.Message}");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Check if HDR is supported on the primary output.
+    /// </summary>
+    public bool IsHdrSupported()
+    {
+        try
+        {
+            if (_adapter == null) return false;
+
+            // Get the first output
+            if (!_adapter.EnumOutputs(0, out var output).Success || output == null)
+                return false;
+
+            using (output)
+            {
+                // Try to get IDXGIOutput6 for HDR support check
+                if (output.QueryInterface<IDXGIOutput6>() is IDXGIOutput6 output6)
+                {
+                    using (output6)
+                    {
+                        var desc = output6.Description1;
+                        bool hdrSupported = desc.ColorSpace == ColorSpaceType.RgbFullG2084NoneP2020;
+                        Log($"HDR check - ColorSpace: {desc.ColorSpace}, HDR supported: {hdrSupported}");
+                        return hdrSupported;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"HDR check failed: {ex.Message}");
+        }
+
+        return false;
     }
 
     public void Dispose()

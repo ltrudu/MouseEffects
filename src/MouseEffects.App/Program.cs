@@ -365,9 +365,10 @@ static partial class Program
         {
             // Settings already loaded in Main() for early theme application
             Log($"Preferred GPU: {_settings.SelectedGpuName ?? "auto"}");
+            Log($"HDR enabled: {_settings.EnableHdr}, Peak brightness: {_settings.HdrPeakBrightness}x");
 
             Log("Creating OverlayManager...");
-            _overlayManager = new OverlayManager(_settings.SelectedGpuName);
+            _overlayManager = new OverlayManager(_settings.SelectedGpuName, _settings.EnableHdr, _settings.HdrPeakBrightness);
 
             Log("Initializing overlays...");
             _overlayManager.Initialize();

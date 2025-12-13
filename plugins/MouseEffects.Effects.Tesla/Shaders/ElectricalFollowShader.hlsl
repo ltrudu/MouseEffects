@@ -29,6 +29,8 @@ cbuffer TrailConstants : register(b0)
     float SparkleIntensity;       // 4 bytes = 112
     float4 BranchBoltColor;       // 16 bytes = 128
     float4 SparkleColor;          // 16 bytes = 144
+    float HdrMultiplier;          // 4 bytes - HDR peak brightness multiplier
+    float3 Padding2;              // 12 bytes = 160
 };
 
 struct TrailPoint
@@ -394,6 +396,9 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     if (alpha < 0.005)
         discard;
+
+    // Apply HDR multiplier for bright highlights
+    finalColor *= HdrMultiplier;
 
     return float4(finalColor, alpha);
 }
