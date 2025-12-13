@@ -1,0 +1,70 @@
+<UserControl x:Class="MouseEffects.Effects.Retro.UI.Filters.XSaISettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,6,0,2"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SectionStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- Layout Settings -->
+        <TextBlock Text="Layout" Style="{StaticResource SectionStyle}"/>
+        <TextBlock Text="Define where the effect is applied on screen."
+                   Opacity="0.6" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+        <TextBlock Text="Layout Mode" Style="{StaticResource LabelStyle}"/>
+        <ComboBox x:Name="LayoutModeCombo" SelectionChanged="LayoutModeCombo_SelectionChanged" Margin="0,0,0,8">
+            <ComboBoxItem Content="Fullscreen" IsSelected="True"/>
+            <ComboBoxItem Content="Circle (follows mouse)"/>
+            <ComboBoxItem Content="Rectangle (follows mouse)"/>
+        </ComboBox>
+
+        <!-- Circle Settings -->
+        <StackPanel x:Name="CircleSettingsPanel" Visibility="Collapsed">
+            <TextBlock Text="Radius" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="RadiusSlider" Minimum="50" Maximum="500" Value="200"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_Changed"/>
+            <TextBlock x:Name="RadiusValue" Text="200 px" Style="{StaticResource ValueStyle}"/>
+        </StackPanel>
+
+        <!-- Rectangle Settings -->
+        <StackPanel x:Name="RectangleSettingsPanel" Visibility="Collapsed">
+            <TextBlock Text="Width" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="RectWidthSlider" Minimum="100" Maximum="800" Value="400"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RectWidthSlider_Changed"/>
+            <TextBlock x:Name="RectWidthValue" Text="400 px" Style="{StaticResource ValueStyle}"/>
+
+            <TextBlock Text="Height" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="RectHeightSlider" Minimum="100" Maximum="600" Value="300"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RectHeightSlider_Changed"/>
+            <TextBlock x:Name="RectHeightValue" Text="300 px" Style="{StaticResource ValueStyle}"/>
+        </StackPanel>
+
+        <!-- Edge Softness (for Circle/Rectangle modes) -->
+        <StackPanel x:Name="EdgeSoftnessPanel" Visibility="Collapsed">
+            <TextBlock Text="Edge Softness" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="EdgeSoftnessSlider" Minimum="0" Maximum="100" Value="20"
+                    Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_Changed"/>
+            <TextBlock x:Name="EdgeSoftnessValue" Text="20 px" Style="{StaticResource ValueStyle}"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>

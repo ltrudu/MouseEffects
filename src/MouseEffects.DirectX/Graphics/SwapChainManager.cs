@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Drawing.Imaging;
+using MouseEffects.Core.Diagnostics;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 using Vortice.Mathematics;
@@ -18,15 +19,43 @@ public sealed class SwapChainManager : IDisposable
     public ID3D11RenderTargetView RenderTargetView { get; private set; }
     public int Width { get; private set; }
     public int Height { get; private set; }
+    public bool IsHdrEnabled { get; }
 
-    public SwapChainManager(D3D11GraphicsDevice graphicsDevice, nint hwnd, int width, int height)
+    public SwapChainManager(D3D11GraphicsDevice graphicsDevice, nint hwnd, int width, int height, bool hdrEnabled = false)
     {
         _graphicsDevice = graphicsDevice;
         Width = width;
         Height = height;
+        IsHdrEnabled = hdrEnabled;
 
-        SwapChain = graphicsDevice.CreateSwapChain(hwnd, width, height);
+        SwapChain = graphicsDevice.CreateSwapChain(hwnd, width, height, hdrEnabled);
         RenderTargetView = CreateRenderTargetView();
+
+        // Set HDR color space if enabled
+        if (hdrEnabled)
+        {
+            SetHdrColorSpace();
+        }
+    }
+
+    private void SetHdrColorSpace()
+    {
+        try
+        {
+            // Get IDXGISwapChain4 for color space support
+            if (SwapChain.QueryInterface<IDXGISwapChain4>() is IDXGISwapChain4 swapChain4)
+            {
+                // Use scRGB color space for HDR (linear, extended range)
+                // This allows values > 1.0 for HDR highlights
+                swapChain4.SetColorSpace1(ColorSpaceType.RgbFullG10NoneP709);
+                Log("HDR color space set to scRGB (RgbFullG10NoneP709)");
+                swapChain4.Dispose();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to set HDR color space: {ex.Message}");
+        }
     }
 
     private ID3D11RenderTargetView CreateRenderTargetView()
@@ -49,8 +78,9 @@ public sealed class SwapChainManager : IDisposable
         // Release old render target
         RenderTargetView.Dispose();
 
-        // Resize swap chain
-        SwapChain.ResizeBuffers(0, (uint)width, (uint)height, Format.Unknown, SwapChainFlags.None);
+        // Resize swap chain - preserve format for HDR
+        var flags = IsHdrEnabled ? SwapChainFlags.AllowTearing : SwapChainFlags.None;
+        SwapChain.ResizeBuffers(0, (uint)width, (uint)height, Format.Unknown, flags);
 
         // Recreate render target view
         RenderTargetView = CreateRenderTargetView();
@@ -78,7 +108,10 @@ public sealed class SwapChainManager : IDisposable
     /// </summary>
     public void Present(bool vsync = true)
     {
-        SwapChain.Present(vsync ? 1u : 0u, PresentFlags.None);
+        // HDR with tearing support can use ALLOW_TEARING flag
+        var presentFlags = (!vsync && IsHdrEnabled) ? PresentFlags.AllowTearing : PresentFlags.None;
+        var syncInterval = vsync ? 1u : 0u;
+        SwapChain.Present(syncInterval, presentFlags);
     }
 
     /// <summary>
@@ -91,6 +124,7 @@ public sealed class SwapChainManager : IDisposable
             using var backBuffer = SwapChain.GetBuffer<ID3D11Texture2D>(0);
 
             // Create a staging texture for CPU read
+            // Note: For HDR, we'd need to tone map to SDR for bitmap output
             var stagingDesc = new Texture2DDescription
             {
                 Width = (uint)Width,
@@ -153,6 +187,8 @@ public sealed class SwapChainManager : IDisposable
             return null;
         }
     }
+
+    private static void Log(string message) => Logger.Log("SwapChain", message);
 
     public void Dispose()
     {

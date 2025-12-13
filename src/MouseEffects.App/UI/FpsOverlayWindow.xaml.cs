@@ -15,6 +15,13 @@ public partial class FpsOverlayWindow : Window
     private const int WS_EX_TOOLWINDOW = 0x00000080;
     private const int GWL_EXSTYLE = -20;
 
+    // Window display affinity for excluding from screen capture
+    private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetWindowDisplayAffinity(nint hWnd, uint dwAffinity);
+
     // Use GetWindowLongPtrW on 64-bit, GetWindowLongW on 32-bit
 #if TARGET_64BIT
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongPtrW")]
@@ -60,6 +67,10 @@ public partial class FpsOverlayWindow : Window
         var hwnd = new WindowInteropHelper(this).Handle;
         var extendedStyle = (int)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
         SetWindowLongPtr(hwnd, GWL_EXSTYLE, (nint)(extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW));
+
+        // Exclude this window from screen capture (DXGI Desktop Duplication)
+        // This prevents the FPS overlay from being affected by screen-capture effects
+        SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
     }
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)

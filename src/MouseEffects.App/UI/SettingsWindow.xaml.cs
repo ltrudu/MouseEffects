@@ -45,6 +45,7 @@ public partial class SettingsWindow : Window
         LoadGpuList();
         LoadFrameRateSetting();
         LoadFpsCounterSetting();
+        LoadHdrSettings();
         LoadHotkeySettings();
         LoadPluginSettings();
         LoadUpdateSettings();
@@ -168,6 +169,90 @@ public partial class SettingsWindow : Window
         settings.Save();
     }
 
+    private void LoadHdrSettings()
+    {
+        var settings = Program.Settings;
+        var overlayManager = Program.OverlayManager;
+
+        // Check if HDR is supported on this device
+        bool hdrSupported = overlayManager?.IsHdrSupported ?? false;
+
+        // Hide the entire HDR card if not supported
+        HdrSettingsCard.Visibility = hdrSupported ? Visibility.Visible : Visibility.Collapsed;
+
+        if (!hdrSupported)
+            return;
+
+        EnableHdrCheckBox.IsChecked = settings.EnableHdr;
+        HdrBrightnessSlider.Value = settings.HdrPeakBrightness;
+        HdrBrightnessValue.Text = $"{settings.HdrPeakBrightness:F1}x";
+
+        // Show brightness panel only when HDR is enabled
+        HdrBrightnessPanel.Visibility = settings.EnableHdr ? Visibility.Visible : Visibility.Collapsed;
+
+        // Update status text
+        UpdateHdrStatus();
+    }
+
+    private void UpdateHdrStatus()
+    {
+        var overlayManager = Program.OverlayManager;
+        if (overlayManager != null)
+        {
+            bool supported = overlayManager.IsHdrSupported;
+            bool enabled = overlayManager.IsHdrEnabled;
+
+            if (!supported)
+            {
+                HdrStatusText.Text = "HDR not supported on this display or Windows HDR is disabled";
+            }
+            else if (enabled)
+            {
+                HdrStatusText.Text = $"HDR is active (peak brightness: {overlayManager.HdrPeakBrightness:F1}x)";
+            }
+            else
+            {
+                HdrStatusText.Text = "HDR is supported and available";
+            }
+        }
+        else
+        {
+            HdrStatusText.Text = "";
+        }
+    }
+
+    private void EnableHdrCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = EnableHdrCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableHdr = enabled;
+        settings.Save();
+
+        // Show/hide brightness slider
+        HdrBrightnessPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+
+        // Update status text to indicate restart needed
+        HdrStatusText.Text = "Restart MouseEffects to apply HDR changes";
+    }
+
+    private void HdrBrightnessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing || HdrBrightnessValue == null) return;
+
+        var value = (float)HdrBrightnessSlider.Value;
+        HdrBrightnessValue.Text = $"{value:F1}x";
+
+        var settings = Program.Settings;
+        settings.HdrPeakBrightness = value;
+        settings.Save();
+
+        // Update status text to indicate restart needed
+        HdrStatusText.Text = "Restart MouseEffects to apply HDR changes";
+    }
+
     private void LoadHotkeySettings()
     {
         var settings = Program.Settings;
@@ -254,7 +339,12 @@ public partial class SettingsWindow : Window
         PluginSettingsContainer.Children.Clear();
         _effectSettingsControls.Clear();
 
-        foreach (var factory in _pluginLoader.Factories)
+        // Sort factories alphabetically by their display name
+        var sortedFactories = _pluginLoader.Factories
+            .OrderBy(f => f.Metadata.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var factory in sortedFactories)
         {
             // Find the corresponding effect instance
             var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == factory.Metadata.Id);
@@ -611,12 +701,111 @@ public partial class SettingsWindow : Window
     }
 
     // ═══════════════════════════════════════════════════
-    // Settings Backup (Export/Import)
+    // Manage Settings (Save/Reload/Export/Import)
     // ═══════════════════════════════════════════════════
 
     private static readonly string SettingsFolder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "MouseEffects");
+
+    private void SaveSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            SaveSettingsButton.IsEnabled = false;
+            BackupStatusText.Text = "Saving settings...";
+
+            // Save app settings
+            Program.Settings.Save();
+
+            // Save all plugin settings
+            foreach (var effect in _effectManager.Effects)
+            {
+                Program.SavePluginSettings(effect.Metadata.Id);
+            }
+
+            BackupStatusText.Text = $"Settings saved successfully at {DateTime.Now:HH:mm:ss}";
+            Logger.Log("SettingsWindow", "All settings saved");
+        }
+        catch (Exception ex)
+        {
+            BackupStatusText.Text = $"Save failed: {ex.Message}";
+            Logger.Log("SettingsWindow", $"Save failed: {ex.Message}");
+        }
+        finally
+        {
+            SaveSettingsButton.IsEnabled = true;
+        }
+    }
+
+    private void ReloadSettingsButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ReloadSettingsButton.IsEnabled = false;
+            BackupStatusText.Text = "Reloading settings...";
+
+            _isInitializing = true;
+
+            // Reload app settings from disk
+            var settings = AppSettings.Load();
+
+            // Apply app settings to UI
+            ThemeSelector.SelectedIndex = settings.Theme switch
+            {
+                AppTheme.System => 0,
+                AppTheme.Light => 1,
+                AppTheme.Dark => 2,
+                _ => 0
+            };
+
+            FrameRateSlider.Value = settings.TargetFrameRate;
+            FrameRateValue.Text = $"{settings.TargetFrameRate} fps";
+
+            ShowFpsCheckBox.IsChecked = settings.ShowFpsCounter;
+            ShowFpsOverlayCheckBox.IsChecked = settings.ShowFpsOverlay;
+            UpdateFpsCounterVisibility(settings.ShowFpsCounter);
+
+            ToggleHotkeyCheckBox.IsChecked = settings.EnableToggleHotkey;
+            SettingsHotkeyCheckBox.IsChecked = settings.EnableSettingsHotkey;
+            ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
+
+            // Apply settings to game loop
+            var gameLoop = Program.GameLoop;
+            if (gameLoop != null)
+            {
+                gameLoop.TargetFrameRate = settings.TargetFrameRate;
+            }
+
+            // Reload plugin settings from disk and apply to effects
+            foreach (var effect in _effectManager.Effects)
+            {
+                var pluginSettings = PluginSettings.Load(effect.Metadata.Id);
+                pluginSettings.ApplyToEffect(effect);
+            }
+
+            // Refresh plugin UI controls
+            LoadPluginSettings();
+
+            // Sync tray menu with reloaded states
+            Program.SyncTrayWithEffects();
+
+            _isInitializing = false;
+
+            BackupStatusText.Text = $"Settings reloaded successfully at {DateTime.Now:HH:mm:ss}";
+            Logger.Log("SettingsWindow", "All settings reloaded from disk");
+        }
+        catch (Exception ex)
+        {
+            BackupStatusText.Text = $"Reload failed: {ex.Message}";
+            Logger.Log("SettingsWindow", $"Reload failed: {ex.Message}");
+            _isInitializing = false;
+        }
+        finally
+        {
+            ReloadSettingsButton.IsEnabled = true;
+        }
+    }
 
     private void ExportSettingsButton_Click(object sender, RoutedEventArgs e)
     {

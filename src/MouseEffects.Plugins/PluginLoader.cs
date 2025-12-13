@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.Loader;
 using MouseEffects.Core.Effects;
@@ -13,9 +14,15 @@ public sealed class PluginLoader
     private readonly string _pluginsDirectory;
     private readonly List<PluginInfo> _loadedPlugins = [];
     private readonly List<IEffectFactory> _factories = [];
+    private readonly object _lock = new();
 
     public IReadOnlyList<PluginInfo> LoadedPlugins => _loadedPlugins;
     public IReadOnlyList<IEffectFactory> Factories => _factories;
+
+    /// <summary>
+    /// Event raised when a plugin is loaded (for progress reporting).
+    /// </summary>
+    public event Action<string, int, int>? PluginLoaded;
 
     public PluginLoader(string pluginsDirectory)
     {
@@ -23,7 +30,72 @@ public sealed class PluginLoader
     }
 
     /// <summary>
-    /// Load all plugins from the plugins directory.
+    /// Load all plugins from the plugins directory asynchronously.
+    /// </summary>
+    public async Task LoadPluginsAsync(CancellationToken cancellationToken = default)
+    {
+        if (!Directory.Exists(_pluginsDirectory))
+        {
+            Log($"Plugins directory not found: {_pluginsDirectory}");
+            Directory.CreateDirectory(_pluginsDirectory);
+            Log($"Created plugins directory: {_pluginsDirectory}");
+            return;
+        }
+
+        Log($"Scanning plugins directory: {_pluginsDirectory}");
+
+        // Find all DLLs in the plugins directory (including subdirectories)
+        var dllFiles = await Task.Run(() =>
+            Directory.GetFiles(_pluginsDirectory, "*.dll", SearchOption.AllDirectories)
+                .Where(f => !IsSystemAssembly(Path.GetFileName(f)))
+                .ToArray(),
+            cancellationToken);
+
+        Log($"Found {dllFiles.Length} plugin DLL file(s) to load");
+
+        if (dllFiles.Length == 0)
+            return;
+
+        // Load plugins in parallel
+        var loadedPlugins = new ConcurrentBag<(PluginInfo info, List<IEffectFactory> factories)>();
+        int loadedCount = 0;
+
+        await Parallel.ForEachAsync(dllFiles, cancellationToken, async (dllPath, ct) =>
+        {
+            try
+            {
+                var result = await Task.Run(() => LoadPluginInternal(dllPath), ct);
+                if (result.HasValue)
+                {
+                    loadedPlugins.Add(result.Value);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to load plugin {Path.GetFileName(dllPath)}: {ex.Message}");
+            }
+            finally
+            {
+                var count = Interlocked.Increment(ref loadedCount);
+                PluginLoaded?.Invoke(Path.GetFileName(dllPath), count, dllFiles.Length);
+            }
+        });
+
+        // Add all loaded plugins to the main lists (thread-safe)
+        lock (_lock)
+        {
+            foreach (var (info, factories) in loadedPlugins)
+            {
+                _loadedPlugins.Add(info);
+                _factories.AddRange(factories);
+            }
+        }
+
+        Log($"Loaded {_factories.Count} effect factory(ies) from {_loadedPlugins.Count} plugin(s)");
+    }
+
+    /// <summary>
+    /// Load all plugins from the plugins directory (synchronous, for backward compatibility).
     /// </summary>
     public void LoadPlugins()
     {
@@ -65,6 +137,17 @@ public sealed class PluginLoader
 
     private void LoadPlugin(string dllPath)
     {
+        var result = LoadPluginInternal(dllPath);
+        if (result.HasValue)
+        {
+            var (info, factories) = result.Value;
+            _loadedPlugins.Add(info);
+            _factories.AddRange(factories);
+        }
+    }
+
+    private (PluginInfo info, List<IEffectFactory> factories)? LoadPluginInternal(string dllPath)
+    {
         var fileName = Path.GetFileName(dllPath);
 
         // Load into default context so types match with the main app
@@ -79,7 +162,7 @@ public sealed class PluginLoader
 
         if (factoryTypes.Count == 0)
         {
-            return; // Not a plugin DLL
+            return null; // Not a plugin DLL
         }
 
         Log($"Loading plugin: {fileName}");
@@ -90,14 +173,14 @@ public sealed class PluginLoader
             Assembly = assembly,
             FactoryTypes = factoryTypes
         };
-        _loadedPlugins.Add(pluginInfo);
 
+        var factories = new List<IEffectFactory>();
         foreach (var factoryType in factoryTypes)
         {
             try
             {
                 var factory = (IEffectFactory)Activator.CreateInstance(factoryType)!;
-                _factories.Add(factory);
+                factories.Add(factory);
                 Log($"  Registered factory: {factory.Metadata.Name} ({factory.Metadata.Id})");
             }
             catch (Exception ex)
@@ -105,6 +188,8 @@ public sealed class PluginLoader
                 Log($"  Failed to create factory {factoryType.Name}: {ex.Message}");
             }
         }
+
+        return (pluginInfo, factories);
     }
 
     private static bool IsSystemAssembly(string fileName)

@@ -1,0 +1,213 @@
+<UserControl x:Class="MouseEffects.Effects.Tesla.UI.Effects.LightningBoltSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="300"
+             Foreground="White">
+    <UserControl.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,8,0,4" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="ValueStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="SectionStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,12,0,8" />
+            <Setter Property="Foreground" Value="#89B4FA" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="SliderStyle" TargetType="Slider">
+            <Setter Property="Margin" Value="0,0,0,2" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- ===== TRIGGER SETTINGS ===== -->
+        <TextBlock Text="Trigger Settings" Style="{StaticResource SectionStyle}" />
+
+        <CheckBox x:Name="MouseMoveEnabledCheckBox" Content="Enable on Mouse Move"
+                  Margin="0,4,0,4" IsChecked="True"
+                  Checked="MouseMoveEnabledCheckBox_Changed" Unchecked="MouseMoveEnabledCheckBox_Changed" />
+
+        <CheckBox x:Name="LeftClickEnabledCheckBox" Content="Enable on Left Click"
+                  Margin="0,4,0,4" IsChecked="True"
+                  Checked="LeftClickEnabledCheckBox_Changed" Unchecked="LeftClickEnabledCheckBox_Changed" />
+
+        <CheckBox x:Name="RightClickEnabledCheckBox" Content="Enable on Right Click"
+                  Margin="0,4,0,4"
+                  Checked="RightClickEnabledCheckBox_Changed" Unchecked="RightClickEnabledCheckBox_Changed" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== MOUSE MOVE TRIGGER ===== -->
+        <TextBlock Text="Mouse Move Trigger" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Distance Threshold (pixels)" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="DistanceThresholdSlider" Minimum="1" Maximum="150" Value="50"
+                Style="{StaticResource SliderStyle}" ValueChanged="DistanceThresholdSlider_Changed" />
+        <TextBlock x:Name="DistanceThresholdValue" Text="50 px" Style="{StaticResource ValueStyle}" />
+
+        <CheckBox x:Name="RandomDistanceCheckBox" Content="Random distance (recalculates every second)"
+                  Margin="0,8,0,4" Checked="RandomDistanceCheckBox_Changed" Unchecked="RandomDistanceCheckBox_Changed" />
+
+        <TextBlock Text="Direction Mode" Style="{StaticResource LabelStyle}" />
+        <ComboBox x:Name="MoveDirectionModeCombo" SelectionChanged="MoveDirectionModeCombo_Changed" Margin="0,0,0,4">
+            <ComboBoxItem Content="All directions (360 deg)" IsSelected="True" />
+            <ComboBoxItem Content="Configurable spread" />
+            <ComboBoxItem Content="Velocity-based" />
+        </ComboBox>
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== CLICK TRIGGER ===== -->
+        <TextBlock Text="Click Trigger" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Direction Mode" Style="{StaticResource LabelStyle}" />
+        <ComboBox x:Name="ClickDirectionModeCombo" SelectionChanged="ClickDirectionModeCombo_Changed" Margin="0,0,0,4">
+            <ComboBoxItem Content="All directions (360 deg)" IsSelected="True" />
+            <ComboBoxItem Content="Configurable spread" />
+        </ComboBox>
+
+        <TextBlock Text="Spread Angle (degrees)" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="SpreadAngleSlider" Minimum="30" Maximum="360" Value="180"
+                Style="{StaticResource SliderStyle}" ValueChanged="SpreadAngleSlider_Changed" />
+        <TextBlock x:Name="SpreadAngleValue" Text="180 deg" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== BOLT COUNT ===== -->
+        <TextBlock Text="Bolt Count" Style="{StaticResource SectionStyle}" />
+
+        <CheckBox x:Name="RandomBoltCountCheckBox" Content="Random bolt count" IsChecked="True"
+                  Margin="0,4,0,4" Checked="RandomBoltCountCheckBox_Changed" Unchecked="RandomBoltCountCheckBox_Changed" />
+
+        <StackPanel x:Name="RandomBoltCountPanel">
+            <TextBlock Text="Min Bolt Count" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="MinBoltCountSlider" Minimum="1" Maximum="10" Value="3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MinBoltCountSlider_Changed"
+                    IsSnapToTickEnabled="True" TickFrequency="1" />
+            <TextBlock x:Name="MinBoltCountValue" Text="3" Style="{StaticResource ValueStyle}" />
+
+            <TextBlock Text="Max Bolt Count" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="MaxBoltCountSlider" Minimum="1" Maximum="15" Value="6"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxBoltCountSlider_Changed"
+                    IsSnapToTickEnabled="True" TickFrequency="1" />
+            <TextBlock x:Name="MaxBoltCountValue" Text="6" Style="{StaticResource ValueStyle}" />
+        </StackPanel>
+
+        <StackPanel x:Name="FixedBoltCountPanel" Visibility="Collapsed">
+            <TextBlock Text="Fixed Bolt Count" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="FixedBoltCountSlider" Minimum="1" Maximum="15" Value="4"
+                    Style="{StaticResource SliderStyle}" ValueChanged="FixedBoltCountSlider_Changed"
+                    IsSnapToTickEnabled="True" TickFrequency="1" />
+            <TextBlock x:Name="FixedBoltCountValue" Text="4" Style="{StaticResource ValueStyle}" />
+        </StackPanel>
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== BOLT APPEARANCE ===== -->
+        <TextBlock Text="Bolt Appearance" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Min Bolt Length" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MinBoltLengthSlider" Minimum="20" Maximum="300" Value="50"
+                Style="{StaticResource SliderStyle}" ValueChanged="MinBoltLengthSlider_Changed" />
+        <TextBlock x:Name="MinBoltLengthValue" Text="50 px" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Max Bolt Length" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MaxBoltLengthSlider" Minimum="50" Maximum="500" Value="150"
+                Style="{StaticResource SliderStyle}" ValueChanged="MaxBoltLengthSlider_Changed" />
+        <TextBlock x:Name="MaxBoltLengthValue" Text="150 px" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Bolt Thickness" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="BoltThicknessSlider" Minimum="0.5" Maximum="5" Value="1.0"
+                Style="{StaticResource SliderStyle}" ValueChanged="BoltThicknessSlider_Changed" />
+        <TextBlock x:Name="BoltThicknessValue" Text="1.0" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Branch Probability" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="BranchProbabilitySlider" Minimum="0" Maximum="1" Value="0.5"
+                Style="{StaticResource SliderStyle}" ValueChanged="BranchProbabilitySlider_Changed" />
+        <TextBlock x:Name="BranchProbabilityValue" Text="50%" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== COLORS ===== -->
+        <TextBlock Text="Colors" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Glow Color" Style="{StaticResource LabelStyle}" />
+        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+            <Border x:Name="GlowColorPreview" Width="24" Height="24"
+                    BorderThickness="1" BorderBrush="Gray" Background="#4D80FF" Margin="0,0,8,0" />
+            <Button Content="Pick Color..." Click="GlowColorButton_Click" />
+        </StackPanel>
+
+        <CheckBox x:Name="RandomColorVariationCheckBox" Content="Random color variation"
+                  Margin="0,8,0,4" Checked="RandomColorVariationCheckBox_Changed" Unchecked="RandomColorVariationCheckBox_Changed" />
+
+        <CheckBox x:Name="RainbowModeCheckBox" Content="Rainbow mode"
+                  Margin="0,4,0,4" Checked="RainbowModeCheckBox_Changed" Unchecked="RainbowModeCheckBox_Changed" />
+
+        <StackPanel x:Name="RainbowSpeedPanel" Visibility="Collapsed">
+            <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}" />
+            <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_Changed" />
+            <TextBlock x:Name="RainbowSpeedValue" Text="0.5" Style="{StaticResource ValueStyle}" />
+        </StackPanel>
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== TIMING ===== -->
+        <TextBlock Text="Timing" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Bolt Lifetime (seconds)" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="BoltLifetimeSlider" Minimum="0.05" Maximum="1.0" Value="0.15"
+                Style="{StaticResource SliderStyle}" ValueChanged="BoltLifetimeSlider_Changed" />
+        <TextBlock x:Name="BoltLifetimeValue" Text="0.15 s" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Flicker Speed" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="FlickerSpeedSlider" Minimum="1" Maximum="50" Value="15"
+                Style="{StaticResource SliderStyle}" ValueChanged="FlickerSpeedSlider_Changed" />
+        <TextBlock x:Name="FlickerSpeedValue" Text="15" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Fade Duration (seconds)" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="FadeDurationSlider" Minimum="0.01" Maximum="0.5" Value="0.05"
+                Style="{StaticResource SliderStyle}" ValueChanged="FadeDurationSlider_Changed" />
+        <TextBlock x:Name="FadeDurationValue" Text="0.05 s" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== GLOW ===== -->
+        <TextBlock Text="Glow" Style="{StaticResource SectionStyle}" />
+
+        <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="GlowIntensitySlider" Minimum="0" Maximum="2" Value="0.8"
+                Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_Changed" />
+        <TextBlock x:Name="GlowIntensityValue" Text="0.8" Style="{StaticResource ValueStyle}" />
+
+        <Separator Margin="0,8,0,8" />
+
+        <!-- ===== PERFORMANCE ===== -->
+        <TextBlock Text="Performance" Style="{StaticResource SectionStyle}" Foreground="#F9E2AF" />
+
+        <TextBlock Text="Max Active Bolts" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MaxActiveBoltsSlider" Minimum="16" Maximum="256" Value="64"
+                Style="{StaticResource SliderStyle}" ValueChanged="MaxActiveBoltsSlider_Changed"
+                IsSnapToTickEnabled="True" TickFrequency="16" />
+        <TextBlock x:Name="MaxActiveBoltsValue" Text="64" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Max Bolts Per Second" Style="{StaticResource LabelStyle}" />
+        <Slider x:Name="MaxBoltsPerSecondSlider" Minimum="10" Maximum="100" Value="30"
+                Style="{StaticResource SliderStyle}" ValueChanged="MaxBoltsPerSecondSlider_Changed"
+                IsSnapToTickEnabled="True" TickFrequency="10" />
+        <TextBlock x:Name="MaxBoltsPerSecondValue" Text="30" Style="{StaticResource ValueStyle}" />
+
+        <TextBlock Text="Lower values = better performance" FontSize="10" Opacity="0.5" Margin="0,4,0,0" />
+
+    </StackPanel>
+</UserControl>

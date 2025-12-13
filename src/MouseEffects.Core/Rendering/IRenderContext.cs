@@ -13,6 +13,12 @@ public interface IRenderContext : IDisposable
     /// <summary>Current viewport size.</summary>
     Vector2 ViewportSize { get; }
 
+    /// <summary>Whether HDR rendering is enabled.</summary>
+    bool IsHdrEnabled { get; }
+
+    /// <summary>HDR peak brightness multiplier (1.0 for SDR, higher for HDR).</summary>
+    float HdrPeakBrightness { get; }
+
     /// <summary>
     /// Captured screen texture for effects that need to sample the background.
     /// May be null if screen capture is not available.

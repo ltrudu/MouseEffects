@@ -35,14 +35,18 @@ public sealed class D3D11RenderContext : IRenderContext
     public nint DeviceHandle => _graphicsDevice.Device.NativePointer;
     public Vector2 ViewportSize { get; private set; }
     public ITexture? ScreenTexture => _screenTexture;
+    public bool IsHdrEnabled { get; private set; }
+    public float HdrPeakBrightness { get; private set; } = 1.0f;
 
     public ID3D11Device Device => _graphicsDevice.Device;
     public ID3D11DeviceContext Context => _graphicsDevice.Context;
 
-    public D3D11RenderContext(D3D11GraphicsDevice graphicsDevice, int viewportWidth, int viewportHeight)
+    public D3D11RenderContext(D3D11GraphicsDevice graphicsDevice, int viewportWidth, int viewportHeight, bool hdrEnabled = false, float hdrPeakBrightness = 1.0f)
     {
         _graphicsDevice = graphicsDevice;
         ViewportSize = new Vector2(viewportWidth, viewportHeight);
+        IsHdrEnabled = hdrEnabled;
+        HdrPeakBrightness = hdrEnabled ? hdrPeakBrightness : 1.0f;
         _screenCapture = new ScreenCapture(graphicsDevice);
         InitializeCommonStates();
         InitializeScreenCapture();

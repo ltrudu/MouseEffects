@@ -1,0 +1,63 @@
+<UserControl x:Class="MouseEffects.Effects.Retro.UI.Filters.PreFilterSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,6,0,2"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Opacity" Value="0.7"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Expander Header="Pre-Filter" IsExpanded="True" Margin="0,0,0,8">
+        <StackPanel Margin="8,8,0,0">
+            <TextBlock Text="Input processing applied before the main filter. Controls how the source image is scaled."
+                       Opacity="0.6" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+            <!-- Scaling Mode -->
+            <TextBlock Text="Scaling Mode" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="ScalingModeCombo" SelectionChanged="ScalingModeCombo_SelectionChanged" Margin="0,0,0,4">
+                <ComboBoxItem Content="Enhancement (native resolution)"/>
+                <ComboBoxItem Content="Pixelate + Scale"/>
+                <ComboBoxItem Content="Downscale + Upscale"/>
+            </ComboBox>
+
+            <!-- Pixel Size (for Pixelate + Scale mode) -->
+            <StackPanel x:Name="PixelSizePanel" Visibility="Collapsed">
+                <TextBlock Text="Pixel Size" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="PixelSizeSlider" Minimum="2" Maximum="16" Value="4"
+                        Style="{StaticResource SliderStyle}" ValueChanged="PixelSizeSlider_Changed"
+                        IsSnapToTickEnabled="True" TickFrequency="1"/>
+                <TextBlock x:Name="PixelSizeValue" Text="4 px" Style="{StaticResource ValueStyle}"/>
+            </StackPanel>
+
+            <!-- Scale Factor (for Downscale + Upscale mode) -->
+            <StackPanel x:Name="ScaleFactorPanel" Visibility="Collapsed">
+                <TextBlock Text="Scale Factor" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="ScaleFactorCombo" SelectionChanged="ScaleFactorCombo_SelectionChanged" Margin="0,0,0,4">
+                    <ComboBoxItem Content="2x (half resolution)" Tag="2"/>
+                    <ComboBoxItem Content="4x (quarter resolution)" Tag="4" IsSelected="True"/>
+                    <ComboBoxItem Content="8x" Tag="8"/>
+                    <ComboBoxItem Content="16x" Tag="16"/>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Effect Strength -->
+            <TextBlock Text="Effect Strength" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="StrengthSlider" Minimum="0" Maximum="1" Value="1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="StrengthSlider_Changed"/>
+            <TextBlock x:Name="StrengthValue" Text="100%" Style="{StaticResource ValueStyle}"/>
+        </StackPanel>
+    </Expander>
+</UserControl>
