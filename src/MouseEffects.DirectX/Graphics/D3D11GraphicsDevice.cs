@@ -267,6 +267,8 @@ public sealed class D3D11GraphicsDevice : IDisposable
         width = Math.Max(1, width);
         height = Math.Max(1, height);
 
+        // Try modern flip model with premultiplied alpha first (better transparency)
+        // Falls back to legacy blit model if not supported (hybrid GPU, older drivers)
         var swapChainDesc = new SwapChainDescription1
         {
             Width = (uint)width,
@@ -277,22 +279,38 @@ public sealed class D3D11GraphicsDevice : IDisposable
             BufferUsage = Usage.RenderTargetOutput,
             BufferCount = 2,
             Scaling = Scaling.Stretch,
-            SwapEffect = SwapEffect.Discard,  // Legacy blit model - works better cross-adapter
-            AlphaMode = AlphaMode.Unspecified,  // Unspecified works with legacy swap effect
+            SwapEffect = SwapEffect.FlipDiscard,     // Modern flip model for alpha compositing
+            AlphaMode = AlphaMode.Premultiplied,     // Per-pixel transparency for overlay
             Flags = SwapChainFlags.None
         };
 
         try
         {
-            Log("Calling CreateSwapChainForHwnd...");
+            Log($"Calling CreateSwapChainForHwnd (format: {swapChainDesc.Format}, swapEffect: FlipDiscard, alphaMode: Premultiplied)...");
             var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, swapChainDesc);
-            Log("SwapChain created successfully");
+            Log("SwapChain created successfully with modern flip model");
             return swapChain;
         }
         catch (Exception ex)
         {
-            Log($"CreateSwapChainForHwnd failed: {ex.Message}");
-            throw;
+            Log($"Modern swap chain failed ({ex.Message}), falling back to legacy blit model...");
+
+            // Fallback to legacy blit model (works on all configurations including hybrid GPU)
+            swapChainDesc.SwapEffect = SwapEffect.Discard;
+            swapChainDesc.AlphaMode = AlphaMode.Unspecified;
+
+            try
+            {
+                Log($"Calling CreateSwapChainForHwnd (format: {swapChainDesc.Format}, swapEffect: Discard, alphaMode: Unspecified)...");
+                var swapChain = Factory.CreateSwapChainForHwnd(Device, hwnd, swapChainDesc);
+                Log("SwapChain created successfully with legacy blit model");
+                return swapChain;
+            }
+            catch (Exception fallbackEx)
+            {
+                Log($"CreateSwapChainForHwnd failed: {fallbackEx.Message}");
+                throw;
+            }
         }
     }
 
