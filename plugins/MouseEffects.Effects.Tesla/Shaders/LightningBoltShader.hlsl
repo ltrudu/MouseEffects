@@ -13,11 +13,9 @@ cbuffer TeslaConstants : register(b0)
     float BoltIntensity;
     float BoltThickness;
     float FlickerSpeed;
-    float CoreRadius;
-    float CoreEnabled;
     float GlowIntensity;
     float FadeDuration;
-    float4 CoreColor;
+    float2 Padding;  // Padding for 16-byte alignment
 };
 
 struct BoltInstance
@@ -48,11 +46,6 @@ float2x2 Rotate(float angle)
     float c = cos(angle);
     float s = sin(angle);
     return float2x2(c, s, -s, c);
-}
-
-float CircleSDF(float2 p, float r)
-{
-    return length(p) - r;
 }
 
 float LineSDF(float2 p, float2 a, float2 b, float thickness)
@@ -198,21 +191,6 @@ float4 PSMain(VSOutput input) : SV_TARGET
         );
 
         finalColor += boltColor * fade * bolt.Color.a;
-    }
-
-    // Render core glow if enabled
-    if (CoreEnabled > 0.5)
-    {
-        float2 coreUV = (screenPos - MousePosition) / ViewportSize.y;
-        float coreNormRadius = CoreRadius / ViewportSize.y;
-
-        // Animated core with noise
-        float r = coreNormRadius * SimpleNoise(coreUV * 50.0 - float2(0.0, fmod(Time, 200.0) * 5.0), 2.0);
-        float coreDist = CircleSDF(coreUV, r);
-        float3 core = GlowIntensity / max(0.001, coreDist) * CoreColor.rgb;
-        // Fast approximation for core glow
-        core = saturate(core * 0.05 / (1.0 + core * 0.05));
-        finalColor += core * CoreColor.a;
     }
 
     // Apply overall glow intensity

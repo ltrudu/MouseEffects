@@ -85,7 +85,7 @@ public partial class TeslaSettingsControl : System.Windows.Controls.UserControl
     {
         _isExpanded = !_isExpanded;
         ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "-" : "+";
+        FoldButton.Content = _isExpanded ? "▶" : "▼";
     }
 
     private void EffectTypeCombo_Changed(object sender, SelectionChangedEventArgs e)

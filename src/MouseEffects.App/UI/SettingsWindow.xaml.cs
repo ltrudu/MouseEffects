@@ -254,7 +254,12 @@ public partial class SettingsWindow : Window
         PluginSettingsContainer.Children.Clear();
         _effectSettingsControls.Clear();
 
-        foreach (var factory in _pluginLoader.Factories)
+        // Sort factories alphabetically by their display name
+        var sortedFactories = _pluginLoader.Factories
+            .OrderBy(f => f.Metadata.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        foreach (var factory in sortedFactories)
         {
             // Find the corresponding effect instance
             var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == factory.Metadata.Id);

@@ -26,7 +26,7 @@ public sealed class TeslaEffect : EffectBase
     public override EffectMetadata Metadata => _metadata;
 
     // GPU Structures (16-byte aligned)
-    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    [StructLayout(LayoutKind.Sequential, Size = 48)]
     private struct TeslaConstants
     {
         public Vector2 ViewportSize;      // 8 bytes
@@ -35,11 +35,9 @@ public sealed class TeslaEffect : EffectBase
         public float BoltIntensity;       // 4 bytes
         public float BoltThickness;       // 4 bytes
         public float FlickerSpeed;        // 4 bytes = 32
-        public float CoreRadius;          // 4 bytes
-        public float CoreEnabled;         // 4 bytes (0 or 1)
         public float GlowIntensity;       // 4 bytes
-        public float FadeDuration;        // 4 bytes = 48
-        public Vector4 CoreColor;         // 16 bytes = 64
+        public float FadeDuration;        // 4 bytes
+        public Vector2 Padding;           // 8 bytes = 48
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 48)]
@@ -161,11 +159,6 @@ public sealed class TeslaEffect : EffectBase
     private DirectionMode _moveDirectionMode = DirectionMode.AllDirections;
     private DirectionMode _clickDirectionMode = DirectionMode.AllDirections;
     private float _spreadAngle = 180f;
-
-    // Core settings
-    private bool _coreEnabled = true;
-    private float _coreRadius = 20f;
-    private Vector4 _coreColor = new(0.2f, 0.4f, 1f, 1f);
 
     // Bolt count settings
     private bool _randomBoltCount = true;
@@ -299,9 +292,6 @@ public sealed class TeslaEffect : EffectBase
     public DirectionMode MoveDirectionMode { get => _moveDirectionMode; set => _moveDirectionMode = value; }
     public DirectionMode ClickDirectionMode { get => _clickDirectionMode; set => _clickDirectionMode = value; }
     public float SpreadAngle { get => _spreadAngle; set => _spreadAngle = value; }
-    public bool CoreEnabled { get => _coreEnabled; set => _coreEnabled = value; }
-    public float CoreRadius { get => _coreRadius; set => _coreRadius = value; }
-    public Vector4 CoreColor { get => _coreColor; set => _coreColor = value; }
     public bool RandomBoltCount { get => _randomBoltCount; set => _randomBoltCount = value; }
     public int MinBoltCount { get => _minBoltCount; set => _minBoltCount = value; }
     public int MaxBoltCount { get => _maxBoltCount; set => _maxBoltCount = value; }
@@ -483,14 +473,6 @@ public sealed class TeslaEffect : EffectBase
             _clickDirectionMode = (DirectionMode)clickDirMode;
         if (Configuration.TryGet("ct_spreadAngle", out float spread))
             _spreadAngle = spread;
-
-        // Core settings
-        if (Configuration.TryGet("core_enabled", out bool coreEn))
-            _coreEnabled = coreEn;
-        if (Configuration.TryGet("core_radius", out float coreRad))
-            _coreRadius = coreRad;
-        if (Configuration.TryGet("core_color", out Vector4 coreCol))
-            _coreColor = coreCol;
 
         // Bolt count settings
         if (Configuration.TryGet("bc_randomCount", out bool randCount))
@@ -990,8 +972,8 @@ public sealed class TeslaEffect : EffectBase
     {
         float currentTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
 
-        // Render Lightning Bolts if there are active bolts or core is enabled
-        if (_activeBoltCount > 0 || _coreEnabled)
+        // Render Lightning Bolts if there are active bolts
+        if (_activeBoltCount > 0)
         {
             RenderLightningBolts(context, currentTime);
         }
@@ -1033,11 +1015,9 @@ public sealed class TeslaEffect : EffectBase
             BoltIntensity = 0.1f,
             BoltThickness = _boltThickness,
             FlickerSpeed = _flickerSpeed,
-            CoreRadius = _coreRadius,
-            CoreEnabled = _coreEnabled ? 1f : 0f,
             GlowIntensity = _glowIntensity,
             FadeDuration = _fadeDuration,
-            CoreColor = _coreColor
+            Padding = Vector2.Zero
         };
         context.UpdateBuffer(_constantBuffer!, constants);
 

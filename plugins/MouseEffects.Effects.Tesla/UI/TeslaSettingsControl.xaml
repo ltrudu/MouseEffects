@@ -36,7 +36,7 @@
                        FontWeight="Bold" FontSize="14"
                        VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0" />
             <Button x:Name="FoldButton" Grid.Column="2"
-                    Content="+" Width="24" Height="24"
+                    Content="▼" Width="24" Height="24"
                     Background="Transparent" BorderThickness="0"
                     Click="FoldButton_Click" ToolTip="Expand/Collapse settings" />
         </Grid>

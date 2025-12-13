@@ -45,12 +45,6 @@ public partial class LightningBoltSettings : System.Windows.Controls.UserControl
             SpreadAngleSlider.Value = _effect.SpreadAngle;
             SpreadAngleValue.Text = $"{_effect.SpreadAngle:F0} deg";
 
-            // Core settings
-            CoreEnabledCheckBox.IsChecked = _effect.CoreEnabled;
-            CoreRadiusSlider.Value = _effect.CoreRadius;
-            CoreRadiusValue.Text = $"{_effect.CoreRadius:F0} px";
-            UpdateColorPreview(CoreColorPreview, _effect.CoreColor);
-
             // Bolt count
             RandomBoltCountCheckBox.IsChecked = _effect.RandomBoltCount;
             MinBoltCountSlider.Value = _effect.MinBoltCount;
@@ -176,43 +170,6 @@ public partial class LightningBoltSettings : System.Windows.Controls.UserControl
         _effect.SpreadAngle = (float)SpreadAngleSlider.Value;
         _effect.Configuration.Set("ct_spreadAngle", _effect.SpreadAngle);
         SpreadAngleValue.Text = $"{_effect.SpreadAngle:F0} deg";
-    }
-
-    // ===== Core Settings =====
-    private void CoreEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.CoreEnabled = CoreEnabledCheckBox.IsChecked == true;
-        _effect.Configuration.Set("core_enabled", _effect.CoreEnabled);
-    }
-
-    private void CoreRadiusSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.CoreRadius = (float)CoreRadiusSlider.Value;
-        _effect.Configuration.Set("core_radius", _effect.CoreRadius);
-        CoreRadiusValue.Text = $"{_effect.CoreRadius:F0} px";
-    }
-
-    private void CoreColorButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null) return;
-        using var dialog = new System.Windows.Forms.ColorDialog();
-        dialog.Color = System.Drawing.Color.FromArgb(
-            (int)(_effect.CoreColor.X * 255),
-            (int)(_effect.CoreColor.Y * 255),
-            (int)(_effect.CoreColor.Z * 255));
-
-        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        {
-            _effect.CoreColor = new Vector4(
-                dialog.Color.R / 255f,
-                dialog.Color.G / 255f,
-                dialog.Color.B / 255f,
-                1f);
-            _effect.Configuration.Set("core_color", _effect.CoreColor);
-            UpdateColorPreview(CoreColorPreview, _effect.CoreColor);
-        }
     }
 
     // ===== Bolt Count =====

@@ -82,28 +82,6 @@
 
         <Separator Margin="0,8,0,8" />
 
-        <!-- ===== CORE SETTINGS ===== -->
-        <TextBlock Text="Core Settings" Style="{StaticResource SectionStyle}" />
-
-        <CheckBox x:Name="CoreEnabledCheckBox" Content="Enable Core" IsChecked="True"
-                  Margin="0,4,0,4" Checked="CoreEnabledCheckBox_Changed" Unchecked="CoreEnabledCheckBox_Changed" />
-
-        <StackPanel x:Name="CoreSettingsPanel">
-            <TextBlock Text="Core Radius" Style="{StaticResource LabelStyle}" />
-            <Slider x:Name="CoreRadiusSlider" Minimum="5" Maximum="100" Value="20"
-                    Style="{StaticResource SliderStyle}" ValueChanged="CoreRadiusSlider_Changed" />
-            <TextBlock x:Name="CoreRadiusValue" Text="20 px" Style="{StaticResource ValueStyle}" />
-
-            <TextBlock Text="Core Color" Style="{StaticResource LabelStyle}" />
-            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                <Border x:Name="CoreColorPreview" Width="24" Height="24"
-                        BorderThickness="1" BorderBrush="Gray" Background="#3366FF" Margin="0,0,8,0" />
-                <Button Content="Pick Color..." Click="CoreColorButton_Click" />
-            </StackPanel>
-        </StackPanel>
-
-        <Separator Margin="0,8,0,8" />
-
         <!-- ===== BOLT COUNT ===== -->
         <TextBlock Text="Bolt Count" Style="{StaticResource SectionStyle}" />
 
