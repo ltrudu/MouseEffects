@@ -211,69 +211,18 @@ public sealed class OverlayWindow : IDisposable
 
     /// <summary>
     /// Re-apply topmost state. Call periodically to ensure overlay stays on top.
-    /// Uses aggressive approach to force window to front of Z-order.
     /// </summary>
     public void EnforceTopmost()
     {
         if (!_topmostSuspended && _isTopmost)
         {
-            // Check if we're already at the top of the Z-order
-            var prevWindow = NativeMethods.GetWindow(_hwnd, NativeMethods.GW_HWNDPREV);
-            if (prevWindow == nint.Zero)
-            {
-                // Already at top, just ensure topmost flag is set
-                NativeMethods.SetWindowPos(
-                    _hwnd,
-                    NativeMethods.HWND_TOPMOST,
-                    0, 0, 0, 0,
-                    NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
-                );
-                return;
-            }
-
-            // Use AttachThreadInput trick for aggressive Z-order control
-            var foregroundHwnd = NativeMethods.GetForegroundWindow();
-            if (foregroundHwnd != nint.Zero && foregroundHwnd != _hwnd)
-            {
-                var foregroundThread = NativeMethods.GetWindowThreadProcessId(foregroundHwnd, out _);
-                var currentThread = NativeMethods.GetCurrentThreadId();
-
-                if (foregroundThread != currentThread)
-                {
-                    // Temporarily attach to foreground thread to gain Z-order control
-                    NativeMethods.AttachThreadInput(currentThread, foregroundThread, true);
-
-                    // Now we can manipulate Z-order more reliably
-                    NativeMethods.SetWindowPos(
-                        _hwnd,
-                        NativeMethods.HWND_TOPMOST,
-                        0, 0, 0, 0,
-                        NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW
-                    );
-
-                    NativeMethods.BringWindowToTop(_hwnd);
-
-                    // Detach from foreground thread
-                    NativeMethods.AttachThreadInput(currentThread, foregroundThread, false);
-                    return;
-                }
-            }
-
-            // Fallback: cycle topmost state to force Z-order recalculation
-            NativeMethods.SetWindowPos(
-                _hwnd,
-                NativeMethods.HWND_NOTOPMOST,
-                0, 0, 0, 0,
-                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
-            );
-
-            NativeMethods.BringWindowToTop(_hwnd);
-
+            // Simple approach: just re-apply HWND_TOPMOST
+            // The WM_WINDOWPOSCHANGING handler will prevent other windows from pushing us down
             NativeMethods.SetWindowPos(
                 _hwnd,
                 NativeMethods.HWND_TOPMOST,
                 0, 0, 0, 0,
-                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE
             );
         }
     }
