@@ -391,14 +391,18 @@ float4 PSMain(VSOutput input) : SV_TARGET
         }
     }
 
-    // Calculate alpha from brightness
-    float alpha = saturate(length(finalColor) * 1.5);
+    // Calculate brightness for alpha and discard threshold
+    float brightness = max(max(finalColor.r, finalColor.g), finalColor.b);
 
-    if (alpha < 0.005)
+    // Discard dim pixels to eliminate dark halo effect
+    // Higher threshold removes the semi-transparent dark fringe
+    if (brightness < 0.02)
         discard;
 
     // Apply HDR multiplier for bright highlights
     finalColor *= HdrMultiplier;
 
-    return float4(finalColor, alpha);
+    // Use brightness as alpha - this works with additive blend (SrcAlpha * SrcColor + DstColor)
+    // Bright pixels get added fully, dim pixels (already discarded) don't affect the scene
+    return float4(finalColor, saturate(brightness));
 }

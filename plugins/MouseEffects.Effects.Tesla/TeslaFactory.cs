@@ -25,10 +25,10 @@ public sealed class TeslaFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // Selected effect type for UI (0 = Lightning Bolt, 1 = Electrical Follow)
-        config.Set("selectedEffectType", 0);
+        config.Set("selectedEffectType", 1);
 
         // Lightning Bolt trigger settings (lb_ prefix)
-        config.Set("lb_mouseMoveEnabled", true);
+        config.Set("lb_mouseMoveEnabled", false);
         config.Set("lb_leftClickEnabled", true);
         config.Set("lb_rightClickEnabled", true);
 
@@ -41,7 +41,7 @@ public sealed class TeslaFactory : IEffectFactory
         config.Set("ts_rightClickEffect", (int)TriggerType.None);
 
         // Move trigger (mt_ prefix)
-        config.Set("mt_distanceThreshold", 83f);
+        config.Set("mt_distanceThreshold", 83.01f);
         config.Set("mt_randomDistanceEnabled", true);
         config.Set("mt_directionMode", (int)DirectionMode.VelocityBased);
 
@@ -68,8 +68,8 @@ public sealed class TeslaFactory : IEffectFactory
         config.Set("col_rainbowSpeed", 0.5f);
 
         // Timing (time_ prefix)
-        config.Set("time_boltLifetime", 0.94f);
-        config.Set("time_flickerSpeed", 29.52f);
+        config.Set("time_boltLifetime", 0.44f);
+        config.Set("time_flickerSpeed", 30.09f);
         config.Set("time_fadeDuration", 0.30f);
 
         // Glow
@@ -81,36 +81,36 @@ public sealed class TeslaFactory : IEffectFactory
 
         // ===== Electrical Follow Configuration (ef_ prefix) =====
         // General
-        config.Set("ef_maxPieces", 100);
-        config.Set("ef_pieceSize", 30f);
-        config.Set("ef_lifetime", 0.1f);
-        config.Set("ef_randomLifetime", true);
+        config.Set("ef_maxPieces", 900);
+        config.Set("ef_pieceSize", 22.82f);
+        config.Set("ef_lifetime", 0.44f);
+        config.Set("ef_randomLifetime", false);
         config.Set("ef_minLifetime", 0.1f);
         config.Set("ef_maxLifetime", 0.5f);
 
         // Appearance
         config.Set("ef_lineThickness", 3.12f);
-        config.Set("ef_randomThickness", false);
+        config.Set("ef_randomThickness", true);
         config.Set("ef_minThickness", 0.8f);
-        config.Set("ef_maxThickness", 2.5f);
+        config.Set("ef_maxThickness", 3.06f);
         config.Set("ef_glowIntensity", 0.62f);
         config.Set("ef_randomGlow", false);
         config.Set("ef_minGlow", 0.5f);
         config.Set("ef_maxGlow", 1.5f);
 
         // Flicker
-        config.Set("ef_flickerSpeed", 20f);
-        config.Set("ef_flickerIntensity", 0.6f);
+        config.Set("ef_flickerSpeed", 1f);
+        config.Set("ef_flickerIntensity", 0f);
         config.Set("ef_randomFlicker", false);
         config.Set("ef_minFlickerSpeed", 10f);
         config.Set("ef_maxFlickerSpeed", 40f);
 
         // Crackle
-        config.Set("ef_crackleIntensity", 0.19f);
+        config.Set("ef_crackleIntensity", 0f);
         config.Set("ef_randomCrackle", true);
         config.Set("ef_minCrackle", 0.09f);
         config.Set("ef_maxCrackle", 0.71f);
-        config.Set("ef_noiseScale", 1.0f);
+        config.Set("ef_noiseScale", 0.13f);
 
         // Burst sparks
         config.Set("ef_burstProbability", 0.3f);
@@ -124,15 +124,15 @@ public sealed class TeslaFactory : IEffectFactory
         config.Set("ef_secondaryColor", new Vector4(0.8f, 0.9f, 1f, 1f));
         config.Set("ef_randomColorVariation", true);
         config.Set("ef_rainbowMode", true);
-        config.Set("ef_rainbowSpeed", 0.3f);
+        config.Set("ef_rainbowSpeed", 2f);
 
         // Branch Bolts
         config.Set("ef_branchBoltEnabled", true);
-        config.Set("ef_branchBoltCount", 3);
+        config.Set("ef_branchBoltCount", 2);
         config.Set("ef_randomBranchCount", true);
-        config.Set("ef_minBranchCount", 3);
-        config.Set("ef_maxBranchCount", 8);
-        config.Set("ef_branchBoltLength", 25f);
+        config.Set("ef_minBranchCount", 2);
+        config.Set("ef_maxBranchCount", 6);
+        config.Set("ef_branchBoltLength", 62.39f);
         config.Set("ef_randomBranchLength", false);
         config.Set("ef_minBranchLength", 10f);
         config.Set("ef_maxBranchLength", 40f);
@@ -140,11 +140,11 @@ public sealed class TeslaFactory : IEffectFactory
         config.Set("ef_randomBranchThickness", false);
         config.Set("ef_minBranchThickness", 0.5f);
         config.Set("ef_maxBranchThickness", 2.0f);
-        config.Set("ef_branchBoltSpread", 90f);
+        config.Set("ef_branchBoltSpread", 90.09f);
         config.Set("ef_branchBoltColor", new Vector4(0.6f, 0.8f, 1f, 0f)); // Alpha 0 = use segment color
 
         // Sparkles
-        config.Set("ef_sparkleEnabled", true);
+        config.Set("ef_sparkleEnabled", false);
         config.Set("ef_sparkleCount", 1);
         config.Set("ef_randomSparkleCount", true);
         config.Set("ef_minSparkleCount", 1);
