@@ -80,6 +80,15 @@ public partial class MandalaSettings : System.Windows.Controls.UserControl
             TwinkleIntensitySlider.Value = _effect.TwinkleIntensity;
             TwinkleIntensityLabel.Text = $"{_effect.TwinkleIntensity:F2}";
 
+            // Morphing
+            MorphEnabledCheck.IsChecked = _effect.MorphEnabled;
+            MorphSettingsPanel.Visibility = _effect.MorphEnabled ? Visibility.Visible : Visibility.Collapsed;
+            MorphSpeedSlider.Value = _effect.MorphSpeed;
+            MorphSpeedLabel.Text = $"{_effect.MorphSpeed:F1}x";
+            MorphIntensitySlider.Value = _effect.MorphIntensity;
+            MorphIntensityLabel.Text = $"{_effect.MorphIntensity:F2}";
+            MorphBetweenPatternsCheck.IsChecked = _effect.MorphBetweenPatterns;
+
             // Appearance
             AppearanceModeCombo.SelectedIndex = (int)_effect.AppearanceMode;
             RandomAppearanceModeCheck.IsChecked = _effect.RandomAppearanceMode;
@@ -362,6 +371,38 @@ public partial class MandalaSettings : System.Windows.Controls.UserControl
         _effect.TwinkleIntensity = (float)TwinkleIntensitySlider.Value;
         _effect.Configuration.Set("sg_glow_twinkleIntensity", _effect.TwinkleIntensity);
         TwinkleIntensityLabel.Text = $"{_effect.TwinkleIntensity:F2}";
+    }
+
+    // ===== MORPHING HANDLERS =====
+    private void MorphEnabledCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MorphEnabled = MorphEnabledCheck.IsChecked == true;
+        _effect.Configuration.Set("sg_morph_enabled", _effect.MorphEnabled);
+        MorphSettingsPanel.Visibility = _effect.MorphEnabled ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void MorphSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MorphSpeed = (float)MorphSpeedSlider.Value;
+        _effect.Configuration.Set("sg_morph_speed", _effect.MorphSpeed);
+        MorphSpeedLabel.Text = $"{_effect.MorphSpeed:F1}x";
+    }
+
+    private void MorphIntensitySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MorphIntensity = (float)MorphIntensitySlider.Value;
+        _effect.Configuration.Set("sg_morph_intensity", _effect.MorphIntensity);
+        MorphIntensityLabel.Text = $"{_effect.MorphIntensity:F2}";
+    }
+
+    private void MorphBetweenPatternsCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MorphBetweenPatterns = MorphBetweenPatternsCheck.IsChecked == true;
+        _effect.Configuration.Set("sg_morph_betweenPatterns", _effect.MorphBetweenPatterns);
     }
 
     // ===== APPEARANCE HANDLERS =====

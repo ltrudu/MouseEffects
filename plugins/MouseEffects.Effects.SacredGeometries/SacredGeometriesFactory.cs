@@ -85,6 +85,12 @@ public sealed class SacredGeometriesFactory : IEffectFactory
         config.Set("sg_perf_maxActive", 20);
         config.Set("sg_perf_maxSpawnsPerSecond", 10);
 
+        // ===== Morphing Settings (sg_morph_ prefix) =====
+        config.Set("sg_morph_enabled", true);
+        config.Set("sg_morph_speed", 0.5f);
+        config.Set("sg_morph_intensity", 0.5f);
+        config.Set("sg_morph_betweenPatterns", true);
+
         return config;
     }
 

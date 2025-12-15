@@ -195,6 +195,29 @@
 
             <Separator Margin="0,8,0,8" />
 
+            <!-- ===== MORPHING SECTION ===== -->
+            <TextBlock Text="Morphing" Style="{StaticResource SectionStyle}" />
+
+            <CheckBox x:Name="MorphEnabledCheck" Content="Enable Morphing"
+                      Checked="MorphEnabledCheck_Changed" Unchecked="MorphEnabledCheck_Changed" Margin="0,0,0,8" />
+
+            <StackPanel x:Name="MorphSettingsPanel">
+                <TextBlock Text="Morph Speed" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="MorphSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="MorphSpeedSlider" Minimum="0.1" Maximum="3.0"
+                        ValueChanged="MorphSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                <TextBlock Text="Morph Intensity" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="MorphIntensityLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="MorphIntensitySlider" Minimum="0" Maximum="1.0"
+                        ValueChanged="MorphIntensitySlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                <CheckBox x:Name="MorphBetweenPatternsCheck" Content="Morph Between Patterns"
+                          Checked="MorphBetweenPatternsCheck_Changed" Unchecked="MorphBetweenPatternsCheck_Changed" Margin="0,0,0,8" />
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8" />
+
             <!-- ===== APPEARANCE SECTION ===== -->
             <TextBlock Text="Appearance" Style="{StaticResource SectionStyle}" />
 

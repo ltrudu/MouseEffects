@@ -51,11 +51,15 @@ public sealed class SacredGeometriesEffect : EffectBase
         public float ScaleInDuration;      // 4 bytes
         public float ScaleOutDuration;     // 4 bytes = 96
 
-        public Vector4 Padding2;           // 16 bytes = 112
+        public int MorphEnabled;           // 4 bytes (bool as int)
+        public float MorphSpeed;           // 4 bytes
+        public float MorphIntensity;       // 4 bytes
+        public int MorphBetweenPatterns;   // 4 bytes (bool as int) = 112
+
         public Vector4 Padding3;           // 16 bytes = 128
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    [StructLayout(LayoutKind.Sequential, Size = 80)]
     private struct MandalaInstance
     {
         public Vector2 Position;           // 8 bytes - Screen position
@@ -73,6 +77,11 @@ public sealed class SacredGeometriesEffect : EffectBase
         public float PatternComplexity;    // 4 bytes = 48 - Detail level
 
         public Vector4 Color;              // 16 bytes = 64 - RGBA color
+
+        public float MorphPhase;           // 4 bytes - Current morph animation phase
+        public float MorphTargetPattern;   // 4 bytes - Target pattern to morph to (-1 = none)
+        public float MorphSpeed;           // 4 bytes - Individual morph speed multiplier
+        public float Padding;              // 4 bytes = 80 - Padding for alignment
     }
 
     // Constants
@@ -168,6 +177,12 @@ public sealed class SacredGeometriesEffect : EffectBase
     private int _maxActiveMandalas = 20;
     private int _maxSpawnsPerSecond = 10;
 
+    // Morphing settings
+    private bool _morphEnabled = true;
+    private float _morphSpeed = 0.5f;
+    private float _morphIntensity = 0.5f;
+    private bool _morphBetweenPatterns = true;
+
     // Public properties for UI binding
     public PatternType SelectedPattern { get => _selectedPattern; set => _selectedPattern = value; }
     public bool RandomPatternEnabled { get => _randomPatternEnabled; set => _randomPatternEnabled = value; }
@@ -207,6 +222,10 @@ public sealed class SacredGeometriesEffect : EffectBase
     public bool WhileActiveMode { get => _whileActiveMode; set => _whileActiveMode = value; }
     public int MaxActiveMandalas { get => _maxActiveMandalas; set => _maxActiveMandalas = value; }
     public int MaxSpawnsPerSecond { get => _maxSpawnsPerSecond; set => _maxSpawnsPerSecond = value; }
+    public bool MorphEnabled { get => _morphEnabled; set => _morphEnabled = value; }
+    public float MorphSpeed { get => _morphSpeed; set => _morphSpeed = value; }
+    public float MorphIntensity { get => _morphIntensity; set => _morphIntensity = value; }
+    public bool MorphBetweenPatterns { get => _morphBetweenPatterns; set => _morphBetweenPatterns = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -332,6 +351,16 @@ public sealed class SacredGeometriesEffect : EffectBase
             _maxActiveMandalas = maxActive;
         if (Configuration.TryGet("sg_perf_maxSpawnsPerSecond", out int maxSpawns))
             _maxSpawnsPerSecond = maxSpawns;
+
+        // Morphing settings
+        if (Configuration.TryGet("sg_morph_enabled", out bool morphEnabled))
+            _morphEnabled = morphEnabled;
+        if (Configuration.TryGet("sg_morph_speed", out float morphSpeed))
+            _morphSpeed = morphSpeed;
+        if (Configuration.TryGet("sg_morph_intensity", out float morphIntensity))
+            _morphIntensity = morphIntensity;
+        if (Configuration.TryGet("sg_morph_betweenPatterns", out bool morphBetween))
+            _morphBetweenPatterns = morphBetween;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -439,6 +468,24 @@ public sealed class SacredGeometriesEffect : EffectBase
                 m.Radius = _radiusMin + oscillation * (_radiusMax - _radiusMin);
             }
 
+            // Update morph phase (continuously cycling for internal animations)
+            if (_morphEnabled)
+            {
+                m.MorphPhase += dt * _morphSpeed * m.MorphSpeed;
+                // Keep phase cycling for continuous animation
+                if (m.MorphPhase > 1f)
+                {
+                    m.MorphPhase -= 1f;
+                    // When morphing between patterns, swap patterns on cycle
+                    if (_morphBetweenPatterns && m.MorphTargetPattern >= 0)
+                    {
+                        float temp = m.PatternIndex;
+                        m.PatternIndex = m.MorphTargetPattern;
+                        m.MorphTargetPattern = temp;
+                    }
+                }
+            }
+
             // Copy to GPU buffer
             _gpuMandalas[_activeMandalaCount++] = m;
         }
@@ -530,6 +577,19 @@ public sealed class SacredGeometriesEffect : EffectBase
             ? _radiusMin + Random.Shared.NextSingle() * (_radiusMax - _radiusMin)
             : _fixedRadius;
 
+        // Determine morph target (different pattern for morphing)
+        float morphTarget = -1f;
+        float morphSpeedMultiplier = 0.8f + Random.Shared.NextSingle() * 0.4f; // 0.8-1.2 variation
+        if (_morphBetweenPatterns)
+        {
+            int targetPattern;
+            do
+            {
+                targetPattern = Random.Shared.Next(0, 10);
+            } while (targetPattern == (int)pattern);
+            morphTarget = (float)targetPattern;
+        }
+
         // Create mandala
         _mandalas[slot] = new MandalaInstance
         {
@@ -544,7 +604,11 @@ public sealed class SacredGeometriesEffect : EffectBase
             AppearMode = (float)appMode,
             SpawnTime = totalTime,
             PatternComplexity = _patternComplexity,
-            Color = color
+            Color = color,
+            MorphPhase = Random.Shared.NextSingle(),  // Random starting phase for variety
+            MorphTargetPattern = morphTarget,
+            MorphSpeed = morphSpeedMultiplier,
+            Padding = 0
         };
 
         _spawnsThisSecond++;
@@ -575,7 +639,11 @@ public sealed class SacredGeometriesEffect : EffectBase
             FadeInDuration = _fadeInDuration,
             FadeOutDuration = _fadeOutDuration,
             ScaleInDuration = _scaleInDuration,
-            ScaleOutDuration = _scaleOutDuration
+            ScaleOutDuration = _scaleOutDuration,
+            MorphEnabled = _morphEnabled ? 1 : 0,
+            MorphSpeed = _morphSpeed,
+            MorphIntensity = _morphIntensity,
+            MorphBetweenPatterns = _morphBetweenPatterns ? 1 : 0
         };
 
         context.UpdateBuffer(_constantBuffer!, MemoryMarshal.CreateReadOnlySpan(ref constants, 1));
