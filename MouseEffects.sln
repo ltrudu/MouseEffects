@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.Retro"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.Tesla", "plugins\MouseEffects.Effects.Tesla\MouseEffects.Effects.Tesla.csproj", "{7AF5946F-49FA-4C91-BC2E-D7A6C6551CF1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.SacredGeometries", "plugins\MouseEffects.Effects.SacredGeometries\MouseEffects.Effects.SacredGeometries.csproj", "{270906C7-1602-486A-BFCB-1F11BE30F8D4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -269,6 +271,18 @@ Global
 		{7AF5946F-49FA-4C91-BC2E-D7A6C6551CF1}.Release|x64.Build.0 = Release|x64
 		{7AF5946F-49FA-4C91-BC2E-D7A6C6551CF1}.Release|x86.ActiveCfg = Release|x64
 		{7AF5946F-49FA-4C91-BC2E-D7A6C6551CF1}.Release|x86.Build.0 = Release|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Debug|Any CPU.Build.0 = Debug|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Debug|x64.ActiveCfg = Debug|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Debug|x64.Build.0 = Debug|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Debug|x86.ActiveCfg = Debug|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Debug|x86.Build.0 = Debug|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Release|Any CPU.ActiveCfg = Release|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Release|Any CPU.Build.0 = Release|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Release|x64.ActiveCfg = Release|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Release|x64.Build.0 = Release|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Release|x86.ActiveCfg = Release|x64
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -292,6 +306,7 @@ Global
 		{880CF8B1-2E3B-4EE7-AF7D-0D3F18B725B7} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{CD9849B5-B919-43CE-9FA7-923481ED9778} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{7AF5946F-49FA-4C91-BC2E-D7A6C6551CF1} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
+		{270906C7-1602-486A-BFCB-1F11BE30F8D4} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FCD67D-F721-4679-A84D-FCEEF635AF00}

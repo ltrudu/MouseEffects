@@ -1,0 +1,291 @@
+<UserControl x:Class="MouseEffects.Effects.SacredGeometries.UI.Effects.MandalaSettings"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="1200" d:DesignWidth="300"
+             Foreground="White">
+    <UserControl.Resources>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,8,0,4" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+        <Style x:Key="SectionStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,12,0,8" />
+            <Setter Property="Foreground" Value="#89B4FA" />
+            <Setter Property="FontSize" Value="13" />
+        </Style>
+        <Style x:Key="SubLabelStyle" TargetType="TextBlock">
+            <Setter Property="Opacity" Value="0.7" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Margin" Value="0,2,0,4" />
+        </Style>
+        <Style x:Key="SliderStyle" TargetType="Slider">
+            <Setter Property="Margin" Value="0,4,0,8" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0,0,8,0">
+
+            <!-- ===== PATTERN SECTION ===== -->
+            <TextBlock Text="Pattern" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Pattern Type" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="PatternCombo" SelectionChanged="PatternCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Seed of Life" />
+                <ComboBoxItem Content="Flower of Life" />
+                <ComboBoxItem Content="Vesica Piscis" />
+                <ComboBoxItem Content="Merkaba" />
+                <ComboBoxItem Content="Sri Yantra" />
+                <ComboBoxItem Content="Metatron's Cube" />
+                <ComboBoxItem Content="Tree of Life" />
+                <ComboBoxItem Content="Torus" />
+                <ComboBoxItem Content="Tetrahedron Grid" />
+                <ComboBoxItem Content="Platonic Solids" />
+            </ComboBox>
+
+            <CheckBox x:Name="RandomPatternCheck" Content="Randomize Pattern"
+                      Checked="RandomPatternCheck_Changed" Unchecked="RandomPatternCheck_Changed" Margin="0,0,0,8" />
+
+            <TextBlock Text="Complexity" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="ComplexityLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="ComplexitySlider" Minimum="0.5" Maximum="3.0"
+                    ValueChanged="ComplexitySlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== RADIUS SECTION ===== -->
+            <TextBlock Text="Radius" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Fixed Radius" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="FixedRadiusLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="FixedRadiusSlider" Minimum="20" Maximum="300"
+                    ValueChanged="FixedRadiusSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <CheckBox x:Name="AnimatedRadiusCheck" Content="Animate Radius"
+                      Checked="AnimatedRadiusCheck_Changed" Unchecked="AnimatedRadiusCheck_Changed" Margin="0,0,0,8" />
+
+            <StackPanel x:Name="AnimatedRadiusPanel">
+                <TextBlock Text="Min Radius" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="MinRadiusLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="MinRadiusSlider" Minimum="20" Maximum="200"
+                        ValueChanged="MinRadiusSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                <TextBlock Text="Max Radius" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="MaxRadiusLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="MaxRadiusSlider" Minimum="50" Maximum="400"
+                        ValueChanged="MaxRadiusSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                <TextBlock Text="Oscillation Speed" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="OscSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="OscSpeedSlider" Minimum="0.1" Maximum="5.0"
+                        ValueChanged="OscSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== ROTATION SECTION ===== -->
+            <TextBlock Text="Rotation" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Rotation Speed (deg/s)" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="RotSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="RotSpeedSlider" Minimum="0" Maximum="180"
+                    ValueChanged="RotSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Direction" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="DirectionCombo" SelectionChanged="DirectionCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Left" />
+                <ComboBoxItem Content="Right" />
+                <ComboBoxItem Content="Random" />
+            </ComboBox>
+
+            <CheckBox x:Name="RandomRotSpeedCheck" Content="Randomize Speed"
+                      Checked="RandomRotSpeedCheck_Changed" Unchecked="RandomRotSpeedCheck_Changed" Margin="0,0,0,8" />
+
+            <StackPanel x:Name="RandomRotSpeedPanel">
+                <TextBlock Text="Min Speed" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="RotMinSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="RotMinSpeedSlider" Minimum="0" Maximum="90"
+                        ValueChanged="RotMinSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                <TextBlock Text="Max Speed" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="RotMaxSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="RotMaxSpeedSlider" Minimum="15" Maximum="180"
+                        ValueChanged="RotMaxSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== COLOR SECTION ===== -->
+            <TextBlock Text="Colors" Style="{StaticResource SectionStyle}" />
+
+            <CheckBox x:Name="RainbowModeCheck" Content="Rainbow Mode"
+                      Checked="RainbowModeCheck_Changed" Unchecked="RainbowModeCheck_Changed" Margin="0,0,0,8" />
+
+            <StackPanel x:Name="RainbowPanel">
+                <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="RainbowSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="3.0"
+                        ValueChanged="RainbowSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                <CheckBox x:Name="RandomRainbowSpeedCheck" Content="Randomize Rainbow Speed"
+                          Checked="RandomRainbowSpeedCheck_Changed" Unchecked="RandomRainbowSpeedCheck_Changed" Margin="0,0,0,8" />
+
+                <StackPanel x:Name="RandomRainbowSpeedPanel">
+                    <TextBlock Text="Min Rainbow Speed" Style="{StaticResource LabelStyle}" />
+                    <TextBlock x:Name="RainbowMinSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                    <Slider x:Name="RainbowMinSpeedSlider" Minimum="0.1" Maximum="1.5"
+                            ValueChanged="RainbowMinSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+                    <TextBlock Text="Max Rainbow Speed" Style="{StaticResource LabelStyle}" />
+                    <TextBlock x:Name="RainbowMaxSpeedLabel" Style="{StaticResource SubLabelStyle}" />
+                    <Slider x:Name="RainbowMaxSpeedSlider" Minimum="0.5" Maximum="3.0"
+                            ValueChanged="RainbowMaxSpeedSlider_Changed" Style="{StaticResource SliderStyle}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel x:Name="FixedColorPanel">
+                <TextBlock Text="Primary Color" Style="{StaticResource LabelStyle}" />
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="PrimaryColorPreview" Grid.Column="0" Height="24" CornerRadius="4"
+                            Background="#CC80FF" BorderBrush="White" BorderThickness="1" />
+                    <Button x:Name="PrimaryColorButton" Grid.Column="1" Content="Pick" Width="50" Margin="8,0,0,0"
+                            Click="PrimaryColorButton_Click" />
+                </Grid>
+
+                <TextBlock Text="Secondary Color" Style="{StaticResource LabelStyle}" />
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border x:Name="SecondaryColorPreview" Grid.Column="0" Height="24" CornerRadius="4"
+                            Background="#66CCFF" BorderBrush="White" BorderThickness="1" />
+                    <Button x:Name="SecondaryColorButton" Grid.Column="1" Content="Pick" Width="50" Margin="8,0,0,0"
+                            Click="SecondaryColorButton_Click" />
+                </Grid>
+            </StackPanel>
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== GLOW SECTION ===== -->
+            <TextBlock Text="Glow" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="GlowIntensityLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="GlowIntensitySlider" Minimum="0" Maximum="3.0"
+                    ValueChanged="GlowIntensitySlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Line Thickness" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="LineThicknessLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="LineThicknessSlider" Minimum="0.5" Maximum="5.0"
+                    ValueChanged="LineThicknessSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Twinkle Intensity" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="TwinkleIntensityLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="TwinkleIntensitySlider" Minimum="0" Maximum="1.0"
+                    ValueChanged="TwinkleIntensitySlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== APPEARANCE SECTION ===== -->
+            <TextBlock Text="Appearance" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Appearance Mode" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="AppearanceModeCombo" SelectionChanged="AppearanceModeCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Fade" />
+                <ComboBoxItem Content="Scale" />
+                <ComboBoxItem Content="Both" />
+            </ComboBox>
+
+            <CheckBox x:Name="RandomAppearanceModeCheck" Content="Randomize Mode"
+                      Checked="RandomAppearanceModeCheck_Changed" Unchecked="RandomAppearanceModeCheck_Changed" Margin="0,0,0,8" />
+
+            <TextBlock Text="Fade In Duration" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="FadeInLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="FadeInSlider" Minimum="0.05" Maximum="1.0"
+                    ValueChanged="FadeInSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Fade Out Duration" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="FadeOutLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="FadeOutSlider" Minimum="0.1" Maximum="2.0"
+                    ValueChanged="FadeOutSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Scale In Duration" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="ScaleInLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="ScaleInSlider" Minimum="0.05" Maximum="1.0"
+                    ValueChanged="ScaleInSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Scale Out Duration" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="ScaleOutLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="ScaleOutSlider" Minimum="0.1" Maximum="2.0"
+                    ValueChanged="ScaleOutSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== SPAWN SECTION ===== -->
+            <TextBlock Text="Spawn" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Max Mandalas (1 = follow cursor)" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="MaxCountLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="MaxCountSlider" Minimum="1" Maximum="50" IsSnapToTickEnabled="True" TickFrequency="1"
+                    ValueChanged="MaxCountSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== TRIGGERS SECTION ===== -->
+            <TextBlock Text="Triggers" Style="{StaticResource SectionStyle}" />
+
+            <CheckBox x:Name="MouseMoveEnabledCheck" Content="Mouse Move"
+                      Checked="MouseMoveEnabledCheck_Changed" Unchecked="MouseMoveEnabledCheck_Changed" Margin="0,0,0,8" />
+
+            <StackPanel x:Name="MoveDistancePanel">
+                <TextBlock Text="Move Distance Threshold" Style="{StaticResource LabelStyle}" />
+                <TextBlock x:Name="MoveDistanceLabel" Style="{StaticResource SubLabelStyle}" />
+                <Slider x:Name="MoveDistanceSlider" Minimum="20" Maximum="200"
+                        ValueChanged="MoveDistanceSlider_Changed" Style="{StaticResource SliderStyle}" />
+            </StackPanel>
+
+            <CheckBox x:Name="LeftClickEnabledCheck" Content="Left Click"
+                      Checked="LeftClickEnabledCheck_Changed" Unchecked="LeftClickEnabledCheck_Changed" Margin="0,0,0,8" />
+
+            <CheckBox x:Name="RightClickEnabledCheck" Content="Right Click"
+                      Checked="RightClickEnabledCheck_Changed" Unchecked="RightClickEnabledCheck_Changed" Margin="0,0,0,8" />
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== LIFETIME SECTION ===== -->
+            <TextBlock Text="Lifetime" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Duration (seconds)" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="LifetimeLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="10.0"
+                    ValueChanged="LifetimeSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <CheckBox x:Name="WhileActiveModeCheck" Content="While Active Mode (stays visible while trigger active)"
+                      Checked="WhileActiveModeCheck_Changed" Unchecked="WhileActiveModeCheck_Changed" Margin="0,0,0,8" />
+
+            <Separator Margin="0,8,0,8" />
+
+            <!-- ===== PERFORMANCE SECTION ===== -->
+            <TextBlock Text="Performance" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Max Active Mandalas" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="MaxActiveLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="MaxActiveSlider" Minimum="1" Maximum="100" IsSnapToTickEnabled="True" TickFrequency="1"
+                    ValueChanged="MaxActiveSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+            <TextBlock Text="Max Spawns Per Second" Style="{StaticResource LabelStyle}" />
+            <TextBlock x:Name="MaxSpawnsLabel" Style="{StaticResource SubLabelStyle}" />
+            <Slider x:Name="MaxSpawnsSlider" Minimum="1" Maximum="60" IsSnapToTickEnabled="True" TickFrequency="1"
+                    ValueChanged="MaxSpawnsSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+    </StackPanel>
+</UserControl>
