@@ -585,21 +585,38 @@ static partial class Program
     }
 
     /// <summary>
-    /// Create and initialize only the previously enabled effects.
+    /// Create and initialize only ONE previously enabled effect (single-plugin mode).
+    /// If multiple effects have IsEnabled=true in settings, only the first one is loaded
+    /// and the others are corrected to IsEnabled=false.
     /// </summary>
     private static void CreateEnabledEffects()
     {
         if (_effectManager == null) return;
 
+        string? loadedEffectId = null;
+
         foreach (var (effectId, pluginSettings) in _pluginSettingsCache)
         {
             if (pluginSettings.IsEnabled)
             {
-                var effect = _effectManager.CreateEffect(effectId);
-                if (effect != null)
+                if (loadedEffectId == null)
                 {
-                    pluginSettings.ApplyToEffect(effect);
-                    Log($"  Created: {effectId} (was enabled)");
+                    // Load the first enabled effect
+                    var effect = _effectManager.CreateEffect(effectId);
+                    if (effect != null)
+                    {
+                        pluginSettings.ApplyToEffect(effect);
+                        loadedEffectId = effectId;
+                        Log($"  Created: {effectId} (was enabled)");
+                    }
+                }
+                else
+                {
+                    // Fix inconsistent state: another effect was already enabled
+                    // Set this one to disabled and save
+                    pluginSettings.IsEnabled = false;
+                    pluginSettings.Save(effectId);
+                    Log($"  Fixed: {effectId} had IsEnabled=true but {loadedEffectId} already loaded - corrected to false");
                 }
             }
         }
@@ -722,6 +739,7 @@ static partial class Program
         // Effect was just enabled - disable all others
         var disabledEffects = new List<string>();
 
+        // Disable all CREATED effects that are enabled
         foreach (var effect in _effectManager.Effects)
         {
             if (effect.Metadata.Id != effectId && effect.IsEnabled)
@@ -729,6 +747,19 @@ static partial class Program
                 effect.IsEnabled = false;
                 disabledEffects.Add(effect.Metadata.Id);
                 SavePluginSettings(effect.Metadata.Id);
+            }
+        }
+
+        // Also disable any non-created effects that have IsEnabled=true in cached settings
+        // (handles lazy-loaded effects that weren't created yet)
+        foreach (var (cachedId, cachedSettings) in _pluginSettingsCache)
+        {
+            if (cachedId != effectId && cachedSettings.IsEnabled && !_effectManager.IsEffectCreated(cachedId))
+            {
+                cachedSettings.IsEnabled = false;
+                cachedSettings.Save(cachedId);
+                disabledEffects.Add(cachedId);
+                Log($"Disabled non-loaded effect: {cachedId}");
             }
         }
 
@@ -953,8 +984,8 @@ static partial class Program
                 var otherEffect = _effectManager.GetEffect(otherId);
                 if (otherEffect != null)
                 {
-                    // Save settings before unloading
-                    SavePluginSettings(otherId);
+                    // Set IsEnabled to false BEFORE saving to persist the correct state
+                    otherEffect.IsEnabled = false;
 
                     // Update cached settings
                     if (_pluginSettingsCache.TryGetValue(otherId, out var cachedSettings))
@@ -962,10 +993,26 @@ static partial class Program
                         cachedSettings.IsEnabled = false;
                     }
 
+                    // Save settings with correct IsEnabled state
+                    SavePluginSettings(otherId);
+
                     // Unload to free GPU resources
                     _effectManager.UnloadEffect(otherId);
                     changedEffects.Add(otherId);
                     Log($"Unloaded effect: {otherId}");
+                }
+            }
+
+            // Also disable any non-created effects that have IsEnabled=true in cached settings
+            // (handles lazy-loaded effects that weren't created yet)
+            foreach (var (cachedId, cachedSettings) in _pluginSettingsCache)
+            {
+                if (cachedId != effectId && cachedSettings.IsEnabled && !_effectManager.IsEffectCreated(cachedId))
+                {
+                    cachedSettings.IsEnabled = false;
+                    cachedSettings.Save(cachedId);
+                    changedEffects.Add(cachedId);
+                    Log($"Disabled non-loaded effect: {cachedId}");
                 }
             }
 
@@ -989,14 +1036,17 @@ static partial class Program
             var effect = _effectManager.GetEffect(effectId);
             if (effect != null)
             {
-                // Save settings before unloading
-                SavePluginSettings(effectId);
+                // Set IsEnabled to false BEFORE saving to persist the correct state
+                effect.IsEnabled = false;
 
                 // Update cached settings
                 if (_pluginSettingsCache.TryGetValue(effectId, out var cachedSettings))
                 {
                     cachedSettings.IsEnabled = false;
                 }
+
+                // Save settings with correct IsEnabled state
+                SavePluginSettings(effectId);
 
                 // Unload to free GPU resources
                 _effectManager.UnloadEffect(effectId);

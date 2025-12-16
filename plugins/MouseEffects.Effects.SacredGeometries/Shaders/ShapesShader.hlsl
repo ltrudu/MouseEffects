@@ -465,91 +465,56 @@ float PentagramSDF(float2 p, float anim)
 }
 
 // ============================================
-// SHAPE 11: Golden Spiral
+// SHAPE 11: Yin Yang - Symbol of balance and duality
 // ============================================
-float GoldenSpiralSDF(float2 p, float anim)
+float YinYangSDF(float2 p, float anim)
 {
     float result = 1e10;
+    float r = 0.7;
 
-    // Animate the spiral rotation
-    float2 rp = mul(Rotate2D(anim * 0.2), p);
+    // Slow rotation animation
+    float2 rp = mul(Rotate2D(anim * 0.3), p);
 
-    // Draw Fibonacci rectangles
-    float2 centers[8];
-    float sizes[8];
+    // Outer circle
+    result = min(result, abs(CircleSDF(rp, r)) - LineThickness);
 
-    // Build Fibonacci sequence for sizes
-    sizes[0] = 0.05;
-    sizes[1] = 0.05;
-    for (int i = 2; i < 8; i++)
+    // S-curve dividing line (two half circles)
+    float halfR = r * 0.5;
+
+    // Upper half circle (curves right)
+    float2 upperCenter = float2(0, halfR * 0.5);
+    float upperDist = length(rp - upperCenter);
+    // Only draw the right half of this circle
+    if (rp.x >= upperCenter.x - 0.01)
     {
-        sizes[i] = sizes[i-1] + sizes[i-2];
+        result = min(result, abs(upperDist - halfR) - LineThickness);
     }
 
-    // Scale to fit
-    float maxSize = sizes[7];
-    for (int j = 0; j < 8; j++)
+    // Lower half circle (curves left)
+    float2 lowerCenter = float2(0, -halfR * 0.5);
+    float lowerDist = length(rp - lowerCenter);
+    // Only draw the left half of this circle
+    if (rp.x <= lowerCenter.x + 0.01)
     {
-        sizes[j] = sizes[j] / maxSize * 0.8;
+        result = min(result, abs(lowerDist - halfR) - LineThickness);
     }
 
-    // Draw quarter-circle arcs for the spiral
-    float2 arcCenter = float2(0, 0);
-    float baseAngle = 0;
+    // Small dots (eyes) - animated pulse
+    float dotPulse = 1.0 + sin(anim * 2.0) * 0.15;
+    float dotR = r * 0.12 * dotPulse;
 
-    for (int k = 0; k < 7; k++)
+    // Upper dot (in dark section = yang eye)
+    float2 upperDot = float2(0, halfR * 0.5);
+    result = min(result, abs(CircleSDF(rp - upperDot, dotR)) - LineThickness * 0.7);
+
+    // Lower dot (in light section = yin eye)
+    float2 lowerDot = float2(0, -halfR * 0.5);
+    result = min(result, abs(CircleSDF(rp - lowerDot, dotR)) - LineThickness * 0.7);
+
+    // Center vertical line connecting the S-curve
+    if (abs(rp.x) < LineThickness && rp.y > -halfR * 0.5 && rp.y < halfR * 0.5)
     {
-        float r = sizes[k];
-
-        // Draw arc segment
-        float angle = atan2(rp.y - arcCenter.y, rp.x - arcCenter.x);
-        float dist = length(rp - arcCenter);
-
-        // Quarter arc in the right direction
-        float startAngle = baseAngle;
-        float endAngle = baseAngle + PI * 0.5;
-
-        if (angle >= startAngle && angle <= endAngle)
-        {
-            float arcDist = abs(dist - r);
-            result = min(result, arcDist - LineThickness);
-        }
-
-        // Move center for next arc
-        float2 offset;
-        int dir = k % 4;
-        if (dir == 0) offset = float2(sizes[k], 0);
-        else if (dir == 1) offset = float2(0, sizes[k]);
-        else if (dir == 2) offset = float2(-sizes[k], 0);
-        else offset = float2(0, -sizes[k]);
-
-        arcCenter += offset;
-        baseAngle += PI * 0.5;
-    }
-
-    // Simplified: just draw a logarithmic spiral
-    float angle = atan2(rp.y, rp.x);
-    float dist = length(rp);
-
-    // Golden spiral: r = a * e^(b * theta)
-    float a = 0.05;
-    float b = 0.306349; // ln(PHI) / (PI/2)
-
-    // Find closest point on spiral
-    float spiralAngle = angle + anim;
-    for (int n = -4; n < 8; n++)
-    {
-        float theta = spiralAngle + float(n) * TAU;
-        if (theta > 0)
-        {
-            float spiralR = a * exp(b * theta);
-            if (spiralR < 1.0)
-            {
-                float2 spiralPoint = float2(cos(theta - anim), sin(theta - anim)) * spiralR;
-                float d = length(rp - spiralPoint);
-                result = min(result, d - LineThickness);
-            }
-        }
+        result = min(result, abs(rp.x) - LineThickness);
     }
 
     return result;
@@ -839,7 +804,7 @@ float GetShapeSDF(float2 p, int shapeIndex, float anim)
         case 8: return MerkabaSDF(p, anim);
         case 9: return HexagramSDF(p, anim);
         case 10: return PentagramSDF(p, anim);
-        case 11: return GoldenSpiralSDF(p, anim);
+        case 11: return YinYangSDF(p, anim);
         case 12: return TetrahedronSDF(p, anim);
         case 13: return CubeSDF(p, anim);
         case 14: return OctahedronSDF(p, anim);
@@ -938,8 +903,9 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
         scale *= saturate(lifeFactor * 3.0);
     }
 
-    // Make quad larger to accommodate glow effect (1.5x padding)
-    float glowPadding = 1.5;
+    // Make quad larger to accommodate glow effect (2.5x padding, matching mandala)
+    // Some shapes (like Sri Yantra) extend to 0.9 in normalized space + glow
+    float glowPadding = 2.5;
     float quadScale = scale * glowPadding;
 
     // Transform vertex
@@ -951,7 +917,7 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
 
     output.Position = float4(ndc, 0, 1);
     output.TexCoord = texCoords[vertexId];
-    output.LocalPos = vertex * glowPadding; // Scaled to match larger quad
+    output.LocalPos = vertex * 2.5; // Scaled to match larger quad (glowPadding = 2.5)
     output.Color = shape.Color;
     output.Rotation = shape.Rotation;
     output.ShapeIndex = shape.ShapeIndex;
@@ -996,8 +962,11 @@ float4 PSMain(VSOutput input) : SV_TARGET
     if (input.LifeFactor <= 0)
         discard;
 
-    // Get local position for SDF (-1 to 1)
-    float2 localPos = input.LocalPos;
+    // Get local position - input.LocalPos is in -2.5 to 2.5 range (glowPadding)
+    // Shapes extend to ~0.9 in their coordinate space
+    // We want shape edge (0.9) to appear at world distance = radius
+    // input.LocalPos = 1.0 at world distance radius, so map 1.0 -> 0.9
+    float2 localPos = input.LocalPos * 0.9;
 
     // Apply rotation
     localPos = mul(Rotate2D(input.Rotation), localPos);

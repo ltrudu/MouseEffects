@@ -104,6 +104,8 @@ public partial class ShapesSettings : System.Windows.Controls.UserControl
             // Performance
             MaxActiveSlider.Value = _effect.MaxActiveShapes;
             MaxActiveLabel.Text = $"{_effect.MaxActiveShapes}";
+            MaxSpawnsSlider.Value = _effect.ShapeMaxSpawnsPerSecond;
+            MaxSpawnsLabel.Text = $"{_effect.ShapeMaxSpawnsPerSecond}/s";
         }
         finally
         {
@@ -386,6 +388,14 @@ public partial class ShapesSettings : System.Windows.Controls.UserControl
         _effect.MaxActiveShapes = (int)MaxActiveSlider.Value;
         _effect.Configuration.Set("sh_perf_maxActive", _effect.MaxActiveShapes);
         MaxActiveLabel.Text = $"{_effect.MaxActiveShapes}";
+    }
+
+    private void MaxSpawnsSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.ShapeMaxSpawnsPerSecond = (int)MaxSpawnsSlider.Value;
+        _effect.Configuration.Set("sh_perf_maxSpawnsPerSecond", _effect.ShapeMaxSpawnsPerSecond);
+        MaxSpawnsLabel.Text = $"{_effect.ShapeMaxSpawnsPerSecond}/s";
     }
 
     // ===== MORPH HANDLERS =====

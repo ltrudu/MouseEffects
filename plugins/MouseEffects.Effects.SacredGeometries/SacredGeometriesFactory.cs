@@ -143,6 +143,7 @@ public sealed class SacredGeometriesFactory : IEffectFactory
 
         // ===== Performance Settings (sh_perf_ prefix) =====
         config.Set("sh_perf_maxActive", 20);
+        config.Set("sh_perf_maxSpawnsPerSecond", 10);
 
         // ===== Morph Settings (sh_morph_ prefix) =====
         config.Set("sh_morph_enabled", true);

@@ -46,7 +46,7 @@
             <ComboBoxItem Content="Merkaba" />
             <ComboBoxItem Content="Hexagram" />
             <ComboBoxItem Content="Pentagram" />
-            <ComboBoxItem Content="Golden Spiral" />
+            <ComboBoxItem Content="Yin Yang" />
             <ComboBoxItem Content="Tetrahedron" />
             <ComboBoxItem Content="Cube" />
             <ComboBoxItem Content="Octahedron" />
@@ -271,6 +271,11 @@
         <TextBlock x:Name="MaxActiveLabel" Style="{StaticResource SubLabelStyle}" />
         <Slider x:Name="MaxActiveSlider" Minimum="1" Maximum="50" IsSnapToTickEnabled="True" TickFrequency="1"
                 ValueChanged="MaxActiveSlider_Changed" Style="{StaticResource SliderStyle}" />
+
+        <TextBlock Text="Max Spawns Per Second" Style="{StaticResource LabelStyle}" />
+        <TextBlock x:Name="MaxSpawnsLabel" Style="{StaticResource SubLabelStyle}" />
+        <Slider x:Name="MaxSpawnsSlider" Minimum="1" Maximum="30" IsSnapToTickEnabled="True" TickFrequency="1"
+                ValueChanged="MaxSpawnsSlider_Changed" Style="{StaticResource SliderStyle}" />
 
     </StackPanel>
 </UserControl>

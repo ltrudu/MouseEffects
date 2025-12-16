@@ -214,6 +214,7 @@ public sealed class SacredGeometriesEffect : EffectBase
     private bool _shapeRightClickEnabled;
     private float _shapeLifetimeDuration = 4.0f;
     private int _maxActiveShapes = 20;
+    private int _shapeMaxSpawnsPerSecond = 10;
 
     // Shapes morphing settings
     private bool _shapeMorphEnabled = true;
@@ -326,6 +327,7 @@ public sealed class SacredGeometriesEffect : EffectBase
     public bool ShapeRightClickEnabled { get => _shapeRightClickEnabled; set => _shapeRightClickEnabled = value; }
     public float ShapeLifetimeDuration { get => _shapeLifetimeDuration; set => _shapeLifetimeDuration = value; }
     public int MaxActiveShapes { get => _maxActiveShapes; set => _maxActiveShapes = value; }
+    public int ShapeMaxSpawnsPerSecond { get => _shapeMaxSpawnsPerSecond; set => _shapeMaxSpawnsPerSecond = value; }
     public bool ShapeMorphEnabled { get => _shapeMorphEnabled; set => _shapeMorphEnabled = value; }
     public float ShapeMorphSpeed { get => _shapeMorphSpeed; set => _shapeMorphSpeed = value; }
     public float ShapeMorphIntensity { get => _shapeMorphIntensity; set => _shapeMorphIntensity = value; }
@@ -569,6 +571,8 @@ public sealed class SacredGeometriesEffect : EffectBase
             _shapeLifetimeDuration = shapeLife;
         if (Configuration.TryGet("sh_perf_maxActive", out int shapeMaxActive))
             _maxActiveShapes = shapeMaxActive;
+        if (Configuration.TryGet("sh_perf_maxSpawnsPerSecond", out int shapeMaxSpawns))
+            _shapeMaxSpawnsPerSecond = shapeMaxSpawns;
 
         // Shapes morphing settings
         if (Configuration.TryGet("sh_morph_enabled", out bool shapeMorphEnabled))
@@ -795,8 +799,8 @@ public sealed class SacredGeometriesEffect : EffectBase
 
     private void SpawnShape(Vector2 position, float totalTime)
     {
-        // Rate limiting
-        if (_spawnsThisSecond >= _maxSpawnsPerSecond)
+        // Rate limiting (use shape-specific spawn rate)
+        if (_spawnsThisSecond >= _shapeMaxSpawnsPerSecond)
             return;
 
         // Active count limiting
