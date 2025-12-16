@@ -72,6 +72,11 @@ public sealed class RadialDitheringEffect : EffectBase
 
     public override EffectMetadata Metadata => _metadata;
 
+    /// <summary>
+    /// RadialDithering effect requires screen capture to apply dithering to screen content.
+    /// </summary>
+    public override bool RequiresContinuousScreenCapture => true;
+
     protected override void OnInitialize(IRenderContext context)
     {
         // Load and compile shaders

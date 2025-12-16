@@ -76,6 +76,11 @@ public sealed class ZoomEffect : EffectBase
 
     public override EffectMetadata Metadata => _metadata;
 
+    /// <summary>
+    /// Zoom effect requires screen capture to magnify screen content.
+    /// </summary>
+    public override bool RequiresContinuousScreenCapture => true;
+
     protected override void OnInitialize(IRenderContext context)
     {
         // Load and compile shaders
