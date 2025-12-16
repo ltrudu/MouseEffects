@@ -346,45 +346,157 @@ public partial class SettingsWindow : Window
 
         foreach (var factory in sortedFactories)
         {
-            // Find the corresponding effect instance
-            var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == factory.Metadata.Id);
-            if (effect == null) continue;
-
-            // Create the card container
-            var card = CreateEffectCard(factory, effect);
+            var card = CreateEffectCard(factory);
             PluginSettingsContainer.Children.Add(card);
         }
     }
 
-    private Border CreateEffectCard(IEffectFactory factory, IEffect effect)
+    /// <summary>
+    /// Create an effect card. Only loads full settings if effect is enabled/created.
+    /// </summary>
+    private Border CreateEffectCard(IEffectFactory factory)
     {
+        var effectId = factory.Metadata.Id;
+        var isEnabled = Program.IsEffectEnabled(effectId);
+        var effect = _effectManager.GetEffect(effectId);
+
         var border = new Border
         {
             CornerRadius = new CornerRadius(8),
             Padding = new Thickness(15),
-            Margin = new Thickness(0, 5, 0, 5)
+            Margin = new Thickness(0, 5, 0, 5),
+            Tag = factory // Store factory for later use
         };
-        // Use dynamic resource for theme-aware background
         border.SetResourceReference(Border.BackgroundProperty, "SystemControlBackgroundChromeMediumLowBrush");
 
         var mainStack = new StackPanel();
 
-        // Try to get plugin-provided settings control
-        // (description is now handled inside each plugin's settings control)
-        var settingsControl = factory.CreateSettingsControl(effect);
-        if (settingsControl is FrameworkElement frameworkElement)
+        // If effect is created, show full settings from plugin
+        if (effect != null)
         {
-            mainStack.Children.Add(frameworkElement);
+            var settingsControl = factory.CreateSettingsControl(effect);
+            if (settingsControl is FrameworkElement frameworkElement)
+            {
+                mainStack.Children.Add(frameworkElement);
+                WireUpSettingsChanged(settingsControl, effectId);
+                _effectSettingsControls[effectId] = frameworkElement;
+            }
+        }
+        else
+        {
+            // Effect not created - show minimal card with just name and enable checkbox
+            var headerPanel = new StackPanel();
 
-            // Wire up settings change notifications for persistence
-            WireUpSettingsChanged(settingsControl, effect.Metadata.Id);
+            // Header with checkbox and name
+            var headerRow = new StackPanel { Orientation = System.Windows.Controls.Orientation.Horizontal };
 
-            // Store reference to the settings control for external updates
-            _effectSettingsControls[effect.Metadata.Id] = frameworkElement;
+            var enabledCheckBox = new System.Windows.Controls.CheckBox
+            {
+                IsChecked = false,
+                Content = factory.Metadata.Name,
+                FontSize = 16,
+                FontWeight = FontWeights.SemiBold,
+                Tag = effectId,
+                Name = "EnabledCheckBox"
+            };
+            enabledCheckBox.Checked += MinimalCard_EnabledChanged;
+            enabledCheckBox.Unchecked += MinimalCard_EnabledChanged;
+
+            headerRow.Children.Add(enabledCheckBox);
+            headerPanel.Children.Add(headerRow);
+
+            // Description
+            var description = new TextBlock
+            {
+                Text = factory.Metadata.Description,
+                Opacity = 0.7,
+                FontSize = 12,
+                Margin = new Thickness(0, 8, 0, 0),
+                TextWrapping = TextWrapping.Wrap
+            };
+            headerPanel.Children.Add(description);
+
+            // "Enable to configure" hint
+            var hint = new TextBlock
+            {
+                Text = "Enable this effect to access its settings",
+                Opacity = 0.5,
+                FontSize = 11,
+                FontStyle = FontStyles.Italic,
+                Margin = new Thickness(0, 10, 0, 0)
+            };
+            headerPanel.Children.Add(hint);
+
+            mainStack.Children.Add(headerPanel);
         }
 
         border.Child = mainStack;
         return border;
+    }
+
+    /// <summary>
+    /// Handle enabling effect from minimal card - creates effect and reloads the card.
+    /// </summary>
+    private void MinimalCard_EnabledChanged(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+        if (sender is not System.Windows.Controls.CheckBox checkBox) return;
+        if (checkBox.Tag is not string effectId) return;
+
+        var isEnabled = checkBox.IsChecked == true;
+
+        if (isEnabled)
+        {
+            var factory = _effectManager.GetFactory(effectId);
+            if (factory != null)
+            {
+                Logger.Log("SettingsWindow", $"Creating effect on enable: {effectId}");
+
+                // Update checkbox to show loading state
+                checkBox.Content = $"{factory.Metadata.Name} (Loading...)";
+                checkBox.IsEnabled = false;
+            }
+
+            // Defer the creation to allow UI to update first
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                CompleteEffectEnable(effectId, checkBox);
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+    }
+
+    /// <summary>
+    /// Complete the effect enable after UI has updated.
+    /// </summary>
+    private void CompleteEffectEnable(string effectId, System.Windows.Controls.CheckBox checkBox)
+    {
+        // Create the effect
+        var effect = _effectManager.CreateEffect(effectId);
+        if (effect != null)
+        {
+            Program.ApplyPluginSettingsToEffect(effectId, effect);
+            effect.IsEnabled = true;
+        }
+
+        // Disable and unload all other effects (single-plugin mode) to free GPU memory
+        var otherEffectIds = _effectManager.Effects
+            .Where(e => e.Metadata.Id != effectId)
+            .Select(e => e.Metadata.Id)
+            .ToList();
+
+        foreach (var otherId in otherEffectIds)
+        {
+            Program.SavePluginSettings(otherId);
+            _effectManager.UnloadEffect(otherId);
+            Logger.Log("SettingsWindow", $"Unloaded effect: {otherId}");
+        }
+
+        // Save and sync
+        Program.SavePluginSettings(effectId);
+        Program.SyncTrayWithEffects();
+
+        // Reload plugin settings to show full UI
+        LoadPluginSettings();
     }
 
     /// <summary>
@@ -419,14 +531,21 @@ public partial class SettingsWindow : Window
     /// </summary>
     public void RefreshEffectEnabledState(string effectId, bool isEnabled)
     {
+        // Search in settings controls for the checkbox
         if (_effectSettingsControls.TryGetValue(effectId, out var control))
         {
-            // Find the checkbox in the visual tree (it's built by now)
-            var checkBox = FindChild<System.Windows.Controls.CheckBox>(control, "EnabledCheckBox");
-            if (checkBox != null)
+            var foundCheckBox = FindChild<System.Windows.Controls.CheckBox>(control, "EnabledCheckBox");
+            if (foundCheckBox != null)
             {
-                checkBox.IsChecked = isEnabled;
+                foundCheckBox.IsChecked = isEnabled;
             }
+        }
+
+        // If effect was just enabled from tray and we have the settings window open,
+        // reload to show full settings UI
+        if (isEnabled && !_effectSettingsControls.ContainsKey(effectId))
+        {
+            LoadPluginSettings();
         }
     }
 
@@ -457,7 +576,7 @@ public partial class SettingsWindow : Window
         Program.SavePluginSettings(effectId);
 
         // Check if this effect was just enabled - enforce single-plugin mode
-        var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == effectId);
+        var effect = _effectManager.GetEffect(effectId);
         if (effect != null && effect.IsEnabled)
         {
             // Disable all other effects and get list of affected IDs
@@ -718,10 +837,14 @@ public partial class SettingsWindow : Window
             // Save app settings
             Program.Settings.Save();
 
-            // Save all plugin settings
-            foreach (var effect in _effectManager.Effects)
+            // Save all plugin settings (only for effects that have been created)
+            foreach (var factory in _effectManager.Factories.Values)
             {
-                Program.SavePluginSettings(effect.Metadata.Id);
+                var effect = _effectManager.GetEffect(factory.Metadata.Id);
+                if (effect != null)
+                {
+                    Program.SavePluginSettings(effect.Metadata.Id);
+                }
             }
 
             BackupStatusText.Text = $"Settings saved successfully at {DateTime.Now:HH:mm:ss}";
@@ -777,11 +900,15 @@ public partial class SettingsWindow : Window
                 gameLoop.TargetFrameRate = settings.TargetFrameRate;
             }
 
-            // Reload plugin settings from disk and apply to effects
-            foreach (var effect in _effectManager.Effects)
+            // Reload plugin settings from disk and apply to effects (only for effects that have been created)
+            foreach (var factory in _effectManager.Factories.Values)
             {
-                var pluginSettings = PluginSettings.Load(effect.Metadata.Id);
-                pluginSettings.ApplyToEffect(effect);
+                var effect = _effectManager.GetEffect(factory.Metadata.Id);
+                if (effect != null)
+                {
+                    var pluginSettings = PluginSettings.Load(effect.Metadata.Id);
+                    pluginSettings.ApplyToEffect(effect);
+                }
             }
 
             // Refresh plugin UI controls

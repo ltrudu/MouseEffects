@@ -7,16 +7,23 @@ namespace MouseEffects.App;
 
 /// <summary>
 /// Manages effect lifecycle, loading, and rendering.
+/// Supports lazy effect creation - effects are only initialized when first needed.
 /// </summary>
 public sealed class EffectManager : IDisposable
 {
     private readonly List<IEffect> _effects = [];
     private readonly Dictionary<string, IEffectFactory> _factories = new();
+    private readonly Dictionary<string, IEffect> _effectsById = new();
     private readonly IRenderContext _sharedContext;
     private bool _disposed;
     private bool _globallyPaused;
 
     public IReadOnlyList<IEffect> Effects => _effects;
+
+    /// <summary>
+    /// Gets all registered factories (for lazy loading - metadata only).
+    /// </summary>
+    public IReadOnlyDictionary<string, IEffectFactory> Factories => _factories;
 
     /// <summary>
     /// Gets or sets whether all effects are globally paused.
@@ -46,6 +53,12 @@ public sealed class EffectManager : IDisposable
     /// </summary>
     public IEffect? CreateEffect(string effectId, EffectConfiguration? config = null)
     {
+        // Return existing effect if already created
+        if (_effectsById.TryGetValue(effectId, out var existingEffect))
+        {
+            return existingEffect;
+        }
+
         if (!_factories.TryGetValue(effectId, out var factory))
         {
             return null;
@@ -60,7 +73,47 @@ public sealed class EffectManager : IDisposable
         }
 
         _effects.Add(effect);
+        _effectsById[effectId] = effect;
         return effect;
+    }
+
+    /// <summary>
+    /// Get or create an effect instance (lazy loading).
+    /// Returns the effect and whether it was newly created.
+    /// </summary>
+    public (IEffect? Effect, bool WasCreated) GetOrCreateEffect(string effectId)
+    {
+        if (_effectsById.TryGetValue(effectId, out var existingEffect))
+        {
+            return (existingEffect, false);
+        }
+
+        var effect = CreateEffect(effectId);
+        return (effect, effect != null);
+    }
+
+    /// <summary>
+    /// Check if an effect has been created.
+    /// </summary>
+    public bool IsEffectCreated(string effectId)
+    {
+        return _effectsById.ContainsKey(effectId);
+    }
+
+    /// <summary>
+    /// Get an effect by ID if it exists.
+    /// </summary>
+    public IEffect? GetEffect(string effectId)
+    {
+        return _effectsById.GetValueOrDefault(effectId);
+    }
+
+    /// <summary>
+    /// Get a factory by ID.
+    /// </summary>
+    public IEffectFactory? GetFactory(string effectId)
+    {
+        return _factories.GetValueOrDefault(effectId);
     }
 
     /// <summary>
@@ -70,8 +123,25 @@ public sealed class EffectManager : IDisposable
     {
         if (_effects.Remove(effect))
         {
+            _effectsById.Remove(effect.Metadata.Id);
             effect.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Unload an effect by ID - disposes GPU resources and removes from active effects.
+    /// The effect can be recreated later via CreateEffect (lazy loading).
+    /// </summary>
+    public bool UnloadEffect(string effectId)
+    {
+        if (_effectsById.TryGetValue(effectId, out var effect))
+        {
+            _effects.Remove(effect);
+            _effectsById.Remove(effectId);
+            effect.Dispose();
+            return true;
+        }
+        return false;
     }
 
     /// <summary>

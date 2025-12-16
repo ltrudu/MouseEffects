@@ -400,7 +400,7 @@ static partial class Program
             // Load plugins asynchronously (parallel assembly loading)
             _pluginLoader.LoadPluginsAsync().GetAwaiter().GetResult();
 
-            // Register discovered effect factories
+            // Register discovered effect factories (lazy loading - no effect instances created yet)
             Log($"Registering {_pluginLoader.Factories.Count} effect factories...");
             foreach (var factory in _pluginLoader.Factories)
             {
@@ -408,17 +408,13 @@ static partial class Program
                 Log($"  Registered: {factory.Metadata.Name}");
             }
 
-            // Create effect instances for all registered factories
-            Log("Creating effect instances...");
-            foreach (var factory in _pluginLoader.Factories)
-            {
-                _effectManager.CreateEffect(factory.Metadata.Id);
-                Log($"  Created: {factory.Metadata.Id}");
-            }
+            // Load all plugin settings from disk (just JSON, no effect initialization)
+            Log("Loading plugin settings...");
+            LoadAllPluginSettings();
 
-            // Apply saved plugin settings and enabled states
-            Log("Applying saved plugin settings...");
-            ApplySavedPluginSettings();
+            // Create only the previously enabled effects (lazy loading)
+            Log("Creating enabled effects...");
+            CreateEnabledEffects();
 
             // Create mouse input provider
             Log("Creating mouse input...");
@@ -559,35 +555,98 @@ static partial class Program
         _overlayManager?.Dispose();
     }
 
+    // Cache of loaded plugin settings (loaded at startup, before effects are created)
+    private static readonly Dictionary<string, PluginSettings> _pluginSettingsCache = new();
+
     /// <summary>
-    /// Apply saved plugin enabled states and configurations to loaded effects.
-    /// Each plugin has its own settings file.
+    /// Load all plugin settings from disk (just JSON files, no effect initialization).
+    /// This allows us to know which effects are enabled without creating them.
     /// </summary>
-    private static void ApplySavedPluginSettings()
+    private static void LoadAllPluginSettings()
     {
         if (_effectManager == null) return;
 
-        foreach (var effect in _effectManager.Effects)
+        foreach (var factory in _effectManager.Factories.Values)
         {
-            var effectId = effect.Metadata.Id;
-
-            // Load plugin-specific settings file
+            var effectId = factory.Metadata.Id;
             var pluginSettings = PluginSettings.Load(effectId);
-            pluginSettings.ApplyToEffect(effect);
-
-            Log($"  {effectId}: enabled={effect.IsEnabled}, {pluginSettings.Configuration.Count} config values");
+            _pluginSettingsCache[effectId] = pluginSettings;
+            Log($"  Loaded settings: {effectId} (enabled={pluginSettings.IsEnabled})");
         }
     }
 
     /// <summary>
-    /// Populate the system tray effects menu with loaded plugins.
+    /// Create and initialize only the previously enabled effects.
+    /// </summary>
+    private static void CreateEnabledEffects()
+    {
+        if (_effectManager == null) return;
+
+        foreach (var (effectId, pluginSettings) in _pluginSettingsCache)
+        {
+            if (pluginSettings.IsEnabled)
+            {
+                var effect = _effectManager.CreateEffect(effectId);
+                if (effect != null)
+                {
+                    pluginSettings.ApplyToEffect(effect);
+                    Log($"  Created: {effectId} (was enabled)");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get cached plugin settings (or load if not cached).
+    /// </summary>
+    private static PluginSettings GetPluginSettings(string effectId)
+    {
+        if (!_pluginSettingsCache.TryGetValue(effectId, out var settings))
+        {
+            settings = PluginSettings.Load(effectId);
+            _pluginSettingsCache[effectId] = settings;
+        }
+        return settings;
+    }
+
+    /// <summary>
+    /// Check if an effect is enabled (from cached settings, works even if effect not created).
+    /// </summary>
+    public static bool IsEffectEnabled(string effectId)
+    {
+        // First check if effect is created and get its actual state
+        var effect = _effectManager?.GetEffect(effectId);
+        if (effect != null)
+        {
+            return effect.IsEnabled;
+        }
+
+        // Otherwise check cached settings
+        return _pluginSettingsCache.TryGetValue(effectId, out var settings) && settings.IsEnabled;
+    }
+
+    /// <summary>
+    /// Apply cached plugin settings to an effect (for lazy loading).
+    /// </summary>
+    public static void ApplyPluginSettingsToEffect(string effectId, IEffect effect)
+    {
+        var settings = GetPluginSettings(effectId);
+        settings.ApplyToEffect(effect);
+        Log($"Applied settings to lazily loaded effect: {effectId}");
+    }
+
+    /// <summary>
+    /// Populate the system tray effects menu with loaded plugins (using factories for lazy loading).
     /// </summary>
     private static void PopulateTrayEffectsMenu()
     {
         if (_trayManager == null || _effectManager == null) return;
 
-        var effectsInfo = _effectManager.Effects
-            .Select(e => (e.Metadata, e.IsEnabled))
+        // Use factories for metadata, use cached settings for enabled state
+        // Sort alphabetically by name
+        var effectsInfo = _effectManager.Factories.Values
+            .OrderBy(f => f.Metadata.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(f => (f.Metadata, IsEffectEnabled(f.Metadata.Id)))
             .ToList();
 
         _trayManager.PopulateEffectsMenu(effectsInfo);
@@ -601,8 +660,9 @@ static partial class Program
     {
         if (_trayManager == null || _effectManager == null) return;
 
-        var states = _effectManager.Effects
-            .Select(e => (e.Metadata.Id, e.IsEnabled))
+        // Use factories for all effect IDs, use cached settings for enabled state
+        var states = _effectManager.Factories.Values
+            .Select(f => (f.Metadata.Id, IsEffectEnabled(f.Metadata.Id)))
             .ToList();
 
         _trayManager.SyncEffectStates(states);
@@ -819,25 +879,120 @@ static partial class Program
     {
         if (_effectManager == null) return;
 
-        List<string> changedEffects;
+        // Check if we need to create the effect (lazy loading)
+        bool needsCreation = enabled && !_effectManager.IsEffectCreated(effectId);
 
-        if (enabled)
+        if (needsCreation)
         {
-            // Enforce single-plugin mode: enable only this effect, disable all others
-            changedEffects = _effectManager.EnableExclusively(effectId);
+            var factory = _effectManager.GetFactory(effectId);
+            if (factory != null)
+            {
+                // Show toast that we're initializing the plugin
+                _trayManager?.ShowBalloon("MouseEffects", $"Initializing {factory.Metadata.Name}...");
+                Log($"Lazy loading effect: {effectId}");
+            }
+
+            // Defer the creation to allow UI to update first
+            _ = Task.Run(() =>
+            {
+                // Small delay to let the toast appear
+                Thread.Sleep(50);
+
+                // Creation must happen on main thread (DirectX requirement)
+                System.Windows.Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    CompleteEffectToggle(effectId, enabled);
+                });
+            });
         }
         else
         {
-            // Just disable this specific effect
-            var effect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == effectId);
-            if (effect != null && effect.IsEnabled)
+            // No creation needed, execute immediately
+            CompleteEffectToggle(effectId, enabled);
+        }
+    }
+
+    private static void CompleteEffectToggle(string effectId, bool enabled)
+    {
+        if (_effectManager == null) return;
+
+        List<string> changedEffects = [];
+
+        if (enabled)
+        {
+            // Lazy loading: create effect if not yet created
+            if (!_effectManager.IsEffectCreated(effectId))
             {
-                effect.IsEnabled = false;
-                changedEffects = [effectId];
+                var effect = _effectManager.CreateEffect(effectId);
+                if (effect != null)
+                {
+                    // Apply cached settings to the newly created effect
+                    var settings = GetPluginSettings(effectId);
+                    settings.ApplyToEffect(effect);
+                }
             }
-            else
+
+            // Disable and unload all other effects (single-plugin mode) to free GPU memory
+            // Make a copy of the list since we'll be modifying it
+            var otherEffectIds = _effectManager.Effects
+                .Where(e => e.Metadata.Id != effectId)
+                .Select(e => e.Metadata.Id)
+                .ToList();
+
+            foreach (var otherId in otherEffectIds)
             {
-                changedEffects = [];
+                var otherEffect = _effectManager.GetEffect(otherId);
+                if (otherEffect != null)
+                {
+                    // Save settings before unloading
+                    SavePluginSettings(otherId);
+
+                    // Update cached settings
+                    if (_pluginSettingsCache.TryGetValue(otherId, out var cachedSettings))
+                    {
+                        cachedSettings.IsEnabled = false;
+                    }
+
+                    // Unload to free GPU resources
+                    _effectManager.UnloadEffect(otherId);
+                    changedEffects.Add(otherId);
+                    Log($"Unloaded effect: {otherId}");
+                }
+            }
+
+            // Enable the target effect
+            var targetEffect = _effectManager.GetEffect(effectId);
+            if (targetEffect != null && !targetEffect.IsEnabled)
+            {
+                targetEffect.IsEnabled = true;
+                changedEffects.Add(effectId);
+
+                // Update cached settings
+                if (_pluginSettingsCache.TryGetValue(effectId, out var cachedSettings))
+                {
+                    cachedSettings.IsEnabled = true;
+                }
+            }
+        }
+        else
+        {
+            // Disable and unload the effect to free GPU memory
+            var effect = _effectManager.GetEffect(effectId);
+            if (effect != null)
+            {
+                // Save settings before unloading
+                SavePluginSettings(effectId);
+
+                // Update cached settings
+                if (_pluginSettingsCache.TryGetValue(effectId, out var cachedSettings))
+                {
+                    cachedSettings.IsEnabled = false;
+                }
+
+                // Unload to free GPU resources
+                _effectManager.UnloadEffect(effectId);
+                changedEffects.Add(effectId);
+                Log($"Unloaded effect: {effectId}");
             }
         }
 
@@ -845,12 +1000,7 @@ static partial class Program
         foreach (var changedId in changedEffects)
         {
             SavePluginSettings(changedId);
-
-            var changedEffect = _effectManager.Effects.FirstOrDefault(e => e.Metadata.Id == changedId);
-            if (changedEffect != null)
-            {
-                _settingsWindow?.RefreshEffectEnabledState(changedId, changedEffect.IsEnabled);
-            }
+            _settingsWindow?.RefreshEffectEnabledState(changedId, IsEffectEnabled(changedId));
         }
 
         // Sync the tray menu to reflect all effect states
