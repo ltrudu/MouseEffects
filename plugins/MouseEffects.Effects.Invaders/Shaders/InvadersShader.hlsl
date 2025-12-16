@@ -11,7 +11,7 @@ cbuffer FrameData : register(b0)
     float TrailLength;
     float NeonIntensity;
     float AnimSpeed;
-    float Padding1;
+    float HdrMultiplier;
     float Padding2;
     float Padding3;
     float Padding4;
@@ -788,6 +788,10 @@ float4 PSMain(VSOutput input) : SV_TARGET
         // Outer glow
         color.rgb += baseColor.rgb * edgeGlow;
     }
+
+    // HDR boost - amplify bright areas for HDR displays
+    float hdrBoost = 1.0 + coreGlow * HdrMultiplier * 2.0;
+    color.rgb *= hdrBoost;
 
     // Final alpha
     float finalAlpha = (shape + coreGlow * 0.5) * lifeFactor;

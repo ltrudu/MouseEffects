@@ -87,7 +87,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         public float TrailLength;
         public float NeonIntensity;
         public float AnimSpeed;
-        public float Padding1;
+        public float HdrMultiplier;
         public float Padding2;
         public float Padding3;
         public float Padding4;
@@ -908,7 +908,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             EnableTrails = _enableTrails ? 1f : 0f,
             TrailLength = _trailLength,
             NeonIntensity = _neonIntensity,
-            AnimSpeed = _animSpeed
+            AnimSpeed = _animSpeed,
+            HdrMultiplier = context.HdrPeakBrightness
         };
         context.UpdateBuffer(_frameDataBuffer!, frameData);
 
