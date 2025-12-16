@@ -174,7 +174,7 @@ public sealed class ParticleTrailEffect : EffectBase
         {
             ViewportSize = context.ViewportSize,
             Time = 0,
-            Padding = 0
+            HdrMultiplier = context.HdrPeakBrightness
         };
         context.UpdateBuffer(_frameDataBuffer!, frameData);
 
@@ -257,12 +257,13 @@ public sealed class ParticleTrailEffect : EffectBase
         public float Padding;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Sequential, Size = 32)]
     private struct FrameData
     {
         public Vector2 ViewportSize;
         public float Time;
-        public float Padding;
+        public float HdrMultiplier;
+        public Vector4 Padding;
     }
 
     #endregion

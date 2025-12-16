@@ -7,12 +7,12 @@ cbuffer FrameData : register(b0)
     float GlowIntensity;
     float EnableTrails;
     float TrailLength;
+    float HdrMultiplier;
     float Padding1;
     float Padding2;
     float Padding3;
     float Padding4;
     float Padding5;
-    float Padding6;
 };
 
 struct ParticleInstance
@@ -138,6 +138,10 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // White hot core
     float coreWhite = (1.0 - smoothstep(0.0, 0.3, dist)) * 0.3 * input.LifeFactor;
     color.rgb += float3(coreWhite, coreWhite, coreWhite);
+
+    // HDR boost - amplify bright areas for HDR displays
+    float hdrBoost = 1.0 + glow * HdrMultiplier * 2.0;
+    color.rgb *= hdrBoost;
 
     color.a = finalAlpha;
 

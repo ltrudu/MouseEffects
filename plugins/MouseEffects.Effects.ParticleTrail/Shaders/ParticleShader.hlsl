@@ -4,7 +4,8 @@ cbuffer FrameData : register(b0)
 {
     float2 ViewportSize;
     float Time;
-    float Padding;
+    float HdrMultiplier;
+    float4 Padding;
 };
 
 struct ParticleInstance
@@ -81,8 +82,15 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Soft circle falloff
     float alpha = 1.0 - smoothstep(0.5, 1.0, dist);
 
+    // Glow effect for HDR
+    float glow = exp(-dist * dist * 2.0);
+
     float4 color = input.Color;
     color.a *= alpha;
+
+    // HDR boost - amplify bright core areas
+    float hdrBoost = 1.0 + glow * HdrMultiplier * 1.5;
+    color.rgb *= hdrBoost;
 
     return color;
 }

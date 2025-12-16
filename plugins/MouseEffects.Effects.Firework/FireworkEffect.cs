@@ -55,12 +55,12 @@ public sealed class FireworkEffect : EffectBase
         public float GlowIntensity;
         public float EnableTrails;
         public float TrailLength;
+        public float HdrMultiplier;
         public float Padding1;
         public float Padding2;
         public float Padding3;
         public float Padding4;
         public float Padding5;
-        public float Padding6;
     }
 
     private const int MaxParticlesLimit = 15000;
@@ -570,7 +570,8 @@ public sealed class FireworkEffect : EffectBase
             Time = totalTime,
             GlowIntensity = _glowIntensity,
             EnableTrails = _enableTrails ? 1f : 0f,
-            TrailLength = _trailLength
+            TrailLength = _trailLength,
+            HdrMultiplier = context.HdrPeakBrightness
         };
         context.UpdateBuffer(_frameDataBuffer!, frameData);
 
