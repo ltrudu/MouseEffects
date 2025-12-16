@@ -317,6 +317,15 @@ static partial class Program
     }
 
     /// <summary>
+    /// Enforce topmost state for the FPS overlay.
+    /// Called periodically along with main overlay enforcement.
+    /// </summary>
+    public static void EnforceFpsOverlayTopmost()
+    {
+        _fpsOverlay?.EnforceTopmost();
+    }
+
+    /// <summary>
     /// Enable capture FPS tracking if any consumer needs it.
     /// </summary>
     private static void UpdateCaptureFpsTracking()

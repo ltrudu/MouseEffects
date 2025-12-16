@@ -171,6 +171,7 @@ public sealed class GameLoop : IDisposable
         if (currentTime - _lastTopmostEnforceTime >= TopmostEnforceInterval)
         {
             _overlayManager.EnforceTopmost();
+            Program.EnforceFpsOverlayTopmost();
             _lastTopmostEnforceTime = currentTime;
         }
 

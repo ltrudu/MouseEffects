@@ -18,9 +18,19 @@ public partial class FpsOverlayWindow : Window
     // Window display affinity for excluding from screen capture
     private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
 
+    // For topmost enforcement
+    private const int HWND_TOPMOST = -1;
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_NOACTIVATE = 0x0010;
+
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetWindowDisplayAffinity(nint hWnd, uint dwAffinity);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
     // Use GetWindowLongPtrW on 64-bit, GetWindowLongW on 32-bit
 #if TARGET_64BIT
@@ -41,6 +51,7 @@ public partial class FpsOverlayWindow : Window
 #endif
 
     private readonly DispatcherTimer _updateTimer;
+    private nint _hwnd;
 
     public FpsOverlayWindow()
     {
@@ -64,13 +75,26 @@ public partial class FpsOverlayWindow : Window
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         // Make window click-through
-        var hwnd = new WindowInteropHelper(this).Handle;
-        var extendedStyle = (int)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-        SetWindowLongPtr(hwnd, GWL_EXSTYLE, (nint)(extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW));
+        _hwnd = new WindowInteropHelper(this).Handle;
+        var extendedStyle = (int)GetWindowLongPtr(_hwnd, GWL_EXSTYLE);
+        SetWindowLongPtr(_hwnd, GWL_EXSTYLE, (nint)(extendedStyle | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW));
 
         // Exclude this window from screen capture (DXGI Desktop Duplication)
         // This prevents the FPS overlay from being affected by screen-capture effects
-        SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+        SetWindowDisplayAffinity(_hwnd, WDA_EXCLUDEFROMCAPTURE);
+
+        // Ensure topmost
+        EnforceTopmost();
+    }
+
+    /// <summary>
+    /// Force the window to be topmost using Win32 API.
+    /// Called periodically to ensure it stays on top.
+    /// </summary>
+    public void EnforceTopmost()
+    {
+        if (_hwnd == nint.Zero) return;
+        SetWindowPos(_hwnd, (nint)HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 
     private void UpdateTimer_Tick(object? sender, EventArgs e)
