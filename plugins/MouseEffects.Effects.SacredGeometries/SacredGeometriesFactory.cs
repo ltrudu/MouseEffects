@@ -91,6 +91,65 @@ public sealed class SacredGeometriesFactory : IEffectFactory
         config.Set("sg_morph_intensity", 0.5f);
         config.Set("sg_morph_betweenPatterns", true);
 
+        // ==========================================================
+        // ===== SHAPES EFFECT SETTINGS (sh_ prefix) =====
+        // ==========================================================
+
+        // ===== Shape Settings (sh_shape_ prefix) =====
+        config.Set("sh_shape_selected", (int)ShapeType.FlowerOfLife);
+        config.Set("sh_shape_randomEnabled", true);
+        config.Set("sh_shape_cycleEnabled", false);
+        config.Set("sh_shape_cycleSpeed", 3.0f);
+
+        // ===== Radius Settings (sh_rad_ prefix) =====
+        config.Set("sh_rad_fixed", 120f);
+        config.Set("sh_rad_pulseEnabled", true);
+        config.Set("sh_rad_pulseAmount", 0.15f);
+        config.Set("sh_rad_pulseSpeed", 1.0f);
+
+        // ===== Rotation Settings (sh_rot_ prefix) =====
+        config.Set("sh_rot_speed", 20f);  // degrees per second
+        config.Set("sh_rot_direction", 2);  // 0=CW, 1=CCW, 2=random
+
+        // ===== Color Settings (sh_col_ prefix) =====
+        config.Set("sh_col_rainbowMode", true);
+        config.Set("sh_col_rainbowSpeed", 0.3f);
+        config.Set("sh_col_independentRainbow", true);
+        config.Set("sh_col_primary", new Vector4(0.6f, 0.4f, 1f, 1f));  // Purple
+        config.Set("sh_col_secondary", new Vector4(0.3f, 0.9f, 1f, 1f));  // Cyan
+
+        // ===== Glow Settings (sh_glow_ prefix) =====
+        config.Set("sh_glow_intensity", 1.5f);
+        config.Set("sh_glow_lineThickness", 0.015f);
+        config.Set("sh_glow_twinkleIntensity", 0.2f);
+
+        // ===== Animation Settings (sh_anim_ prefix) =====
+        config.Set("sh_anim_speed", 1.0f);
+
+        // ===== Appearance Settings (sh_app_ prefix) =====
+        config.Set("sh_app_mode", (int)AppearanceMode.Both);
+
+        // ===== Spawn Settings (sh_spawn_ prefix) =====
+        config.Set("sh_spawn_maxCount", 3);
+
+        // ===== Trigger Settings (sh_trig_ prefix) =====
+        config.Set("sh_trig_mouseMoveEnabled", true);
+        config.Set("sh_trig_moveDistance", 100f);
+        config.Set("sh_trig_leftClickEnabled", true);
+        config.Set("sh_trig_rightClickEnabled", false);
+
+        // ===== Lifetime Settings (sh_life_ prefix) =====
+        config.Set("sh_life_duration", 4.0f);
+
+        // ===== Performance Settings (sh_perf_ prefix) =====
+        config.Set("sh_perf_maxActive", 20);
+
+        // ===== Morph Settings (sh_morph_ prefix) =====
+        config.Set("sh_morph_enabled", true);
+        config.Set("sh_morph_speed", 0.5f);
+        config.Set("sh_morph_intensity", 0.7f);
+        config.Set("sh_morph_betweenShapes", true);
+
         return config;
     }
 

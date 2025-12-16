@@ -52,6 +52,7 @@
 
             <ComboBox x:Name="EffectTypeCombo" SelectionChanged="EffectTypeCombo_Changed" Margin="0,0,0,8">
                 <ComboBoxItem Content="Mandala" IsSelected="True" />
+                <ComboBoxItem Content="Shapes" />
             </ComboBox>
 
             <Separator Margin="0,4,0,8" />

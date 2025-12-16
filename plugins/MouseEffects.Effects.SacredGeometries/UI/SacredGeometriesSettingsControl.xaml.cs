@@ -13,6 +13,7 @@ public partial class SacredGeometriesSettingsControl : System.Windows.Controls.U
 
     // Lazy-loaded effect settings controls
     private MandalaSettings? _mandalaSettings;
+    private ShapesSettings? _shapesSettings;
 
     public SacredGeometriesSettingsControl(IEffect effect)
     {
@@ -62,6 +63,15 @@ public partial class SacredGeometriesSettingsControl : System.Windows.Controls.U
                 EffectSettingsHost.Content = _mandalaSettings;
                 _mandalaSettings.Initialize(_effect);
                 break;
+
+            case 1: // Shapes
+                if (_shapesSettings == null)
+                {
+                    _shapesSettings = new ShapesSettings();
+                }
+                EffectSettingsHost.Content = _shapesSettings;
+                _shapesSettings.Initialize(_effect);
+                break;
         }
     }
 
@@ -82,8 +92,11 @@ public partial class SacredGeometriesSettingsControl : System.Windows.Controls.U
     {
         if (_effect == null || _isLoading) return;
 
-        // Save the selected effect type to config
-        _effect.Configuration.Set("selectedEffectType", EffectTypeCombo.SelectedIndex);
+        int effectType = EffectTypeCombo.SelectedIndex;
+
+        // Save the selected effect type to config and effect property
+        _effect.Configuration.Set("selectedEffectType", effectType);
+        _effect.SelectedEffectType = effectType;
 
         // Load the appropriate settings control
         LoadEffectSettings();
