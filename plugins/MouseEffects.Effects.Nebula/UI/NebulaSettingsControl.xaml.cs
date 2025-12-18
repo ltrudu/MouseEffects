@@ -26,6 +26,9 @@ public partial class NebulaSettingsControl : UserControl
         _isLoading = true;
         try
         {
+            // Alpha
+            AlphaSlider.Value = _effect.Alpha;
+
             // Cloud properties
             CloudDensitySlider.Value = _effect.CloudDensity;
             LayerCountSlider.Value = _effect.LayerCount;
@@ -38,6 +41,7 @@ public partial class NebulaSettingsControl : UserControl
 
             // Visual effects
             GlowIntensitySlider.Value = _effect.GlowIntensity;
+            GlowAnimationSpeedSlider.Value = _effect.GlowAnimationSpeed;
             StarDensitySlider.Value = _effect.StarDensity;
             ColorVariationSlider.Value = _effect.ColorVariation;
 
@@ -48,6 +52,13 @@ public partial class NebulaSettingsControl : UserControl
         {
             _isLoading = false;
         }
+    }
+
+    private void AlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.Alpha = (float)AlphaSlider.Value;
+        _effect.Configuration.Set("nb_alpha", _effect.Alpha);
     }
 
     private void CloudDensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -97,6 +108,13 @@ public partial class NebulaSettingsControl : UserControl
         if (_isLoading) return;
         _effect.GlowIntensity = (float)GlowIntensitySlider.Value;
         _effect.Configuration.Set("nb_glowIntensity", _effect.GlowIntensity);
+    }
+
+    private void GlowAnimationSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.GlowAnimationSpeed = (float)GlowAnimationSpeedSlider.Value;
+        _effect.Configuration.Set("nb_glowAnimationSpeed", _effect.GlowAnimationSpeed);
     }
 
     private void StarDensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

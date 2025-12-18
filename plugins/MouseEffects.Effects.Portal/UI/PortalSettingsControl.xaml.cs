@@ -48,7 +48,6 @@ public partial class PortalSettingsControl : System.Windows.Controls.UserControl
         RimParticlesCheckBox.IsChecked = _effect.RimParticlesEnabled;
         ParticleSpeedSlider.Value = _effect.ParticleSpeed;
         ColorThemeCombo.SelectedIndex = _effect.ColorTheme;
-        HdrMultiplierSlider.Value = _effect.HdrMultiplier;
     }
 
     private void RadiusSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -126,12 +125,5 @@ public partial class PortalSettingsControl : System.Windows.Controls.UserControl
         if (_effect == null || _isLoading) return;
         _effect.ColorTheme = ColorThemeCombo.SelectedIndex;
         _effect.Configuration.Set("colorTheme", _effect.ColorTheme);
-    }
-
-    private void HdrMultiplierSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.HdrMultiplier = (float)HdrMultiplierSlider.Value;
-        _effect.Configuration.Set("hdrMultiplier", _effect.HdrMultiplier);
     }
 }

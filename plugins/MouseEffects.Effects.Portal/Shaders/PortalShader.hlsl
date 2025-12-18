@@ -148,12 +148,12 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float layer2 = sin(spiralAngle * float(SpiralArms) * 1.5 - Time * RotationSpeed * 1.5) * 0.5 + 0.5;
     float layer3 = sin(spiralAngle * float(SpiralArms) * 0.7 + Time * RotationSpeed * 0.8) * 0.5 + 0.5;
 
-    // Combine layers with depth falloff
-    float spiralPattern = (layer1 * 0.5 + layer2 * 0.3 + layer3 * 0.2);
+    // Combine layers with depth falloff - softer combination
+    float spiralPattern = (layer1 * 0.4 + layer2 * 0.35 + layer3 * 0.25);
 
-    // Add radial rings for more structure
-    float rings = sin(normDist * 20.0 - Time * 3.0) * 0.5 + 0.5;
-    spiralPattern = lerp(spiralPattern, rings, 0.2);
+    // Soft radial variation instead of harsh rings
+    float radialWave = sin(normDist * 8.0 - Time * 1.5) * 0.15;
+    spiralPattern = spiralPattern * (1.0 + radialWave);
 
     // ============================================
     // Depth Illusion - Center recedes
@@ -208,13 +208,14 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Glow Layers
     // ============================================
 
-    // Main portal glow - stronger at edges for rim effect
-    float edgeFactor = 1.0 - abs(normDist * 2.0 - 1.0); // Peaks at 0.5
-    float coreGlow = exp(-dist * dist / (PortalRadius * PortalRadius * 0.5)) * spiralPattern;
-    float rimGlow = exp(-pow(1.0 - normDist, 2.0) * 10.0) * 2.0;
+    // Main portal glow - concentrated in spiral arms
+    float coreGlow = exp(-dist * dist / (PortalRadius * PortalRadius * 0.8)) * spiralPattern;
 
-    // Combine glows
-    float totalGlow = (coreGlow + rimGlow * 0.8 + particles * 2.0) * GlowIntensity;
+    // Soft rim glow - reduced intensity
+    float rimGlow = exp(-pow(1.0 - normDist, 2.0) * 8.0);
+
+    // Combine glows - clamped to prevent blow-out
+    float totalGlow = saturate((coreGlow * 0.7 + rimGlow * 0.4 + particles) * GlowIntensity);
 
     // ============================================
     // Color Application
@@ -222,16 +223,15 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     // Get colors based on position
     float3 baseColor = GetPortalColor(spiralPattern);
-    float3 edgeColor = GetPortalColor(normDist);
 
-    // Mix colors - outer rim gets rim color
-    float3 finalColor = lerp(baseColor, RimColor.rgb, normDist * 0.5);
+    // Mix colors - outer rim gets rim color tint
+    float3 finalColor = lerp(baseColor, RimColor.rgb, normDist * 0.3);
 
     // Apply depth darkening
     finalColor *= centerDarkness;
 
-    // Apply glow intensity
-    finalColor *= totalGlow;
+    // Apply glow as brightness modulation - keeps colors saturated
+    finalColor *= totalGlow * 1.5;
 
     // ============================================
     // Alpha Calculation
@@ -239,17 +239,17 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     // Smooth falloff at edge
     float edgeFalloff = smoothstep(1.2, 0.8, normDist);
-    float alpha = saturate(totalGlow * edgeFalloff);
 
-    // Boost inner area alpha
-    alpha = lerp(alpha, min(alpha * 1.5, 1.0), 1.0 - normDist);
+    // Center should be transparent (void), only rim and spiral should be visible
+    float centerHole = smoothstep(0.0, 0.4, normDist); // Transparent in center
+    float alpha = saturate(totalGlow * edgeFalloff * centerHole * 0.8);
 
     // ============================================
     // HDR Boost
     // ============================================
 
-    // Boost bright areas for HDR displays
-    float hdrBoost = 1.0 + (coreGlow + rimGlow) * HdrMultiplier;
+    // Gentle HDR boost only for HDR displays - clamped to prevent blow-out
+    float hdrBoost = 1.0 + saturate(coreGlow * 0.5) * (HdrMultiplier - 1.0);
     finalColor *= hdrBoost;
 
     // ============================================

@@ -47,7 +47,10 @@ public sealed class NebulaEffect : EffectBase
         public Vector4 PaletteColor1;     // 16 bytes = 128 (computed from palette)
         public Vector4 PaletteColor2;     // 16 bytes = 144
         public Vector4 PaletteColor3;     // 16 bytes = 160
-        public Vector4 Padding1;          // 16 bytes = 176
+        public float Alpha;               // 4 bytes
+        public float GlowAnimationSpeed;  // 4 bytes
+        public float Padding1b;           // 4 bytes
+        public float Padding1c;           // 4 bytes = 176
         public Vector4 Padding2;          // 16 bytes = 192
     }
 
@@ -60,10 +63,12 @@ public sealed class NebulaEffect : EffectBase
     private Vector2 _currentMousePosition;
 
     // Configuration fields (nb_ prefix for Nebula)
+    private float _alpha = 0.7f;
     private float _cloudDensity = 0.7f;
     private float _swirlSpeed = 0.5f;
     private int _layerCount = 4;
     private float _glowIntensity = 1.5f;
+    private float _glowAnimationSpeed = 0f;
     private float _starDensity = 0.3f;
     private float _effectRadius = 400f;
     private float _noiseScale = 1.2f;
@@ -75,10 +80,12 @@ public sealed class NebulaEffect : EffectBase
     private Vector4 _customColor3 = new(1f, 0.41f, 0.71f, 1f);    // Pink
 
     // Public properties for UI binding
+    public float Alpha { get => _alpha; set => _alpha = value; }
     public float CloudDensity { get => _cloudDensity; set => _cloudDensity = value; }
     public float SwirlSpeed { get => _swirlSpeed; set => _swirlSpeed = value; }
     public int LayerCount { get => _layerCount; set => _layerCount = value; }
     public float GlowIntensity { get => _glowIntensity; set => _glowIntensity = value; }
+    public float GlowAnimationSpeed { get => _glowAnimationSpeed; set => _glowAnimationSpeed = value; }
     public float StarDensity { get => _starDensity; set => _starDensity = value; }
     public float EffectRadius { get => _effectRadius; set => _effectRadius = value; }
     public float NoiseScale { get => _noiseScale; set => _noiseScale = value; }
@@ -107,6 +114,8 @@ public sealed class NebulaEffect : EffectBase
 
     protected override void OnConfigurationChanged()
     {
+        if (Configuration.TryGet("nb_alpha", out float alpha))
+            _alpha = alpha;
         if (Configuration.TryGet("nb_cloudDensity", out float density))
             _cloudDensity = density;
         if (Configuration.TryGet("nb_swirlSpeed", out float swirl))
@@ -115,6 +124,8 @@ public sealed class NebulaEffect : EffectBase
             _layerCount = layers;
         if (Configuration.TryGet("nb_glowIntensity", out float glow))
             _glowIntensity = glow;
+        if (Configuration.TryGet("nb_glowAnimationSpeed", out float glowSpeed))
+            _glowAnimationSpeed = glowSpeed;
         if (Configuration.TryGet("nb_starDensity", out float stars))
             _starDensity = stars;
         if (Configuration.TryGet("nb_effectRadius", out float radius))
@@ -171,7 +182,10 @@ public sealed class NebulaEffect : EffectBase
             PaletteColor1 = color1,
             PaletteColor2 = color2,
             PaletteColor3 = color3,
-            Padding1 = Vector4.Zero,
+            Alpha = _alpha,
+            GlowAnimationSpeed = _glowAnimationSpeed,
+            Padding1b = 0f,
+            Padding1c = 0f,
             Padding2 = Vector4.Zero
         };
         context.UpdateBuffer(_constantBuffer!, constants);

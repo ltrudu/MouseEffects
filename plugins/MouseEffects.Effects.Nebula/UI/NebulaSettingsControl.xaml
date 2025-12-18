@@ -1,15 +1,31 @@
 <UserControl x:Class="MouseEffects.Effects.Nebula.UI.NebulaSettingsControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:ui="http://schemas.modernwpf.com/2019"
-             Width="400">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10">
-            <!-- Header -->
-            <TextBlock Text="Nebula Settings"
-                      FontSize="18"
-                      FontWeight="SemiBold"
-                      Margin="0,0,0,15"/>
+             xmlns:ui="http://schemas.modernwpf.com/2019">
+    <StackPanel Margin="0">
+            <!-- Alpha Setting -->
+            <ui:SimpleStackPanel Spacing="8" Margin="0,0,0,12">
+                <TextBlock Text="Alpha"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="AlphaSlider"
+                           Grid.Column="0"
+                           Minimum="0.1"
+                           Maximum="1.0"
+                           Value="0.7"
+                           TickFrequency="0.05"
+                           IsSnapToTickEnabled="True"
+                           ValueChanged="AlphaSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                              Text="{Binding ElementName=AlphaSlider, Path=Value, StringFormat=F2}"
+                              Width="40"
+                              TextAlignment="Right"
+                              Margin="10,0,0,0"/>
+                </Grid>
+            </ui:SimpleStackPanel>
 
             <!-- Cloud Properties -->
             <ui:SimpleStackPanel Spacing="12">
@@ -182,6 +198,27 @@
                                   Margin="10,0,0,0"/>
                     </Grid>
 
+                    <TextBlock Text="Glow Animation Speed"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="GlowAnimationSpeedSlider"
+                               Grid.Column="0"
+                               Minimum="0"
+                               Maximum="10"
+                               Value="0"
+                               TickFrequency="0.5"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="GlowAnimationSpeedSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=GlowAnimationSpeedSlider, Path=Value, StringFormat=F1}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
                     <TextBlock Text="Star Density"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -256,6 +293,5 @@
                     </StackPanel>
                 </ui:SimpleStackPanel>
             </ui:SimpleStackPanel>
-        </StackPanel>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>

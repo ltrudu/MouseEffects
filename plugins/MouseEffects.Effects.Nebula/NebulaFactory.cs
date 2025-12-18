@@ -24,11 +24,15 @@ public sealed class NebulaFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
+        // Global settings
+        config.Set("nb_alpha", 0.7f);
+
         // Nebula appearance (nb_ prefix for Nebula)
         config.Set("nb_cloudDensity", 0.7f);
         config.Set("nb_swirlSpeed", 0.5f);
         config.Set("nb_layerCount", 4);
         config.Set("nb_glowIntensity", 1.5f);
+        config.Set("nb_glowAnimationSpeed", 0f);
         config.Set("nb_starDensity", 0.3f);
         config.Set("nb_effectRadius", 400f);
         config.Set("nb_noiseScale", 1.2f);
@@ -52,6 +56,18 @@ public sealed class NebulaFactory : IEffectFactory
         {
             Parameters =
             [
+                // Global Settings
+                new FloatParameter
+                {
+                    Key = "nb_alpha",
+                    DisplayName = "Alpha",
+                    Description = "Overall transparency of the nebula effect",
+                    MinValue = 0.1f,
+                    MaxValue = 1.0f,
+                    DefaultValue = 0.7f,
+                    Step = 0.05f
+                },
+
                 // Cloud Properties
                 new FloatParameter
                 {
@@ -125,6 +141,16 @@ public sealed class NebulaFactory : IEffectFactory
                     MaxValue = 3f,
                     DefaultValue = 1.5f,
                     Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "nb_glowAnimationSpeed",
+                    DisplayName = "Glow Animation Speed",
+                    Description = "Speed of glow pulsing animation (0 = static)",
+                    MinValue = 0f,
+                    MaxValue = 10f,
+                    DefaultValue = 0f,
+                    Step = 0.5f
                 },
                 new FloatParameter
                 {

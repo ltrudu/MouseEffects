@@ -32,7 +32,10 @@ cbuffer Constants : register(b0)
     float4 PaletteColor2;
     float4 PaletteColor3;
 
-    float4 Padding1;
+    float Alpha;
+    float GlowAnimationSpeed;
+    float Padding1b;
+    float Padding1c;
     float4 Padding2;
 }
 
@@ -297,7 +300,14 @@ float4 PSMain(VSOutput input) : SV_TARGET
     }
 
     // Add glow effect around dense areas
-    float glow = smoothstep(0.0, 0.5, totalDensity) * GlowIntensity * radialFalloff;
+    float glowValue = GlowIntensity;
+    if (GlowAnimationSpeed > 0.0)
+    {
+        // Animate glow intensity with a pulsing effect
+        float pulse = sin(Time * GlowAnimationSpeed) * 0.5 + 0.5;
+        glowValue *= (0.5 + pulse); // Varies between 50% and 150% of base intensity
+    }
+    float glow = smoothstep(0.0, 0.5, totalDensity) * glowValue * radialFalloff;
     finalColor.rgb *= (1.0 + glow * 0.5);
 
     // Add twinkling stars
@@ -329,6 +339,9 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     // Soft edge falloff
     finalColor.a *= smoothstep(1.0, 0.8, dist);
+
+    // Apply global alpha
+    finalColor *= Alpha;
 
     // Discard fully transparent pixels
     if (finalColor.a < 0.01)

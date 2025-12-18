@@ -39,7 +39,6 @@ public sealed class PortalEffect : EffectBase
     private Vector4 _rimColor = new(0.8f, 0.9f, 1f, 1f);
     private float _innerDarkness = 0.2f;
     private float _distortionStrength = 1.0f;
-    private float _hdrMultiplier = 0.5f;
     private float _particleSpeed = 1.5f;
     private int _colorTheme = 0; // 0=Blue, 1=Purple, 2=Orange, 3=Rainbow
 
@@ -144,12 +143,6 @@ public sealed class PortalEffect : EffectBase
         set => _distortionStrength = value;
     }
 
-    public float HdrMultiplier
-    {
-        get => _hdrMultiplier;
-        set => _hdrMultiplier = value;
-    }
-
     public float ParticleSpeed
     {
         get => _particleSpeed;
@@ -189,20 +182,32 @@ public sealed class PortalEffect : EffectBase
 
     private void LoadConfiguration()
     {
-        Configuration.TryGet("portalRadius", out _portalRadius);
-        Configuration.TryGet("rotationSpeed", out _rotationSpeed);
-        Configuration.TryGet("spiralTightness", out _spiralTightness);
-        Configuration.TryGet("spiralArms", out _spiralArms);
-        Configuration.TryGet("glowIntensity", out _glowIntensity);
-        Configuration.TryGet("depthStrength", out _depthStrength);
-        Configuration.TryGet("rimParticlesEnabled", out _rimParticlesEnabled);
-        Configuration.TryGet("portalColor", out _portalColor);
-        Configuration.TryGet("rimColor", out _rimColor);
-        Configuration.TryGet("innerDarkness", out _innerDarkness);
-        Configuration.TryGet("distortionStrength", out _distortionStrength);
-        Configuration.TryGet("hdrMultiplier", out _hdrMultiplier);
-        Configuration.TryGet("particleSpeed", out _particleSpeed);
-        Configuration.TryGet("colorTheme", out _colorTheme);
+        if (Configuration.TryGet("portalRadius", out float portalRadius))
+            _portalRadius = portalRadius;
+        if (Configuration.TryGet("rotationSpeed", out float rotationSpeed))
+            _rotationSpeed = rotationSpeed;
+        if (Configuration.TryGet("spiralTightness", out float spiralTightness))
+            _spiralTightness = spiralTightness;
+        if (Configuration.TryGet("spiralArms", out int spiralArms))
+            _spiralArms = spiralArms;
+        if (Configuration.TryGet("glowIntensity", out float glowIntensity))
+            _glowIntensity = glowIntensity;
+        if (Configuration.TryGet("depthStrength", out float depthStrength))
+            _depthStrength = depthStrength;
+        if (Configuration.TryGet("rimParticlesEnabled", out bool rimParticlesEnabled))
+            _rimParticlesEnabled = rimParticlesEnabled;
+        if (Configuration.TryGet("portalColor", out Vector4 portalColor))
+            _portalColor = portalColor;
+        if (Configuration.TryGet("rimColor", out Vector4 rimColor))
+            _rimColor = rimColor;
+        if (Configuration.TryGet("innerDarkness", out float innerDarkness))
+            _innerDarkness = innerDarkness;
+        if (Configuration.TryGet("distortionStrength", out float distortionStrength))
+            _distortionStrength = distortionStrength;
+        if (Configuration.TryGet("particleSpeed", out float particleSpeed))
+            _particleSpeed = particleSpeed;
+        if (Configuration.TryGet("colorTheme", out int colorTheme))
+            _colorTheme = colorTheme;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -233,7 +238,7 @@ public sealed class PortalEffect : EffectBase
             RimColor = _rimColor,
             InnerDarkness = _innerDarkness,
             DistortionStrength = _distortionStrength,
-            HdrMultiplier = _hdrMultiplier,
+            HdrMultiplier = context.HdrPeakBrightness,
             ParticleSpeed = _particleSpeed,
             ColorTheme = _colorTheme,
             Padding1 = 0,
@@ -243,8 +248,8 @@ public sealed class PortalEffect : EffectBase
 
         context.UpdateBuffer(_constantBuffer, constants);
 
-        // Set pipeline state
-        context.SetBlendState(BlendMode.Alpha);
+        // Set pipeline state - Additive for glowing effect
+        context.SetBlendState(BlendMode.Additive);
         context.SetVertexShader(_vertexShader);
         context.SetPixelShader(_pixelShader);
         context.SetConstantBuffer(ShaderStage.Pixel, 0, _constantBuffer);

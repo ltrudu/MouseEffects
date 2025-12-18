@@ -47,9 +47,6 @@ public sealed class PortalFactory : IEffectFactory
         config.Set("rimColor", new Vector4(0.8f, 0.9f, 1f, 1f));
         config.Set("colorTheme", 0); // 0=Blue, 1=Purple, 2=Orange, 3=Rainbow
 
-        // HDR
-        config.Set("hdrMultiplier", 0.5f);
-
         return config;
     }
 
@@ -189,18 +186,6 @@ public sealed class PortalFactory : IEffectFactory
                     Description = "Color of the outer rim glow",
                     DefaultValue = new Vector4(0.8f, 0.9f, 1f, 1f),
                     SupportsAlpha = false
-                },
-
-                // HDR
-                new FloatParameter
-                {
-                    Key = "hdrMultiplier",
-                    DisplayName = "HDR Brightness",
-                    Description = "Extra brightness for HDR displays",
-                    MinValue = 0f,
-                    MaxValue = 2f,
-                    DefaultValue = 0.5f,
-                    Step = 0.1f
                 }
             ]
         };

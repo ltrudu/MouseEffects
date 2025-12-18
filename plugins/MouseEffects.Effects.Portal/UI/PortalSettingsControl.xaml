@@ -177,22 +177,6 @@
                 <ComboBoxItem Content="Rainbow Portal" />
             </ComboBox>
 
-            <!-- HDR -->
-            <TextBlock Text="HDR" Style="{StaticResource SectionStyle}" />
-
-            <TextBlock Text="HDR Brightness" Style="{StaticResource LabelStyle}" />
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Slider x:Name="HdrMultiplierSlider" Grid.Column="0"
-                        Minimum="0" Maximum="2" Value="0.5"
-                        ValueChanged="HdrMultiplierSlider_Changed" />
-                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=HdrMultiplierSlider, StringFormat={}{0:F1}}"
-                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
-            </Grid>
-
         </StackPanel>
     </StackPanel>
 </UserControl>
