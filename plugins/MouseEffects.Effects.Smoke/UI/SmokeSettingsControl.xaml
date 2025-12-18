@@ -1,0 +1,355 @@
+<UserControl x:Class="MouseEffects.Effects.Smoke.UI.SmokeSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.modernwpf.com/2019"
+             Width="400">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10">
+            <!-- Header -->
+            <TextBlock Text="Smoke Settings"
+                      FontSize="18"
+                      FontWeight="SemiBold"
+                      Margin="0,0,0,15"/>
+
+            <!-- Particle Settings -->
+            <ui:SimpleStackPanel Spacing="12">
+                <TextBlock Text="Particle Settings"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Margin="0,10,0,5"/>
+
+                <ui:SimpleStackPanel Spacing="8">
+                    <TextBlock Text="Particle Count"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="ParticleCountSlider"
+                               Grid.Column="0"
+                               Minimum="20"
+                               Maximum="200"
+                               Value="100"
+                               TickFrequency="10"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="ParticleCountSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=ParticleCountSlider, Path=Value, StringFormat=N0}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Particle Size"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="ParticleSizeSlider"
+                               Grid.Column="0"
+                               Minimum="5"
+                               Maximum="50"
+                               Value="20"
+                               TickFrequency="1"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="ParticleSizeSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=ParticleSizeSlider, Path=Value, StringFormat=N0}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Lifetime (seconds)"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="LifetimeSlider"
+                               Grid.Column="0"
+                               Minimum="1"
+                               Maximum="8"
+                               Value="3"
+                               TickFrequency="0.5"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="LifetimeSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=LifetimeSlider, Path=Value, StringFormat=F1}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Spawn Rate"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="SpawnRateSlider"
+                               Grid.Column="0"
+                               Minimum="0.01"
+                               Maximum="0.2"
+                               Value="0.05"
+                               TickFrequency="0.01"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="SpawnRateSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=SpawnRateSlider, Path=Value, StringFormat=F2}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+                </ui:SimpleStackPanel>
+
+                <!-- Motion Settings -->
+                <TextBlock Text="Motion Settings"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Margin="0,20,0,5"/>
+
+                <ui:SimpleStackPanel Spacing="8">
+                    <TextBlock Text="Rise Speed"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="RiseSpeedSlider"
+                               Grid.Column="0"
+                               Minimum="10"
+                               Maximum="150"
+                               Value="50"
+                               TickFrequency="5"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="RiseSpeedSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=RiseSpeedSlider, Path=Value, StringFormat=N0}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Expansion Rate"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="ExpansionRateSlider"
+                               Grid.Column="0"
+                               Minimum="5"
+                               Maximum="50"
+                               Value="15"
+                               TickFrequency="1"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="ExpansionRateSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=ExpansionRateSlider, Path=Value, StringFormat=N0}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Turbulence"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="TurbulenceSlider"
+                               Grid.Column="0"
+                               Minimum="0"
+                               Maximum="100"
+                               Value="30"
+                               TickFrequency="5"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="TurbulenceSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=TurbulenceSlider, Path=Value, StringFormat=N0}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+                </ui:SimpleStackPanel>
+
+                <!-- Visual Settings -->
+                <TextBlock Text="Visual Settings"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Margin="0,20,0,5"/>
+
+                <ui:SimpleStackPanel Spacing="8">
+                    <TextBlock Text="Opacity"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="OpacitySlider"
+                               Grid.Column="0"
+                               Minimum="0.1"
+                               Maximum="1"
+                               Value="0.6"
+                               TickFrequency="0.1"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="OpacitySlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=OpacitySlider, Path=Value, StringFormat=F1}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Softness"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="SoftnessSlider"
+                               Grid.Column="0"
+                               Minimum="0.1"
+                               Maximum="1"
+                               Value="0.8"
+                               TickFrequency="0.1"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="SoftnessSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=SoftnessSlider, Path=Value, StringFormat=F1}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+                </ui:SimpleStackPanel>
+
+                <!-- Color Settings -->
+                <TextBlock Text="Color Settings"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Margin="0,20,0,5"/>
+
+                <ui:SimpleStackPanel Spacing="8">
+                    <TextBlock Text="Smoke Type"/>
+                    <ComboBox x:Name="ColorModeCombo" SelectionChanged="ColorModeCombo_SelectionChanged">
+                        <ComboBoxItem Content="Gray Smoke" IsSelected="True"/>
+                        <ComboBoxItem Content="White Smoke"/>
+                        <ComboBoxItem Content="Black Smoke"/>
+                        <ComboBoxItem Content="Colored Smoke"/>
+                    </ComboBox>
+
+                    <StackPanel x:Name="ColoredSmokePanel" Visibility="Collapsed">
+                        <TextBlock Text="Smoke Color Preset" Margin="0,5,0,5"/>
+                        <ComboBox x:Name="ColorPresetCombo" SelectionChanged="ColorPresetCombo_SelectionChanged">
+                            <ComboBoxItem Content="Blue" IsSelected="True"/>
+                            <ComboBoxItem Content="Purple"/>
+                            <ComboBoxItem Content="Green"/>
+                            <ComboBoxItem Content="Orange"/>
+                            <ComboBoxItem Content="Pink"/>
+                            <ComboBoxItem Content="Cyan"/>
+                        </ComboBox>
+                    </StackPanel>
+                </ui:SimpleStackPanel>
+
+                <!-- Trigger Settings -->
+                <TextBlock Text="Trigger Settings"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Margin="0,20,0,5"/>
+
+                <ui:SimpleStackPanel Spacing="8">
+                    <CheckBox x:Name="MouseMoveCheckBox"
+                             Content="Mouse Move Trigger"
+                             IsChecked="True"
+                             Checked="MouseMoveCheckBox_Changed"
+                             Unchecked="MouseMoveCheckBox_Changed"/>
+
+                    <StackPanel x:Name="MouseMovePanel">
+                        <TextBlock Text="Move Distance Threshold"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider x:Name="MoveDistanceSlider"
+                                   Grid.Column="0"
+                                   Minimum="5"
+                                   Maximum="50"
+                                   Value="10"
+                                   TickFrequency="5"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="MoveDistanceSlider_ValueChanged"/>
+                            <TextBlock Grid.Column="1"
+                                      Text="{Binding ElementName=MoveDistanceSlider, Path=Value, StringFormat=N0}"
+                                      Width="40"
+                                      TextAlignment="Right"
+                                      Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <CheckBox x:Name="LeftClickCheckBox"
+                             Content="Left Click Burst"
+                             IsChecked="True"
+                             Checked="LeftClickCheckBox_Changed"
+                             Unchecked="LeftClickCheckBox_Changed"
+                             Margin="0,10,0,0"/>
+
+                    <StackPanel x:Name="LeftClickPanel">
+                        <TextBlock Text="Left Click Particle Count"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider x:Name="LeftClickCountSlider"
+                                   Grid.Column="0"
+                                   Minimum="10"
+                                   Maximum="150"
+                                   Value="50"
+                                   TickFrequency="10"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="LeftClickCountSlider_ValueChanged"/>
+                            <TextBlock Grid.Column="1"
+                                      Text="{Binding ElementName=LeftClickCountSlider, Path=Value, StringFormat=N0}"
+                                      Width="40"
+                                      TextAlignment="Right"
+                                      Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <CheckBox x:Name="RightClickCheckBox"
+                             Content="Right Click Burst"
+                             IsChecked="True"
+                             Checked="RightClickCheckBox_Changed"
+                             Unchecked="RightClickCheckBox_Changed"
+                             Margin="0,10,0,0"/>
+
+                    <StackPanel x:Name="RightClickPanel">
+                        <TextBlock Text="Right Click Particle Count"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Slider x:Name="RightClickCountSlider"
+                                   Grid.Column="0"
+                                   Minimum="20"
+                                   Maximum="200"
+                                   Value="80"
+                                   TickFrequency="10"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="RightClickCountSlider_ValueChanged"/>
+                            <TextBlock Grid.Column="1"
+                                      Text="{Binding ElementName=RightClickCountSlider, Path=Value, StringFormat=N0}"
+                                      Width="40"
+                                      TextAlignment="Right"
+                                      Margin="10,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </ui:SimpleStackPanel>
+            </ui:SimpleStackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

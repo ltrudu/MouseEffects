@@ -1,0 +1,133 @@
+<UserControl x:Class="MouseEffects.Effects.CrystalGrowth.UI.CrystalGrowthSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="800" d:DesignWidth="400">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="10">
+
+            <!-- Trigger Settings -->
+            <TextBlock Text="Trigger Settings" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
+
+            <CheckBox x:Name="LeftClickCheck" Content="Left Click" IsChecked="True" Margin="0,0,0,5" Checked="LeftClickCheck_Changed" Unchecked="LeftClickCheck_Changed"/>
+            <CheckBox x:Name="RightClickCheck" Content="Right Click" IsChecked="True" Margin="0,0,0,10" Checked="RightClickCheck_Changed" Unchecked="RightClickCheck_Changed"/>
+
+            <Separator Margin="0,10"/>
+
+            <!-- Crystal Settings -->
+            <TextBlock Text="Crystal Settings" FontWeight="Bold" FontSize="14" Margin="0,10,0,10"/>
+
+            <TextBlock Text="Crystals Per Click" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=CrystalCountSlider, StringFormat=F0}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="CrystalCountSlider" Minimum="2" Maximum="8" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CrystalCountSlider_Changed"/>
+            </DockPanel>
+
+            <TextBlock Text="Growth Speed (px/s)" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=GrowthSpeedSlider, StringFormat=F0}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="GrowthSpeedSlider" Minimum="30" Maximum="300" Value="120" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="GrowthSpeedSlider_Changed"/>
+            </DockPanel>
+
+            <TextBlock Text="Max Size (px)" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=MaxSizeSlider, StringFormat=F0}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="MaxSizeSlider" Minimum="30" Maximum="250" Value="100" TickFrequency="10" IsSnapToTickEnabled="True" ValueChanged="MaxSizeSlider_Changed"/>
+            </DockPanel>
+
+            <TextBlock Text="Branch Probability" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=BranchProbSlider, StringFormat=F2}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="BranchProbSlider" Minimum="0" Maximum="1" Value="0.7" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="BranchProbSlider_Changed"/>
+            </DockPanel>
+
+            <TextBlock Text="Max Generations" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=MaxGenerationsSlider, StringFormat=F0}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="MaxGenerationsSlider" Minimum="1" Maximum="5" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="MaxGenerationsSlider_Changed"/>
+            </DockPanel>
+
+            <Separator Margin="0,10"/>
+
+            <!-- Appearance Settings -->
+            <TextBlock Text="Appearance" FontWeight="Bold" FontSize="14" Margin="0,10,0,10"/>
+
+            <TextBlock Text="Branch Thickness" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=ThicknessSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="ThicknessSlider" Minimum="0.5" Maximum="4" Value="1.5" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="ThicknessSlider_Changed"/>
+            </DockPanel>
+
+            <TextBlock Text="Glow Intensity" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=GlowSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="GlowSlider" Minimum="0.2" Maximum="3" Value="1.0" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="GlowSlider_Changed"/>
+            </DockPanel>
+
+            <TextBlock Text="Sparkle Intensity" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=SparkleSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="SparkleSlider" Minimum="0" Maximum="3" Value="1.2" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="SparkleSlider_Changed"/>
+            </DockPanel>
+
+            <Separator Margin="0,10"/>
+
+            <!-- Timing Settings -->
+            <TextBlock Text="Timing" FontWeight="Bold" FontSize="14" Margin="0,10,0,10"/>
+
+            <TextBlock Text="Crystal Lifetime (seconds)" Margin="0,5,0,2"/>
+            <DockPanel Margin="0,0,0,10">
+                <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=LifetimeSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="10" Value="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="LifetimeSlider_Changed"/>
+            </DockPanel>
+
+            <Separator Margin="0,10"/>
+
+            <!-- Color Settings -->
+            <TextBlock Text="Color" FontWeight="Bold" FontSize="14" Margin="0,10,0,10"/>
+
+            <TextBlock Text="Crystal Color" Margin="0,5,0,2"/>
+            <ComboBox x:Name="ColorPresetCombo" Margin="0,0,0,10" SelectionChanged="ColorPresetCombo_Changed">
+                <ComboBoxItem Content="Ice Blue" IsSelected="True"/>
+                <ComboBoxItem Content="Amethyst"/>
+                <ComboBoxItem Content="Emerald"/>
+                <ComboBoxItem Content="Diamond"/>
+                <ComboBoxItem Content="Custom"/>
+            </ComboBox>
+
+            <StackPanel x:Name="CustomColorPanel" Visibility="Collapsed" Margin="0,10,0,0">
+                <TextBlock Text="Custom Color (RGB)" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,5,0">
+                        <TextBlock Text="Red" Margin="0,0,0,2"/>
+                        <Slider x:Name="CustomRSlider" Minimum="0" Maximum="1" Value="0.53" TickFrequency="0.01" ValueChanged="CustomColorSlider_Changed"/>
+                        <TextBlock Text="{Binding Value, ElementName=CustomRSlider, StringFormat=F2}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="5,0">
+                        <TextBlock Text="Green" Margin="0,0,0,2"/>
+                        <Slider x:Name="CustomGSlider" Minimum="0" Maximum="1" Value="0.81" TickFrequency="0.01" ValueChanged="CustomColorSlider_Changed"/>
+                        <TextBlock Text="{Binding Value, ElementName=CustomGSlider, StringFormat=F2}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="5,0,0,0">
+                        <TextBlock Text="Blue" Margin="0,0,0,2"/>
+                        <Slider x:Name="CustomBSlider" Minimum="0" Maximum="1" Value="0.92" TickFrequency="0.01" ValueChanged="CustomColorSlider_Changed"/>
+                        <TextBlock Text="{Binding Value, ElementName=CustomBSlider, StringFormat=F2}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+
+                <Border x:Name="ColorPreview" Height="30" Background="#87CEEB" CornerRadius="3" Margin="0,10,0,0"/>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

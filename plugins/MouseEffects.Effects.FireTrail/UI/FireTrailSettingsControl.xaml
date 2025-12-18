@@ -1,0 +1,209 @@
+<UserControl x:Class="MouseEffects.Effects.FireTrail.UI.FireTrailSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="320">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SectionStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,12,0,8"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="ValueStyle">
+            <Setter Property="MinWidth" Value="40"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0">
+        <!-- Header Row -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
+                      VerticalAlignment="Center"
+                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
+
+            <TextBlock Text="Fire Trail" Grid.Column="1"
+                       FontWeight="Bold" FontSize="14"
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+
+            <Button x:Name="FoldButton" Grid.Column="2"
+                    Content="&#x25BC;" Width="24" Height="24"
+                    Background="Transparent" BorderThickness="0"
+                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
+        </Grid>
+
+        <!-- Description -->
+        <TextBlock Text="Realistic fire and flames that trail behind the mouse cursor."
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+        <!-- Collapsible Content -->
+        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+
+            <!-- General Settings -->
+            <TextBlock Text="General" Style="{StaticResource SectionStyle}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Intensity" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="IntensityValue" Text="1.0" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="IntensitySlider" Minimum="0" Maximum="2" Value="1.0" TickFrequency="0.1"
+                    ValueChanged="IntensitySlider_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Particle Lifetime" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="LifetimeValue" Text="1.5s" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="3" Value="1.5" TickFrequency="0.1"
+                    ValueChanged="LifetimeSlider_Changed"/>
+
+            <!-- Flame Appearance -->
+            <TextBlock Text="Flame Appearance" Style="{StaticResource SectionStyle}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Fire Style" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+            </Grid>
+            <ComboBox x:Name="FireStyleCombo" SelectionChanged="FireStyleCombo_Changed">
+                <ComboBoxItem Content="Campfire" IsSelected="True"/>
+                <ComboBoxItem Content="Torch"/>
+                <ComboBoxItem Content="Inferno"/>
+            </ComboBox>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Flame Height" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="HeightValue" Text="80" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="HeightSlider" Minimum="20" Maximum="200" Value="80" TickFrequency="5"
+                    ValueChanged="HeightSlider_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Flame Width" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="WidthValue" Text="40" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="WidthSlider" Minimum="10" Maximum="100" Value="40" TickFrequency="5"
+                    ValueChanged="WidthSlider_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Turbulence" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="TurbulenceValue" Text="0.5" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="TurbulenceSlider" Minimum="0" Maximum="1" Value="0.5" TickFrequency="0.05"
+                    ValueChanged="TurbulenceSlider_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Flicker Speed" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="FlickerSpeedValue" Text="15" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="FlickerSpeedSlider" Minimum="1" Maximum="30" Value="15" TickFrequency="1"
+                    ValueChanged="FlickerSpeedSlider_Changed"/>
+
+            <!-- Color & Glow -->
+            <TextBlock Text="Color &amp; Glow" Style="{StaticResource SectionStyle}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="GlowValue" Text="1.2" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="GlowSlider" Minimum="0" Maximum="3" Value="1.2" TickFrequency="0.1"
+                    ValueChanged="GlowSlider_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Color Saturation" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="SaturationValue" Text="1.0" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="SaturationSlider" Minimum="0" Maximum="2" Value="1.0" TickFrequency="0.1"
+                    ValueChanged="SaturationSlider_Changed"/>
+
+            <!-- Particle Types -->
+            <TextBlock Text="Particle Types" Style="{StaticResource SectionStyle}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Smoke Amount" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="SmokeValue" Text="0.3" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="SmokeSlider" Minimum="0" Maximum="1" Value="0.3" TickFrequency="0.05"
+                    ValueChanged="SmokeSlider_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Ember Amount" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="EmberValue" Text="0.2" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="EmberSlider" Minimum="0" Maximum="1" Value="0.2" TickFrequency="0.05"
+                    ValueChanged="EmberSlider_Changed"/>
+
+            <!-- HDR Settings -->
+            <TextBlock Text="HDR Settings" Style="{StaticResource SectionStyle}"/>
+
+            <CheckBox x:Name="HdrEnabledCheckBox" Content="Enable HDR"
+                      IsChecked="True" Checked="HdrEnabledCheckBox_Changed" Unchecked="HdrEnabledCheckBox_Changed"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="HDR Brightness" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                <TextBlock x:Name="HdrBrightnessValue" Text="2.0" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+            </Grid>
+            <Slider x:Name="HdrBrightnessSlider" Minimum="1" Maximum="5" Value="2.0" TickFrequency="0.1"
+                    ValueChanged="HdrBrightnessSlider_Changed"/>
+
+        </StackPanel>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,128 @@
+<UserControl x:Class="MouseEffects.Effects.PixieDust.UI.PixieDustSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="300">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="CheckBox" x:Key="CheckBoxStyle">
+            <Setter Property="Margin" Value="0,4,0,4"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0">
+        <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
+                      VerticalAlignment="Center"
+                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
+
+            <TextBlock Text="Pixie Dust" Grid.Column="1"
+                       FontWeight="Bold" FontSize="14"
+                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0"/>
+
+            <Button x:Name="FoldButton" Grid.Column="2"
+                    Content="▼" Width="24" Height="24"
+                    Background="Transparent" BorderThickness="0"
+                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
+        </Grid>
+
+        <!-- Description (always visible) -->
+        <TextBlock Text="Magical sparkle particles that float upward from the cursor"
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+
+        <!-- Collapsible Content Panel -->
+        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+
+            <!-- Triggers Section -->
+            <TextBlock Text="Triggers" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+
+            <CheckBox x:Name="MouseMoveCheckBox" Content="Mouse Move"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="MouseMoveCheckBox_Changed" Unchecked="MouseMoveCheckBox_Changed"/>
+
+            <TextBlock Text="Move Distance Threshold" Style="{StaticResource LabelStyle}" Margin="16,4,0,4"/>
+            <Slider x:Name="MoveDistanceSlider" Minimum="5" Maximum="100" Value="15"
+                    Style="{StaticResource SliderStyle}" Margin="16,0,0,4"
+                    ValueChanged="MoveDistanceSlider_ValueChanged"/>
+            <TextBlock x:Name="MoveDistanceValue" Text="15" Opacity="0.7" FontSize="11" Margin="16,0,0,0"/>
+
+            <CheckBox x:Name="LeftClickCheckBox" Content="Left Click Burst"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="LeftClickCheckBox_Changed" Unchecked="LeftClickCheckBox_Changed"/>
+
+            <TextBlock Text="Left Click Particle Count" Style="{StaticResource LabelStyle}" Margin="16,4,0,4"/>
+            <Slider x:Name="LeftClickCountSlider" Minimum="10" Maximum="100" Value="30"
+                    Style="{StaticResource SliderStyle}" Margin="16,0,0,4"
+                    ValueChanged="LeftClickCountSlider_ValueChanged"/>
+            <TextBlock x:Name="LeftClickCountValue" Text="30" Opacity="0.7" FontSize="11" Margin="16,0,0,0"/>
+
+            <CheckBox x:Name="RightClickCheckBox" Content="Right Click Burst"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="RightClickCheckBox_Changed" Unchecked="RightClickCheckBox_Changed"/>
+
+            <TextBlock Text="Right Click Particle Count" Style="{StaticResource LabelStyle}" Margin="16,4,0,4"/>
+            <Slider x:Name="RightClickCountSlider" Minimum="10" Maximum="200" Value="50"
+                    Style="{StaticResource SliderStyle}" Margin="16,0,0,4"
+                    ValueChanged="RightClickCountSlider_ValueChanged"/>
+            <TextBlock x:Name="RightClickCountValue" Text="50" Opacity="0.7" FontSize="11" Margin="16,0,0,0"/>
+
+            <!-- Particle Settings Section -->
+            <TextBlock Text="Particle Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+
+            <TextBlock Text="Particle Count (per trigger)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ParticleCountSlider" Minimum="1" Maximum="100" Value="10"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ParticleCountSlider_ValueChanged"/>
+            <TextBlock x:Name="ParticleCountValue" Text="10" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Particle Size" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ParticleSizeSlider" Minimum="5" Maximum="50" Value="15"
+                    Style="{StaticResource SliderStyle}" ValueChanged="ParticleSizeSlider_ValueChanged"/>
+            <TextBlock x:Name="ParticleSizeValue" Text="15" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Lifetime (seconds)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="5" Value="2.0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="LifetimeSlider_ValueChanged"/>
+            <TextBlock x:Name="LifetimeValue" Text="2.0" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Drift Speed" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="DriftSpeedSlider" Minimum="10" Maximum="100" Value="30"
+                    Style="{StaticResource SliderStyle}" ValueChanged="DriftSpeedSlider_ValueChanged"/>
+            <TextBlock x:Name="DriftSpeedValue" Text="30" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="GlowIntensitySlider" Minimum="0.5" Maximum="3" Value="1.2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_ValueChanged"/>
+            <TextBlock x:Name="GlowIntensityValue" Text="1.2" Opacity="0.7" FontSize="11"/>
+
+            <!-- Color Settings Section -->
+            <TextBlock Text="Color Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+
+            <CheckBox x:Name="RainbowModeCheckBox" Content="Rainbow Mode"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="RainbowModeCheckBox_Changed" Unchecked="RainbowModeCheckBox_Changed"/>
+
+            <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_ValueChanged"/>
+            <TextBlock x:Name="RainbowSpeedValue" Text="0.5" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Fixed Color (when rainbow disabled)" Style="{StaticResource LabelStyle}"/>
+            <TextBlock Text="Color picker not yet implemented - using golden yellow"
+                       Opacity="0.5" FontSize="10" Margin="0,0,0,8"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>
