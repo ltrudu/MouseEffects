@@ -128,20 +128,21 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float dist = length(p);
     float angle = atan2(p.y, p.x);
 
-    // Early out if outside portal radius + glow
-    float maxDist = PortalRadius * 1.8;
+    // Early out if far outside portal radius
+    float maxDist = PortalRadius * 2.5;
     if (dist > maxDist)
         discard;
 
-    // Normalized distance (0 at center, 1 at edge)
-    float normDist = saturate(dist / PortalRadius);
+    // Normalized distance (0 at center, 1 at nominal edge, can exceed 1.0)
+    float normDist = dist / PortalRadius;
+    float normDistClamped = saturate(normDist);
 
     // ============================================
     // Spiral Pattern
     // ============================================
 
     // Create spiral distortion - tighter spirals near center
-    float spiralAngle = angle + (1.0 - normDist) * SpiralTightness * 5.0 - Time * RotationSpeed;
+    float spiralAngle = angle + (1.0 - normDistClamped) * SpiralTightness * 5.0 - Time * RotationSpeed;
 
     // Multiple rotating layers for depth
     float layer1 = sin(spiralAngle * float(SpiralArms) + Time * RotationSpeed * 2.0) * 0.5 + 0.5;
@@ -152,7 +153,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float spiralPattern = (layer1 * 0.4 + layer2 * 0.35 + layer3 * 0.25);
 
     // Soft radial variation instead of harsh rings
-    float radialWave = sin(normDist * 8.0 - Time * 1.5) * 0.15;
+    float radialWave = sin(normDistClamped * 8.0 - Time * 1.5) * 0.15;
     spiralPattern = spiralPattern * (1.0 + radialWave);
 
     // ============================================
@@ -160,32 +161,32 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // ============================================
 
     // Darker toward center with adjustable strength
-    float depthFade = pow(normDist, 1.0 - DepthStrength * 0.5);
+    float depthFade = pow(normDistClamped, 1.0 - DepthStrength * 0.5);
     float centerDarkness = lerp(InnerDarkness, 1.0, depthFade);
 
     // Add swirling darkness pattern
-    float darknessSpiral = sin((angle + Time * RotationSpeed * 0.5) * 3.0 + normDist * 10.0);
-    centerDarkness *= 1.0 - (1.0 - normDist) * 0.3 * darknessSpiral;
+    float darknessSpiral = sin((angle + Time * RotationSpeed * 0.5) * 3.0 + normDistClamped * 10.0);
+    centerDarkness *= 1.0 - (1.0 - normDistClamped) * 0.3 * darknessSpiral;
 
     // ============================================
     // UV Distortion - Swirl toward center
     // ============================================
 
     float2 distortedUV = p;
-    float distortAmount = (1.0 - normDist) * DistortionStrength;
+    float distortAmount = (1.0 - normDistClamped) * DistortionStrength;
     float distortAngle = angle + distortAmount * 2.0;
     distortedUV = float2(cos(distortAngle), sin(distortAngle)) * dist;
 
     // Add turbulence
     float turbulence = sin(distortedUV.x * 0.1 + Time) * cos(distortedUV.y * 0.1 - Time);
-    spiralPattern += turbulence * 0.1 * (1.0 - normDist);
+    spiralPattern += turbulence * 0.1 * (1.0 - normDistClamped);
 
     // ============================================
     // Rim Particles/Sparks
     // ============================================
 
     float particles = 0.0;
-    if (RimParticlesEnabled > 0.5 && normDist > 0.7 && normDist < 1.0)
+    if (RimParticlesEnabled > 0.5 && normDistClamped > 0.7 && normDistClamped < 1.0)
     {
         // Rotating particle field around rim
         float particleAngle = angle + Time * ParticleSpeed;
@@ -212,7 +213,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float coreGlow = exp(-dist * dist / (PortalRadius * PortalRadius * 0.8)) * spiralPattern;
 
     // Soft rim glow - reduced intensity
-    float rimGlow = exp(-pow(1.0 - normDist, 2.0) * 8.0);
+    float rimGlow = exp(-pow(1.0 - normDistClamped, 2.0) * 8.0);
 
     // Combine glows - clamped to prevent blow-out
     float totalGlow = saturate((coreGlow * 0.7 + rimGlow * 0.4 + particles) * GlowIntensity);
@@ -225,7 +226,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float3 baseColor = GetPortalColor(spiralPattern);
 
     // Mix colors - outer rim gets rim color tint
-    float3 finalColor = lerp(baseColor, RimColor.rgb, normDist * 0.3);
+    float3 finalColor = lerp(baseColor, RimColor.rgb, normDistClamped * 0.3);
 
     // Apply depth darkening
     finalColor *= centerDarkness;
@@ -237,12 +238,14 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Alpha Calculation
     // ============================================
 
-    // Smooth falloff at edge
-    float edgeFalloff = smoothstep(1.2, 0.8, normDist);
+    // Pure exponential falloff - no visible edge, fades naturally to zero
+    float edgeFalloff = exp(-normDist * normDist * 1.5);
 
     // Center should be transparent (void), only rim and spiral should be visible
-    float centerHole = smoothstep(0.0, 0.4, normDist); // Transparent in center
-    float alpha = saturate(totalGlow * edgeFalloff * centerHole * 0.8);
+    float centerHole = smoothstep(0.0, 0.35, normDistClamped);
+
+    // Alpha follows the glow pattern - bright areas more visible
+    float alpha = saturate(totalGlow * edgeFalloff * centerHole * 1.5);
 
     // ============================================
     // HDR Boost
