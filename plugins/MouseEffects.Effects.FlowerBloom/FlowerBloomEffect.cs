@@ -18,7 +18,7 @@ public sealed class FlowerBloomEffect : EffectBase
         Description = "Beautiful flowers that bloom and grow from the mouse cursor with organic petal unfurling",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Nature
     };
 
     public override EffectMetadata Metadata => _metadata;

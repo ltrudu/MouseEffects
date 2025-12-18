@@ -18,7 +18,7 @@ public sealed class HeartsEffect : EffectBase
         Description = "Floating heart particles following the mouse cursor with gentle wobble animation",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public override EffectMetadata Metadata => _metadata;

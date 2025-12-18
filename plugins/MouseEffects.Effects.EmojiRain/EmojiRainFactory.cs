@@ -13,7 +13,7 @@ public sealed class EmojiRainFactory : IEffectFactory
         Description = "Falling emoji faces from the mouse cursor with rotation and tumble",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

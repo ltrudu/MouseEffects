@@ -18,7 +18,7 @@ public sealed class CherryBlossomsEffect : EffectBase
         Description = "Beautiful sakura petals floating gently around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Nature
     };
 
     public override EffectMetadata Metadata => _metadata;

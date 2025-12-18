@@ -12,7 +12,7 @@ public sealed class BubblesFactory : IEffectFactory
         Description = "Floating soap bubbles with rainbow iridescence following the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

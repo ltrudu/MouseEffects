@@ -17,7 +17,7 @@ public sealed class PortalEffect : EffectBase
         Description = "Swirling dimensional vortex/portal effect at the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Cosmic
     };
 
     public override EffectMetadata Metadata => _metadata;

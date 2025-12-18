@@ -24,31 +24,46 @@ public sealed record EffectMetadata
     public string? IconPath { get; init; }
 
     /// <summary>Effect category for organization.</summary>
-    public EffectCategory Category { get; init; } = EffectCategory.Visual;
+    public EffectCategory Category { get; init; } = EffectCategory.Other;
 
     /// <summary>Default trigger mode.</summary>
     public EffectTrigger DefaultTrigger { get; init; } = EffectTrigger.Always;
 }
 
 /// <summary>
-/// Categories for organizing effects.
+/// Categories for organizing effects in the UI.
 /// </summary>
 public enum EffectCategory
 {
-    /// <summary>Visual effects like particles, trails.</summary>
-    Visual,
+    /// <summary>Particle effects like sparkles, confetti, snow.</summary>
+    Particle,
 
-    /// <summary>Interactive effects that respond to input.</summary>
-    Interactive,
+    /// <summary>Cosmic and space-themed effects.</summary>
+    Cosmic,
 
-    /// <summary>Ambient/background effects.</summary>
-    Ambient,
+    /// <summary>Nature-inspired effects.</summary>
+    Nature,
 
-    /// <summary>Utility effects.</summary>
-    Utility,
+    /// <summary>Trail effects that follow mouse movement.</summary>
+    Trail,
 
-    /// <summary>Accessibility effects for users with disabilities.</summary>
-    Accessibility
+    /// <summary>Digital and tech-themed effects.</summary>
+    Digital,
+
+    /// <summary>Artistic and creative effects.</summary>
+    Artistic,
+
+    /// <summary>Physics-based and abstract effects.</summary>
+    Physics,
+
+    /// <summary>Light and glow effects.</summary>
+    Light,
+
+    /// <summary>Screen transformation effects.</summary>
+    Screen,
+
+    /// <summary>Other effects that don't fit other categories.</summary>
+    Other
 }
 
 /// <summary>

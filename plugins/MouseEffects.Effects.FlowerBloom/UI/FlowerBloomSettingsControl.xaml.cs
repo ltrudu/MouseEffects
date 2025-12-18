@@ -8,7 +8,6 @@ public partial class FlowerBloomSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class FlowerBloomSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Trigger settings
         if (_effect.Configuration.TryGet("fb_leftClickEnabled", out bool leftEnabled))
             LeftClickCheckBox.IsChecked = leftEnabled;
@@ -122,13 +119,6 @@ public partial class FlowerBloomSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void LeftClickCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateConfiguration();
@@ -211,12 +201,5 @@ public partial class FlowerBloomSettingsControl : UserControl
         if (FadeOutDurationValue != null)
             FadeOutDurationValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

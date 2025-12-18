@@ -10,7 +10,6 @@ public partial class RadialDitheringSettingsControl : System.Windows.Controls.Us
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _color1 = new(1.0f, 1.0f, 1.0f, 1.0f);
     private Vector4 _color2 = new(0.0f, 0.0f, 0.0f, 1.0f);
     private Vector4 _glowColor = new(0.3f, 0.5f, 1.0f, 1.0f);
@@ -31,8 +30,6 @@ public partial class RadialDitheringSettingsControl : System.Windows.Controls.Us
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("radius", out float radius))
         {
             RadiusSlider.Value = radius;
@@ -198,13 +195,6 @@ public partial class RadialDitheringSettingsControl : System.Windows.Controls.Us
             (byte)(_glowColor.X * 255),
             (byte)(_glowColor.Y * 255),
             (byte)(_glowColor.Z * 255)));
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
     private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -374,12 +364,5 @@ public partial class RadialDitheringSettingsControl : System.Windows.Controls.Us
             UpdateGlowColorPreview();
             UpdateConfiguration();
         }
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

@@ -8,7 +8,6 @@ public partial class CometTrailSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class CometTrailSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Trail settings
         if (_effect.Configuration.TryGet("ct_maxTrailPoints", out int maxPoints))
         {
@@ -121,13 +118,6 @@ public partial class CometTrailSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void MaxTrailLengthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (MaxTrailLengthValue != null)
@@ -196,12 +186,5 @@ public partial class CometTrailSettingsControl : UserControl
         if (SmoothingFactorValue != null)
             SmoothingFactorValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

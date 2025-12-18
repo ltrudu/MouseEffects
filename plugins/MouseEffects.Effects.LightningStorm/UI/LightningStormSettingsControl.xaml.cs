@@ -12,7 +12,6 @@ public partial class LightningStormSettingsControl : System.Windows.Controls.Use
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
     private Vector4 _customColor = new(0.4f, 0.6f, 1f, 1f);
 
     public LightningStormSettingsControl(IEffect effect)
@@ -25,8 +24,6 @@ public partial class LightningStormSettingsControl : System.Windows.Controls.Use
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet<bool>("ls_onClickTrigger", out var onClick))
             OnClickCheckBox.IsChecked = onClick;
 
@@ -199,19 +196,6 @@ public partial class LightningStormSettingsControl : System.Windows.Controls.Use
     }
 
     // Event handlers
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
-    }
-
     private void OnClickCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         SavePropertyAndConfig("ls_onClickTrigger", OnClickCheckBox.IsChecked == true);

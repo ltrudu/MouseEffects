@@ -14,7 +14,6 @@ public partial class RetroSettingsControl : UserControl
 {
     private RetroEffect? _effect;
     private bool _isLoading;
-    private bool _isExpanded;
 
     // Filter-specific settings controls
     private XSaISettings? _xsaiSettings;
@@ -55,8 +54,6 @@ public partial class RetroSettingsControl : UserControl
 
         try
         {
-            EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
             if (_effect.Configuration.TryGet("filterType", out int filterType))
             {
                 FilterTypeCombo.SelectedIndex = filterType;
@@ -104,21 +101,6 @@ public partial class RetroSettingsControl : UserControl
                 FilterSettingsHost.Content = _xsaiSettings;
                 _xsaiSettings.Initialize(_effect);
                 break;
-        }
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B2" : "\u25BC";
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect != null && !_isLoading)
-        {
-            _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
         }
     }
 

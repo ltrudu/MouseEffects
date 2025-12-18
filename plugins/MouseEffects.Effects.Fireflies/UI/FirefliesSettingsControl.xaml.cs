@@ -8,7 +8,6 @@ public partial class FirefliesSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class FirefliesSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // General settings
         if (_effect.Configuration.TryGet("ff_fireflyCount", out int count))
         {
@@ -125,13 +122,6 @@ public partial class FirefliesSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void FireflyCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (FireflyCountValue != null)
@@ -207,12 +197,5 @@ public partial class FirefliesSettingsControl : UserControl
         if (HdrMultiplierValue != null)
             HdrMultiplierValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

@@ -22,31 +22,6 @@
     </UserControl.Resources>
 
     <StackPanel>
-        <!-- Header -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
-                      VerticalAlignment="Center"
-                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed" />
-            <TextBlock Text="Starfield Warp" Grid.Column="1"
-                       FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0" />
-            <Button x:Name="FoldButton" Grid.Column="2"
-                    Content="&#x25BC;" Width="24" Height="24"
-                    Background="Transparent" BorderThickness="0"
-                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings" />
-        </Grid>
-
-        <TextBlock Text="Hyperspace/warp speed effect with stars streaking past"
-                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
-
-        <!-- Collapsible Content -->
-        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
-
             <!-- Star Field Settings -->
             <TextBlock Text="Star Field" Style="{StaticResource SectionStyle}" />
 
@@ -198,7 +173,5 @@
                 <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=PulseSpeedSlider, StringFormat={}{0:F1}}"
                            Width="60" TextAlignment="Right" Margin="8,0,0,0" />
             </Grid>
-
-        </StackPanel>
     </StackPanel>
 </UserControl>

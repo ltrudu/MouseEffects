@@ -23,7 +23,7 @@ public sealed class WaterRippleEffect : EffectBase
         Description = "Creates expanding water ripples on click that distort the screen with realistic wave interference",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Screen
     };
 
     // GPU resources

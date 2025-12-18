@@ -13,7 +13,7 @@ public sealed class PixieDustFactory : IEffectFactory
         Description = "Magical sparkle particles that follow the mouse cursor with floating and fading effects",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

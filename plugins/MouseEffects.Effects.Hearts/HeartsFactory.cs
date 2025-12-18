@@ -13,7 +13,7 @@ public sealed class HeartsFactory : IEffectFactory
         Description = "Floating heart particles following the mouse cursor with gentle wobble animation",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

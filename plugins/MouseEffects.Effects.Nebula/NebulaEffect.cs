@@ -18,7 +18,7 @@ public sealed class NebulaEffect : EffectBase
         Description = "Colorful cosmic gas clouds trailing the mouse cursor with volumetric feel and twinkling stars",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Cosmic
     };
 
     public override EffectMetadata Metadata => _metadata;

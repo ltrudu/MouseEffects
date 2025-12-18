@@ -10,7 +10,6 @@ public partial class TileVibrationSettingsControl : System.Windows.Controls.User
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _outlineColor = new(1f, 1f, 1f, 1f);
 
     /// <summary>
@@ -31,8 +30,6 @@ public partial class TileVibrationSettingsControl : System.Windows.Controls.User
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("tileLifespan", out float lifespan))
         {
             LifespanSlider.Value = lifespan;
@@ -178,20 +175,6 @@ public partial class TileVibrationSettingsControl : System.Windows.Controls.User
         MinHeightLabel.Visibility = synced ? Visibility.Collapsed : Visibility.Visible;
         MinHeightSlider.Visibility = synced ? Visibility.Collapsed : Visibility.Visible;
         MinHeightValue.Visibility = synced ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B2" : "\u25BC";
     }
 
     private void LifespanSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

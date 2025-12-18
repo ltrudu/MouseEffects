@@ -8,7 +8,6 @@ public partial class ButterfliesSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class ButterfliesSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Butterfly settings
         if (_effect.Configuration.TryGet("bf_butterflyCount", out int count))
         {
@@ -117,13 +114,6 @@ public partial class ButterfliesSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void ButterflyCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (ButterflyCountValue != null)
@@ -190,12 +180,5 @@ public partial class ButterfliesSettingsControl : UserControl
         if (RainbowSpeedValue != null)
             RainbowSpeedValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

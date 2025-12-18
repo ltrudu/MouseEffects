@@ -13,7 +13,7 @@ public sealed class RunesFactory : IEffectFactory
         Description = "Floating magical runes and symbols that appear and fade around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Digital
     };
 
     public EffectMetadata Metadata => _metadata;

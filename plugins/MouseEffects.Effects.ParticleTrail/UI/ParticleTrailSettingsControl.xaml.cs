@@ -8,7 +8,6 @@ public partial class ParticleTrailSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
 
     /// <summary>
     /// Event raised when settings are changed and should be saved.
@@ -27,8 +26,6 @@ public partial class ParticleTrailSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("emissionRate", out float emissionRate))
         {
             EmissionRateSlider.Value = emissionRate;
@@ -83,15 +80,6 @@ public partial class ParticleTrailSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-
-        // Notify that settings changed for persistence
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void EmissionRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (EmissionRateValue != null)
@@ -125,12 +113,5 @@ public partial class ParticleTrailSettingsControl : UserControl
         if (SpeedValue != null)
             SpeedValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

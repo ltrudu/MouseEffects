@@ -192,8 +192,28 @@
                     </StackPanel>
                 </Border>
 
-                <!-- Dynamic Plugin Settings Container -->
-                <StackPanel x:Name="PluginSettingsContainer"/>
+                <!-- Effect Selection -->
+                <Border Style="{StaticResource EffectCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Effect Selection" Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock Text="Choose an effect to display around your cursor"
+                                   Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
+                        <ContentControl x:Name="EffectSelectorHost"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Effect Settings (dynamic content based on selection) -->
+                <Border x:Name="EffectSettingsCard" Style="{StaticResource EffectCardStyle}" Visibility="Collapsed">
+                    <StackPanel>
+                        <TextBlock x:Name="EffectSettingsTitle" Text="Effect Settings"
+                                   Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock x:Name="EffectSettingsHint"
+                                   Text="Select an effect above to configure its settings"
+                                   Opacity="0.5" FontStyle="Italic" Margin="0,10,0,0"
+                                   Visibility="Collapsed"/>
+                        <ContentControl x:Name="EffectSettingsHost" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
 
                 <!-- Manage Settings Section -->
                 <Border Style="{StaticResource EffectCardStyle}">

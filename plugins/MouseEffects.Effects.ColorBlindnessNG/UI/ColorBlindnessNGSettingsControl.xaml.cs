@@ -14,7 +14,6 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
 {
     private ColorBlindnessNGEffect? _effect;
     private bool _isLoading;
-    private bool _isExpanded;
     private PresetManager _presetManager = new();
     private ZoneSettingsEditor[] _zoneEditors = Array.Empty<ZoneSettingsEditor>();
 
@@ -251,7 +250,6 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
         try
         {
             // Load global settings
-            EnabledCheckBox.IsChecked = _effect.IsEnabled;
             SplitModeCombo.SelectedIndex = (int)_effect.SplitMode;
             SplitPositionSlider.Value = _effect.SplitPosition;
             SplitPositionVSlider.Value = _effect.SplitPositionV;
@@ -296,21 +294,6 @@ public partial class ColorBlindnessNGSettingsControl : UserControl
     }
 
     #region UI Event Handlers
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B2" : "\u25BC";
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect != null && !_isLoading)
-        {
-            _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
-        }
-    }
 
     private void SplitModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {

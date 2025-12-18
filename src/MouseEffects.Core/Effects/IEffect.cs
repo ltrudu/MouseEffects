@@ -25,9 +25,6 @@ public interface IEffect : IDisposable
     /// <summary>Whether this effect has completed and can be removed.</summary>
     bool IsComplete { get; }
 
-    /// <summary>Whether the effect is currently enabled.</summary>
-    bool IsEnabled { get; set; }
-
     /// <summary>
     /// Whether this effect requires continuous screen capture.
     /// Effects that read and transform screen content (like color filters) should return true.

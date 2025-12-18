@@ -10,7 +10,6 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _diskColor = new(1.0f, 0.6f, 0.2f, 1.0f);
 
     /// <summary>
@@ -28,8 +27,6 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("radius", out float radius))
         {
             RadiusSlider.Value = radius;
@@ -106,15 +103,6 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
             (byte)(_diskColor.Z * 255)));
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-
-        // Notify that settings changed for persistence
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (RadiusValue != null)
@@ -180,12 +168,5 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
         if (GlowIntensityValue != null)
             GlowIntensityValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

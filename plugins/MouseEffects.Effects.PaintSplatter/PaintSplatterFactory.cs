@@ -13,7 +13,7 @@ public sealed class PaintSplatterFactory : IEffectFactory
         Description = "Artistic paint drops that splatter on clicks like Jackson Pollock",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

@@ -12,7 +12,7 @@ public sealed class KaleidoscopeFactory : IEffectFactory
         Description = "Creates real-time kaleidoscopic mirroring of the screen around the mouse cursor with radial symmetry",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

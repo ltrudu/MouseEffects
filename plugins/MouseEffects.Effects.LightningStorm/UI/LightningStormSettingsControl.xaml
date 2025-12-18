@@ -23,26 +23,10 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <CheckBox Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
-                      VerticalAlignment="Center" IsChecked="True"
-                      Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed" />
-            <TextBlock Text="Lightning Storm" Grid.Column="1" FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0" />
-            <Button Name="FoldButton" Grid.Column="2" Content="▼" Width="24" Height="24"
-                    Background="Transparent" BorderThickness="0"
-                    ToolTip="Expand/Collapse settings" Click="FoldButton_Click" />
-        </Grid>
-
         <TextBlock Text="Dramatic lightning bolts that arc from or around the mouse cursor with electric effects"
-                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
 
-        <StackPanel Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+        <StackPanel Margin="0,8,0,0">
             <!-- Trigger Settings -->
             <TextBlock Text="Trigger Settings" Style="{StaticResource SectionStyle}" />
             <CheckBox Name="OnClickCheckBox" Content="Trigger on Click" Margin="0,4,0,4"

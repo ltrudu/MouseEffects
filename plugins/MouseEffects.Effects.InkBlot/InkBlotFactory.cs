@@ -13,7 +13,7 @@ public sealed class InkBlotFactory : IEffectFactory
         Description = "Spreading ink and watercolor drops that bloom from clicks or cursor movement",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

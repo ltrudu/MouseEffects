@@ -8,7 +8,6 @@ public partial class SpotlightSettingsControl : System.Windows.Controls.UserCont
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     /// <summary>
     /// Event raised when settings are changed and should be saved.
@@ -25,8 +24,6 @@ public partial class SpotlightSettingsControl : System.Windows.Controls.UserCont
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("spotlightRadius", out float radius))
         {
             SpotlightRadiusSlider.Value = radius;
@@ -92,15 +89,6 @@ public partial class SpotlightSettingsControl : System.Windows.Controls.UserCont
         DustParticlesPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-
-        // Notify that settings changed for persistence
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void SpotlightRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (SpotlightRadiusValue != null)
@@ -148,12 +136,5 @@ public partial class SpotlightSettingsControl : System.Windows.Controls.UserCont
         if (DustDensityValue != null)
             DustDensityValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

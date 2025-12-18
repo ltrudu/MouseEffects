@@ -23,7 +23,7 @@ public sealed class ShockwaveEffect : EffectBase
         Description = "Creates expanding circular shockwave rings on click with glow and optional distortion",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Physics
     };
 
     // GPU resources

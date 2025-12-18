@@ -13,7 +13,7 @@ public sealed class LightningStormFactory : IEffectFactory
         Description = "Creates dramatic lightning bolts that arc from or around the mouse cursor with electric effects",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Physics
     };
 
     public EffectMetadata Metadata => _metadata;

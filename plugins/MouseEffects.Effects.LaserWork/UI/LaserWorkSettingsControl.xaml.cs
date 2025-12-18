@@ -12,7 +12,6 @@ public partial class LaserWorkSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _laserColor = new(1f, 0.2f, 0.2f, 1f);
 
     /// <summary>
@@ -31,8 +30,6 @@ public partial class LaserWorkSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Emission rate
         if (_effect.Configuration.TryGet("lasersPerSecond", out float lps))
         {
@@ -228,13 +225,6 @@ public partial class LaserWorkSettingsControl : UserControl
     private void UpdateCollideAlwaysUI(bool collideAlwaysEnabled)
     {
         MaxCollisionPanel.Visibility = collideAlwaysEnabled ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
     private void DirectionCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -448,12 +438,5 @@ public partial class LaserWorkSettingsControl : UserControl
         bool collideAlwaysEnabled = CollideAlwaysCheckBox.IsChecked ?? false;
         UpdateCollideAlwaysUI(collideAlwaysEnabled);
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

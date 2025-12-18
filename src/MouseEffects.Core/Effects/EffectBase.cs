@@ -16,7 +16,6 @@ public abstract class EffectBase : IEffect
 
     public virtual int RenderOrder => 0;
     public virtual bool IsComplete => false;
-    public bool IsEnabled { get; set; } = false;
 
     /// <summary>
     /// Whether this effect requires continuous screen capture.
@@ -47,13 +46,13 @@ public abstract class EffectBase : IEffect
 
     public void Update(GameTime gameTime, MouseState mouseState)
     {
-        if (!IsEnabled || !IsInitialized) return;
+        if (!IsInitialized) return;
         OnUpdate(gameTime, mouseState);
     }
 
     public void Render(IRenderContext context)
     {
-        if (!IsEnabled || !IsInitialized) return;
+        if (!IsInitialized) return;
         OnRender(context);
     }
 

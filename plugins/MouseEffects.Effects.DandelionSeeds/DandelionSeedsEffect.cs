@@ -18,7 +18,7 @@ public sealed class DandelionSeedsEffect : EffectBase
         Description = "Delicate dandelion seeds floating away from the mouse cursor on the wind",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Nature
     };
 
     public override EffectMetadata Metadata => _metadata;

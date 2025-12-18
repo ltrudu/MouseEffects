@@ -18,7 +18,7 @@ public sealed class CircuitEffect : EffectBase
         Description = "PCB-style circuit traces that grow from the mouse cursor like electronic veins",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Digital
     };
 
     public override EffectMetadata Metadata => _metadata;

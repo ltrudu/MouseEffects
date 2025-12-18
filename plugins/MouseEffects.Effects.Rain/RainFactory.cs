@@ -12,7 +12,7 @@ public sealed class RainFactory : IEffectFactory
         Description = "Realistic raindrops falling around the mouse cursor with splash effects",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Nature
     };
 
     public EffectMetadata Metadata => _metadata;

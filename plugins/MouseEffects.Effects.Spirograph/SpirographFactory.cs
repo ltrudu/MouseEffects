@@ -13,7 +13,7 @@ public sealed class SpirographFactory : IEffectFactory
         Description = "Beautiful spirograph-like geometric patterns following the mouse cursor with intricate mathematical curves",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

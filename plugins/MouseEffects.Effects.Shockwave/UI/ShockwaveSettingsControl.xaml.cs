@@ -10,7 +10,6 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
     private Vector4 _customColor = new(0.0f, 0.5f, 1.0f, 1.0f);
 
     /// <summary>
@@ -30,8 +29,6 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("sw_maxShockwaves", out int maxShockwaves))
         {
             MaxShockwavesSlider.Value = maxShockwaves;
@@ -175,20 +172,6 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
                 (byte)(_customColor.X * 255),
                 (byte)(_customColor.Y * 255),
                 (byte)(_customColor.Z * 255)));
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B2" : "\u25BC";
     }
 
     private void MaxShockwavesSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

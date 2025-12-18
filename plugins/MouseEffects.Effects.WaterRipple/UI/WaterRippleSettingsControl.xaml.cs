@@ -10,7 +10,6 @@ public partial class WaterRippleSettingsControl : System.Windows.Controls.UserCo
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _gridColor = new(0.0f, 1.0f, 0.5f, 0.8f);
 
     /// <summary>
@@ -30,8 +29,6 @@ public partial class WaterRippleSettingsControl : System.Windows.Controls.UserCo
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("maxRipples", out int maxRipples))
         {
             MaxRipplesSlider.Value = maxRipples;
@@ -186,20 +183,6 @@ public partial class WaterRippleSettingsControl : System.Windows.Controls.UserCo
 
         // Notify that settings changed for persistence
         SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B2" : "\u25BC";
     }
 
     private void LifespanSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

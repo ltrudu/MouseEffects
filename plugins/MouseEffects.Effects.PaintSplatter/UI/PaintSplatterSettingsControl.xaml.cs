@@ -10,7 +10,6 @@ public partial class PaintSplatterSettingsControl : System.Windows.Controls.User
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -25,8 +24,6 @@ public partial class PaintSplatterSettingsControl : System.Windows.Controls.User
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Trigger settings
         if (_effect.Configuration.TryGet("ps_clickEnabled", out bool clickEnabled))
             ClickEnabledCheckBox.IsChecked = clickEnabled;
@@ -144,13 +141,6 @@ public partial class PaintSplatterSettingsControl : System.Windows.Controls.User
         ColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(r, g, b));
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void ClickEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateConfiguration();
@@ -231,12 +221,5 @@ public partial class PaintSplatterSettingsControl : System.Windows.Controls.User
     {
         UpdateColorPreview();
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

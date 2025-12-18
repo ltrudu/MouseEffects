@@ -19,34 +19,11 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
-                      VerticalAlignment="Center"
-                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
-
-            <TextBlock Text="Laser Work" Grid.Column="1"
-                       FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0"/>
-
-            <Button x:Name="FoldButton" Grid.Column="2"
-                    Content="▼" Width="24" Height="24"
-                    Background="Transparent" BorderThickness="0"
-                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
-        </Grid>
-
-        <!-- Description (always visible) -->
         <TextBlock Text="Shoots glowing lasers from the mouse pointer that bounce off screen edges"
-                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
-        <!-- Collapsible Content Panel -->
-        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+        <!-- Settings Panel -->
+        <StackPanel Margin="0,8,0,0">
             <!-- Emission Rate -->
             <TextBlock Text="Lasers Per Second" Style="{StaticResource LabelStyle}" Margin="0"/>
             <Slider x:Name="LasersPerSecondSlider" Minimum="1" Maximum="100" Value="20"

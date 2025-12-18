@@ -13,7 +13,7 @@ public sealed class FireworkFactory : IEffectFactory
         Description = "Creates stunning firework explosions with colorful particles and trails",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Other
     };
 
     public EffectMetadata Metadata => _metadata;

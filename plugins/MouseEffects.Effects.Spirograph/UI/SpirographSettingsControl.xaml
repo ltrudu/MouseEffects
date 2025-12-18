@@ -5,12 +5,6 @@
              Width="400">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
-            <!-- Header -->
-            <TextBlock Text="Spirograph Settings"
-                      FontSize="18"
-                      FontWeight="SemiBold"
-                      Margin="0,0,0,15"/>
-
             <!-- Spirograph Shape -->
             <ui:SimpleStackPanel Spacing="12">
                 <TextBlock Text="Pattern Shape"

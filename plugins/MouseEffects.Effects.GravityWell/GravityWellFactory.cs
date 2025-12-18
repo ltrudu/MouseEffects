@@ -13,7 +13,7 @@ public sealed class GravityWellFactory : IEffectFactory
         Description = "Particles attracted to or repelled from the mouse cursor, simulating gravitational physics",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Cosmic
     };
 
     public EffectMetadata Metadata => _metadata;

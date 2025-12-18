@@ -18,7 +18,7 @@ public sealed class SnowfallEffect : EffectBase
         Description = "Gentle snowflakes falling around the mouse cursor with wind physics",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public override EffectMetadata Metadata => _metadata;

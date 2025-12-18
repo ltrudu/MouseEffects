@@ -8,7 +8,6 @@ public partial class ConfettiSettingsControl : System.Windows.Controls.UserContr
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class ConfettiSettingsControl : System.Windows.Controls.UserContr
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Trigger settings
         if (_effect.Configuration.TryGet("burstOnClick", out bool burstClick))
             BurstOnClickCheckBox.IsChecked = burstClick;
@@ -161,13 +158,6 @@ public partial class ConfettiSettingsControl : System.Windows.Controls.UserContr
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void BurstOnClickCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateConfiguration();
@@ -273,12 +263,5 @@ public partial class ConfettiSettingsControl : System.Windows.Controls.UserContr
         if (MaxParticlesValue != null)
             MaxParticlesValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

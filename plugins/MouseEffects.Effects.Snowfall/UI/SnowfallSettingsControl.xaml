@@ -18,35 +18,6 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <!-- Header Row: Enabled checkbox | Title | Fold/Unfold button -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
-                      VerticalAlignment="Center"
-                      IsChecked="True" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
-
-            <TextBlock Text="Snowfall" Grid.Column="1"
-                       FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0"/>
-
-            <Button x:Name="FoldButton" Grid.Column="2"
-                    Content="▼" Width="24" Height="24"
-                    Background="Transparent" BorderThickness="0"
-                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
-        </Grid>
-
-        <!-- Description (always visible) -->
-        <TextBlock Text="Gentle snowflakes falling around the mouse with wind physics"
-                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
-
-        <!-- Collapsible Content Panel -->
-        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
-
             <!-- Spawn Settings Section -->
             <TextBlock Text="Spawn Settings" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
 
@@ -105,6 +76,5 @@
             <Slider x:Name="GlowIntensitySlider" Minimum="0.1" Maximum="3" Value="1.0"
                     Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_ValueChanged"/>
             <TextBlock x:Name="GlowIntensityValue" Text="1.0" Opacity="0.7" FontSize="11"/>
-        </StackPanel>
     </StackPanel>
 </UserControl>

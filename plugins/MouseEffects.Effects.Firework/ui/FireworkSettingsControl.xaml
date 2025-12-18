@@ -25,16 +25,12 @@
     <StackPanel Margin="0">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <CheckBox Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
-                      VerticalAlignment="Center" IsChecked="True"
-                      Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed" />
-            <TextBlock Text="Firework" Grid.Column="1" FontWeight="Bold" FontSize="14"
+            <TextBlock Text="Firework" Grid.Column="0" FontWeight="Bold" FontSize="14"
                        VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0" />
-            <Button Name="FoldButton" Grid.Column="2" Content="▼" Width="24" Height="24"
+            <Button Name="FoldButton" Grid.Column="1" Content="▼" Width="24" Height="24"
                     Background="Transparent" BorderThickness="0"
                     ToolTip="Expand/Collapse settings" Click="FoldButton_Click" />
         </Grid>

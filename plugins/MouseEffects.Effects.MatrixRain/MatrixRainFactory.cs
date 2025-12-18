@@ -13,7 +13,7 @@ public sealed class MatrixRainFactory : IEffectFactory
         Description = "Iconic falling green code effect from The Matrix centered around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Digital
     };
 
     public EffectMetadata Metadata => _metadata;

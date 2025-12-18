@@ -109,7 +109,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         Description = "Defend against waves of neon space invaders with rockets from your cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Interactive
+        Category = EffectCategory.Other
     };
 
     private IBuffer? _entityBuffer;
@@ -232,7 +232,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             DisplayName = "Reset Game",
             Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Shift,
             Key = HotkeyKey.I,
-            IsEnabled = _enableResetHotkey && IsEnabled,
+            IsEnabled = _enableResetHotkey,
             Callback = ResetGame
         };
     }

@@ -18,7 +18,7 @@ public sealed class CometTrailEffect : EffectBase
         Description = "A blazing comet with fiery tail and sparks following the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Trail
     };
 
     public override EffectMetadata Metadata => _metadata;

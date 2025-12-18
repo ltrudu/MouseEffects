@@ -21,30 +21,8 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <!-- Header Row -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Grid.Column="0"
-                      VerticalAlignment="Center"
-                      IsChecked="False" Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
-
-            <TextBlock Text="Space Invaders" Grid.Column="1"
-                       FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0"/>
-
-            <Button x:Name="FoldButton" Grid.Column="2"
-                    Content="&#x25BC;" Width="24" Height="24"
-                    Background="Transparent" BorderThickness="0"
-                    Click="FoldButton_Click" ToolTip="Expand/Collapse settings"/>
-        </Grid>
-
         <TextBlock Text="Defend against waves of neon space invaders with rockets from your cursor"
-                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
         <!-- Score Display -->
         <Border Background="#22FFFFFF" CornerRadius="4" Padding="8" Margin="0,8,0,0">
@@ -82,8 +60,8 @@
             </StackPanel>
         </Border>
 
-        <!-- Collapsible Content Panel -->
-        <StackPanel x:Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+        <!-- Settings Panel -->
+        <StackPanel Margin="0,8,0,0">
 
             <!-- ========== ROCKET SETTINGS ========== -->
             <TextBlock Text="ROCKET SETTINGS" Style="{StaticResource SectionStyle}"/>

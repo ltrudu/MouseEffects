@@ -18,7 +18,7 @@ public sealed class SmokeEffect : EffectBase
         Description = "Soft, wispy smoke trails following the mouse cursor with rising motion and turbulence",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Trail
     };
 
     public override EffectMetadata Metadata => _metadata;

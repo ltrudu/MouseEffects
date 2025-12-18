@@ -25,11 +25,6 @@ public class PluginSettings
     };
 
     /// <summary>
-    /// Whether the plugin is enabled.
-    /// </summary>
-    public bool IsEnabled { get; set; } = false;
-
-    /// <summary>
     /// Plugin configuration settings as key-value pairs.
     /// </summary>
     public Dictionary<string, JsonElement> Configuration { get; set; } = new();
@@ -49,7 +44,7 @@ public class PluginSettings
                 var settings = JsonSerializer.Deserialize<PluginSettings>(json, JsonOptions);
                 if (settings != null)
                 {
-                    Logger.Log("PluginSettings", $"Loaded settings for '{effectId}': enabled={settings.IsEnabled}, {settings.Configuration.Count} config values");
+                    Logger.Log("PluginSettings", $"Loaded settings for '{effectId}': {settings.Configuration.Count} config values");
                     return settings;
                 }
             }
@@ -101,9 +96,6 @@ public class PluginSettings
     /// </summary>
     public void ApplyToEffect(IEffect effect)
     {
-        // Apply enabled state
-        effect.IsEnabled = IsEnabled;
-
         // Apply configuration if we have any saved settings
         if (Configuration.Count > 0)
         {
@@ -131,11 +123,10 @@ public class PluginSettings
     }
 
     /// <summary>
-    /// Save the effect's current state and configuration to this settings object.
+    /// Save the effect's current configuration to this settings object.
     /// </summary>
     public void SaveFromEffect(IEffect effect)
     {
-        IsEnabled = effect.IsEnabled;
         Configuration.Clear();
 
         foreach (var kvp in effect.Configuration.GetAll())

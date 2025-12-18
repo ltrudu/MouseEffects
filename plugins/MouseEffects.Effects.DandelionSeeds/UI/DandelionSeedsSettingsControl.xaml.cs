@@ -8,7 +8,6 @@ public partial class DandelionSeedsSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class DandelionSeedsSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Seed settings
         if (_effect.Configuration.TryGet("ds_seedCount", out int count))
         {
@@ -122,13 +119,6 @@ public partial class DandelionSeedsSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void SeedCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (SeedCountValue != null)
@@ -204,12 +194,5 @@ public partial class DandelionSeedsSettingsControl : UserControl
         if (GlowIntensityValue != null)
             GlowIntensityValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

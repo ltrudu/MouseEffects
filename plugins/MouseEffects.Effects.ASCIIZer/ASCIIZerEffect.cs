@@ -21,7 +21,7 @@ public sealed class ASCIIZerEffect : EffectBase
         Description = "Renders the screen as ASCII art with multiple filter styles",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Screen
     };
 
     // GPU resources - shared

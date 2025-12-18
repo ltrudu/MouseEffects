@@ -9,7 +9,6 @@ public partial class TeslaSettingsControl : System.Windows.Controls.UserControl
 {
     private TeslaEffect? _effect;
     private bool _isLoading;
-    private bool _isExpanded;
 
     // Lazy-loaded effect settings controls
     private LightningBoltSettings? _lightningBoltSettings;
@@ -30,8 +29,6 @@ public partial class TeslaSettingsControl : System.Windows.Controls.UserControl
 
             try
             {
-                EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
                 // Load the selected effect type from config
                 if (_effect.Configuration.TryGet("selectedEffectType", out int effectType))
                 {
@@ -73,19 +70,6 @@ public partial class TeslaSettingsControl : System.Windows.Controls.UserControl
                 _electricalFollowSettings.Initialize(_effect);
                 break;
         }
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▶" : "▼";
     }
 
     private void EffectTypeCombo_Changed(object sender, SelectionChangedEventArgs e)

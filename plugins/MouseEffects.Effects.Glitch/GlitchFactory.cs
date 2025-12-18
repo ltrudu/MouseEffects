@@ -12,7 +12,7 @@ public sealed class GlitchFactory : IEffectFactory
         Description = "Creates digital corruption and distortion artifacts around the mouse cursor like a broken screen",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Digital
     };
 
     public EffectMetadata Metadata => _metadata;

@@ -18,7 +18,7 @@ public sealed class RunesEffect : EffectBase
         Description = "Floating magical runes and symbols that appear and fade around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Digital
     };
 
     public override EffectMetadata Metadata => _metadata;

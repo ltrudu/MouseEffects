@@ -42,6 +42,11 @@ public class AppSettings
     public string? SelectedGpuName { get; set; }
 
     /// <summary>
+    /// The ID of the currently active effect. Null or empty means no effect is active.
+    /// </summary>
+    public string? ActiveEffectId { get; set; }
+
+    /// <summary>
     /// Application theme. Default is System (follows Windows theme).
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]

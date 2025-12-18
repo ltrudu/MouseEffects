@@ -15,7 +15,7 @@ public sealed class ColorBlindnessNGFactory : IEffectFactory
         Description = "Next-generation CVD simulation and correction. Simulation uses scientific Machado/Brettel matrices. Correction uses LUT-based color remapping for practical color enhancement.",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Accessibility
+        Category = EffectCategory.Screen
     };
 
     public EffectMetadata Metadata => _metadata;

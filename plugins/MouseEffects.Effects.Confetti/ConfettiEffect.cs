@@ -67,7 +67,7 @@ public sealed class ConfettiEffect : EffectBase
         Description = "Colorful confetti particles bursting from clicks or following the cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     private IBuffer? _particleBuffer;

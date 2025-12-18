@@ -129,7 +129,7 @@ public sealed class ColorBlindnessNGEffect : EffectBase
         Description = "Next-generation CVD simulation and correction with per-zone LUT-based color remapping.",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Accessibility
+        Category = EffectCategory.Screen
     };
 
     // GPU resources

@@ -44,7 +44,7 @@ public sealed class ZoomEffect : EffectBase
         Description = "Magnifies the area around the mouse cursor with selectable circle or rectangle shape",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Screen
     };
 
     // GPU resources

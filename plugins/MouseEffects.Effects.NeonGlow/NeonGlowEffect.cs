@@ -18,7 +18,7 @@ public sealed class NeonGlowEffect : EffectBase
         Description = "80s synthwave style neon trails with multilayer bloom following the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Trail
     };
 
     public override EffectMetadata Metadata => _metadata;

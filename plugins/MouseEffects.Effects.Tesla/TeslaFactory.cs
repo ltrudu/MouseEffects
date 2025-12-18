@@ -13,7 +13,7 @@ public sealed class TeslaFactory : IEffectFactory
         Description = "Creates electrical lightning bolt effects around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Other
     };
 
     public EffectMetadata Metadata => _metadata;

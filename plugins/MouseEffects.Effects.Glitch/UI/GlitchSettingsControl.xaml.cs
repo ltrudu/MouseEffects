@@ -8,7 +8,6 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     /// <summary>
     /// Event raised when settings are changed and should be saved.
@@ -25,8 +24,6 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("radius", out float radius))
         {
             RadiusSlider.Value = radius;
@@ -89,15 +86,6 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-
-        // Notify that settings changed for persistence
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void RadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (RadiusValue != null)
@@ -145,12 +133,5 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
         if (NoiseValue != null)
             NoiseValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

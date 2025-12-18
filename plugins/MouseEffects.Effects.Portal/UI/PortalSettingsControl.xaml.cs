@@ -8,7 +8,6 @@ public partial class PortalSettingsControl : System.Windows.Controls.UserControl
 {
     private PortalEffect? _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public PortalSettingsControl(IEffect effect)
     {
@@ -25,7 +24,6 @@ public partial class PortalSettingsControl : System.Windows.Controls.UserControl
 
             try
             {
-                EnabledCheckBox.IsChecked = _effect.IsEnabled;
                 LoadConfiguration();
             }
             finally
@@ -51,19 +49,6 @@ public partial class PortalSettingsControl : System.Windows.Controls.UserControl
         ParticleSpeedSlider.Value = _effect.ParticleSpeed;
         ColorThemeCombo.SelectedIndex = _effect.ColorTheme;
         HdrMultiplierSlider.Value = _effect.HdrMultiplier;
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B6" : "\u25BC";
     }
 
     private void RadiusSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)

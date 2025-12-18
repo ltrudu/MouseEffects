@@ -30,8 +30,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet<int>("maxParticles", out var maxPart))
         {
             MaxParticlesSlider.Value = maxPart;
@@ -283,13 +281,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("rocketSecondaryColor", _rocketSecondaryColor);
 
         _effect.Configure(config);
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 

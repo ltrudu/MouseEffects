@@ -8,7 +8,6 @@ public partial class MagneticFieldSettingsControl : UserControl
 {
     private MagneticFieldEffect? _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public MagneticFieldSettingsControl(IEffect effect)
     {
@@ -25,7 +24,6 @@ public partial class MagneticFieldSettingsControl : UserControl
 
             try
             {
-                EnabledCheckBox.IsChecked = _effect.IsEnabled;
                 LoadConfiguration();
             }
             finally
@@ -51,19 +49,6 @@ public partial class MagneticFieldSettingsControl : UserControl
         DualPoleModeCheckBox.IsChecked = _effect.DualPoleMode;
         PoleSeparationSlider.Value = _effect.PoleSeparation;
         ColorModeCombo.SelectedIndex = _effect.ColorMode;
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B6" : "\u25BC";
     }
 
     private void LineCountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)

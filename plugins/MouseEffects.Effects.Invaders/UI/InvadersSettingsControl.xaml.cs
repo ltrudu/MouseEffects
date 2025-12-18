@@ -12,7 +12,6 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
     private readonly IEffect _effect;
     private readonly DispatcherTimer _scoreTimer;
     private bool _isInitializing = true;
-    private bool _isExpanded;
 
     private Vector4 _rocketColor = new(0f, 1f, 0.5f, 1f);
     private Vector4 _invaderSmallColor = new(1f, 0.2f, 0.8f, 1f);
@@ -179,8 +178,6 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Rocket settings
         if (_effect.Configuration.TryGet("spawnOnLeftClick", out bool leftClick))
             LeftClickCheckBox.IsChecked = leftClick;
@@ -387,20 +384,6 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? false;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B2" : "\u25BC";
     }
 
     private void CheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();

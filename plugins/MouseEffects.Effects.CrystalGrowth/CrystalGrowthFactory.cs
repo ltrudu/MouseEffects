@@ -13,7 +13,7 @@ public sealed class CrystalGrowthFactory : IEffectFactory
         Description = "Ice/crystal structures that grow from mouse clicks with geometric, angular branches",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Other
     };
 
     public EffectMetadata Metadata => _metadata;

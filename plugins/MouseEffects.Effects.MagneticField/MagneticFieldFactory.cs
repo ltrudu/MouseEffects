@@ -13,7 +13,7 @@ public sealed class MagneticFieldFactory : IEffectFactory
         Description = "Visualization of magnetic field lines emanating from the mouse cursor with dipole pattern",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Physics
     };
 
     public EffectMetadata Metadata => _metadata;

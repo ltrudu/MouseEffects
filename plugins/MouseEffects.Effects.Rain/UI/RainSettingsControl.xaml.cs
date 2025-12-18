@@ -47,32 +47,10 @@ public partial class RainSettingsControl : UserControl
             FullScreenCheckBox.IsChecked = _effect.FullScreenMode;
             SpawnRadiusSlider.Value = _effect.SpawnRadius;
 
-            // Enable/disable state
-            EnabledCheckBox.IsChecked = _effect.IsEnabled;
         }
         finally
         {
             _isLoading = false;
-        }
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ContentPanel.Visibility == Visibility.Visible)
-        {
-            ContentPanel.Visibility = Visibility.Collapsed;
-            FoldButton.Content = "▼";
-        }
-        else
-        {
-            ContentPanel.Visibility = Visibility.Visible;
-            FoldButton.Content = "▲";
         }
     }
 

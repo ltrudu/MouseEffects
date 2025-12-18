@@ -16,7 +16,7 @@ public sealed class TileVibrationFactory : IEffectFactory
         Description = "Creates vibrating screen tiles that follow the mouse cursor and shrink over time",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Screen
     };
 
     public EffectMetadata Metadata => _metadata;

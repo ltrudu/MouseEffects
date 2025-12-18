@@ -8,7 +8,6 @@ public partial class HeartsSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -23,8 +22,6 @@ public partial class HeartsSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         // Heart settings
         if (_effect.Configuration.TryGet("h_heartCount", out int count))
         {
@@ -124,13 +121,6 @@ public partial class HeartsSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void HeartCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (HeartCountValue != null)
@@ -204,12 +194,5 @@ public partial class HeartsSettingsControl : UserControl
     private void ColorModeComboBox_Changed(object sender, SelectionChangedEventArgs e)
     {
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

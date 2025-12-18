@@ -13,7 +13,7 @@ public sealed class FallingLeavesFactory : IEffectFactory
         Description = "Autumn leaves drifting down from the mouse cursor with natural tumbling motion",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Nature
     };
 
     public EffectMetadata Metadata => _metadata;

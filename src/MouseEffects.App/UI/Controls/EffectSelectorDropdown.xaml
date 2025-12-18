@@ -1,0 +1,120 @@
+<UserControl x:Class="MouseEffects.App.UI.Controls.EffectSelectorDropdown"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             d:DesignHeight="40" d:DesignWidth="300">
+    <UserControl.Resources>
+        <!-- TreeView Item Style -->
+        <Style x:Key="CategoryItemStyle" TargetType="TreeViewItem">
+            <Setter Property="IsExpanded" Value="True"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="Padding" Value="4,6"/>
+        </Style>
+
+        <Style x:Key="EffectItemStyle" TargetType="TreeViewItem">
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <!-- Dropdown Toggle Button -->
+        <ToggleButton x:Name="DropdownToggle"
+                      Padding="12,8"
+                      HorizontalContentAlignment="Left"
+                      Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"
+                      BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                      BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="SelectedEffectText"
+                           Text="None"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+                <Path Grid.Column="1"
+                      Data="M0,0 L4,4 L8,0"
+                      Stroke="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                      StrokeThickness="1.5"
+                      VerticalAlignment="Center"
+                      Margin="8,0,0,0"/>
+            </Grid>
+        </ToggleButton>
+
+        <!-- Dropdown Popup -->
+        <Popup x:Name="DropdownPopup"
+               IsOpen="{Binding IsChecked, ElementName=DropdownToggle}"
+               StaysOpen="False"
+               PlacementTarget="{Binding ElementName=DropdownToggle}"
+               Placement="Bottom"
+               AllowsTransparency="True"
+               PopupAnimation="Slide">
+            <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
+                    BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Margin="0,2,0,0"
+                    MaxHeight="400"
+                    MinWidth="{Binding ActualWidth, ElementName=DropdownToggle}">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3"/>
+                </Border.Effect>
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              Padding="4">
+                    <StackPanel>
+                        <!-- None Option -->
+                        <Border x:Name="NoneOption"
+                                Padding="12,8"
+                                Cursor="Hand"
+                                MouseLeftButtonUp="NoneOption_Click"
+                                Background="Transparent">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListLowBrush}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Path x:Name="NoneCheckmark"
+                                      Data="M0,5 L3,8 L8,0"
+                                      Stroke="{DynamicResource SystemControlForegroundAccentBrush}"
+                                      StrokeThickness="2"
+                                      Visibility="Collapsed"
+                                      VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="None" FontStyle="Italic" Opacity="0.8"/>
+                            </Grid>
+                        </Border>
+
+                        <Separator Margin="8,4"/>
+
+                        <!-- TreeView for Categories and Effects -->
+                        <TreeView x:Name="EffectTreeView"
+                                  Background="Transparent"
+                                  BorderThickness="0"
+                                  Padding="0"
+                                  SelectedItemChanged="EffectTreeView_SelectedItemChanged">
+                            <TreeView.ItemContainerStyle>
+                                <Style TargetType="TreeViewItem">
+                                    <Setter Property="IsExpanded" Value="True"/>
+                                    <Setter Property="Padding" Value="4,2"/>
+                                </Style>
+                            </TreeView.ItemContainerStyle>
+                        </TreeView>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

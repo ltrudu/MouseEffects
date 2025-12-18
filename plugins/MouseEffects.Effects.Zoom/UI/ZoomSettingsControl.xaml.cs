@@ -11,7 +11,6 @@ public partial class ZoomSettingsControl : System.Windows.Controls.UserControl
     private readonly IEffect _effect;
     private readonly ZoomEffect? _zoomEffect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _borderColor = new(0.2f, 0.6f, 1.0f, 1.0f);
 
     /// <summary>
@@ -79,8 +78,6 @@ public partial class ZoomSettingsControl : System.Windows.Controls.UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("shapeType", out int shapeType))
         {
             ShapeComboBox.SelectedIndex = shapeType;
@@ -182,15 +179,6 @@ public partial class ZoomSettingsControl : System.Windows.Controls.UserControl
             (byte)(_borderColor.X * 255),
             (byte)(_borderColor.Y * 255),
             (byte)(_borderColor.Z * 255)));
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isInitializing) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-
-        // Notify that settings changed for persistence
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
     private void ShapeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -297,12 +285,5 @@ public partial class ZoomSettingsControl : System.Windows.Controls.UserControl
     private void SizeHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

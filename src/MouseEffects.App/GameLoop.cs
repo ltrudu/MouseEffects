@@ -107,8 +107,8 @@ public sealed class GameLoop : IDisposable
         var frameTime = currentTime - _previousTime;
         _previousTime = currentTime;
 
-        // Check if any effect is enabled
-        var hasAnyEffectEnabled = _effectManager.HasAnyEffectEnabled();
+        // Check if any effect is active
+        var hasAnyEffectEnabled = _effectManager.HasActiveEffect();
 
         // Handle transition from enabled to disabled - clear overlay once
         if (!hasAnyEffectEnabled && _wasAnyEffectEnabled)

@@ -8,7 +8,6 @@ public partial class StarfieldWarpSettingsControl : UserControl
 {
     private StarfieldWarpEffect? _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public StarfieldWarpSettingsControl(IEffect effect)
     {
@@ -25,7 +24,6 @@ public partial class StarfieldWarpSettingsControl : UserControl
 
             try
             {
-                EnabledCheckBox.IsChecked = _effect.IsEnabled;
                 LoadConfiguration();
             }
             finally
@@ -51,19 +49,6 @@ public partial class StarfieldWarpSettingsControl : UserControl
         DepthLayersSlider.Value = _effect.DepthLayers;
         PulseEffectCheckBox.IsChecked = _effect.PulseEffect;
         PulseSpeedSlider.Value = _effect.PulseSpeed;
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked == true;
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "\u25B6" : "\u25BC";
     }
 
     private void StarCountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)

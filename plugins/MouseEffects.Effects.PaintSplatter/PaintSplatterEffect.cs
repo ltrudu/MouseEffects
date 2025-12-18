@@ -20,7 +20,7 @@ public sealed class PaintSplatterEffect : EffectBase
         Description = "Artistic paint drops that splatter on clicks like Jackson Pollock",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Artistic
     };
 
     public override EffectMetadata Metadata => _metadata;

@@ -16,7 +16,7 @@ public sealed class ASCIIZerFactory : IEffectFactory
         Description = "Renders the screen as ASCII art with multiple filter styles and extensive customization options",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Screen
     };
 
     public EffectMetadata Metadata => _metadata;

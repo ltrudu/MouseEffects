@@ -33,7 +33,6 @@ public partial class FireTrailSettingsControl : System.Windows.Controls.UserCont
         try
         {
             // General
-            EnabledCheckBox.IsChecked = _effect.Enabled;
             IntensitySlider.Value = _effect.Intensity;
             IntensityValue.Text = _effect.Intensity.ToString("F1");
             LifetimeSlider.Value = _effect.ParticleLifetime;
@@ -71,27 +70,6 @@ public partial class FireTrailSettingsControl : System.Windows.Controls.UserCont
         {
             _isLoading = false;
         }
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (ContentPanel.Visibility == Visibility.Collapsed)
-        {
-            ContentPanel.Visibility = Visibility.Visible;
-            FoldButton.Content = "\u25B2"; // Up arrow
-        }
-        else
-        {
-            ContentPanel.Visibility = Visibility.Collapsed;
-            FoldButton.Content = "\u25BC"; // Down arrow
-        }
-    }
-
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.Enabled = EnabledCheckBox.IsChecked ?? false;
-        _effect.Configuration.Set("ft_enabled", _effect.Enabled);
     }
 
     private void IntensitySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)

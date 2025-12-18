@@ -17,7 +17,7 @@ public sealed class MagneticFieldEffect : EffectBase
         Description = "Visualization of magnetic field lines emanating from the mouse cursor with dipole pattern",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Physics
     };
 
     public override EffectMetadata Metadata => _metadata;

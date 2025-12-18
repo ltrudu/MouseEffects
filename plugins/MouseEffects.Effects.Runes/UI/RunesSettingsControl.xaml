@@ -4,14 +4,6 @@
              xmlns:ui="http://schemas.modernwpf.com/2019">
 
     <StackPanel>
-        <CheckBox x:Name="EnabledCheckBox" Content="Enabled" Margin="0,0,0,10"
-                  Checked="EnabledCheckBox_Changed" Unchecked="EnabledCheckBox_Changed"/>
-
-        <Button x:Name="FoldButton" Content="▼" Width="30" Height="25"
-                Margin="0,0,0,10" Click="FoldButton_Click" HorizontalAlignment="Left"/>
-
-        <StackPanel x:Name="ContentPanel" Visibility="Collapsed">
-
             <!-- Trigger Settings -->
             <TextBlock Text="Trigger Settings" FontWeight="Bold" Margin="0,5,0,5"/>
 
@@ -155,7 +147,5 @@
             <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="2" Value="0.3"
                     TickFrequency="0.1" IsSnapToTickEnabled="True"
                     ValueChanged="RainbowSpeedSlider_ValueChanged" Margin="0,0,0,8"/>
-
-        </StackPanel>
     </StackPanel>
 </UserControl>

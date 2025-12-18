@@ -21,7 +21,7 @@ public sealed class GlitchEffect : EffectBase
         Description = "Creates digital corruption and distortion artifacts around the mouse cursor like a broken screen",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Digital
     };
 
     // GPU resources

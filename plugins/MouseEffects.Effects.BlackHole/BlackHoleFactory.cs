@@ -13,7 +13,7 @@ public sealed class BlackHoleFactory : IEffectFactory
         Description = "Creates gravitational lensing distortion around the mouse cursor, warping the screen like a real black hole",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Cosmic
     };
 
     public EffectMetadata Metadata => _metadata;

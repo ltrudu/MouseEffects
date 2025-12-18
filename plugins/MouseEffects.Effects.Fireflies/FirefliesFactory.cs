@@ -13,7 +13,7 @@ public sealed class FirefliesFactory : IEffectFactory
         Description = "Glowing fireflies that swarm around the mouse cursor with pulsing bioluminescence",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Nature
     };
 
     public EffectMetadata Metadata => _metadata;

@@ -12,7 +12,7 @@ public sealed class CometTrailFactory : IEffectFactory
         Description = "A blazing comet with fiery tail and sparks following the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Trail
     };
 
     public EffectMetadata Metadata => _metadata;

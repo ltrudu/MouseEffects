@@ -9,7 +9,6 @@ public partial class RunesSettingsControl : UserControl
 {
     private readonly IEffect _effect;
     private bool _isLoading = true;
-    private bool _isExpanded;
 
     public event Action<string>? SettingsChanged;
 
@@ -24,8 +23,6 @@ public partial class RunesSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
-        EnabledCheckBox.IsChecked = _effect.IsEnabled;
-
         if (_effect.Configuration.TryGet("rn_mouseMoveEnabled", out bool moveEnabled))
             MouseMoveCheckBox.IsChecked = moveEnabled;
 
@@ -127,13 +124,6 @@ public partial class RunesSettingsControl : UserControl
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void EnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_isLoading) return;
-        _effect.IsEnabled = EnabledCheckBox.IsChecked ?? true;
-        SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
     private void MouseMoveCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateConfiguration();
@@ -222,12 +212,5 @@ public partial class RunesSettingsControl : UserControl
         if (RainbowSpeedValue != null)
             RainbowSpeedValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 }

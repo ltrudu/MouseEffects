@@ -23,7 +23,7 @@ public sealed class ParticleTrailEffect : EffectBase
         Description = "Creates colorful particle trails that follow the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Trail
     };
 
     // GPU resources

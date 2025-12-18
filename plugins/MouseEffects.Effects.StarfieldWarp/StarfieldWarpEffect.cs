@@ -18,7 +18,7 @@ public sealed class StarfieldWarpEffect : EffectBase
         Description = "Hyperspace/warp speed effect with stars streaking past, centered on mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Cosmic
     };
 
     public override EffectMetadata Metadata => _metadata;

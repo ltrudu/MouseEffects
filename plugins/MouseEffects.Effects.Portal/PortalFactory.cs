@@ -13,7 +13,7 @@ public sealed class PortalFactory : IEffectFactory
         Description = "Swirling dimensional vortex/portal effect at the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Cosmic
     };
 
     public EffectMetadata Metadata => _metadata;

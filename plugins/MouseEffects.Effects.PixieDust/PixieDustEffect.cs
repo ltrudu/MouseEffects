@@ -18,7 +18,7 @@ public sealed class PixieDustEffect : EffectBase
         Description = "Magical sparkle particles that follow the mouse cursor with floating and fading effects",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Visual
+        Category = EffectCategory.Particle
     };
 
     public override EffectMetadata Metadata => _metadata;
