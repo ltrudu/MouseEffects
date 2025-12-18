@@ -66,6 +66,12 @@
                     SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05"
                     Style="{StaticResource SliderStyle}" ValueChanged="EdgeSoftnessSlider_ValueChanged"/>
             <TextBlock x:Name="EdgeSoftnessValue" Text="0.2" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Alpha (Opacity)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="AlphaSlider" Minimum="0.0" Maximum="1.0" Value="1.0"
+                    SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05"
+                    Style="{StaticResource SliderStyle}" ValueChanged="AlphaSlider_ValueChanged"/>
+            <TextBlock x:Name="AlphaValue" Text="1.0" Opacity="0.7" FontSize="11"/>
         </StackPanel>
     </StackPanel>
 </UserControl>

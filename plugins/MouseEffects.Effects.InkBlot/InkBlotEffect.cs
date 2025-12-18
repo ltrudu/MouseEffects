@@ -13,68 +13,70 @@ namespace MouseEffects.Effects.InkBlot;
 
 public sealed class InkBlotEffect : EffectBase
 {
-    private const int HardMaxBlots = 100;
+    private const int MaxDrops = 128;
 
     private static readonly EffectMetadata _metadata = new()
     {
         Id = "inkblot",
         Name = "Ink Blot",
-        Description = "Spreading ink and watercolor drops that bloom from clicks or cursor movement",
+        Description = "Animated metaball ink drops that drip and merge organically",
         Author = "MouseEffects",
-        Version = new Version(1, 0, 0),
+        Version = new Version(1, 1, 0),
         Category = EffectCategory.Artistic
     };
 
     public override EffectMetadata Metadata => _metadata;
 
     // GPU Structures (16-byte aligned)
-    [StructLayout(LayoutKind.Sequential, Size = 80)]
-    private struct InkBlotConstants
+    [StructLayout(LayoutKind.Sequential, Size = 96)]
+    private struct InkConstants
     {
         public Vector2 ViewportSize;       // 8 bytes
         public float Time;                 // 4 bytes
-        public float EdgeIrregularity;     // 4 bytes = 16
+        public int ActiveDropCount;        // 4 bytes = 16
 
-        public float Opacity;              // 4 bytes
-        public int ActiveBlotCount;        // 4 bytes
+        public float MetaballThreshold;    // 4 bytes
+        public float EdgeSoftness;         // 4 bytes
         public float HdrMultiplier;        // 4 bytes
-        public float Padding1;             // 4 bytes = 32
+        public float Opacity;              // 4 bytes = 32
 
-        public Vector4 Padding2;           // 16 bytes = 48
-        public Vector4 Padding3;           // 16 bytes = 64
-        public Vector4 Padding4;           // 16 bytes = 80
+        public Vector4 InkColor;           // 16 bytes = 48
+
+        public float GlowIntensity;        // 4 bytes
+        public float InnerDarkening;       // 4 bytes
+        public int ColorMode;              // 4 bytes
+        public float RainbowSpeed;         // 4 bytes = 64
+
+        public int AnimateGlow;            // 4 bytes (bool as int)
+        public float GlowMin;              // 4 bytes
+        public float GlowMax;              // 4 bytes
+        public float GlowAnimSpeed;        // 4 bytes = 80
+
+        public Vector4 Padding;            // 16 bytes = 96
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 64)]
-    private struct BlotInstance
+    [StructLayout(LayoutKind.Sequential, Size = 32)]
+    private struct InkDrop
     {
-        public Vector2 Position;           // 8 bytes - Screen position
-        public float CurrentRadius;        // 4 bytes - Current radius
-        public float MaxRadius;            // 4 bytes = 16 - Maximum radius
+        public Vector2 Position;           // 8 bytes
+        public Vector2 Velocity;           // 8 bytes = 16
 
-        public float BirthTime;            // 4 bytes - When spawned
-        public float Lifetime;             // 4 bytes - Total lifetime
-        public float Age;                  // 4 bytes - Current age
-        public float Seed;                 // 4 bytes = 32 - Random seed for noise
-
-        public Vector4 Color;              // 16 bytes = 48 - RGBA color
-
-        public float SpreadSpeed;          // 4 bytes - Pixels per second
-        public float Padding1;             // 4 bytes
-        public float Padding2;             // 4 bytes
-        public float Padding3;             // 4 bytes = 64
+        public float Radius;               // 4 bytes
+        public float Age;                  // 4 bytes
+        public float MaxAge;               // 4 bytes
+        public float Seed;                 // 4 bytes = 32
     }
 
     // GPU Resources
     private IBuffer? _constantBuffer;
-    private IBuffer? _blotBuffer;
+    private IBuffer? _dropBuffer;
     private IShader? _vertexShader;
     private IShader? _pixelShader;
 
-    // Blot management (CPU side)
-    private readonly BlotInstance[] _blots = new BlotInstance[HardMaxBlots];
-    private readonly BlotInstance[] _gpuBlots = new BlotInstance[HardMaxBlots];
-    private int _activeBlotCount;
+    // Drop management (CPU side)
+    private readonly InkDrop[] _drops = new InkDrop[MaxDrops];
+    private readonly InkDrop[] _gpuDrops = new InkDrop[MaxDrops];
+    private int _activeDropCount;
 
     // Mouse tracking
     private Vector2 _lastMousePos;
@@ -90,58 +92,73 @@ public sealed class InkBlotEffect : EffectBase
     private float _lastSecondStart;
 
     // Configuration fields
-    private float _dropSize = 60f;
-    private float _spreadSpeed = 50f;
-    private float _edgeIrregularity = 0.3f;
-    private float _opacity = 0.7f;
-    private float _lifetime = 3.0f;
-    private int _colorMode = 1; // 0=Ink, 1=Watercolor
-    private int _inkColorIndex = 0;
-    private int _watercolorIndex = 0;
-    private bool _randomColor = true;
+    private float _dropRadius = 25f;
+    private float _gravity = 150f;
+    private float _surfaceTension = 0.5f;
+    private float _viscosity = 0.98f;
+    private float _spawnSpread = 30f;
+    private float _metaballThreshold = 1.0f;
+    private float _edgeSoftness = 0.3f;
+    private float _opacity = 0.85f;
+    private float _lifetime = 4.0f;
+    private float _glowIntensity = 0.2f;
+    private float _innerDarkening = 0.3f;
+    private bool _animateGlow = false;
+    private float _glowMin = 0.1f;
+    private float _glowMax = 0.5f;
+    private float _glowAnimSpeed = 2.0f;
+    private int _colorMode = 0; // 0=Black, 1=Blue, 2=Red, 3=Sepia, 4=Rainbow
+    private Vector4 _customColor = new(0.1f, 0.1f, 0.1f, 1f);
+    private float _rainbowSpeed = 1.0f;
     private bool _spawnOnClick = true;
-    private bool _spawnOnMove = false;
-    private float _moveDistance = 80f;
-    private int _maxBlots = 30;
-    private int _maxBlotsPerSecond = 20;
+    private bool _spawnOnMove = true;
+    private float _moveDistance = 40f;
+    private int _dropsPerSpawn = 3;
+    private int _maxDropsPerSecond = 30;
 
-    // Color palettes
+    // Color palette
     private static readonly Vector4[] InkColors =
     [
-        new(0.1f, 0.1f, 0.1f, 1f),      // Black
-        new(0.118f, 0.227f, 0.541f, 1f), // Blue (#1E3A8A)
-        new(0.6f, 0.106f, 0.106f, 1f),   // Red (#991B1B)
-        new(0.471f, 0.208f, 0.059f, 1f)  // Sepia (#78350F)
-    ];
-
-    private static readonly Vector4[] WatercolorColors =
-    [
-        new(0.576f, 0.773f, 0.992f, 1f), // Soft Blue (#93C5FD)
-        new(0.984f, 0.812f, 0.910f, 1f), // Soft Pink (#FBCFE8)
-        new(0.733f, 0.969f, 0.816f, 1f), // Soft Green (#BBF7D0)
-        new(0.867f, 0.839f, 0.996f, 1f), // Soft Purple (#DDD6FE)
-        new(0.996f, 0.941f, 0.659f, 1f)  // Soft Yellow (#FEF08A)
+        new(0.05f, 0.05f, 0.08f, 1f),      // Black ink
+        new(0.08f, 0.15f, 0.45f, 1f),       // Blue ink
+        new(0.5f, 0.08f, 0.08f, 1f),        // Red ink
+        new(0.4f, 0.2f, 0.05f, 1f)          // Sepia
     ];
 
     // Public properties for UI binding
-    public float DropSize { get => _dropSize; set => _dropSize = value; }
-    public float SpreadSpeed { get => _spreadSpeed; set => _spreadSpeed = value; }
-    public float EdgeIrregularity { get => _edgeIrregularity; set => _edgeIrregularity = value; }
+    public float DropRadius { get => _dropRadius; set => _dropRadius = value; }
+    public float Gravity { get => _gravity; set => _gravity = value; }
+    public float SurfaceTension { get => _surfaceTension; set => _surfaceTension = value; }
+    public float Viscosity { get => _viscosity; set => _viscosity = value; }
+    public float SpawnSpread { get => _spawnSpread; set => _spawnSpread = value; }
+    public float MetaballThreshold { get => _metaballThreshold; set => _metaballThreshold = value; }
+    public float EdgeSoftness { get => _edgeSoftness; set => _edgeSoftness = value; }
     public float Opacity { get => _opacity; set => _opacity = value; }
     public float Lifetime { get => _lifetime; set => _lifetime = value; }
+    public float GlowIntensity { get => _glowIntensity; set => _glowIntensity = value; }
+    public float InnerDarkening { get => _innerDarkening; set => _innerDarkening = value; }
+    public bool AnimateGlow { get => _animateGlow; set => _animateGlow = value; }
+    public float GlowMin { get => _glowMin; set => _glowMin = value; }
+    public float GlowMax { get => _glowMax; set => _glowMax = value; }
+    public float GlowAnimSpeed { get => _glowAnimSpeed; set => _glowAnimSpeed = value; }
     public int ColorMode { get => _colorMode; set => _colorMode = value; }
-    public int InkColorIndex { get => _inkColorIndex; set => _inkColorIndex = value; }
-    public int WatercolorIndex { get => _watercolorIndex; set => _watercolorIndex = value; }
-    public bool RandomColor { get => _randomColor; set => _randomColor = value; }
+    public Vector4 CustomColor { get => _customColor; set => _customColor = value; }
+    public float RainbowSpeed { get => _rainbowSpeed; set => _rainbowSpeed = value; }
     public bool SpawnOnClick { get => _spawnOnClick; set => _spawnOnClick = value; }
     public bool SpawnOnMove { get => _spawnOnMove; set => _spawnOnMove = value; }
     public float MoveDistance { get => _moveDistance; set => _moveDistance = value; }
-    public int MaxBlots { get => _maxBlots; set => _maxBlots = value; }
-    public int MaxBlotsPerSecond { get => _maxBlotsPerSecond; set => _maxBlotsPerSecond = value; }
+    public int DropsPerSpawn { get => _dropsPerSpawn; set => _dropsPerSpawn = value; }
+    public int MaxDropsPerSecond { get => _maxDropsPerSecond; set => _maxDropsPerSecond = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
         _viewportSize = context.ViewportSize;
+
+        // Initialize drops as inactive
+        for (int i = 0; i < MaxDrops; i++)
+        {
+            _drops[i].Age = -1f;
+        }
 
         // Load and compile shaders
         var shaderCode = LoadShaderResource("Shaders.InkBlotShader.hlsl");
@@ -151,51 +168,67 @@ public sealed class InkBlotEffect : EffectBase
         // Create constant buffer
         _constantBuffer = context.CreateBuffer(new BufferDescription
         {
-            Size = Marshal.SizeOf<InkBlotConstants>(),
+            Size = Marshal.SizeOf<InkConstants>(),
             Type = BufferType.Constant,
             Dynamic = true
         });
 
-        // Create blot instance buffer (structured buffer)
-        _blotBuffer = context.CreateBuffer(new BufferDescription
+        // Create drop instance buffer (structured buffer)
+        _dropBuffer = context.CreateBuffer(new BufferDescription
         {
-            Size = Marshal.SizeOf<BlotInstance>() * HardMaxBlots,
+            Size = Marshal.SizeOf<InkDrop>() * MaxDrops,
             Type = BufferType.Structured,
             Dynamic = true,
-            StructureStride = Marshal.SizeOf<BlotInstance>()
+            StructureStride = Marshal.SizeOf<InkDrop>()
         });
     }
 
     protected override void OnConfigurationChanged()
     {
-        if (Configuration.TryGet("dropSize", out float dropSize))
-            _dropSize = dropSize;
-        if (Configuration.TryGet("spreadSpeed", out float spreadSpeed))
-            _spreadSpeed = spreadSpeed;
-        if (Configuration.TryGet("edgeIrregularity", out float irregularity))
-            _edgeIrregularity = irregularity;
+        if (Configuration.TryGet("dropRadius", out float dropRadius))
+            _dropRadius = dropRadius;
+        if (Configuration.TryGet("gravity", out float gravity))
+            _gravity = gravity;
+        if (Configuration.TryGet("surfaceTension", out float surfaceTension))
+            _surfaceTension = surfaceTension;
+        if (Configuration.TryGet("viscosity", out float viscosity))
+            _viscosity = viscosity;
+        if (Configuration.TryGet("spawnSpread", out float spawnSpread))
+            _spawnSpread = spawnSpread;
+        if (Configuration.TryGet("metaballThreshold", out float threshold))
+            _metaballThreshold = threshold;
+        if (Configuration.TryGet("edgeSoftness", out float softness))
+            _edgeSoftness = softness;
         if (Configuration.TryGet("opacity", out float opacity))
             _opacity = opacity;
         if (Configuration.TryGet("lifetime", out float lifetime))
             _lifetime = lifetime;
+        if (Configuration.TryGet("glowIntensity", out float glow))
+            _glowIntensity = glow;
+        if (Configuration.TryGet("innerDarkening", out float darkening))
+            _innerDarkening = darkening;
+        if (Configuration.TryGet("animateGlow", out bool animateGlow))
+            _animateGlow = animateGlow;
+        if (Configuration.TryGet("glowMin", out float glowMin))
+            _glowMin = glowMin;
+        if (Configuration.TryGet("glowMax", out float glowMax))
+            _glowMax = glowMax;
+        if (Configuration.TryGet("glowAnimSpeed", out float glowAnimSpeed))
+            _glowAnimSpeed = glowAnimSpeed;
         if (Configuration.TryGet("colorMode", out int colorMode))
             _colorMode = colorMode;
-        if (Configuration.TryGet("inkColorIndex", out int inkColor))
-            _inkColorIndex = inkColor;
-        if (Configuration.TryGet("watercolorIndex", out int watercolorColor))
-            _watercolorIndex = watercolorColor;
-        if (Configuration.TryGet("randomColor", out bool randomColor))
-            _randomColor = randomColor;
+        if (Configuration.TryGet("rainbowSpeed", out float rainbowSpeed))
+            _rainbowSpeed = rainbowSpeed;
         if (Configuration.TryGet("spawnOnClick", out bool spawnOnClick))
             _spawnOnClick = spawnOnClick;
         if (Configuration.TryGet("spawnOnMove", out bool spawnOnMove))
             _spawnOnMove = spawnOnMove;
         if (Configuration.TryGet("moveDistance", out float moveDistance))
             _moveDistance = moveDistance;
-        if (Configuration.TryGet("maxBlots", out int maxBlots))
-            _maxBlots = maxBlots;
-        if (Configuration.TryGet("maxBlotsPerSecond", out int maxBlotsPerSecond))
-            _maxBlotsPerSecond = maxBlotsPerSecond;
+        if (Configuration.TryGet("dropsPerSpawn", out int dropsPerSpawn))
+            _dropsPerSpawn = dropsPerSpawn;
+        if (Configuration.TryGet("maxDropsPerSecond", out int maxDropsPerSecond))
+            _maxDropsPerSecond = maxDropsPerSecond;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -220,7 +253,7 @@ public sealed class InkBlotEffect : EffectBase
             _accumulatedDistance += distanceFromLast;
             if (_accumulatedDistance >= _moveDistance)
             {
-                SpawnBlot(currentPos, totalTime);
+                SpawnDrops(currentPos, totalTime);
                 _accumulatedDistance = 0f;
             }
         }
@@ -231,137 +264,180 @@ public sealed class InkBlotEffect : EffectBase
 
         if (_spawnOnClick && leftPressed && !_wasLeftPressed)
         {
-            SpawnBlot(currentPos, totalTime);
+            SpawnDrops(currentPos, totalTime);
         }
         if (_spawnOnClick && rightPressed && !_wasRightPressed)
         {
-            SpawnBlot(currentPos, totalTime);
+            SpawnDrops(currentPos, totalTime);
         }
 
         _wasLeftPressed = leftPressed;
         _wasRightPressed = rightPressed;
         _lastMousePos = currentPos;
 
-        // Update existing blots
-        UpdateBlots(dt, totalTime);
+        // Update physics
+        UpdatePhysics(dt);
     }
 
-    private void UpdateBlots(float dt, float totalTime)
+    private void UpdatePhysics(float dt)
     {
-        _activeBlotCount = 0;
-
-        for (int i = 0; i < HardMaxBlots; i++)
+        // First pass: update velocities with surface tension (attraction to nearby drops)
+        if (_surfaceTension > 0)
         {
-            ref var blot = ref _blots[i];
-            if (blot.Age < 0) continue; // Inactive blot
+            for (int i = 0; i < MaxDrops; i++)
+            {
+                ref var dropA = ref _drops[i];
+                if (dropA.Age < 0) continue;
+
+                Vector2 tensionForce = Vector2.Zero;
+
+                for (int j = 0; j < MaxDrops; j++)
+                {
+                    if (i == j) continue;
+                    ref var dropB = ref _drops[j];
+                    if (dropB.Age < 0) continue;
+
+                    var delta = dropB.Position - dropA.Position;
+                    var dist = delta.Length();
+                    var combinedRadius = (dropA.Radius + dropB.Radius) * 2f;
+
+                    // Only attract within a certain range
+                    if (dist > 0.1f && dist < combinedRadius)
+                    {
+                        var strength = (1f - dist / combinedRadius) * _surfaceTension * 50f;
+                        tensionForce += Vector2.Normalize(delta) * strength;
+                    }
+                }
+
+                dropA.Velocity += tensionForce * dt;
+            }
+        }
+
+        // Second pass: update positions and apply gravity/viscosity
+        _activeDropCount = 0;
+
+        for (int i = 0; i < MaxDrops; i++)
+        {
+            ref var drop = ref _drops[i];
+            if (drop.Age < 0) continue;
 
             // Update age
-            blot.Age += dt;
+            drop.Age += dt;
 
             // Check if expired
-            if (blot.Age >= blot.Lifetime)
+            if (drop.Age >= drop.MaxAge)
             {
-                blot.Age = -1; // Mark as inactive
+                drop.Age = -1f;
                 continue;
             }
 
-            // Update radius (expand over time)
-            float progress = blot.Age * blot.SpreadSpeed;
-            blot.CurrentRadius = Math.Min(progress, blot.MaxRadius);
+            // Apply gravity
+            drop.Velocity.Y += _gravity * dt;
+
+            // Apply viscosity (drag)
+            drop.Velocity *= MathF.Pow(_viscosity, dt * 60f);
+
+            // Update position
+            drop.Position += drop.Velocity * dt;
+
+            // Boundary check - keep drops on screen (with some margin)
+            float margin = drop.Radius * 2;
+            if (drop.Position.X < -margin || drop.Position.X > _viewportSize.X + margin ||
+                drop.Position.Y < -margin || drop.Position.Y > _viewportSize.Y + margin)
+            {
+                drop.Age = -1f;
+                continue;
+            }
 
             // Copy to GPU buffer
-            _gpuBlots[_activeBlotCount++] = blot;
+            _gpuDrops[_activeDropCount++] = drop;
         }
     }
 
-    private void SpawnBlot(Vector2 position, float totalTime)
+    private void SpawnDrops(Vector2 position, float totalTime)
     {
-        // Rate limiting
-        if (_spawnsThisSecond >= _maxBlotsPerSecond)
-            return;
-
-        // Active count limiting
-        if (_activeBlotCount >= _maxBlots)
-            return;
-
-        // Find empty slot
-        int slot = -1;
-        for (int i = 0; i < HardMaxBlots; i++)
+        for (int d = 0; d < _dropsPerSpawn; d++)
         {
-            if (_blots[i].Age < 0)
+            // Rate limiting
+            if (_spawnsThisSecond >= _maxDropsPerSecond)
+                return;
+
+            // Find empty slot
+            int slot = -1;
+            for (int i = 0; i < MaxDrops; i++)
             {
-                slot = i;
-                break;
+                if (_drops[i].Age < 0)
+                {
+                    slot = i;
+                    break;
+                }
             }
+            if (slot < 0) return;
+
+            // Random offset for spread
+            var offset = new Vector2(
+                (Random.Shared.NextSingle() - 0.5f) * 2f * _spawnSpread,
+                (Random.Shared.NextSingle() - 0.5f) * 2f * _spawnSpread
+            );
+
+            // Random initial velocity (slight downward bias)
+            var velocity = new Vector2(
+                (Random.Shared.NextSingle() - 0.5f) * 40f,
+                Random.Shared.NextSingle() * 20f + 10f
+            );
+
+            // Vary radius slightly
+            var radiusVariation = 0.7f + Random.Shared.NextSingle() * 0.6f;
+
+            // Create drop
+            _drops[slot] = new InkDrop
+            {
+                Position = position + offset,
+                Velocity = velocity,
+                Radius = _dropRadius * radiusVariation,
+                Age = 0f,
+                MaxAge = _lifetime * (0.8f + Random.Shared.NextSingle() * 0.4f),
+                Seed = Random.Shared.NextSingle() * 1000f
+            };
+
+            _spawnsThisSecond++;
         }
-        if (slot < 0) return;
-
-        // Determine color
-        Vector4 color;
-        if (_colorMode == 0) // Ink mode
-        {
-            if (_randomColor)
-            {
-                color = InkColors[Random.Shared.Next(InkColors.Length)];
-            }
-            else
-            {
-                color = InkColors[Math.Clamp(_inkColorIndex, 0, InkColors.Length - 1)];
-            }
-        }
-        else // Watercolor mode
-        {
-            if (_randomColor)
-            {
-                color = WatercolorColors[Random.Shared.Next(WatercolorColors.Length)];
-            }
-            else
-            {
-                color = WatercolorColors[Math.Clamp(_watercolorIndex, 0, WatercolorColors.Length - 1)];
-            }
-        }
-
-        // Create blot
-        _blots[slot] = new BlotInstance
-        {
-            Position = position,
-            CurrentRadius = 0f,
-            MaxRadius = _dropSize,
-            BirthTime = totalTime,
-            Lifetime = _lifetime,
-            Age = 0f,
-            Seed = Random.Shared.NextSingle() * 1000f,
-            Color = color,
-            SpreadSpeed = _spreadSpeed,
-            Padding1 = 0,
-            Padding2 = 0,
-            Padding3 = 0
-        };
-
-        _spawnsThisSecond++;
     }
 
     protected override void OnRender(IRenderContext context)
     {
-        if (_activeBlotCount == 0) return;
+        if (_activeDropCount == 0) return;
 
         var totalTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
 
+        // Get current ink color
+        Vector4 inkColor = _colorMode < InkColors.Length ? InkColors[_colorMode] : _customColor;
+
         // Update constant buffer
-        var constants = new InkBlotConstants
+        var constants = new InkConstants
         {
             ViewportSize = _viewportSize,
             Time = totalTime,
-            EdgeIrregularity = _edgeIrregularity,
+            ActiveDropCount = _activeDropCount,
+            MetaballThreshold = _metaballThreshold,
+            EdgeSoftness = _edgeSoftness,
+            HdrMultiplier = context.HdrPeakBrightness,
             Opacity = _opacity,
-            ActiveBlotCount = _activeBlotCount,
-            HdrMultiplier = context.HdrPeakBrightness
+            InkColor = inkColor,
+            GlowIntensity = _glowIntensity,
+            InnerDarkening = _innerDarkening,
+            ColorMode = _colorMode,
+            RainbowSpeed = _rainbowSpeed,
+            AnimateGlow = _animateGlow ? 1 : 0,
+            GlowMin = _glowMin,
+            GlowMax = _glowMax,
+            GlowAnimSpeed = _glowAnimSpeed
         };
 
         context.UpdateBuffer(_constantBuffer!, MemoryMarshal.CreateReadOnlySpan(ref constants, 1));
 
-        // Update blot buffer
-        context.UpdateBuffer(_blotBuffer!, new ReadOnlySpan<BlotInstance>(_gpuBlots, 0, _activeBlotCount));
+        // Update drop buffer
+        context.UpdateBuffer(_dropBuffer!, new ReadOnlySpan<InkDrop>(_gpuDrops, 0, _activeDropCount));
 
         // Set render state
         context.SetBlendState(BlendMode.Alpha);
@@ -369,12 +445,11 @@ public sealed class InkBlotEffect : EffectBase
         context.SetPixelShader(_pixelShader!);
         context.SetConstantBuffer(ShaderStage.Vertex, 0, _constantBuffer!);
         context.SetConstantBuffer(ShaderStage.Pixel, 0, _constantBuffer!);
-        context.SetShaderResource(ShaderStage.Vertex, 0, _blotBuffer!);
-        context.SetShaderResource(ShaderStage.Pixel, 0, _blotBuffer!);
+        context.SetShaderResource(ShaderStage.Pixel, 0, _dropBuffer!);
         context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
-        // Draw instanced quads (6 vertices per quad, one per blot)
-        context.DrawInstanced(6, _activeBlotCount, 0, 0);
+        // Draw fullscreen triangle for metaball evaluation
+        context.Draw(3, 0);
     }
 
     protected override void OnViewportSizeChanged(Vector2 newSize)
@@ -384,7 +459,7 @@ public sealed class InkBlotEffect : EffectBase
 
     protected override void OnDispose()
     {
-        _blotBuffer?.Dispose();
+        _dropBuffer?.Dispose();
         _constantBuffer?.Dispose();
         _pixelShader?.Dispose();
         _vertexShader?.Dispose();

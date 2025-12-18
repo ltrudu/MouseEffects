@@ -41,6 +41,33 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="EventHorizonSlider_ValueChanged"/>
             <TextBlock x:Name="EventHorizonValue" Text="0.30" Opacity="0.7" FontSize="11"/>
 
+            <TextBlock Text="Center Alpha" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="CenterAlphaSlider" Minimum="0.0" Maximum="1.0" Value="0.6"
+                    SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05"
+                    Style="{StaticResource SliderStyle}" ValueChanged="CenterAlphaSlider_ValueChanged"/>
+            <TextBlock x:Name="CenterAlphaValue" Text="0.60" Opacity="0.7" FontSize="11"/>
+
+            <!-- Center Glow Settings -->
+            <Separator Margin="0,12,0,8"/>
+            <TextBlock Text="Center Glow" FontWeight="Bold" Margin="0,0,0,8"/>
+
+            <CheckBox x:Name="CenterGlowCheckBox" Content="Animate Center Glow" Margin="0,0,0,8"
+                      IsChecked="False" Checked="CenterGlowCheckBox_Changed" Unchecked="CenterGlowCheckBox_Changed"/>
+
+            <StackPanel x:Name="CenterGlowPanel" Visibility="Collapsed">
+                <TextBlock Text="Luminosity Threshold" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="CenterGlowThresholdSlider" Minimum="0.0" Maximum="1.0" Value="0.1"
+                        SmallChange="0.05" LargeChange="0.1" TickFrequency="0.05"
+                        Style="{StaticResource SliderStyle}" ValueChanged="CenterGlowThresholdSlider_ValueChanged"/>
+                <TextBlock x:Name="CenterGlowThresholdValue" Text="0.10" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="CenterGlowIntensitySlider" Minimum="0.0" Maximum="3.0" Value="1.5"
+                        SmallChange="0.1" LargeChange="0.5" TickFrequency="0.1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="CenterGlowIntensitySlider_ValueChanged"/>
+                <TextBlock x:Name="CenterGlowIntensityValue" Text="1.5" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
             <!-- Accretion Disk Settings -->
             <Separator Margin="0,12,0,8"/>
             <TextBlock Text="Accretion Disk" FontWeight="Bold" Margin="0,0,0,8"/>

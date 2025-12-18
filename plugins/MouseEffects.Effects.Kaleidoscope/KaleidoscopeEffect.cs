@@ -37,6 +37,7 @@ public sealed class KaleidoscopeEffect : EffectBase
     private float _rotationOffset = 0.0f;
     private float _edgeSoftness = 0.2f;
     private float _zoomFactor = 1.0f;
+    private float _alpha = 1.0f;
     private Vector2 _mousePosition;
     private float _totalTime;
 
@@ -86,6 +87,9 @@ public sealed class KaleidoscopeEffect : EffectBase
 
         if (Configuration.TryGet("zoomFactor", out float zoomFactor))
             _zoomFactor = zoomFactor;
+
+        if (Configuration.TryGet("alpha", out float alpha))
+            _alpha = alpha;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -114,7 +118,8 @@ public sealed class KaleidoscopeEffect : EffectBase
             EdgeSoftness = _edgeSoftness,
             ZoomFactor = _zoomFactor,
             Time = _totalTime,
-            HdrMultiplier = context.HdrPeakBrightness
+            HdrMultiplier = context.HdrPeakBrightness,
+            Alpha = _alpha
         };
 
         context.UpdateBuffer(_paramsBuffer!, kaleidoscopeParams);
@@ -185,7 +190,8 @@ public sealed class KaleidoscopeEffect : EffectBase
         public float ZoomFactor;           // 4 bytes, offset 36
         public float Time;                 // 4 bytes, offset 40
         public float HdrMultiplier;        // 4 bytes, offset 44
-        private Vector4 _padding;          // 16 bytes, offset 48
+        public float Alpha;                // 4 bytes, offset 48
+        private Vector3 _padding;          // 12 bytes, offset 52
     }
 
     #endregion

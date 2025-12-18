@@ -70,6 +70,17 @@ public sealed class SpirographEffect : EffectBase
     private Vector4 _secondaryColor = new(0f, 0.5f, 1f, 1f);
     private Vector4 _tertiaryColor = new(0.5f, 1f, 0f, 1f);
 
+    // Trigger settings
+    private bool _showOnLeftClick = false;
+    private bool _showOnRightClick = false;
+    private int _mouseMoveMode = 1; // 0=None, 1=Follow, 2=Follow/Rotate
+    private bool _invertRotation = false;
+
+    // Runtime state
+    private Vector2 _lastMousePosition;
+    private float _mouseRotationOffset = 0f;
+    private bool _isVisible = true;
+
     // Public properties for UI binding
     public float InnerRadius { get => _innerRadius; set => _innerRadius = value; }
     public float OuterRadius { get => _outerRadius; set => _outerRadius = value; }
@@ -84,6 +95,10 @@ public sealed class SpirographEffect : EffectBase
     public Vector4 PrimaryColor { get => _primaryColor; set => _primaryColor = value; }
     public Vector4 SecondaryColor { get => _secondaryColor; set => _secondaryColor = value; }
     public Vector4 TertiaryColor { get => _tertiaryColor; set => _tertiaryColor = value; }
+    public bool ShowOnLeftClick { get => _showOnLeftClick; set => _showOnLeftClick = value; }
+    public bool ShowOnRightClick { get => _showOnRightClick; set => _showOnRightClick = value; }
+    public int MouseMoveMode { get => _mouseMoveMode; set => _mouseMoveMode = value; }
+    public bool InvertRotation { get => _invertRotation; set => _invertRotation = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -129,17 +144,70 @@ public sealed class SpirographEffect : EffectBase
             _secondaryColor = secCol;
         if (Configuration.TryGet("sp_tertiaryColor", out Vector4 tertCol))
             _tertiaryColor = tertCol;
+
+        // Trigger settings
+        if (Configuration.TryGet("sp_showOnLeftClick", out bool showLeft))
+            _showOnLeftClick = showLeft;
+        if (Configuration.TryGet("sp_showOnRightClick", out bool showRight))
+            _showOnRightClick = showRight;
+        if (Configuration.TryGet("sp_mouseMoveMode", out int moveMode))
+            _mouseMoveMode = moveMode;
+        if (Configuration.TryGet("sp_invertRotation", out bool invertRot))
+            _invertRotation = invertRot;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
-        // Store current mouse position for rendering
-        _currentMousePosition = mouseState.Position;
+        // Determine visibility based on mouse button triggers
+        if (_showOnLeftClick || _showOnRightClick)
+        {
+            // If triggers are enabled, only show when button is held
+            _isVisible = (_showOnLeftClick && mouseState.IsButtonDown(MouseButtons.Left)) ||
+                         (_showOnRightClick && mouseState.IsButtonDown(MouseButtons.Right));
+        }
+        else
+        {
+            // No triggers enabled, always visible
+            _isVisible = true;
+        }
+
+        // Handle mouse move mode
+        if (_mouseMoveMode == 0) // None
+        {
+            // Don't update position - keep static
+        }
+        else if (_mouseMoveMode == 1 || _mouseMoveMode == 2) // Follow or Follow/Rotate
+        {
+            // Update position to follow mouse
+            Vector2 delta = mouseState.Position - _lastMousePosition;
+
+            // In Follow/Rotate mode, adjust rotation based on mouse movement
+            if (_mouseMoveMode == 2 && _lastMousePosition != Vector2.Zero)
+            {
+                // Up or right = clockwise, down or left = counter-clockwise
+                float rotationDelta = (delta.X + -delta.Y) * 0.01f;
+
+                if (_invertRotation)
+                    rotationDelta = -rotationDelta;
+
+                _mouseRotationOffset += rotationDelta;
+            }
+
+            _currentMousePosition = mouseState.Position;
+            _lastMousePosition = mouseState.Position;
+        }
     }
 
     protected override void OnRender(IRenderContext context)
     {
+        // Don't render if not visible
+        if (!_isVisible)
+            return;
+
         float currentTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
+
+        // Calculate effective rotation speed (automatic in Follow mode, mouse-driven in Follow/Rotate)
+        float effectiveRotationOffset = _mouseMoveMode == 2 ? _mouseRotationOffset : 0f;
 
         // Update constant buffer
         var constants = new SpirographConstants
@@ -150,7 +218,7 @@ public sealed class SpirographEffect : EffectBase
             InnerRadius = _innerRadius,
             OuterRadius = _outerRadius,
             PenOffset = _penOffset,
-            RotationSpeed = _rotationSpeed,
+            RotationSpeed = _mouseMoveMode == 2 ? 0f : _rotationSpeed, // No auto rotation in Follow/Rotate mode
             LineThickness = _lineThickness,
             GlowIntensity = _glowIntensity,
             NumPetals = _numPetals,
@@ -161,7 +229,7 @@ public sealed class SpirographEffect : EffectBase
             PrimaryColor = _primaryColor,
             SecondaryColor = _secondaryColor,
             TertiaryColor = _tertiaryColor,
-            Padding = Vector4.Zero
+            Padding = new Vector4(effectiveRotationOffset, 0, 0, 0)
         };
         context.UpdateBuffer(_constantBuffer!, constants);
 

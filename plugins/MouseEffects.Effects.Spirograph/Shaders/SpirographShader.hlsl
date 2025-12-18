@@ -108,8 +108,8 @@ float distanceToSpirograph(float2 p, float2 center)
     float r = InnerRadius;
     float d = PenOffset;
 
-    // Animated angle based on time
-    float angleOffset = Time * RotationSpeed;
+    // Animated angle based on time + mouse rotation offset (Padding.x)
+    float angleOffset = Time * RotationSpeed + Padding.x;
 
     // Sample curve with enough detail
     int samples = max(64, NumPetals * 8);
@@ -137,7 +137,7 @@ float distanceToSpirographWithFade(float2 p, float2 center)
     float r = InnerRadius;
     float d = PenOffset;
 
-    float angleOffset = Time * RotationSpeed;
+    float angleOffset = Time * RotationSpeed + Padding.x;
     int samples = max(64, NumPetals * 8);
     float maxT = TAU * float(NumPetals);
 
@@ -205,7 +205,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float R = OuterRadius;
     float r = InnerRadius;
     float d = PenOffset;
-    float angleOffset = Time * RotationSpeed;
+    float angleOffset = Time * RotationSpeed + Padding.x;
 
     // Find parameter t for closest point (simplified - use angle to mouse)
     float angle = atan2(relativePos.y, relativePos.x);

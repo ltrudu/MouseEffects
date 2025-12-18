@@ -4,122 +4,182 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="400">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10">
-            <!-- Drop Settings -->
-            <TextBlock Text="Drop Settings" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
+             d:DesignHeight="700" d:DesignWidth="400"
+             PreviewMouseWheel="UserControl_PreviewMouseWheel">
+    <StackPanel Margin="0">
+        <!-- Physics Settings -->
+        <TextBlock Text="Physics" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
 
-            <TextBlock Text="Drop Size:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="DropSizeSlider" Minimum="20" Maximum="200" Width="250"
-                        ValueChanged="DropSizeSlider_ValueChanged"/>
-                <TextBlock Text="{Binding ElementName=DropSizeSlider, Path=Value, StringFormat={}{0:F0} px}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
+        <TextBlock Text="Drop Size:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="DropRadiusSlider" Minimum="10" Maximum="60" Width="250"
+                    ValueChanged="DropRadiusSlider_ValueChanged"/>
+            <TextBlock Text="{Binding ElementName=DropRadiusSlider, Path=Value, StringFormat={}{0:F0} px}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
 
-            <TextBlock Text="Spread Speed:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="SpreadSpeedSlider" Minimum="10" Maximum="200" Width="250"
-                        ValueChanged="SpreadSpeedSlider_ValueChanged"/>
-                <TextBlock Text="{Binding ElementName=SpreadSpeedSlider, Path=Value, StringFormat={}{0:F0} px/s}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
+        <TextBlock Text="Gravity:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="GravitySlider" Minimum="0" Maximum="400" Width="250"
+                    ValueChanged="GravitySlider_ValueChanged"/>
+            <TextBlock Text="{Binding ElementName=GravitySlider, Path=Value, StringFormat={}{0:F0}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
 
-            <TextBlock Text="Edge Irregularity:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="EdgeIrregularitySlider" Minimum="0" Maximum="1" Width="250"
-                        ValueChanged="EdgeIrregularitySlider_ValueChanged" TickFrequency="0.05"/>
-                <TextBlock Text="{Binding ElementName=EdgeIrregularitySlider, Path=Value, StringFormat={}{0:F2}}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
+        <TextBlock Text="Surface Tension:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="SurfaceTensionSlider" Minimum="0" Maximum="2" Width="250"
+                    ValueChanged="SurfaceTensionSlider_ValueChanged" TickFrequency="0.1"/>
+            <TextBlock Text="{Binding ElementName=SurfaceTensionSlider, Path=Value, StringFormat={}{0:F1}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
 
-            <TextBlock Text="Opacity:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="OpacitySlider" Minimum="0.1" Maximum="1" Width="250"
-                        ValueChanged="OpacitySlider_ValueChanged" TickFrequency="0.05"/>
-                <TextBlock Text="{Binding ElementName=OpacitySlider, Path=Value, StringFormat={}{0:F2}}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
+        <TextBlock Text="Viscosity (drag):" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="ViscositySlider" Minimum="0.9" Maximum="1" Width="250"
+                    ValueChanged="ViscositySlider_ValueChanged" TickFrequency="0.01"/>
+            <TextBlock Text="{Binding ElementName=ViscositySlider, Path=Value, StringFormat={}{0:F2}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
 
-            <TextBlock Text="Lifetime:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="10" Width="250"
-                        ValueChanged="LifetimeSlider_ValueChanged" TickFrequency="0.5"/>
-                <TextBlock Text="{Binding ElementName=LifetimeSlider, Path=Value, StringFormat={}{0:F1} s}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
+        <!-- Appearance Settings -->
+        <TextBlock Text="Appearance" FontWeight="Bold" FontSize="14" Margin="0,15,0,10"/>
 
-            <!-- Color Settings -->
-            <TextBlock Text="Color Settings" FontWeight="Bold" FontSize="14" Margin="0,20,0,10"/>
+        <TextBlock Text="Ink Color:" Margin="0,5,0,2"/>
+        <ComboBox x:Name="ColorModeCombo" Margin="0,0,0,8" SelectionChanged="ColorModeCombo_SelectionChanged">
+            <ComboBoxItem Content="Black Ink" IsSelected="True"/>
+            <ComboBoxItem Content="Blue Ink"/>
+            <ComboBoxItem Content="Red Ink"/>
+            <ComboBoxItem Content="Sepia"/>
+            <ComboBoxItem Content="Rainbow"/>
+        </ComboBox>
 
-            <TextBlock Text="Color Mode:" Margin="0,5,0,2"/>
-            <ComboBox x:Name="ColorModeCombo" Margin="0,0,0,10" SelectionChanged="ColorModeCombo_SelectionChanged">
-                <ComboBoxItem Content="Ink" IsSelected="False"/>
-                <ComboBoxItem Content="Watercolor" IsSelected="True"/>
-            </ComboBox>
-
-            <!-- Ink Colors -->
-            <StackPanel x:Name="InkColorPanel" Visibility="Collapsed">
-                <TextBlock Text="Ink Color:" Margin="0,5,0,2"/>
-                <ComboBox x:Name="InkColorCombo" Margin="0,0,0,10" SelectionChanged="InkColorCombo_SelectionChanged">
-                    <ComboBoxItem Content="Black" IsSelected="True"/>
-                    <ComboBoxItem Content="Blue"/>
-                    <ComboBoxItem Content="Red"/>
-                    <ComboBoxItem Content="Sepia"/>
-                </ComboBox>
-            </StackPanel>
-
-            <!-- Watercolor Colors -->
-            <StackPanel x:Name="WatercolorPanel" Visibility="Visible">
-                <TextBlock Text="Watercolor Color:" Margin="0,5,0,2"/>
-                <ComboBox x:Name="WatercolorCombo" Margin="0,0,0,10" SelectionChanged="WatercolorCombo_SelectionChanged">
-                    <ComboBoxItem Content="Soft Blue" IsSelected="True"/>
-                    <ComboBoxItem Content="Soft Pink"/>
-                    <ComboBoxItem Content="Soft Green"/>
-                    <ComboBoxItem Content="Soft Purple"/>
-                    <ComboBoxItem Content="Soft Yellow"/>
-                </ComboBox>
-            </StackPanel>
-
-            <CheckBox x:Name="RandomColorCheck" Content="Random Color" Margin="0,5,0,10"
-                      Checked="RandomColorCheck_Changed" Unchecked="RandomColorCheck_Changed" IsChecked="True"/>
-
-            <!-- Trigger Settings -->
-            <TextBlock Text="Trigger Settings" FontWeight="Bold" FontSize="14" Margin="0,20,0,10"/>
-
-            <CheckBox x:Name="SpawnOnClickCheck" Content="Spawn on Click" Margin="0,5,0,10"
-                      Checked="SpawnOnClickCheck_Changed" Unchecked="SpawnOnClickCheck_Changed" IsChecked="True"/>
-
-            <CheckBox x:Name="SpawnOnMoveCheck" Content="Spawn on Move" Margin="0,5,0,10"
-                      Checked="SpawnOnMoveCheck_Changed" Unchecked="SpawnOnMoveCheck_Changed" IsChecked="False"/>
-
-            <TextBlock Text="Move Distance:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="MoveDistanceSlider" Minimum="20" Maximum="200" Width="250"
-                        ValueChanged="MoveDistanceSlider_ValueChanged" TickFrequency="10"/>
-                <TextBlock Text="{Binding ElementName=MoveDistanceSlider, Path=Value, StringFormat={}{0:F0} px}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
-
-            <!-- Performance Settings -->
-            <TextBlock Text="Performance Settings" FontWeight="Bold" FontSize="14" Margin="0,20,0,10"/>
-
-            <TextBlock Text="Max Active Blots:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="MaxBlotsSlider" Minimum="10" Maximum="100" Width="250"
-                        ValueChanged="MaxBlotsSlider_ValueChanged" TickFrequency="5"/>
-                <TextBlock Text="{Binding ElementName=MaxBlotsSlider, Path=Value, StringFormat={}{0:F0}}"
-                           Margin="10,0,0,0" VerticalAlignment="Center"/>
-            </StackPanel>
-
-            <TextBlock Text="Max Blots/Second:" Margin="0,5,0,2"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <Slider x:Name="MaxBlotsPerSecondSlider" Minimum="5" Maximum="50" Width="250"
-                        ValueChanged="MaxBlotsPerSecondSlider_ValueChanged" TickFrequency="5"/>
-                <TextBlock Text="{Binding ElementName=MaxBlotsPerSecondSlider, Path=Value, StringFormat={}{0:F0}}"
+        <StackPanel x:Name="RainbowSpeedPanel" Visibility="Collapsed">
+            <TextBlock Text="Rainbow Speed:" Margin="0,5,0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="5" Width="250"
+                        ValueChanged="RainbowSpeedSlider_ValueChanged" TickFrequency="0.1"/>
+                <TextBlock Text="{Binding ElementName=RainbowSpeedSlider, Path=Value, StringFormat={}{0:F1}x}"
                            Margin="10,0,0,0" VerticalAlignment="Center"/>
             </StackPanel>
         </StackPanel>
-    </ScrollViewer>
+
+        <TextBlock Text="Metaball Threshold:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="ThresholdSlider" Minimum="0.5" Maximum="2" Width="250"
+                    ValueChanged="ThresholdSlider_ValueChanged" TickFrequency="0.1"/>
+            <TextBlock Text="{Binding ElementName=ThresholdSlider, Path=Value, StringFormat={}{0:F1}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Edge Softness:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="EdgeSoftnessSlider" Minimum="0.1" Maximum="1" Width="250"
+                    ValueChanged="EdgeSoftnessSlider_ValueChanged" TickFrequency="0.05"/>
+            <TextBlock Text="{Binding ElementName=EdgeSoftnessSlider, Path=Value, StringFormat={}{0:F2}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Opacity:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="OpacitySlider" Minimum="0.3" Maximum="1" Width="250"
+                    ValueChanged="OpacitySlider_ValueChanged" TickFrequency="0.05"/>
+            <TextBlock Text="{Binding ElementName=OpacitySlider, Path=Value, StringFormat={}{0:F2}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Glow Intensity:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="GlowSlider" Minimum="0" Maximum="1" Width="250"
+                    ValueChanged="GlowSlider_ValueChanged" TickFrequency="0.1"/>
+            <TextBlock Text="{Binding ElementName=GlowSlider, Path=Value, StringFormat={}{0:F1}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <CheckBox x:Name="AnimateGlowCheck" Content="Animate Glow" Margin="0,0,0,8"
+                  Checked="AnimateGlowCheck_Changed" Unchecked="AnimateGlowCheck_Changed"/>
+
+        <StackPanel x:Name="GlowAnimPanel" Visibility="Collapsed">
+            <TextBlock Text="Glow Min:" Margin="0,5,0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Slider x:Name="GlowMinSlider" Minimum="0" Maximum="1" Width="250"
+                        ValueChanged="GlowMinSlider_ValueChanged" TickFrequency="0.05"/>
+                <TextBlock Text="{Binding ElementName=GlowMinSlider, Path=Value, StringFormat={}{0:F2}}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TextBlock Text="Glow Max:" Margin="0,5,0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Slider x:Name="GlowMaxSlider" Minimum="0" Maximum="1.5" Width="250"
+                        ValueChanged="GlowMaxSlider_ValueChanged" TickFrequency="0.05"/>
+                <TextBlock Text="{Binding ElementName=GlowMaxSlider, Path=Value, StringFormat={}{0:F2}}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <TextBlock Text="Glow Speed:" Margin="0,5,0,2"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                <Slider x:Name="GlowAnimSpeedSlider" Minimum="0.5" Maximum="10" Width="250"
+                        ValueChanged="GlowAnimSpeedSlider_ValueChanged" TickFrequency="0.5"/>
+                <TextBlock Text="{Binding ElementName=GlowAnimSpeedSlider, Path=Value, StringFormat={}{0:F1}x}"
+                           Margin="10,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+
+        <TextBlock Text="Inner Darkening:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="InnerDarkeningSlider" Minimum="0" Maximum="0.8" Width="250"
+                    ValueChanged="InnerDarkeningSlider_ValueChanged" TickFrequency="0.1"/>
+            <TextBlock Text="{Binding ElementName=InnerDarkeningSlider, Path=Value, StringFormat={}{0:F1}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Lifetime:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="LifetimeSlider" Minimum="1" Maximum="10" Width="250"
+                    ValueChanged="LifetimeSlider_ValueChanged" TickFrequency="0.5"/>
+            <TextBlock Text="{Binding ElementName=LifetimeSlider, Path=Value, StringFormat={}{0:F1} s}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Spawn Settings -->
+        <TextBlock Text="Spawning" FontWeight="Bold" FontSize="14" Margin="0,15,0,10"/>
+
+        <CheckBox x:Name="SpawnOnClickCheck" Content="Spawn on Click" Margin="0,5,0,8"
+                  Checked="SpawnOnClickCheck_Changed" Unchecked="SpawnOnClickCheck_Changed" IsChecked="True"/>
+
+        <CheckBox x:Name="SpawnOnMoveCheck" Content="Spawn on Move" Margin="0,0,0,8"
+                  Checked="SpawnOnMoveCheck_Changed" Unchecked="SpawnOnMoveCheck_Changed" IsChecked="True"/>
+
+        <TextBlock Text="Move Distance:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="MoveDistanceSlider" Minimum="20" Maximum="150" Width="250"
+                    ValueChanged="MoveDistanceSlider_ValueChanged" TickFrequency="10"/>
+            <TextBlock Text="{Binding ElementName=MoveDistanceSlider, Path=Value, StringFormat={}{0:F0} px}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Spawn Spread:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="SpawnSpreadSlider" Minimum="0" Maximum="80" Width="250"
+                    ValueChanged="SpawnSpreadSlider_ValueChanged" TickFrequency="5"/>
+            <TextBlock Text="{Binding ElementName=SpawnSpreadSlider, Path=Value, StringFormat={}{0:F0} px}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Drops per Spawn:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="DropsPerSpawnSlider" Minimum="1" Maximum="8" Width="250"
+                    ValueChanged="DropsPerSpawnSlider_ValueChanged" TickFrequency="1"/>
+            <TextBlock Text="{Binding ElementName=DropsPerSpawnSlider, Path=Value, StringFormat={}{0:F0}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <TextBlock Text="Max Drops/Second:" Margin="0,5,0,2"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+            <Slider x:Name="MaxDropsPerSecondSlider" Minimum="5" Maximum="120" Width="250"
+                    ValueChanged="MaxDropsPerSecondSlider_ValueChanged" TickFrequency="5"/>
+            <TextBlock Text="{Binding ElementName=MaxDropsPerSecondSlider, Path=Value, StringFormat={}{0:F0}}"
+                       Margin="10,0,0,0" VerticalAlignment="Center"/>
+        </StackPanel>
+    </StackPanel>
 </UserControl>

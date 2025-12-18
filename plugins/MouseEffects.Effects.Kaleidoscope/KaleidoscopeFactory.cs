@@ -30,6 +30,7 @@ public sealed class KaleidoscopeFactory : IEffectFactory
         config.Set("rotationOffset", 0.0f);
         config.Set("edgeSoftness", 0.2f);
         config.Set("zoomFactor", 1.0f);
+        config.Set("alpha", 1.0f);
 
         return config;
     }
@@ -98,6 +99,16 @@ public sealed class KaleidoscopeFactory : IEffectFactory
                     MaxValue = 2.0f,
                     DefaultValue = 1.0f,
                     Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "alpha",
+                    DisplayName = "Alpha",
+                    Description = "Opacity of the kaleidoscope effect",
+                    MinValue = 0.0f,
+                    MaxValue = 1.0f,
+                    DefaultValue = 1.0f,
+                    Step = 0.05f
                 }
             ]
         };

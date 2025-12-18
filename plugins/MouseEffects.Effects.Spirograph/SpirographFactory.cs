@@ -41,6 +41,12 @@ public sealed class SpirographFactory : IEffectFactory
         config.Set("sp_secondaryColor", new Vector4(0f, 0.5f, 1f, 1f));   // Cyan
         config.Set("sp_tertiaryColor", new Vector4(0.5f, 1f, 0f, 1f));    // Green
 
+        // Trigger settings
+        config.Set("sp_showOnLeftClick", false);
+        config.Set("sp_showOnRightClick", false);
+        config.Set("sp_mouseMoveMode", 1); // 0=None, 1=Follow, 2=Follow/Rotate
+        config.Set("sp_invertRotation", false);
+
         return config;
     }
 
@@ -50,6 +56,38 @@ public sealed class SpirographFactory : IEffectFactory
         {
             Parameters =
             [
+                // Trigger Settings
+                new BoolParameter
+                {
+                    Key = "sp_showOnLeftClick",
+                    DisplayName = "Show on Left Click",
+                    Description = "Show spirograph when left mouse button is held",
+                    DefaultValue = false
+                },
+                new BoolParameter
+                {
+                    Key = "sp_showOnRightClick",
+                    DisplayName = "Show on Right Click",
+                    Description = "Show spirograph when right mouse button is held",
+                    DefaultValue = false
+                },
+                new IntParameter
+                {
+                    Key = "sp_mouseMoveMode",
+                    DisplayName = "Mouse Move Mode",
+                    Description = "0=None, 1=Follow, 2=Follow/Rotate",
+                    MinValue = 0,
+                    MaxValue = 2,
+                    DefaultValue = 1
+                },
+                new BoolParameter
+                {
+                    Key = "sp_invertRotation",
+                    DisplayName = "Invert Rotation",
+                    Description = "Invert rotation direction when in Follow/Rotate mode",
+                    DefaultValue = false
+                },
+
                 // Spirograph Shape
                 new FloatParameter
                 {

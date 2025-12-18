@@ -128,6 +128,20 @@ public class AppSettings
     /// </summary>
     public DateTime? LastUpdateCheck { get; set; }
 
+    // ═══════════════════════════════════════════════════
+    // Window Settings
+    // ═══════════════════════════════════════════════════
+
+    /// <summary>
+    /// Settings window width. Null means use default.
+    /// </summary>
+    public double? SettingsWindowWidth { get; set; }
+
+    /// <summary>
+    /// Settings window height. Null means use default.
+    /// </summary>
+    public double? SettingsWindowHeight { get; set; }
+
     public static AppSettings Load()
     {
         try

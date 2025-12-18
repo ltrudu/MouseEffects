@@ -21,7 +21,8 @@ cbuffer KaleidoscopeParams : register(b0)
     float ZoomFactor;            // Zoom factor (1.0 = normal)
     float Time;                  // Total time in seconds
     float HdrMultiplier;         // HDR brightness multiplier
-    float4 Padding;              // Padding to 64 bytes
+    float Alpha;                 // Global alpha/opacity
+    float3 Padding;              // Padding to 64 bytes
 };
 
 Texture2D<float4> ScreenTexture : register(t0);
@@ -118,8 +119,8 @@ float4 PSMain(PSInput input) : SV_TARGET
     // Apply HDR multiplier
     color.rgb *= HdrMultiplier;
 
-    // Set alpha based on influence and edge fade
-    color.a = edgeFade;
+    // Set alpha based on influence, edge fade, and global alpha
+    color.a = edgeFade * Alpha;
 
     return color;
 }

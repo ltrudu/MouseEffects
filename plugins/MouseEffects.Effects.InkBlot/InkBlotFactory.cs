@@ -1,4 +1,3 @@
-using System.Numerics;
 using MouseEffects.Core.Effects;
 using MouseEffects.Effects.InkBlot.UI;
 
@@ -10,9 +9,9 @@ public sealed class InkBlotFactory : IEffectFactory
     {
         Id = "inkblot",
         Name = "Ink Blot",
-        Description = "Spreading ink and watercolor drops that bloom from clicks or cursor movement",
+        Description = "Animated metaball ink drops that drip and merge organically",
         Author = "MouseEffects",
-        Version = new Version(1, 0, 0),
+        Version = new Version(1, 1, 0),
         Category = EffectCategory.Artistic
     };
 
@@ -24,33 +23,33 @@ public sealed class InkBlotFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
-        // Drop settings
-        config.Set("dropSize", 60f);
-        config.Set("spreadSpeed", 50f);
-        config.Set("edgeIrregularity", 0.3f);
-        config.Set("opacity", 0.7f);
-        config.Set("lifetime", 3.0f);
+        // Physics settings
+        config.Set("dropRadius", 25f);
+        config.Set("gravity", 0f);
+        config.Set("surfaceTension", 0.5f);
+        config.Set("viscosity", 0.98f);
+        config.Set("spawnSpread", 30f);
 
-        // Color mode (0 = Ink, 1 = Watercolor)
-        config.Set("colorMode", 1);
+        // Appearance settings
+        config.Set("metaballThreshold", 1.0f);
+        config.Set("edgeSoftness", 0.3f);
+        config.Set("opacity", 0.85f);
+        config.Set("lifetime", 2.8f);
+        config.Set("glowIntensity", 0.2f);
+        config.Set("animateGlow", true);
+        config.Set("glowMin", 0.1f);
+        config.Set("glowMax", 1.38f);
+        config.Set("glowAnimSpeed", 4.7f);
+        config.Set("innerDarkening", 0.3f);
+        config.Set("colorMode", 4); // Rainbow
+        config.Set("rainbowSpeed", 1.0f);
 
-        // Ink colors (index: 0=Black, 1=Blue, 2=Red, 3=Sepia)
-        config.Set("inkColorIndex", 0);
-
-        // Watercolor colors (index: 0=Blue, 1=Pink, 2=Green, 3=Purple, 4=Yellow)
-        config.Set("watercolorIndex", 0);
-
-        // Random color per blot
-        config.Set("randomColor", true);
-
-        // Trigger settings
+        // Spawn settings
         config.Set("spawnOnClick", true);
-        config.Set("spawnOnMove", false);
-        config.Set("moveDistance", 80f);
-
-        // Performance
-        config.Set("maxBlots", 30);
-        config.Set("maxBlotsPerSecond", 20);
+        config.Set("spawnOnMove", true);
+        config.Set("moveDistance", 40f);
+        config.Set("dropsPerSpawn", 3);
+        config.Set("maxDropsPerSecond", 60);
 
         return config;
     }
@@ -61,32 +60,93 @@ public sealed class InkBlotFactory : IEffectFactory
         {
             Parameters =
             [
+                // Physics
                 new FloatParameter
                 {
-                    Key = "dropSize",
+                    Key = "dropRadius",
                     DisplayName = "Drop Size",
-                    Description = "Maximum size of ink blots in pixels",
-                    MinValue = 20f,
-                    MaxValue = 200f,
-                    DefaultValue = 60f,
-                    Step = 5f
-                },
-                new FloatParameter
-                {
-                    Key = "spreadSpeed",
-                    DisplayName = "Spread Speed",
-                    Description = "Speed at which blots expand (pixels per second)",
+                    Description = "Base radius of ink drops in pixels",
                     MinValue = 10f,
-                    MaxValue = 200f,
-                    DefaultValue = 50f,
+                    MaxValue = 60f,
+                    DefaultValue = 25f,
                     Step = 5f
                 },
                 new FloatParameter
                 {
-                    Key = "edgeIrregularity",
-                    DisplayName = "Edge Irregularity",
-                    Description = "How organic and wavy the blot edges are (0 = smooth, 1 = very organic)",
+                    Key = "gravity",
+                    DisplayName = "Gravity",
+                    Description = "Downward acceleration force",
                     MinValue = 0f,
+                    MaxValue = 400f,
+                    DefaultValue = 0f,
+                    Step = 10f
+                },
+                new FloatParameter
+                {
+                    Key = "surfaceTension",
+                    DisplayName = "Surface Tension",
+                    Description = "Attraction between nearby drops (causes merging)",
+                    MinValue = 0f,
+                    MaxValue = 2f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "viscosity",
+                    DisplayName = "Viscosity",
+                    Description = "Air resistance/drag (higher = slower movement)",
+                    MinValue = 0.9f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.98f,
+                    Step = 0.01f
+                },
+                new FloatParameter
+                {
+                    Key = "spawnSpread",
+                    DisplayName = "Spawn Spread",
+                    Description = "Random offset when spawning drops",
+                    MinValue = 0f,
+                    MaxValue = 80f,
+                    DefaultValue = 30f,
+                    Step = 5f
+                },
+
+                // Appearance
+                new ChoiceParameter
+                {
+                    Key = "colorMode",
+                    DisplayName = "Ink Color",
+                    Description = "Color of the ink",
+                    Choices = ["Black Ink", "Blue Ink", "Red Ink", "Sepia", "Rainbow"],
+                    DefaultValue = "Rainbow"
+                },
+                new FloatParameter
+                {
+                    Key = "rainbowSpeed",
+                    DisplayName = "Rainbow Speed",
+                    Description = "Speed of rainbow color cycling",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "metaballThreshold",
+                    DisplayName = "Metaball Threshold",
+                    Description = "Controls blob shape (lower = larger, softer blobs)",
+                    MinValue = 0.5f,
+                    MaxValue = 2f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "edgeSoftness",
+                    DisplayName = "Edge Softness",
+                    Description = "How soft/fuzzy the ink edges appear",
+                    MinValue = 0.1f,
                     MaxValue = 1f,
                     DefaultValue = 0.3f,
                     Step = 0.05f
@@ -95,94 +155,122 @@ public sealed class InkBlotFactory : IEffectFactory
                 {
                     Key = "opacity",
                     DisplayName = "Opacity",
-                    Description = "Base opacity of ink blots",
-                    MinValue = 0.1f,
+                    Description = "Base opacity of ink",
+                    MinValue = 0.3f,
                     MaxValue = 1f,
-                    DefaultValue = 0.7f,
+                    DefaultValue = 0.85f,
                     Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "glowIntensity",
+                    DisplayName = "Glow Intensity",
+                    Description = "Subtle glow around ink edges",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.2f,
+                    Step = 0.1f
+                },
+                new BoolParameter
+                {
+                    Key = "animateGlow",
+                    DisplayName = "Animate Glow",
+                    Description = "Pulse the glow effect",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "glowMin",
+                    DisplayName = "Glow Min",
+                    Description = "Minimum glow intensity when animated",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.1f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "glowMax",
+                    DisplayName = "Glow Max",
+                    Description = "Maximum glow intensity when animated",
+                    MinValue = 0f,
+                    MaxValue = 1.5f,
+                    DefaultValue = 1.38f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "glowAnimSpeed",
+                    DisplayName = "Glow Speed",
+                    Description = "Speed of glow animation",
+                    MinValue = 0.5f,
+                    MaxValue = 10f,
+                    DefaultValue = 4.7f,
+                    Step = 0.5f
+                },
+                new FloatParameter
+                {
+                    Key = "innerDarkening",
+                    DisplayName = "Inner Darkening",
+                    Description = "Darker center for depth effect",
+                    MinValue = 0f,
+                    MaxValue = 0.8f,
+                    DefaultValue = 0.3f,
+                    Step = 0.1f
                 },
                 new FloatParameter
                 {
                     Key = "lifetime",
                     DisplayName = "Lifetime",
-                    Description = "How long blots remain visible (seconds)",
-                    MinValue = 0.5f,
+                    Description = "How long drops remain visible (seconds)",
+                    MinValue = 1f,
                     MaxValue = 10f,
-                    DefaultValue = 3.0f,
+                    DefaultValue = 2.8f,
                     Step = 0.5f
                 },
-                new ChoiceParameter
-                {
-                    Key = "colorMode",
-                    DisplayName = "Color Mode",
-                    Description = "Ink mode (dark, saturated) or Watercolor mode (soft, pastel)",
-                    Choices = ["Ink", "Watercolor"],
-                    DefaultValue = "Watercolor"
-                },
-                new ChoiceParameter
-                {
-                    Key = "inkColorIndex",
-                    DisplayName = "Ink Color",
-                    Description = "Color for ink mode",
-                    Choices = ["Black", "Blue", "Red", "Sepia"],
-                    DefaultValue = "Black"
-                },
-                new ChoiceParameter
-                {
-                    Key = "watercolorIndex",
-                    DisplayName = "Watercolor Color",
-                    Description = "Color for watercolor mode",
-                    Choices = ["Soft Blue", "Soft Pink", "Soft Green", "Soft Purple", "Soft Yellow"],
-                    DefaultValue = "Soft Blue"
-                },
-                new BoolParameter
-                {
-                    Key = "randomColor",
-                    DisplayName = "Random Color",
-                    Description = "Use random colors from the selected palette for each blot",
-                    DefaultValue = true
-                },
+
+                // Spawn settings
                 new BoolParameter
                 {
                     Key = "spawnOnClick",
                     DisplayName = "Spawn on Click",
-                    Description = "Create blots when clicking",
+                    Description = "Create drops when clicking",
                     DefaultValue = true
                 },
                 new BoolParameter
                 {
                     Key = "spawnOnMove",
                     DisplayName = "Spawn on Move",
-                    Description = "Create blots when moving the mouse",
-                    DefaultValue = false
+                    Description = "Create drops when moving the mouse",
+                    DefaultValue = true
                 },
                 new FloatParameter
                 {
                     Key = "moveDistance",
                     DisplayName = "Move Distance",
-                    Description = "Distance mouse must move to spawn a blot (pixels)",
+                    Description = "Distance mouse must move to spawn drops (pixels)",
                     MinValue = 20f,
-                    MaxValue = 200f,
-                    DefaultValue = 80f,
+                    MaxValue = 150f,
+                    DefaultValue = 40f,
                     Step = 10f
                 },
                 new IntParameter
                 {
-                    Key = "maxBlots",
-                    DisplayName = "Max Active Blots",
-                    Description = "Maximum number of blots that can be active at once",
-                    MinValue = 10,
-                    MaxValue = 100,
-                    DefaultValue = 30
+                    Key = "dropsPerSpawn",
+                    DisplayName = "Drops per Spawn",
+                    Description = "Number of drops created each spawn event",
+                    MinValue = 1,
+                    MaxValue = 8,
+                    DefaultValue = 3
                 },
                 new IntParameter
                 {
-                    Key = "maxBlotsPerSecond",
-                    DisplayName = "Max Blots/Second",
-                    Description = "Rate limiting for blot spawning",
+                    Key = "maxDropsPerSecond",
+                    DisplayName = "Max Drops/Second",
+                    Description = "Rate limiting for drop spawning",
                     MinValue = 5,
-                    MaxValue = 50,
-                    DefaultValue = 20
+                    MaxValue = 120,
+                    DefaultValue = 60
                 }
             ]
         };

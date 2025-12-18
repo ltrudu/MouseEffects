@@ -21,8 +21,11 @@ cbuffer BlackHoleParams : register(b0)
     float GlowIntensity;         // Brightness of accretion disk
     float Time;                  // Total time in seconds
     float HdrMultiplier;         // HDR brightness multiplier
+    float CenterAlpha;           // Alpha of the black hole center
+    float CenterGlowEnabled;     // 1.0 = animate bright pixels in center
+    float CenterGlowThreshold;   // Luminosity threshold for glow (0-1)
+    float CenterGlowIntensity;   // Glow brightness multiplier
     float4 AccretionDiskColor;   // Color of accretion disk
-    float4 Padding;              // Padding to 80 bytes
 };
 
 Texture2D<float4> ScreenTexture : register(t0);
@@ -100,8 +103,33 @@ float4 PSMain(PSInput input) : SV_TARGET
     float eventHorizonDist = schwarzschildRadius;
     float inEventHorizon = 1.0 - smoothstep(eventHorizonDist * 0.8, eventHorizonDist, dist);
 
-    // Darken inside event horizon (nothing escapes, not even light)
-    screenColor.rgb = lerp(screenColor.rgb, float3(0, 0, 0), inEventHorizon);
+    // Calculate luminosity for center glow effect
+    float luminosity = dot(screenColor.rgb, float3(0.299, 0.587, 0.114));
+
+    // Center glow effect - animate bright pixels inside event horizon
+    if (CenterGlowEnabled > 0.5 && inEventHorizon > 0.01 && luminosity > CenterGlowThreshold)
+    {
+        // Calculate how much above threshold this pixel is
+        float glowFactor = (luminosity - CenterGlowThreshold) / (1.0 - CenterGlowThreshold + 0.001);
+        glowFactor = saturate(glowFactor);
+
+        // Animate glow with pulsing effect
+        float glowPulse = 0.5 + 0.5 * sin(Time * 3.0 + dist * 0.05);
+        float glowPulse2 = 0.5 + 0.5 * sin(Time * 5.0 - luminosity * 10.0);
+        float combinedPulse = glowPulse * 0.6 + glowPulse2 * 0.4;
+
+        // Apply glow - brighten the pixel based on pulse and intensity
+        float glowAmount = glowFactor * inEventHorizon * combinedPulse * CenterGlowIntensity;
+        screenColor.rgb *= 1.0 + glowAmount * HdrMultiplier;
+
+        // Add a subtle color shift toward warm colors for the glow
+        screenColor.rgb += float3(0.2, 0.1, 0.05) * glowAmount * HdrMultiplier;
+    }
+    else
+    {
+        // Darken inside event horizon (nothing escapes, not even light)
+        screenColor.rgb = lerp(screenColor.rgb, float3(0, 0, 0), inEventHorizon);
+    }
 
     // Accretion disk - glowing ring of matter orbiting the black hole
     float4 finalColor = screenColor;
@@ -155,8 +183,10 @@ float4 PSMain(PSInput input) : SV_TARGET
     // Outside the effect radius, return transparent
     float alpha = edgeFade;
 
-    // Inside event horizon, always opaque (but dark)
-    alpha = max(alpha, inEventHorizon);
+    // Apply center alpha - reduces opacity inside event horizon
+    // CenterAlpha = 1.0: fully opaque black center
+    // CenterAlpha = 0.0: fully transparent center (see through)
+    alpha *= lerp(1.0, CenterAlpha, inEventHorizon);
 
     finalColor.a = alpha;
 

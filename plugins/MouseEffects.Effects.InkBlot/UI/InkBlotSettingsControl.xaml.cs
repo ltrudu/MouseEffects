@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using MouseEffects.Core.Effects;
 
 namespace MouseEffects.Effects.InkBlot.UI;
@@ -22,23 +23,35 @@ public partial class InkBlotSettingsControl : System.Windows.Controls.UserContro
 
         try
         {
-            DropSizeSlider.Value = _effect.DropSize;
-            SpreadSpeedSlider.Value = _effect.SpreadSpeed;
-            EdgeIrregularitySlider.Value = _effect.EdgeIrregularity;
-            OpacitySlider.Value = _effect.Opacity;
-            LifetimeSlider.Value = _effect.Lifetime;
+            // Physics
+            DropRadiusSlider.Value = _effect.DropRadius;
+            GravitySlider.Value = _effect.Gravity;
+            SurfaceTensionSlider.Value = _effect.SurfaceTension;
+            ViscositySlider.Value = _effect.Viscosity;
+
+            // Appearance
             ColorModeCombo.SelectedIndex = _effect.ColorMode;
-            InkColorCombo.SelectedIndex = _effect.InkColorIndex;
-            WatercolorCombo.SelectedIndex = _effect.WatercolorIndex;
-            RandomColorCheck.IsChecked = _effect.RandomColor;
+            RainbowSpeedSlider.Value = _effect.RainbowSpeed;
+            UpdateRainbowSpeedVisibility();
+            ThresholdSlider.Value = _effect.MetaballThreshold;
+            EdgeSoftnessSlider.Value = _effect.EdgeSoftness;
+            OpacitySlider.Value = _effect.Opacity;
+            GlowSlider.Value = _effect.GlowIntensity;
+            AnimateGlowCheck.IsChecked = _effect.AnimateGlow;
+            GlowMinSlider.Value = _effect.GlowMin;
+            GlowMaxSlider.Value = _effect.GlowMax;
+            GlowAnimSpeedSlider.Value = _effect.GlowAnimSpeed;
+            UpdateGlowAnimVisibility();
+            InnerDarkeningSlider.Value = _effect.InnerDarkening;
+            LifetimeSlider.Value = _effect.Lifetime;
+
+            // Spawning
             SpawnOnClickCheck.IsChecked = _effect.SpawnOnClick;
             SpawnOnMoveCheck.IsChecked = _effect.SpawnOnMove;
             MoveDistanceSlider.Value = _effect.MoveDistance;
-            MaxBlotsSlider.Value = _effect.MaxBlots;
-            MaxBlotsPerSecondSlider.Value = _effect.MaxBlotsPerSecond;
-
-            // Update panel visibility
-            UpdateColorPanelVisibility();
+            SpawnSpreadSlider.Value = _effect.SpawnSpread;
+            DropsPerSpawnSlider.Value = _effect.DropsPerSpawn;
+            MaxDropsPerSecondSlider.Value = _effect.MaxDropsPerSecond;
         }
         finally
         {
@@ -46,32 +59,68 @@ public partial class InkBlotSettingsControl : System.Windows.Controls.UserContro
         }
     }
 
-    private void UpdateColorPanelVisibility()
-    {
-        bool isInkMode = ColorModeCombo.SelectedIndex == 0;
-        InkColorPanel.Visibility = isInkMode ? Visibility.Visible : Visibility.Collapsed;
-        WatercolorPanel.Visibility = isInkMode ? Visibility.Collapsed : Visibility.Visible;
-    }
-
-    private void DropSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    // Physics handlers
+    private void DropRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.DropSize = (float)DropSizeSlider.Value;
-        _effect.Configuration.Set("dropSize", _effect.DropSize);
+        _effect.DropRadius = (float)DropRadiusSlider.Value;
+        _effect.Configuration.Set("dropRadius", _effect.DropRadius);
     }
 
-    private void SpreadSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void GravitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.SpreadSpeed = (float)SpreadSpeedSlider.Value;
-        _effect.Configuration.Set("spreadSpeed", _effect.SpreadSpeed);
+        _effect.Gravity = (float)GravitySlider.Value;
+        _effect.Configuration.Set("gravity", _effect.Gravity);
     }
 
-    private void EdgeIrregularitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void SurfaceTensionSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.EdgeIrregularity = (float)EdgeIrregularitySlider.Value;
-        _effect.Configuration.Set("edgeIrregularity", _effect.EdgeIrregularity);
+        _effect.SurfaceTension = (float)SurfaceTensionSlider.Value;
+        _effect.Configuration.Set("surfaceTension", _effect.SurfaceTension);
+    }
+
+    private void ViscositySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.Viscosity = (float)ViscositySlider.Value;
+        _effect.Configuration.Set("viscosity", _effect.Viscosity);
+    }
+
+    private void UpdateRainbowSpeedVisibility()
+    {
+        RainbowSpeedPanel.Visibility = ColorModeCombo.SelectedIndex == 4 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Appearance handlers
+    private void ColorModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.ColorMode = ColorModeCombo.SelectedIndex;
+        _effect.Configuration.Set("colorMode", _effect.ColorMode);
+        UpdateRainbowSpeedVisibility();
+    }
+
+    private void RainbowSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.RainbowSpeed = (float)RainbowSpeedSlider.Value;
+        _effect.Configuration.Set("rainbowSpeed", _effect.RainbowSpeed);
+    }
+
+    private void ThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MetaballThreshold = (float)ThresholdSlider.Value;
+        _effect.Configuration.Set("metaballThreshold", _effect.MetaballThreshold);
+    }
+
+    private void EdgeSoftnessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.EdgeSoftness = (float)EdgeSoftnessSlider.Value;
+        _effect.Configuration.Set("edgeSoftness", _effect.EdgeSoftness);
     }
 
     private void OpacitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -81,6 +130,54 @@ public partial class InkBlotSettingsControl : System.Windows.Controls.UserContro
         _effect.Configuration.Set("opacity", _effect.Opacity);
     }
 
+    private void GlowSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.GlowIntensity = (float)GlowSlider.Value;
+        _effect.Configuration.Set("glowIntensity", _effect.GlowIntensity);
+    }
+
+    private void UpdateGlowAnimVisibility()
+    {
+        GlowAnimPanel.Visibility = AnimateGlowCheck.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void AnimateGlowCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.AnimateGlow = AnimateGlowCheck.IsChecked == true;
+        _effect.Configuration.Set("animateGlow", _effect.AnimateGlow);
+        UpdateGlowAnimVisibility();
+    }
+
+    private void GlowMinSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.GlowMin = (float)GlowMinSlider.Value;
+        _effect.Configuration.Set("glowMin", _effect.GlowMin);
+    }
+
+    private void GlowMaxSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.GlowMax = (float)GlowMaxSlider.Value;
+        _effect.Configuration.Set("glowMax", _effect.GlowMax);
+    }
+
+    private void GlowAnimSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.GlowAnimSpeed = (float)GlowAnimSpeedSlider.Value;
+        _effect.Configuration.Set("glowAnimSpeed", _effect.GlowAnimSpeed);
+    }
+
+    private void InnerDarkeningSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.InnerDarkening = (float)InnerDarkeningSlider.Value;
+        _effect.Configuration.Set("innerDarkening", _effect.InnerDarkening);
+    }
+
     private void LifetimeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
@@ -88,35 +185,7 @@ public partial class InkBlotSettingsControl : System.Windows.Controls.UserContro
         _effect.Configuration.Set("lifetime", _effect.Lifetime);
     }
 
-    private void ColorModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.ColorMode = ColorModeCombo.SelectedIndex;
-        _effect.Configuration.Set("colorMode", _effect.ColorMode);
-        UpdateColorPanelVisibility();
-    }
-
-    private void InkColorCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.InkColorIndex = InkColorCombo.SelectedIndex;
-        _effect.Configuration.Set("inkColorIndex", _effect.InkColorIndex);
-    }
-
-    private void WatercolorCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.WatercolorIndex = WatercolorCombo.SelectedIndex;
-        _effect.Configuration.Set("watercolorIndex", _effect.WatercolorIndex);
-    }
-
-    private void RandomColorCheck_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.RandomColor = RandomColorCheck.IsChecked == true;
-        _effect.Configuration.Set("randomColor", _effect.RandomColor);
-    }
-
+    // Spawn handlers
     private void SpawnOnClickCheck_Changed(object sender, RoutedEventArgs e)
     {
         if (_effect == null || _isLoading) return;
@@ -138,17 +207,40 @@ public partial class InkBlotSettingsControl : System.Windows.Controls.UserContro
         _effect.Configuration.Set("moveDistance", _effect.MoveDistance);
     }
 
-    private void MaxBlotsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void SpawnSpreadSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.MaxBlots = (int)MaxBlotsSlider.Value;
-        _effect.Configuration.Set("maxBlots", _effect.MaxBlots);
+        _effect.SpawnSpread = (float)SpawnSpreadSlider.Value;
+        _effect.Configuration.Set("spawnSpread", _effect.SpawnSpread);
     }
 
-    private void MaxBlotsPerSecondSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void DropsPerSpawnSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (_effect == null || _isLoading) return;
-        _effect.MaxBlotsPerSecond = (int)MaxBlotsPerSecondSlider.Value;
-        _effect.Configuration.Set("maxBlotsPerSecond", _effect.MaxBlotsPerSecond);
+        _effect.DropsPerSpawn = (int)DropsPerSpawnSlider.Value;
+        _effect.Configuration.Set("dropsPerSpawn", _effect.DropsPerSpawn);
+    }
+
+    private void MaxDropsPerSecondSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MaxDropsPerSecond = (int)MaxDropsPerSecondSlider.Value;
+        _effect.Configuration.Set("maxDropsPerSecond", _effect.MaxDropsPerSecond);
+    }
+
+    private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        // Pass mouse wheel events to parent ScrollViewer
+        if (!e.Handled)
+        {
+            e.Handled = true;
+            var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = MouseWheelEvent,
+                Source = sender
+            };
+            var parent = ((FrameworkElement)sender).Parent as UIElement;
+            parent?.RaiseEvent(eventArg);
+        }
     }
 }

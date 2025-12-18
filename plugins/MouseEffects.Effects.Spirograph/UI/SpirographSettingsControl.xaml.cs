@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using MouseEffects.Core.Effects;
 
 namespace MouseEffects.Effects.Spirograph.UI;
@@ -27,6 +28,13 @@ public partial class SpirographSettingsControl : UserControl
         _isLoading = true;
         try
         {
+            // Trigger settings
+            ShowOnLeftClickCheck.IsChecked = _effect.ShowOnLeftClick;
+            ShowOnRightClickCheck.IsChecked = _effect.ShowOnRightClick;
+            MouseMoveModeCombo.SelectedIndex = _effect.MouseMoveMode;
+            InvertRotationCheck.IsChecked = _effect.InvertRotation;
+            UpdateMouseMoveModeUI();
+
             // Shape parameters
             InnerRadiusSlider.Value = _effect.InnerRadius;
             OuterRadiusSlider.Value = _effect.OuterRadius;
@@ -51,6 +59,57 @@ public partial class SpirographSettingsControl : UserControl
         {
             _isLoading = false;
         }
+    }
+
+    private void UpdateMouseMoveModeUI()
+    {
+        // Show Invert Rotation only when Follow/Rotate mode is selected
+        InvertRotationCheck.Visibility = MouseMoveModeCombo.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        // Pass mouse wheel events to parent ScrollViewer
+        if (!e.Handled)
+        {
+            e.Handled = true;
+            var eventArg = new MouseWheelEventArgs(e.MouseDevice, e.Timestamp, e.Delta)
+            {
+                RoutedEvent = MouseWheelEvent,
+                Source = sender
+            };
+            var parent = ((FrameworkElement)sender).Parent as UIElement;
+            parent?.RaiseEvent(eventArg);
+        }
+    }
+
+    private void ShowOnLeftClickCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.ShowOnLeftClick = ShowOnLeftClickCheck.IsChecked == true;
+        _effect.Configuration.Set("sp_showOnLeftClick", _effect.ShowOnLeftClick);
+    }
+
+    private void ShowOnRightClickCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.ShowOnRightClick = ShowOnRightClickCheck.IsChecked == true;
+        _effect.Configuration.Set("sp_showOnRightClick", _effect.ShowOnRightClick);
+    }
+
+    private void MouseMoveModeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.MouseMoveMode = MouseMoveModeCombo.SelectedIndex;
+        _effect.Configuration.Set("sp_mouseMoveMode", _effect.MouseMoveMode);
+        UpdateMouseMoveModeUI();
+    }
+
+    private void InvertRotationCheck_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.InvertRotation = InvertRotationCheck.IsChecked == true;
+        _effect.Configuration.Set("sp_invertRotation", _effect.InvertRotation);
     }
 
     private void UpdateColorModeUI()

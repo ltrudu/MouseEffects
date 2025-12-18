@@ -2,9 +2,33 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.modernwpf.com/2019"
-             Width="400">
+             Width="400"
+             PreviewMouseWheel="UserControl_PreviewMouseWheel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
+            <!-- Trigger Settings -->
+            <ui:SimpleStackPanel Spacing="12">
+                <TextBlock Text="Trigger Settings"
+                          FontWeight="SemiBold"
+                          FontSize="14"
+                          Margin="0,0,0,5"/>
+
+                <CheckBox x:Name="ShowOnLeftClickCheck" Content="Show on Left Click (hold)"
+                          Checked="ShowOnLeftClickCheck_Changed" Unchecked="ShowOnLeftClickCheck_Changed"/>
+                <CheckBox x:Name="ShowOnRightClickCheck" Content="Show on Right Click (hold)"
+                          Checked="ShowOnRightClickCheck_Changed" Unchecked="ShowOnRightClickCheck_Changed"/>
+
+                <TextBlock Text="Mouse Move Mode" Margin="0,8,0,4"/>
+                <ComboBox x:Name="MouseMoveModeCombo" SelectionChanged="MouseMoveModeCombo_SelectionChanged">
+                    <ComboBoxItem Content="None"/>
+                    <ComboBoxItem Content="Follow" IsSelected="True"/>
+                    <ComboBoxItem Content="Follow/Rotate"/>
+                </ComboBox>
+
+                <CheckBox x:Name="InvertRotationCheck" Content="Invert Rotation" Visibility="Collapsed"
+                          Checked="InvertRotationCheck_Changed" Unchecked="InvertRotationCheck_Changed"/>
+            </ui:SimpleStackPanel>
+
             <!-- Spirograph Shape -->
             <ui:SimpleStackPanel Spacing="12">
                 <TextBlock Text="Pattern Shape"

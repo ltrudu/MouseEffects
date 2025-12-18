@@ -34,10 +34,14 @@ public sealed class BlackHoleEffect : EffectBase
     private float _radius = 200.0f;
     private float _distortionStrength = 1.0f;
     private float _eventHorizonSize = 0.3f;
+    private float _centerAlpha = 0.6f;
     private bool _accretionDiskEnabled = true;
     private Vector4 _accretionDiskColor = new(1.0f, 0.6f, 0.2f, 1.0f);
     private float _rotationSpeed = 0.5f;
     private float _glowIntensity = 1.0f;
+    private bool _centerGlowEnabled = false;
+    private float _centerGlowThreshold = 0.1f;
+    private float _centerGlowIntensity = 1.5f;
     private Vector2 _mousePosition;
     private float _totalTime;
 
@@ -79,6 +83,9 @@ public sealed class BlackHoleEffect : EffectBase
         if (Configuration.TryGet("eventHorizonSize", out float eventHorizon))
             _eventHorizonSize = eventHorizon;
 
+        if (Configuration.TryGet("centerAlpha", out float centerAlpha))
+            _centerAlpha = centerAlpha;
+
         if (Configuration.TryGet("accretionDiskEnabled", out bool diskEnabled))
             _accretionDiskEnabled = diskEnabled;
 
@@ -90,6 +97,15 @@ public sealed class BlackHoleEffect : EffectBase
 
         if (Configuration.TryGet("glowIntensity", out float glow))
             _glowIntensity = glow;
+
+        if (Configuration.TryGet("centerGlowEnabled", out bool centerGlowEnabled))
+            _centerGlowEnabled = centerGlowEnabled;
+
+        if (Configuration.TryGet("centerGlowThreshold", out float centerGlowThreshold))
+            _centerGlowThreshold = centerGlowThreshold;
+
+        if (Configuration.TryGet("centerGlowIntensity", out float centerGlowIntensity))
+            _centerGlowIntensity = centerGlowIntensity;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -118,8 +134,12 @@ public sealed class BlackHoleEffect : EffectBase
             RotationSpeed = _rotationSpeed,
             GlowIntensity = _glowIntensity,
             Time = _totalTime,
-            AccretionDiskColor = _accretionDiskColor,
-            HdrMultiplier = context.HdrPeakBrightness
+            HdrMultiplier = context.HdrPeakBrightness,
+            CenterAlpha = _centerAlpha,
+            CenterGlowEnabled = _centerGlowEnabled ? 1.0f : 0.0f,
+            CenterGlowThreshold = _centerGlowThreshold,
+            CenterGlowIntensity = _centerGlowIntensity,
+            AccretionDiskColor = _accretionDiskColor
         };
 
         context.UpdateBuffer(_paramsBuffer!, blackHoleParams);
@@ -190,8 +210,11 @@ public sealed class BlackHoleEffect : EffectBase
         public float GlowIntensity;        // 4 bytes, offset 36
         public float Time;                 // 4 bytes, offset 40
         public float HdrMultiplier;        // 4 bytes, offset 44
-        public Vector4 AccretionDiskColor; // 16 bytes, offset 48
-        private Vector4 _padding;          // 16 bytes, offset 64
+        public float CenterAlpha;          // 4 bytes, offset 48
+        public float CenterGlowEnabled;    // 4 bytes, offset 52
+        public float CenterGlowThreshold;  // 4 bytes, offset 56
+        public float CenterGlowIntensity;  // 4 bytes, offset 60
+        public Vector4 AccretionDiskColor; // 16 bytes, offset 64
     }
 
     #endregion

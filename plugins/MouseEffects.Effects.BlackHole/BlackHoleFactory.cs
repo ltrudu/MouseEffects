@@ -25,15 +25,21 @@ public sealed class BlackHoleFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // Black hole parameters
-        config.Set("radius", 200.0f);
+        config.Set("radius", 257.0f);
         config.Set("distortionStrength", 1.0f);
-        config.Set("eventHorizonSize", 0.3f);
+        config.Set("eventHorizonSize", 0.42f);
+        config.Set("centerAlpha", 0.6f);
 
         // Accretion disk
         config.Set("accretionDiskEnabled", true);
         config.Set("accretionDiskColor", new Vector4(1.0f, 0.6f, 0.2f, 1.0f));
         config.Set("rotationSpeed", 0.5f);
         config.Set("glowIntensity", 1.0f);
+
+        // Center glow
+        config.Set("centerGlowEnabled", true);
+        config.Set("centerGlowThreshold", 0.37f);
+        config.Set("centerGlowIntensity", 2.1f);
 
         return config;
     }
@@ -51,7 +57,7 @@ public sealed class BlackHoleFactory : IEffectFactory
                     Description = "Radius of the black hole effect in pixels",
                     MinValue = 50f,
                     MaxValue = 500f,
-                    DefaultValue = 200f,
+                    DefaultValue = 257f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -71,7 +77,17 @@ public sealed class BlackHoleFactory : IEffectFactory
                     Description = "Size of the dark center as percentage of radius (0-1)",
                     MinValue = 0.0f,
                     MaxValue = 0.8f,
-                    DefaultValue = 0.3f,
+                    DefaultValue = 0.42f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "centerAlpha",
+                    DisplayName = "Center Alpha",
+                    Description = "Opacity of the black hole center (0 = transparent, 1 = opaque)",
+                    MinValue = 0.0f,
+                    MaxValue = 1.0f,
+                    DefaultValue = 0.6f,
                     Step = 0.05f
                 },
                 new BoolParameter
@@ -107,6 +123,33 @@ public sealed class BlackHoleFactory : IEffectFactory
                     MinValue = 0.0f,
                     MaxValue = 3.0f,
                     DefaultValue = 1.0f,
+                    Step = 0.1f
+                },
+                new BoolParameter
+                {
+                    Key = "centerGlowEnabled",
+                    DisplayName = "Animate Center Glow",
+                    Description = "Animate bright pixels inside the event horizon with a pulsing glow",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "centerGlowThreshold",
+                    DisplayName = "Center Glow Threshold",
+                    Description = "Luminosity threshold for center glow (pixels brighter than this will glow)",
+                    MinValue = 0.0f,
+                    MaxValue = 1.0f,
+                    DefaultValue = 0.37f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "centerGlowIntensity",
+                    DisplayName = "Center Glow Intensity",
+                    Description = "Brightness of the center glow effect",
+                    MinValue = 0.0f,
+                    MaxValue = 3.0f,
+                    DefaultValue = 2.1f,
                     Step = 0.1f
                 }
             ]

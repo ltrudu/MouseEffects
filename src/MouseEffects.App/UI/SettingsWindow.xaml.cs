@@ -43,6 +43,7 @@ public partial class SettingsWindow : Window
         _fpsTimer.Tick += FpsTimer_Tick;
 
         InitializeComponent();
+        LoadWindowSize();
         LoadThemeSetting();
         LoadGpuList();
         LoadFrameRateSetting();
@@ -52,6 +53,27 @@ public partial class SettingsWindow : Window
         LoadPluginSettings();
         LoadUpdateSettings();
         _isInitializing = false;
+    }
+
+    private void LoadWindowSize()
+    {
+        var settings = Program.Settings;
+        if (settings.SettingsWindowWidth.HasValue && settings.SettingsWindowWidth.Value >= MinWidth)
+        {
+            Width = settings.SettingsWindowWidth.Value;
+        }
+        if (settings.SettingsWindowHeight.HasValue && settings.SettingsWindowHeight.Value >= MinHeight)
+        {
+            Height = settings.SettingsWindowHeight.Value;
+        }
+    }
+
+    private void SaveWindowSize()
+    {
+        var settings = Program.Settings;
+        settings.SettingsWindowWidth = Width;
+        settings.SettingsWindowHeight = Height;
+        settings.Save();
     }
 
     private void LoadThemeSetting()
@@ -954,6 +976,9 @@ public partial class SettingsWindow : Window
     private void HideToTray()
     {
         _fpsTimer.Stop();
+
+        // Save window size before hiding
+        SaveWindowSize();
 
         // Remove topmost from settings window when hidden
         Topmost = false;

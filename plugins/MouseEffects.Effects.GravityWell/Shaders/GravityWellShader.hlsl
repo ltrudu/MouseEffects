@@ -30,8 +30,7 @@ struct VSOutput
     float4 Position : SV_POSITION;
     float2 UV : TEXCOORD0;
     float4 Color : COLOR0;
-    float TrailAlpha : TEXCOORD1;
-    float Size : TEXCOORD2;
+    float Size : TEXCOORD1;
 };
 
 // Vertex shader - Generate quad per particle instance
@@ -46,7 +45,6 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
         output.Position = float4(0, 0, 0, 0);
         output.UV = float2(0, 0);
         output.Color = float4(0, 0, 0, 0);
-        output.TrailAlpha = 0;
         output.Size = 0;
         return output;
     }
@@ -79,7 +77,6 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     output.Position = float4(ndc, 0, 1);
     output.UV = quadUV;
     output.Color = particle.Color;
-    output.TrailAlpha = particle.TrailAlpha;
     output.Size = particle.Size;
 
     return output;
@@ -91,7 +88,7 @@ float sdCircle(float2 p, float r)
     return length(p) - r;
 }
 
-// Pixel shader - Render glowing particles with optional trails
+// Pixel shader - Render glowing particles
 float4 PSMain(VSOutput input) : SV_TARGET
 {
     if (input.Size <= 0)
@@ -110,18 +107,6 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     // Combine layers
     float intensity = core * 2.5 + glow1 * 1.0 + glow2 * 0.5 + glow3 * 0.2;
-
-    // Add trail stretch effect based on velocity
-    if (input.TrailAlpha > 0.01)
-    {
-        // Elongate particles in direction of motion to create trail effect
-        float2 stretchUV = input.UV;
-        stretchUV.x *= lerp(1.0, 0.3, input.TrailAlpha);
-        float stretchDist = length(stretchUV);
-
-        float trail = 1.0 - smoothstep(0.0, 1.2, stretchDist);
-        intensity += trail * input.TrailAlpha * 0.8;
-    }
 
     // Add subtle pulse based on time
     float pulse = 0.9 + 0.1 * sin(Time * 3.0 + input.Position.x * 0.05);

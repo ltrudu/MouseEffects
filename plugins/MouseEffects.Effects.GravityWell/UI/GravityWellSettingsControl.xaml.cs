@@ -22,6 +22,17 @@ public partial class GravityWellSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
+        // Reset settings
+        if (_effect.Configuration.TryGet("gw_resetOnLeftClick", out bool resetLeft))
+        {
+            ResetOnLeftClickCheckBox.IsChecked = resetLeft;
+        }
+
+        if (_effect.Configuration.TryGet("gw_resetOnRightClick", out bool resetRight))
+        {
+            ResetOnRightClickCheckBox.IsChecked = resetRight;
+        }
+
         // Particle settings
         if (_effect.Configuration.TryGet("gw_particleCount", out int count))
         {
@@ -52,6 +63,12 @@ public partial class GravityWellSettingsControl : UserControl
             GravityStrengthValue.Text = strength.ToString("F0");
         }
 
+        if (_effect.Configuration.TryGet("gw_gravityRadius", out float radius))
+        {
+            GravityRadiusSlider.Value = radius;
+            GravityRadiusValue.Text = radius.ToString("F0");
+        }
+
         if (_effect.Configuration.TryGet("gw_orbitSpeed", out float orbit))
         {
             OrbitSpeedSlider.Value = orbit;
@@ -62,6 +79,11 @@ public partial class GravityWellSettingsControl : UserControl
         {
             DampingSlider.Value = damping;
             DampingValue.Text = damping.ToString("F2");
+        }
+
+        if (_effect.Configuration.TryGet("gw_edgeBehavior", out int edgeBehavior))
+        {
+            EdgeBehaviorCombo.SelectedIndex = edgeBehavior;
         }
 
         // Trail settings
@@ -76,11 +98,43 @@ public partial class GravityWellSettingsControl : UserControl
             TrailLengthValue.Text = trailLen.ToString("F2");
         }
 
-        // Visual settings
-        if (_effect.Configuration.TryGet("gw_hdrMultiplier", out float hdr))
+        // Trigger settings
+        if (_effect.Configuration.TryGet("gw_triggerAlwaysActive", out bool triggerAlways))
         {
-            HdrMultiplierSlider.Value = hdr;
-            HdrMultiplierValue.Text = hdr.ToString("F1");
+            TriggerAlwaysActiveCheckBox.IsChecked = triggerAlways;
+        }
+
+        if (_effect.Configuration.TryGet("gw_triggerOnLeftMouseDown", out bool triggerLeft))
+        {
+            TriggerOnLeftMouseDownCheckBox.IsChecked = triggerLeft;
+        }
+
+        if (_effect.Configuration.TryGet("gw_triggerOnRightMouseDown", out bool triggerRight))
+        {
+            TriggerOnRightMouseDownCheckBox.IsChecked = triggerRight;
+        }
+
+        if (_effect.Configuration.TryGet("gw_triggerOnMouseMove", out bool triggerMove))
+        {
+            TriggerOnMouseMoveCheckBox.IsChecked = triggerMove;
+        }
+
+        if (_effect.Configuration.TryGet("gw_mouseMoveTimeMultiplier", out float timeMultiplier))
+        {
+            MouseMoveTimeMultiplierSlider.Value = timeMultiplier;
+            MouseMoveTimeMultiplierValue.Text = timeMultiplier.ToString("F1") + "x";
+        }
+
+        // Drift settings
+        if (_effect.Configuration.TryGet("gw_driftEnabled", out bool driftEnabled))
+        {
+            DriftEnabledCheckBox.IsChecked = driftEnabled;
+        }
+
+        if (_effect.Configuration.TryGet("gw_driftAmount", out float driftAmount))
+        {
+            DriftAmountSlider.Value = driftAmount;
+            DriftAmountValue.Text = driftAmount.ToString("F2");
         }
     }
 
@@ -90,6 +144,10 @@ public partial class GravityWellSettingsControl : UserControl
 
         var config = new EffectConfiguration();
 
+        // Reset settings
+        config.Set("gw_resetOnLeftClick", ResetOnLeftClickCheckBox.IsChecked ?? false);
+        config.Set("gw_resetOnRightClick", ResetOnRightClickCheckBox.IsChecked ?? false);
+
         // Particle settings
         config.Set("gw_particleCount", (int)ParticleCountSlider.Value);
         config.Set("gw_particleSize", (float)ParticleSizeSlider.Value);
@@ -98,15 +156,25 @@ public partial class GravityWellSettingsControl : UserControl
         // Physics settings
         config.Set("gw_gravityMode", GravityModeCombo.SelectedIndex);
         config.Set("gw_gravityStrength", (float)GravityStrengthSlider.Value);
+        config.Set("gw_gravityRadius", (float)GravityRadiusSlider.Value);
         config.Set("gw_orbitSpeed", (float)OrbitSpeedSlider.Value);
         config.Set("gw_damping", (float)DampingSlider.Value);
+        config.Set("gw_edgeBehavior", EdgeBehaviorCombo.SelectedIndex);
 
         // Trail settings
         config.Set("gw_trailEnabled", TrailEnabledCheckBox.IsChecked ?? true);
         config.Set("gw_trailLength", (float)TrailLengthSlider.Value);
 
-        // Visual settings
-        config.Set("gw_hdrMultiplier", (float)HdrMultiplierSlider.Value);
+        // Trigger settings
+        config.Set("gw_triggerAlwaysActive", TriggerAlwaysActiveCheckBox.IsChecked ?? true);
+        config.Set("gw_triggerOnLeftMouseDown", TriggerOnLeftMouseDownCheckBox.IsChecked ?? false);
+        config.Set("gw_triggerOnRightMouseDown", TriggerOnRightMouseDownCheckBox.IsChecked ?? false);
+        config.Set("gw_triggerOnMouseMove", TriggerOnMouseMoveCheckBox.IsChecked ?? false);
+        config.Set("gw_mouseMoveTimeMultiplier", (float)MouseMoveTimeMultiplierSlider.Value);
+
+        // Drift settings
+        config.Set("gw_driftEnabled", DriftEnabledCheckBox.IsChecked ?? false);
+        config.Set("gw_driftAmount", (float)DriftAmountSlider.Value);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
@@ -143,6 +211,13 @@ public partial class GravityWellSettingsControl : UserControl
         UpdateConfiguration();
     }
 
+    private void GravityRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (GravityRadiusValue != null)
+            GravityRadiusValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
     private void OrbitSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (OrbitSpeedValue != null)
@@ -154,6 +229,11 @@ public partial class GravityWellSettingsControl : UserControl
     {
         if (DampingValue != null)
             DampingValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void EdgeBehaviorCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
         UpdateConfiguration();
     }
 
@@ -169,10 +249,45 @@ public partial class GravityWellSettingsControl : UserControl
         UpdateConfiguration();
     }
 
-    private void HdrMultiplierSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void ResetButton_Click(object sender, RoutedEventArgs e)
     {
-        if (HdrMultiplierValue != null)
-            HdrMultiplierValue.Text = e.NewValue.ToString("F1");
+        if (_effect is GravityWellEffect gravityWell)
+        {
+            gravityWell.ResetParticles();
+        }
+    }
+
+    private void ResetOnLeftClickCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void ResetOnRightClickCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void TriggerCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void MouseMoveTimeMultiplierSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MouseMoveTimeMultiplierValue != null)
+            MouseMoveTimeMultiplierValue.Text = e.NewValue.ToString("F1") + "x";
+        UpdateConfiguration();
+    }
+
+    private void DriftEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void DriftAmountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (DriftAmountValue != null)
+            DriftAmountValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 }

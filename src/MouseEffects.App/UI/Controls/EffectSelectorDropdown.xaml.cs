@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -227,6 +226,17 @@ public partial class EffectSelectorDropdown : System.Windows.Controls.UserContro
                     }
                 }
             }
+        }
+    }
+
+    private void DropdownScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        // Handle mouse wheel scrolling in popup (events don't bubble correctly in popups)
+        var scrollViewer = sender as ScrollViewer;
+        if (scrollViewer != null)
+        {
+            scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta / 3.0);
+            e.Handled = true;
         }
     }
 }

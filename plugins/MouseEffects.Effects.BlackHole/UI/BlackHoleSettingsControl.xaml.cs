@@ -45,6 +45,12 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
             EventHorizonValue.Text = eventHorizon.ToString("F2");
         }
 
+        if (_effect.Configuration.TryGet("centerAlpha", out float centerAlpha))
+        {
+            CenterAlphaSlider.Value = centerAlpha;
+            CenterAlphaValue.Text = centerAlpha.ToString("F2");
+        }
+
         if (_effect.Configuration.TryGet("accretionDiskEnabled", out bool diskEnabled))
         {
             AccretionDiskCheckBox.IsChecked = diskEnabled;
@@ -68,6 +74,24 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
             GlowIntensitySlider.Value = glow;
             GlowIntensityValue.Text = glow.ToString("F1");
         }
+
+        if (_effect.Configuration.TryGet("centerGlowEnabled", out bool centerGlowEnabled))
+        {
+            CenterGlowCheckBox.IsChecked = centerGlowEnabled;
+            UpdateCenterGlowPanelVisibility(centerGlowEnabled);
+        }
+
+        if (_effect.Configuration.TryGet("centerGlowThreshold", out float threshold))
+        {
+            CenterGlowThresholdSlider.Value = threshold;
+            CenterGlowThresholdValue.Text = threshold.ToString("F2");
+        }
+
+        if (_effect.Configuration.TryGet("centerGlowIntensity", out float centerGlowIntensity))
+        {
+            CenterGlowIntensitySlider.Value = centerGlowIntensity;
+            CenterGlowIntensityValue.Text = centerGlowIntensity.ToString("F1");
+        }
     }
 
     private void UpdateConfiguration()
@@ -78,10 +102,14 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
         config.Set("radius", (float)RadiusSlider.Value);
         config.Set("distortionStrength", (float)DistortionStrengthSlider.Value);
         config.Set("eventHorizonSize", (float)EventHorizonSlider.Value);
+        config.Set("centerAlpha", (float)CenterAlphaSlider.Value);
         config.Set("accretionDiskEnabled", AccretionDiskCheckBox.IsChecked ?? true);
         config.Set("accretionDiskColor", _diskColor);
         config.Set("rotationSpeed", (float)RotationSpeedSlider.Value);
         config.Set("glowIntensity", (float)GlowIntensitySlider.Value);
+        config.Set("centerGlowEnabled", CenterGlowCheckBox.IsChecked ?? false);
+        config.Set("centerGlowThreshold", (float)CenterGlowThresholdSlider.Value);
+        config.Set("centerGlowIntensity", (float)CenterGlowIntensitySlider.Value);
 
         _effect.Configure(config);
 
@@ -92,6 +120,11 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
     private void UpdateAccretionDiskPanelVisibility(bool enabled)
     {
         AccretionDiskPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateCenterGlowPanelVisibility(bool enabled)
+    {
+        CenterGlowPanel.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateDiskColorPreview()
@@ -121,6 +154,13 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
     {
         if (EventHorizonValue != null)
             EventHorizonValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void CenterAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (CenterAlphaValue != null)
+            CenterAlphaValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 
@@ -167,6 +207,29 @@ public partial class BlackHoleSettingsControl : System.Windows.Controls.UserCont
     {
         if (GlowIntensityValue != null)
             GlowIntensityValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void CenterGlowCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        bool enabled = CenterGlowCheckBox.IsChecked ?? false;
+        UpdateCenterGlowPanelVisibility(enabled);
+        UpdateConfiguration();
+    }
+
+    private void CenterGlowThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (CenterGlowThresholdValue != null)
+            CenterGlowThresholdValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void CenterGlowIntensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (CenterGlowIntensityValue != null)
+            CenterGlowIntensityValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
     }
 }

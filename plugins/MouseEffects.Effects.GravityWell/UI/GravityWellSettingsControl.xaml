@@ -19,13 +19,24 @@
 
     <StackPanel Margin="0">
 
+            <!-- Reset Section -->
+            <TextBlock Text="Reset" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+            <Button x:Name="ResetButton" Content="Reset Particles" Margin="0,4,0,8"
+                    Padding="8,4" HorizontalAlignment="Left" Click="ResetButton_Click"/>
+            <CheckBox x:Name="ResetOnLeftClickCheckBox" Content="Reset on Left Click"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="ResetOnLeftClickCheckBox_Changed" Unchecked="ResetOnLeftClickCheckBox_Changed"/>
+            <CheckBox x:Name="ResetOnRightClickCheckBox" Content="Reset on Right Click"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="ResetOnRightClickCheckBox_Changed" Unchecked="ResetOnRightClickCheckBox_Changed"/>
+
             <!-- Particle Settings Section -->
-            <TextBlock Text="Particle Settings" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+            <TextBlock Text="Particle Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Particle Count" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="ParticleCountSlider" Minimum="50" Maximum="500" Value="100"
+            <Slider x:Name="ParticleCountSlider" Minimum="50" Maximum="500" Value="346"
                     Style="{StaticResource SliderStyle}" ValueChanged="ParticleCountSlider_ValueChanged"/>
-            <TextBlock x:Name="ParticleCountValue" Text="100" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="ParticleCountValue" Text="346" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Particle Size" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="ParticleSizeSlider" Minimum="3" Maximum="20" Value="8"
@@ -33,6 +44,7 @@
             <TextBlock x:Name="ParticleSizeValue" Text="8.0" Opacity="0.7" FontSize="11"/>
 
             <CheckBox x:Name="RandomColorsCheckBox" Content="Random Colors"
+                      IsChecked="True"
                       Style="{StaticResource CheckBoxStyle}"
                       Checked="RandomColorsCheckBox_Changed" Unchecked="RandomColorsCheckBox_Changed"/>
 
@@ -41,25 +53,37 @@
 
             <TextBlock Text="Gravity Mode" Style="{StaticResource LabelStyle}"/>
             <ComboBox x:Name="GravityModeCombo" SelectionChanged="GravityModeCombo_Changed" Margin="0,0,0,8">
-                <ComboBoxItem Content="Attract" IsSelected="True"/>
+                <ComboBoxItem Content="Attract"/>
                 <ComboBoxItem Content="Repel"/>
-                <ComboBoxItem Content="Orbit"/>
+                <ComboBoxItem Content="Orbit" IsSelected="True"/>
             </ComboBox>
 
             <TextBlock Text="Gravity Strength" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="GravityStrengthSlider" Minimum="10000" Maximum="200000" Value="50000"
+            <Slider x:Name="GravityStrengthSlider" Minimum="10000" Maximum="200000" Value="87143"
                     Style="{StaticResource SliderStyle}" ValueChanged="GravityStrengthSlider_ValueChanged"/>
-            <TextBlock x:Name="GravityStrengthValue" Text="50000" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="GravityStrengthValue" Text="87143" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Gravity Radius (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="GravityRadiusSlider" Minimum="100" Maximum="1500" Value="1500"
+                    Style="{StaticResource SliderStyle}" ValueChanged="GravityRadiusSlider_ValueChanged"/>
+            <TextBlock x:Name="GravityRadiusValue" Text="1500" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Orbit Speed" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="OrbitSpeedSlider" Minimum="0" Maximum="500" Value="200"
+            <Slider x:Name="OrbitSpeedSlider" Minimum="0" Maximum="500" Value="81"
                     Style="{StaticResource SliderStyle}" ValueChanged="OrbitSpeedSlider_ValueChanged"/>
-            <TextBlock x:Name="OrbitSpeedValue" Text="200" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="OrbitSpeedValue" Text="81" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Damping" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="DampingSlider" Minimum="0.90" Maximum="1.0" Value="0.98"
+            <Slider x:Name="DampingSlider" Minimum="0.90" Maximum="1.0" Value="1.0"
                     Style="{StaticResource SliderStyle}" ValueChanged="DampingSlider_ValueChanged"/>
-            <TextBlock x:Name="DampingValue" Text="0.98" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="DampingValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Edge Behavior" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="EdgeBehaviorCombo" SelectionChanged="EdgeBehaviorCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Teleport"/>
+                <ComboBoxItem Content="Bounce"/>
+                <ComboBoxItem Content="Reset" IsSelected="True"/>
+            </ComboBox>
 
             <!-- Trail Settings Section -->
             <TextBlock Text="Trail Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
@@ -70,16 +94,48 @@
                       Checked="TrailEnabledCheckBox_Changed" Unchecked="TrailEnabledCheckBox_Changed"/>
 
             <TextBlock Text="Trail Length" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="TrailLengthSlider" Minimum="0.1" Maximum="1.0" Value="0.3"
+            <Slider x:Name="TrailLengthSlider" Minimum="0.1" Maximum="50.0" Value="50.0"
                     Style="{StaticResource SliderStyle}" ValueChanged="TrailLengthSlider_ValueChanged"/>
-            <TextBlock x:Name="TrailLengthValue" Text="0.30" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="TrailLengthValue" Text="50.00" Opacity="0.7" FontSize="11"/>
 
-            <!-- Visual Settings Section -->
-            <TextBlock Text="Visual Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+            <!-- Gravity Triggers Section -->
+            <TextBlock Text="Gravity Triggers" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+            <TextBlock Text="Gravity is active when any selected condition is met:"
+                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
 
-            <TextBlock Text="HDR Multiplier" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="HdrMultiplierSlider" Minimum="0.5" Maximum="3.0" Value="1.0"
-                    Style="{StaticResource SliderStyle}" ValueChanged="HdrMultiplierSlider_ValueChanged"/>
-            <TextBlock x:Name="HdrMultiplierValue" Text="1.0" Opacity="0.7" FontSize="11"/>
+            <CheckBox x:Name="TriggerAlwaysActiveCheckBox" Content="Always Active"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="TriggerCheckBox_Changed" Unchecked="TriggerCheckBox_Changed"/>
+            <CheckBox x:Name="TriggerOnLeftMouseDownCheckBox" Content="On Left Mouse Down"
+                      IsChecked="True"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="TriggerCheckBox_Changed" Unchecked="TriggerCheckBox_Changed"/>
+            <CheckBox x:Name="TriggerOnRightMouseDownCheckBox" Content="On Right Mouse Down"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="TriggerCheckBox_Changed" Unchecked="TriggerCheckBox_Changed"/>
+            <CheckBox x:Name="TriggerOnMouseMoveCheckBox" Content="On Mouse Move"
+                      IsChecked="True"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="TriggerCheckBox_Changed" Unchecked="TriggerCheckBox_Changed"/>
+
+            <TextBlock Text="Mouse Move Speed" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="MouseMoveTimeMultiplierSlider" Minimum="1.0" Maximum="10.0" Value="3.0"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MouseMoveTimeMultiplierSlider_ValueChanged"/>
+            <TextBlock x:Name="MouseMoveTimeMultiplierValue" Text="3.0x" Opacity="0.7" FontSize="11"/>
+
+            <!-- Drift Settings Section -->
+            <TextBlock Text="Drift Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+            <TextBlock Text="When gravity is off, particles decelerate:"
+                       TextWrapping="Wrap" Opacity="0.7" FontSize="11" Margin="0,0,0,8"/>
+
+            <CheckBox x:Name="DriftEnabledCheckBox" Content="Enable Drift"
+                      IsChecked="True"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="DriftEnabledCheckBox_Changed" Unchecked="DriftEnabledCheckBox_Changed"/>
+
+            <TextBlock Text="Drift Amount" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="DriftAmountSlider" Minimum="0.5" Maximum="1.0" Value="0.51"
+                    Style="{StaticResource SliderStyle}" ValueChanged="DriftAmountSlider_ValueChanged"/>
+            <TextBlock x:Name="DriftAmountValue" Text="0.51" Opacity="0.7" FontSize="11"/>
     </StackPanel>
 </UserControl>

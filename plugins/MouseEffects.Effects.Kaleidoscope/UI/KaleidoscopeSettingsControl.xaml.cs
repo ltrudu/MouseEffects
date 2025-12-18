@@ -59,6 +59,12 @@ public partial class KaleidoscopeSettingsControl : System.Windows.Controls.UserC
             ZoomSlider.Value = zoomFactor;
             ZoomValue.Text = zoomFactor.ToString("F1");
         }
+
+        if (_effect.Configuration.TryGet("alpha", out float alpha))
+        {
+            AlphaSlider.Value = alpha;
+            AlphaValue.Text = alpha.ToString("F2");
+        }
     }
 
     private void UpdateConfiguration()
@@ -72,6 +78,7 @@ public partial class KaleidoscopeSettingsControl : System.Windows.Controls.UserC
         config.Set("rotationOffset", (float)RotationOffsetSlider.Value);
         config.Set("edgeSoftness", (float)EdgeSoftnessSlider.Value);
         config.Set("zoomFactor", (float)ZoomSlider.Value);
+        config.Set("alpha", (float)AlphaSlider.Value);
 
         _effect.Configure(config);
 
@@ -118,6 +125,13 @@ public partial class KaleidoscopeSettingsControl : System.Windows.Controls.UserC
     {
         if (ZoomValue != null)
             ZoomValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void AlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (AlphaValue != null)
+            AlphaValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 }

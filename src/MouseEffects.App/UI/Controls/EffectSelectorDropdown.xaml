@@ -63,9 +63,11 @@
                 <Border.Effect>
                     <DropShadowEffect BlurRadius="8" ShadowDepth="2" Opacity="0.3"/>
                 </Border.Effect>
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                <ScrollViewer x:Name="DropdownScrollViewer"
+                              VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              Padding="4">
+                              Padding="4"
+                              PreviewMouseWheel="DropdownScrollViewer_PreviewMouseWheel">
                     <StackPanel>
                         <!-- None Option -->
                         <Border x:Name="NoneOption"
@@ -104,6 +106,8 @@
                                   Background="Transparent"
                                   BorderThickness="0"
                                   Padding="0"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
                                   SelectedItemChanged="EffectTreeView_SelectedItemChanged">
                             <TreeView.ItemContainerStyle>
                                 <Style TargetType="TreeViewItem">
