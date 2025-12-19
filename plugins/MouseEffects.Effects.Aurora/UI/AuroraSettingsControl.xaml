@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.modernwpf.com/2019"
-             Width="400">
+             Width="400"
+             PreviewMouseWheel="UserControl_PreviewMouseWheel">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
             <!-- Header -->
@@ -49,7 +50,7 @@
                         <Slider x:Name="HorizontalSpreadSlider"
                                Grid.Column="0"
                                Minimum="100"
-                               Maximum="600"
+                               Maximum="1920"
                                Value="300"
                                TickFrequency="10"
                                IsSnapToTickEnabled="True"
@@ -61,7 +62,28 @@
                                   Margin="10,0,0,0"/>
                     </Grid>
 
-                    <TextBlock Text="Number of Layers (1-5)"/>
+                    <TextBlock Text="Edge Falloff (0 = sharp edges)"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="EdgeFalloffSlider"
+                               Grid.Column="0"
+                               Minimum="0"
+                               Maximum="1"
+                               Value="0.3"
+                               TickFrequency="0.05"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="EdgeFalloffSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=EdgeFalloffSlider, Path=Value, StringFormat=F2}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Number of Layers (1-10)"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -70,7 +92,7 @@
                         <Slider x:Name="NumLayersSlider"
                                Grid.Column="0"
                                Minimum="1"
-                               Maximum="5"
+                               Maximum="10"
                                Value="3"
                                TickFrequency="1"
                                IsSnapToTickEnabled="True"
@@ -119,6 +141,27 @@
                                ValueChanged="GlowStrengthSlider_ValueChanged"/>
                         <TextBlock Grid.Column="1"
                                   Text="{Binding ElementName=GlowStrengthSlider, Path=Value, StringFormat=F1}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
+
+                    <TextBlock Text="Aurora Alpha (Opacity)"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="AlphaSlider"
+                               Grid.Column="0"
+                               Minimum="0"
+                               Maximum="1"
+                               Value="1"
+                               TickFrequency="0.05"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="AlphaSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=AlphaSlider, Path=Value, StringFormat=F2}"
                                   Width="40"
                                   TextAlignment="Right"
                                   Margin="10,0,0,0"/>
@@ -252,7 +295,29 @@
                         <ComboBoxItem Content="Blue Aurora (Blue/Cyan/White)"/>
                         <ComboBoxItem Content="Red Aurora (Red/Orange/Yellow)"/>
                         <ComboBoxItem Content="Purple Aurora (Purple/Pink/Blue)"/>
+                        <ComboBoxItem Content="Rainbow Aurora"/>
                     </ComboBox>
+
+                    <TextBlock x:Name="RainbowSpeedLabel" Text="Rainbow Speed" Visibility="Collapsed"/>
+                    <Grid x:Name="RainbowSpeedGrid" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Slider x:Name="RainbowSpeedSlider"
+                               Grid.Column="0"
+                               Minimum="0.1"
+                               Maximum="5"
+                               Value="1"
+                               TickFrequency="0.1"
+                               IsSnapToTickEnabled="True"
+                               ValueChanged="RainbowSpeedSlider_ValueChanged"/>
+                        <TextBlock Grid.Column="1"
+                                  Text="{Binding ElementName=RainbowSpeedSlider, Path=Value, StringFormat=F1}"
+                                  Width="40"
+                                  TextAlignment="Right"
+                                  Margin="10,0,0,0"/>
+                    </Grid>
                 </ui:SimpleStackPanel>
             </ui:SimpleStackPanel>
         </StackPanel>

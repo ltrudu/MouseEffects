@@ -45,7 +45,10 @@ public sealed class AuroraEffect : EffectBase
         public Vector4 SecondaryColor;    // 16 bytes = 96
         public Vector4 TertiaryColor;     // 16 bytes = 112
         public Vector4 AccentColor;       // 16 bytes = 128
-        public Vector4 Padding;           // 16 bytes = 144
+        public float EdgeFalloff;         // 4 bytes = 132
+        public float Alpha;               // 4 bytes = 136
+        public uint RainbowMode;          // 4 bytes = 140
+        public float RainbowSpeed;        // 4 bytes = 144
     }
 
     // GPU Resources
@@ -57,11 +60,11 @@ public sealed class AuroraEffect : EffectBase
     private Vector2 _currentMousePosition;
 
     // Configuration fields (au_ prefix for Aurora)
-    private float _height = 400f;
-    private float _horizontalSpread = 300f;
+    private float _height = 170f;
+    private float _horizontalSpread = 870f;
     private float _waveSpeed = 1.0f;
     private float _waveFrequency = 2.0f;
-    private int _numLayers = 3;
+    private int _numLayers = 4;
     private float _colorIntensity = 1.5f;
     private float _glowStrength = 2.0f;
     private Vector4 _primaryColor = new(0f, 1f, 0.5f, 1f);
@@ -71,6 +74,10 @@ public sealed class AuroraEffect : EffectBase
     private float _noiseScale = 1.5f;
     private float _noiseStrength = 0.3f;
     private float _verticalFlow = 0.5f;
+    private float _edgeFalloff = 0.5f;
+    private float _alpha = 0.65f;
+    private bool _rainbowMode = false;
+    private float _rainbowSpeed = 1.0f;
 
     // Public properties for UI binding
     public float Height { get => _height; set => _height = value; }
@@ -87,6 +94,10 @@ public sealed class AuroraEffect : EffectBase
     public float NoiseScale { get => _noiseScale; set => _noiseScale = value; }
     public float NoiseStrength { get => _noiseStrength; set => _noiseStrength = value; }
     public float VerticalFlow { get => _verticalFlow; set => _verticalFlow = value; }
+    public float EdgeFalloff { get => _edgeFalloff; set => _edgeFalloff = value; }
+    public float Alpha { get => _alpha; set => _alpha = value; }
+    public bool RainbowMode { get => _rainbowMode; set => _rainbowMode = value; }
+    public float RainbowSpeed { get => _rainbowSpeed; set => _rainbowSpeed = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -134,6 +145,14 @@ public sealed class AuroraEffect : EffectBase
             _noiseStrength = noiseStr;
         if (Configuration.TryGet("au_verticalFlow", out float vertFlow))
             _verticalFlow = vertFlow;
+        if (Configuration.TryGet("au_edgeFalloff", out float edgeFalloff))
+            _edgeFalloff = edgeFalloff;
+        if (Configuration.TryGet("au_alpha", out float alpha))
+            _alpha = alpha;
+        if (Configuration.TryGet("au_rainbowMode", out bool rainbowMode))
+            _rainbowMode = rainbowMode;
+        if (Configuration.TryGet("au_rainbowSpeed", out float rainbowSpeed))
+            _rainbowSpeed = rainbowSpeed;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -167,7 +186,10 @@ public sealed class AuroraEffect : EffectBase
             SecondaryColor = _secondaryColor,
             TertiaryColor = _tertiaryColor,
             AccentColor = _accentColor,
-            Padding = Vector4.Zero
+            EdgeFalloff = _edgeFalloff,
+            Alpha = _alpha,
+            RainbowMode = _rainbowMode ? 1u : 0u,
+            RainbowSpeed = _rainbowSpeed
         };
         context.UpdateBuffer(_constantBuffer!, constants);
 

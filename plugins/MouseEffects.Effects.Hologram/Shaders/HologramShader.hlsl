@@ -13,7 +13,8 @@ cbuffer HologramParams : register(b0)
 {
     float2 MousePosition;           // Mouse position in screen pixels
     float2 ViewportSize;            // Viewport size in pixels
-    float Radius;                   // Effect radius
+    float Radius;                   // Effect outer radius
+    float CenterRadius;             // Effect inner radius (0 = no empty center)
     float ScanLineDensity;          // Scan line density
     float ScanLineSpeed;            // Scan line speed
     float FlickerIntensity;         // Flicker intensity
@@ -24,7 +25,8 @@ cbuffer HologramParams : register(b0)
     float TintStrength;             // Color tint strength
     float Time;                     // Total time in seconds
     float HdrMultiplier;            // HDR brightness multiplier
-    float Padding;
+    uint DotsEnabled;               // Enable/disable bright dots
+    float3 Padding;
 };
 
 Texture2D<float4> ScreenTexture : register(t0);
@@ -160,13 +162,32 @@ float4 PSMain(PSInput input) : SV_TARGET
     float2 toMouse = screenPos - MousePosition;
     float dist = length(toMouse);
 
-    // Calculate effect influence (1.0 at center, 0.0 at radius)
-    float influence = 1.0 - saturate(dist / Radius);
-
     // Early exit if outside radius
-    if (influence <= 0.0)
+    if (dist > Radius)
     {
         return float4(0, 0, 0, 0);
+    }
+
+    // Calculate effect influence with center falloff
+    float influence;
+    if (CenterRadius > 0.0)
+    {
+        // Center falloff mode: fade in from center to CenterRadius, fade out from CenterRadius to Radius
+        if (dist < CenterRadius)
+        {
+            // Fade in zone: 0 at center, 1 at CenterRadius
+            influence = dist / CenterRadius;
+        }
+        else
+        {
+            // Fade out zone: 1 at CenterRadius, 0 at Radius
+            influence = 1.0 - saturate((dist - CenterRadius) / (Radius - CenterRadius));
+        }
+    }
+    else
+    {
+        // No center falloff: full strength at center, fades to 0 at Radius
+        influence = 1.0 - saturate(dist / Radius);
     }
 
     // Direction from mouse (normalized)
@@ -205,15 +226,31 @@ float4 PSMain(PSInput input) : SV_TARGET
     float edgeGlow = edge * EdgeGlowStrength * influence;
     color += holoColor * edgeGlow;
 
-    // 7. Add holographic glow at edges of effect radius
-    float edgeFalloff = smoothstep(0.0, 0.3, influence) * smoothstep(1.0, 0.7, influence);
-    color += holoColor * edgeFalloff * 0.3;
-
-    // 8. Occasional bright glitches
-    float glitchHash = hash(floor(uv * 300.0) + floor(Time * 15.0));
-    if (glitchHash > 0.995)
+    // 7. Add holographic glow based on influence
+    // When CenterRadius is 0, glow follows influence directly (strongest at center)
+    // When CenterRadius > 0, creates ring effect with glow at the peak influence zone
+    float glowAmount;
+    if (CenterRadius > 0.0)
     {
-        color += holoColor * influence * 0.5;
+        // Ring mode: glow is strongest where influence peaks (at CenterRadius distance)
+        float edgeFalloff = smoothstep(0.0, 0.3, influence) * smoothstep(1.0, 0.7, influence);
+        glowAmount = edgeFalloff;
+    }
+    else
+    {
+        // Full center mode: glow follows influence (strongest at center)
+        glowAmount = influence;
+    }
+    color += holoColor * glowAmount * 0.3;
+
+    // 8. Occasional bright glitches (controlled by DotsEnabled)
+    if (DotsEnabled != 0u)
+    {
+        float glitchHash = hash(floor(uv * 300.0) + floor(Time * 15.0));
+        if (glitchHash > 0.995)
+        {
+            color += holoColor * influence * 0.5;
+        }
     }
 
     // 9. Horizontal interference lines (rare)

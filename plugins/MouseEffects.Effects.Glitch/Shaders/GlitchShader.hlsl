@@ -22,8 +22,11 @@ cbuffer GlitchParams : register(b0)
     float GlitchFrequency;       // How often glitches change
     float Time;                  // Total time in seconds
     float HdrMultiplier;         // HDR brightness multiplier
-    float Padding;
-    float2 Padding2;
+    uint MovingBackgroundEnabled;   // Enable/disable moving background
+    uint CheckeredViewEnabled;      // Enable/disable checkered white blocks
+    uint DistortionEnabled;         // Enable/disable screen distortion
+    uint RgbSplitEnabled;           // Enable/disable RGB split
+    float3 Padding;
 };
 
 Texture2D<float4> ScreenTexture : register(t0);
@@ -167,19 +170,21 @@ float4 PSMain(PSInput input) : SV_TARGET
     float glitchTime = Time * GlitchFrequency;
     float glitchPhase = frac(glitchTime);
 
-    // 1. Block displacement
-    float2 blockOffset = blockGlitch(uv, BlockSize, Time) * effectStrength;
+    // Initialize distorted UV
+    float2 distortedUV = uv;
 
-    // 2. Scan line distortion
-    float scanOffset = scanLineDistortion(uv, Time) * effectStrength;
+    // 1. Block displacement and 2. Scan line distortion (controlled by DistortionEnabled)
+    if (DistortionEnabled != 0u)
+    {
+        float2 blockOffset = blockGlitch(uv, BlockSize, Time) * effectStrength;
+        float scanOffset = scanLineDistortion(uv, Time) * effectStrength;
+        distortedUV = uv + float2(blockOffset.x + scanOffset, blockOffset.y);
+        distortedUV = saturate(distortedUV);
+    }
 
-    // Apply distortions to UV
-    float2 distortedUV = uv + float2(blockOffset.x + scanOffset, blockOffset.y);
-    distortedUV = saturate(distortedUV);
-
-    // 3. RGB split (chromatic aberration)
+    // 3. RGB split (chromatic aberration) - controlled by RgbSplitEnabled
     float3 color;
-    if (RgbSplitAmount > 0.0)
+    if (RgbSplitEnabled != 0u && RgbSplitAmount > 0.0)
     {
         float splitAmount = RgbSplitAmount * effectStrength;
         color = rgbSplit(distortedUV, splitAmount, dir);
@@ -189,23 +194,30 @@ float4 PSMain(PSInput input) : SV_TARGET
         color = ScreenTexture.Sample(LinearSampler, distortedUV).rgb;
     }
 
-    // 4. Color corruption
-    color = colorCorruption(color, uv, Time);
+    // 4. Color corruption and digital artifacts (controlled by CheckeredViewEnabled)
+    if (CheckeredViewEnabled != 0u)
+    {
+        // Color corruption - creates block-based color inversions and channel swaps
+        color = colorCorruption(color, uv, Time);
 
-    // 5. Noise overlay
+        // Digital artifacts - random white pixel sparkles
+        float artifactHash = hash(floor(uv * 500.0) + floor(glitchTime * 10.0));
+        if (artifactHash > 0.98)
+        {
+            color += float3(1, 1, 1) * effectStrength * 0.5;
+        }
+    }
+
+    // 5. Noise overlay (always applied)
     float noiseVal = noise(uv * 800.0 + Time * 10.0) * NoiseAmount * effectStrength;
     color += noiseVal;
 
-    // 6. Digital artifacts - random bright pixels
-    float artifactHash = hash(floor(uv * 500.0) + floor(glitchTime * 10.0));
-    if (artifactHash > 0.98)
+    // 6. Temporal flickering / moving background (controlled by MovingBackgroundEnabled)
+    if (MovingBackgroundEnabled != 0u)
     {
-        color += float3(1, 1, 1) * effectStrength * 0.5;
+        float flicker = noise(float2(glitchTime * 20.0, 0)) * 0.2 + 0.9;
+        color *= flicker;
     }
-
-    // 7. Temporal flickering
-    float flicker = noise(float2(glitchTime * 20.0, 0)) * 0.2 + 0.9;
-    color *= flicker;
 
     // Smooth edge fade
     float edgeFade = smoothstep(0.0, 0.3, influence);

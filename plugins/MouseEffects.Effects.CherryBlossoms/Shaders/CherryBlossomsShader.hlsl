@@ -10,20 +10,21 @@ cbuffer FrameConstants : register(b0)
 
 struct PetalInstance
 {
-    float2 Position;
-    float2 Velocity;
-    float4 Color;
-    float Size;
-    float Lifetime;
-    float MaxLifetime;
-    float RotationAngle;
-    float SpinSpeed;
-    float SwayPhase;
-    float SwayAmplitude;
-    float GlowIntensity;
-    float FallSpeed;
-    float ColorVariant;
-    float Padding;
+    float2 Position;          // 8 bytes, offset 0
+    float2 Velocity;          // 8 bytes, offset 8
+    float4 Color;             // 16 bytes, offset 16
+    float Size;               // 4 bytes, offset 32
+    float Lifetime;           // 4 bytes, offset 36
+    float MaxLifetime;        // 4 bytes, offset 40
+    float RotationAngle;      // 4 bytes, offset 44
+    float SpinSpeed;          // 4 bytes, offset 48
+    float SwayPhase;          // 4 bytes, offset 52
+    float SwayAmplitude;      // 4 bytes, offset 56
+    float GlowIntensity;      // 4 bytes, offset 60
+    float FallSpeed;          // 4 bytes, offset 64
+    float ColorVariant;       // 4 bytes, offset 68
+    float Padding1;           // 4 bytes, offset 72
+    float Padding2;           // 4 bytes, offset 76 = 80 bytes total
 };
 
 StructuredBuffer<PetalInstance> Petals : register(t0);
@@ -43,10 +44,10 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     VSOutput output;
     PetalInstance petal = Petals[instanceId];
 
-    // Skip dead petals
+    // Skip dead petals - move them completely off-screen
     if (petal.Lifetime <= 0)
     {
-        output.Position = float4(0, 0, 0, 0);
+        output.Position = float4(-10.0, -10.0, 0.0, 1.0); // Off-screen with valid w
         output.UV = float2(0, 0);
         output.Color = float4(0, 0, 0, 0);
         output.Alpha = 0;
@@ -180,7 +181,8 @@ float PetalTexture(float2 p, float size)
 // Pixel shader - Render petal with soft glow
 float4 PSMain(VSOutput input) : SV_TARGET
 {
-    if (input.Alpha <= 0.001)
+    // Discard dead/invisible petals
+    if (input.Alpha <= 0.001 || input.Color.a <= 0.001 || input.GlowIntensity <= 0.001)
         discard;
 
     // Calculate petal SDF
@@ -199,8 +201,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
     intensity *= input.GlowIntensity;
 
     // Add subtle petal texture
-    float texture = PetalTexture(input.UV, 0.8);
-    intensity *= (0.9 + texture * 0.1);
+    float petalTex = PetalTexture(input.UV, 0.8);
+    intensity *= (0.9 + petalTex * 0.1);
 
     // Add very subtle shimmer effect
     float shimmer = 0.95 + 0.05 * sin(Time * 2.0 + input.Position.x * 0.05);

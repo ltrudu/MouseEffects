@@ -25,11 +25,11 @@ public sealed class AuroraFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // Aurora appearance (au_ prefix for Aurora)
-        config.Set("au_height", 400f);
-        config.Set("au_horizontalSpread", 300f);
+        config.Set("au_height", 170f);
+        config.Set("au_horizontalSpread", 870f);
         config.Set("au_waveSpeed", 1.0f);
         config.Set("au_waveFrequency", 2.0f);
-        config.Set("au_numLayers", 3);
+        config.Set("au_numLayers", 4);
         config.Set("au_colorIntensity", 1.5f);
         config.Set("au_glowStrength", 2.0f);
 
@@ -43,6 +43,16 @@ public sealed class AuroraFactory : IEffectFactory
         config.Set("au_noiseScale", 1.5f);
         config.Set("au_noiseStrength", 0.3f);
         config.Set("au_verticalFlow", 0.5f);
+
+        // Edge behavior
+        config.Set("au_edgeFalloff", 0.5f);
+
+        // Opacity
+        config.Set("au_alpha", 0.65f);
+
+        // Rainbow mode
+        config.Set("au_rainbowMode", false);
+        config.Set("au_rainbowSpeed", 1.0f);
 
         return config;
     }
@@ -61,7 +71,7 @@ public sealed class AuroraFactory : IEffectFactory
                     Description = "How tall the aurora ribbons extend vertically",
                     MinValue = 100f,
                     MaxValue = 800f,
-                    DefaultValue = 400f,
+                    DefaultValue = 170f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -70,9 +80,19 @@ public sealed class AuroraFactory : IEffectFactory
                     DisplayName = "Horizontal Spread",
                     Description = "Width of the aurora effect horizontally",
                     MinValue = 100f,
-                    MaxValue = 600f,
-                    DefaultValue = 300f,
+                    MaxValue = 1920f,
+                    DefaultValue = 870f,
                     Step = 10f
+                },
+                new FloatParameter
+                {
+                    Key = "au_edgeFalloff",
+                    DisplayName = "Edge Falloff",
+                    Description = "How much the aurora fades at the left/right edges (0 = sharp edges, 1 = full fade)",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.5f,
+                    Step = 0.05f
                 },
                 new FloatParameter
                 {
@@ -100,8 +120,8 @@ public sealed class AuroraFactory : IEffectFactory
                     DisplayName = "Number of Layers",
                     Description = "Number of overlapping aurora layers",
                     MinValue = 1,
-                    MaxValue = 5,
-                    DefaultValue = 3
+                    MaxValue = 10,
+                    DefaultValue = 4
                 },
                 new FloatParameter
                 {
@@ -121,6 +141,33 @@ public sealed class AuroraFactory : IEffectFactory
                     MinValue = 0.5f,
                     MaxValue = 4f,
                     DefaultValue = 2.0f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "au_alpha",
+                    DisplayName = "Aurora Alpha",
+                    Description = "Overall opacity of the aurora effect",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.65f,
+                    Step = 0.05f
+                },
+                new BoolParameter
+                {
+                    Key = "au_rainbowMode",
+                    DisplayName = "Rainbow Mode",
+                    Description = "Enable rainbow color cycling",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "au_rainbowSpeed",
+                    DisplayName = "Rainbow Speed",
+                    Description = "Speed of rainbow color cycling",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1.0f,
                     Step = 0.1f
                 },
 

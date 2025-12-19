@@ -32,14 +32,16 @@ public sealed class HologramEffect : EffectBase
 
     // Effect parameters
     private float _radius = 250.0f;
-    private float _scanLineDensity = 150.0f;
+    private float _centerRadius = 0.0f;
+    private float _scanLineDensity = 63.0f;
     private float _scanLineSpeed = 2.0f;
     private float _flickerIntensity = 0.15f;
-    private int _colorTint = 0; // 0=Cyan, 1=Blue, 2=Green, 3=Purple
+    private int _colorTint = 1; // 0=Cyan, 1=Blue, 2=Green, 3=Purple
     private float _edgeGlowStrength = 0.8f;
-    private float _noiseAmount = 0.2f;
+    private float _noiseAmount = 0.0f;
     private float _chromaticAberration = 0.008f;
     private float _tintStrength = 0.6f;
+    private bool _dotsEnabled = false;
     private Vector2 _mousePosition;
     private float _totalTime;
 
@@ -55,6 +57,18 @@ public sealed class HologramEffect : EffectBase
     {
         get => _radius;
         set => _radius = value;
+    }
+
+    public float CenterRadius
+    {
+        get => _centerRadius;
+        set => _centerRadius = value;
+    }
+
+    public bool DotsEnabled
+    {
+        get => _dotsEnabled;
+        set => _dotsEnabled = value;
     }
 
     public float ScanLineDensity
@@ -130,6 +144,9 @@ public sealed class HologramEffect : EffectBase
         if (Configuration.TryGet("radius", out float radius))
             _radius = radius;
 
+        if (Configuration.TryGet("centerRadius", out float centerRadius))
+            _centerRadius = centerRadius;
+
         if (Configuration.TryGet("scanLineDensity", out float density))
             _scanLineDensity = density;
 
@@ -153,6 +170,9 @@ public sealed class HologramEffect : EffectBase
 
         if (Configuration.TryGet("tintStrength", out float tintStr))
             _tintStrength = tintStr;
+
+        if (Configuration.TryGet("dotsEnabled", out bool dots))
+            _dotsEnabled = dots;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -175,6 +195,7 @@ public sealed class HologramEffect : EffectBase
             MousePosition = _mousePosition,
             ViewportSize = context.ViewportSize,
             Radius = _radius,
+            CenterRadius = _centerRadius,
             ScanLineDensity = _scanLineDensity,
             ScanLineSpeed = _scanLineSpeed,
             FlickerIntensity = _flickerIntensity,
@@ -185,6 +206,7 @@ public sealed class HologramEffect : EffectBase
             TintStrength = _tintStrength,
             Time = _totalTime,
             HdrMultiplier = context.HdrPeakBrightness,
+            DotsEnabled = _dotsEnabled ? 1u : 0u,
             Padding = default
         };
 
@@ -240,26 +262,28 @@ public sealed class HologramEffect : EffectBase
 
     #region Shader Structures
 
-    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    [StructLayout(LayoutKind.Sequential, Size = 80)]
     private struct HologramParams
     {
         // Must match HLSL cbuffer layout exactly!
-        // Total size: 64 bytes (4 * 16), must be multiple of 16 for constant buffers
+        // Total size: 80 bytes (5 * 16), must be multiple of 16 for constant buffers
 
         public Vector2 MousePosition;      // 8 bytes, offset 0
         public Vector2 ViewportSize;       // 8 bytes, offset 8
         public float Radius;               // 4 bytes, offset 16
-        public float ScanLineDensity;      // 4 bytes, offset 20
-        public float ScanLineSpeed;        // 4 bytes, offset 24
-        public float FlickerIntensity;     // 4 bytes, offset 28
-        public int ColorTint;              // 4 bytes, offset 32
-        public float EdgeGlowStrength;     // 4 bytes, offset 36
-        public float NoiseAmount;          // 4 bytes, offset 40
-        public float ChromaticAberration;  // 4 bytes, offset 44
-        public float TintStrength;         // 4 bytes, offset 48
-        public float Time;                 // 4 bytes, offset 52
-        public float HdrMultiplier;        // 4 bytes, offset 56
-        public float Padding;              // 4 bytes, offset 60
+        public float CenterRadius;         // 4 bytes, offset 20
+        public float ScanLineDensity;      // 4 bytes, offset 24
+        public float ScanLineSpeed;        // 4 bytes, offset 28
+        public float FlickerIntensity;     // 4 bytes, offset 32
+        public int ColorTint;              // 4 bytes, offset 36
+        public float EdgeGlowStrength;     // 4 bytes, offset 40
+        public float NoiseAmount;          // 4 bytes, offset 44
+        public float ChromaticAberration;  // 4 bytes, offset 48
+        public float TintStrength;         // 4 bytes, offset 52
+        public float Time;                 // 4 bytes, offset 56
+        public float HdrMultiplier;        // 4 bytes, offset 60
+        public uint DotsEnabled;           // 4 bytes, offset 64
+        public Vector3 Padding;            // 12 bytes, offset 68
     }
 
     #endregion

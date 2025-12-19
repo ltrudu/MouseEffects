@@ -36,6 +36,19 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="GlitchFrequencySlider_ValueChanged"/>
             <TextBlock x:Name="GlitchFrequencyValue" Text="5.0" Opacity="0.7" FontSize="11"/>
 
+            <!-- Effect Toggles -->
+            <Separator Margin="0,12,0,8"/>
+            <TextBlock Text="Effect Toggles" FontWeight="Bold" Margin="0,0,0,8"/>
+
+            <CheckBox x:Name="MovingBackgroundCheckBox" Content="Moving Background (Flickering)"
+                      IsChecked="True" Margin="0,4" Checked="MovingBackgroundCheckBox_Changed" Unchecked="MovingBackgroundCheckBox_Changed"/>
+            <CheckBox x:Name="CheckeredViewCheckBox" Content="Checkered View (White Rectangles)"
+                      IsChecked="True" Margin="0,4" Checked="CheckeredViewCheckBox_Changed" Unchecked="CheckeredViewCheckBox_Changed"/>
+            <CheckBox x:Name="DistortionCheckBox" Content="Distortion (Block/Scanline)"
+                      IsChecked="True" Margin="0,4" Checked="DistortionCheckBox_Changed" Unchecked="DistortionCheckBox_Changed"/>
+            <CheckBox x:Name="RgbSplitCheckBox" Content="RGB Split (Chromatic Aberration)"
+                      IsChecked="True" Margin="0,4" Checked="RgbSplitCheckBox_Changed" Unchecked="RgbSplitCheckBox_Changed"/>
+
             <!-- Glitch Effects -->
             <Separator Margin="0,12,0,8"/>
             <TextBlock Text="Glitch Effects" FontWeight="Bold" Margin="0,0,0,8"/>

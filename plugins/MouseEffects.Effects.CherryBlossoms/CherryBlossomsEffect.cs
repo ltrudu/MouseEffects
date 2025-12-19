@@ -33,23 +33,24 @@ public sealed class CherryBlossomsEffect : EffectBase
         public Vector4 Padding;           // 16 bytes = 32
     }
 
-    [StructLayout(LayoutKind.Sequential, Size = 80)]
+    [StructLayout(LayoutKind.Sequential)]
     private struct PetalInstance
     {
-        public Vector2 Position;          // 8 bytes - Current position
-        public Vector2 Velocity;          // 8 bytes - Movement velocity (fall + wind + sway)
-        public Vector4 Color;             // 16 bytes = 32
-        public float Size;                // 4 bytes - Petal size
-        public float Lifetime;            // 4 bytes - Current life remaining
-        public float MaxLifetime;         // 4 bytes - Total lifetime
-        public float RotationAngle;       // 4 bytes - Current rotation = 48
-        public float SpinSpeed;           // 4 bytes - Rotation speed
-        public float SwayPhase;           // 4 bytes - Phase offset for sway oscillation
-        public float SwayAmplitude;       // 4 bytes - Sway strength
-        public float GlowIntensity;       // 4 bytes = 64
-        public float FallSpeed;           // 4 bytes - Individual fall speed
-        public float ColorVariant;        // 4 bytes - Color variation index
-        public float Padding;             // 4 bytes = 80
+        public Vector2 Position;          // 8 bytes, offset 0
+        public Vector2 Velocity;          // 8 bytes, offset 8
+        public Vector4 Color;             // 16 bytes, offset 16
+        public float Size;                // 4 bytes, offset 32
+        public float Lifetime;            // 4 bytes, offset 36
+        public float MaxLifetime;         // 4 bytes, offset 40
+        public float RotationAngle;       // 4 bytes, offset 44
+        public float SpinSpeed;           // 4 bytes, offset 48
+        public float SwayPhase;           // 4 bytes, offset 52
+        public float SwayAmplitude;       // 4 bytes, offset 56
+        public float GlowIntensity;       // 4 bytes, offset 60
+        public float FallSpeed;           // 4 bytes, offset 64
+        public float ColorVariant;        // 4 bytes, offset 68
+        public float Padding1;            // 4 bytes, offset 72
+        public float Padding2;            // 4 bytes, offset 76 = 80 bytes total
     }
 
     // Constants
@@ -118,6 +119,10 @@ public sealed class CherryBlossomsEffect : EffectBase
             Dynamic = true,
             StructureStride = Marshal.SizeOf<PetalInstance>()
         });
+
+        // Initialize buffer with zeros to prevent garbage data artifacts
+        Array.Clear(_gpuPetals, 0, MaxPetals);
+        context.UpdateBuffer(_petalBuffer!, (ReadOnlySpan<PetalInstance>)_gpuPetals.AsSpan());
     }
 
     protected override void OnConfigurationChanged()
@@ -255,7 +260,8 @@ public sealed class CherryBlossomsEffect : EffectBase
         float colorVariant = Random.Shared.NextSingle();
         petal.ColorVariant = colorVariant;
         petal.Color = GetPetalColor(colorVariant);
-        petal.Padding = 0f;
+        petal.Padding1 = 0f;
+        petal.Padding2 = 0f;
     }
 
     private static Vector4 GetPetalColor(float variant)

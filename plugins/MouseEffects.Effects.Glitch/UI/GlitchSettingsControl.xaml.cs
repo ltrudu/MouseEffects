@@ -65,6 +65,18 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
             NoiseSlider.Value = noise;
             NoiseValue.Text = noise.ToString("F2");
         }
+
+        if (_effect.Configuration.TryGet("movingBackgroundEnabled", out bool movingBg))
+            MovingBackgroundCheckBox.IsChecked = movingBg;
+
+        if (_effect.Configuration.TryGet("checkeredViewEnabled", out bool checkered))
+            CheckeredViewCheckBox.IsChecked = checkered;
+
+        if (_effect.Configuration.TryGet("distortionEnabled", out bool distortion))
+            DistortionCheckBox.IsChecked = distortion;
+
+        if (_effect.Configuration.TryGet("rgbSplitEnabled", out bool rgbSplitEnabled))
+            RgbSplitCheckBox.IsChecked = rgbSplitEnabled;
     }
 
     private void UpdateConfiguration()
@@ -79,6 +91,10 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
         config.Set("scanLineFrequency", (float)ScanLineSlider.Value);
         config.Set("blockSize", (float)BlockSizeSlider.Value);
         config.Set("noiseAmount", (float)NoiseSlider.Value);
+        config.Set("movingBackgroundEnabled", MovingBackgroundCheckBox.IsChecked == true);
+        config.Set("checkeredViewEnabled", CheckeredViewCheckBox.IsChecked == true);
+        config.Set("distortionEnabled", DistortionCheckBox.IsChecked == true);
+        config.Set("rgbSplitEnabled", RgbSplitCheckBox.IsChecked == true);
 
         _effect.Configure(config);
 
@@ -132,6 +148,26 @@ public partial class GlitchSettingsControl : System.Windows.Controls.UserControl
     {
         if (NoiseValue != null)
             NoiseValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void MovingBackgroundCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void CheckeredViewCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void DistortionCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateConfiguration();
+    }
+
+    private void RgbSplitCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
         UpdateConfiguration();
     }
 }

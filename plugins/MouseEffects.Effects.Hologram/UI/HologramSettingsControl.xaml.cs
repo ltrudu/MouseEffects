@@ -30,6 +30,17 @@ public partial class HologramSettingsControl : System.Windows.Controls.UserContr
             RadiusValue.Text = radius.ToString("F0");
         }
 
+        if (_effect.Configuration.TryGet("centerRadius", out float centerRadius))
+        {
+            CenterRadiusSlider.Value = centerRadius;
+            CenterRadiusValue.Text = centerRadius.ToString("F0");
+        }
+
+        if (_effect.Configuration.TryGet("dotsEnabled", out bool dotsEnabled))
+        {
+            DotsEnabledCheckBox.IsChecked = dotsEnabled;
+        }
+
         if (_effect.Configuration.TryGet("scanLineDensity", out float density))
         {
             ScanLineDensitySlider.Value = density;
@@ -84,6 +95,8 @@ public partial class HologramSettingsControl : System.Windows.Controls.UserContr
 
         var config = new EffectConfiguration();
         config.Set("radius", (float)RadiusSlider.Value);
+        config.Set("centerRadius", (float)CenterRadiusSlider.Value);
+        config.Set("dotsEnabled", DotsEnabledCheckBox.IsChecked == true);
         config.Set("scanLineDensity", (float)ScanLineDensitySlider.Value);
         config.Set("scanLineSpeed", (float)ScanLineSpeedSlider.Value);
         config.Set("flickerIntensity", (float)FlickerIntensitySlider.Value);
@@ -103,6 +116,18 @@ public partial class HologramSettingsControl : System.Windows.Controls.UserContr
     {
         if (RadiusValue != null)
             RadiusValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void CenterRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (CenterRadiusValue != null)
+            CenterRadiusValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void DotsEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
         UpdateConfiguration();
     }
 

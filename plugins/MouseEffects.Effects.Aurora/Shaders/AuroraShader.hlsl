@@ -29,7 +29,10 @@ cbuffer Constants : register(b0)
     float4 TertiaryColor;
     float4 AccentColor;
 
-    float4 Padding;
+    float EdgeFalloff;
+    float Alpha;
+    uint RainbowMode;
+    float RainbowSpeed;
 }
 
 struct VSOutput
@@ -122,24 +125,51 @@ float auroraPattern(float2 uv, float layerOffset, float time)
     return ribbon * verticalFalloff;
 }
 
+// HSV to RGB conversion for rainbow mode
+float3 hsv2rgb(float3 c)
+{
+    float4 K = float4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    float3 p = abs(frac(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * lerp(K.xxx, saturate(p - K.xxx), c.y);
+}
+
 // Get color for aurora based on position and layer
 float4 getAuroraColor(float2 uv, float layerIndex, float intensity)
 {
-    // Color variation based on position
-    float colorMix = sin(uv.x * 2.0 + Time * 0.3 + layerIndex) * 0.5 + 0.5;
+    float4 finalColor;
 
-    // Blend between colors based on position and time
-    float4 color1 = lerp(PrimaryColor, SecondaryColor, colorMix);
-    float4 color2 = lerp(TertiaryColor, AccentColor, 1.0 - colorMix);
+    if (RainbowMode != 0u)
+    {
+        // Rainbow mode: cycle through hues based on position and time
+        float hue = frac(uv.x * 0.3 + uv.y * 0.1 + Time * RainbowSpeed * 0.1 + layerIndex * 0.15);
+        float saturation = 0.9;
+        float value = 1.0;
+        float3 rgb = hsv2rgb(float3(hue, saturation, value));
+        finalColor = float4(rgb, 1.0);
 
-    // Layer-based color variation
-    float layerMix = layerIndex / max(float(NumLayers), 1.0);
-    float4 finalColor = lerp(color1, color2, layerMix);
+        // Add shimmering effect
+        float shimmer = 1.0 + sin(Time * 4.0 + uv.x * 10.0 + layerIndex * 3.0) * 0.15;
+        finalColor.rgb *= intensity * shimmer * ColorIntensity;
+    }
+    else
+    {
+        // Color variation based on position
+        float colorMix = sin(uv.x * 2.0 + Time * 0.3 + layerIndex) * 0.5 + 0.5;
 
-    // Add shimmering effect
-    float shimmer = 1.0 + sin(Time * 4.0 + uv.x * 10.0 + layerIndex * 3.0) * 0.15;
+        // Blend between colors based on position and time
+        float4 color1 = lerp(PrimaryColor, SecondaryColor, colorMix);
+        float4 color2 = lerp(TertiaryColor, AccentColor, 1.0 - colorMix);
 
-    return finalColor * intensity * shimmer * ColorIntensity;
+        // Layer-based color variation
+        float layerMix = layerIndex / max(float(NumLayers), 1.0);
+        finalColor = lerp(color1, color2, layerMix);
+
+        // Add shimmering effect
+        float shimmer = 1.0 + sin(Time * 4.0 + uv.x * 10.0 + layerIndex * 3.0) * 0.15;
+        finalColor.rgb *= intensity * shimmer * ColorIntensity;
+    }
+
+    return finalColor;
 }
 
 // ============================================
@@ -174,9 +204,22 @@ float4 PSMain(VSOutput input) : SV_TARGET
     uv.x = relativePos.x / HorizontalSpread;
     uv.y = relativePos.y / Height;
 
-    // Discard pixels outside the effect area
+    // Discard pixels outside the effect area (with some margin for falloff)
     if (abs(uv.x) > 1.0 || abs(uv.y) > 1.0)
         discard;
+
+    // Calculate horizontal edge falloff (left and right sides)
+    float edgeFalloffMask = 1.0;
+    if (EdgeFalloff > 0.0)
+    {
+        // Smooth falloff from 1.0 at center to 0.0 at edge
+        float edgeStart = 1.0 - EdgeFalloff;
+        float absX = abs(uv.x);
+        if (absX > edgeStart)
+        {
+            edgeFalloffMask = smoothstep(1.0, edgeStart, absX);
+        }
+    }
 
     float4 finalColor = float4(0, 0, 0, 0);
 
@@ -206,13 +249,15 @@ float4 PSMain(VSOutput input) : SV_TARGET
         finalColor.a = max(finalColor.a, layerColor.a);
     }
 
-    // Apply HDR boost for brighter displays
-    if (HdrMultiplier > 1.0)
-    {
-        float brightness = dot(finalColor.rgb, float3(0.299, 0.587, 0.114));
-        float hdrBoost = 1.0 + brightness * (HdrMultiplier - 1.0) * 0.5;
-        finalColor.rgb *= hdrBoost;
-    }
+    // Apply horizontal edge falloff
+    finalColor.rgb *= edgeFalloffMask;
+    finalColor.a *= edgeFalloffMask;
+
+    // Apply user-controlled alpha
+    finalColor.a *= Alpha;
+
+    // Apply HDR multiplier for bright displays
+    finalColor.rgb *= HdrMultiplier;
 
     // Ensure alpha is not too high (for proper blending)
     finalColor.a = saturate(finalColor.a * 0.8);

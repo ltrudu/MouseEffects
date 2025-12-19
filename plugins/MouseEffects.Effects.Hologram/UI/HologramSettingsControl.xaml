@@ -24,6 +24,19 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="RadiusSlider_ValueChanged"/>
             <TextBlock x:Name="RadiusValue" Text="250" Opacity="0.7" FontSize="11"/>
 
+            <TextBlock Text="Center Falloff (px) - 0 = full at center" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="CenterRadiusSlider" Minimum="0" Maximum="200" Value="50"
+                    SmallChange="5" LargeChange="25" TickFrequency="5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="CenterRadiusSlider_ValueChanged"/>
+            <TextBlock x:Name="CenterRadiusValue" Text="50" Opacity="0.7" FontSize="11"/>
+
+            <!-- Effect Toggles -->
+            <Separator Margin="0,12,0,8"/>
+            <TextBlock Text="Effect Toggles" FontWeight="Bold" Margin="0,0,0,8"/>
+
+            <CheckBox x:Name="DotsEnabledCheckBox" Content="Show Moving Dots (Bright Glitches)"
+                      IsChecked="True" Margin="0,4" Checked="DotsEnabledCheckBox_Changed" Unchecked="DotsEnabledCheckBox_Changed"/>
+
             <!-- Color Settings -->
             <Separator Margin="0,12,0,8"/>
             <TextBlock Text="Color Settings" FontWeight="Bold" Margin="0,0,0,8"/>

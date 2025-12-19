@@ -25,12 +25,14 @@ public sealed class HologramFactory : IEffectFactory
 
         // Effect parameters
         config.Set("radius", 250.0f);                   // 100-500 pixels
-        config.Set("scanLineDensity", 150.0f);          // 50-300
+        config.Set("centerRadius", 0.0f);               // 0-200 pixels (0 = full at center)
+        config.Set("dotsEnabled", false);               // Show moving dots
+        config.Set("scanLineDensity", 63.0f);           // 50-300
         config.Set("scanLineSpeed", 2.0f);              // 0.5-5.0
         config.Set("flickerIntensity", 0.15f);          // 0.0-0.5
-        config.Set("colorTint", 0);                     // 0=Cyan, 1=Blue, 2=Green, 3=Purple
+        config.Set("colorTint", 1);                     // 0=Cyan, 1=Blue, 2=Green, 3=Purple
         config.Set("edgeGlowStrength", 0.8f);           // 0.0-2.0
-        config.Set("noiseAmount", 0.2f);                // 0.0-1.0
+        config.Set("noiseAmount", 0.0f);                // 0.0-1.0
         config.Set("chromaticAberration", 0.008f);      // 0.0-0.03
         config.Set("tintStrength", 0.6f);               // 0.0-1.0
 
@@ -47,11 +49,28 @@ public sealed class HologramFactory : IEffectFactory
                 {
                     Key = "radius",
                     DisplayName = "Effect Radius",
-                    Description = "Radius of the hologram effect around the cursor in pixels",
+                    Description = "Outer radius of the hologram effect around the cursor in pixels",
                     MinValue = 100f,
                     MaxValue = 500f,
                     DefaultValue = 250f,
                     Step = 10f
+                },
+                new FloatParameter
+                {
+                    Key = "centerRadius",
+                    DisplayName = "Center Falloff",
+                    Description = "Distance from cursor where effect reaches full strength (0 = full at center)",
+                    MinValue = 0f,
+                    MaxValue = 200f,
+                    DefaultValue = 0f,
+                    Step = 5f
+                },
+                new BoolParameter
+                {
+                    Key = "dotsEnabled",
+                    DisplayName = "Show Moving Dots",
+                    Description = "Enable bright glitch dots that appear randomly",
+                    DefaultValue = false
                 },
                 new FloatParameter
                 {
@@ -60,7 +79,7 @@ public sealed class HologramFactory : IEffectFactory
                     Description = "Density of horizontal holographic scan lines",
                     MinValue = 50f,
                     MaxValue = 300f,
-                    DefaultValue = 150f,
+                    DefaultValue = 63f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -89,7 +108,7 @@ public sealed class HologramFactory : IEffectFactory
                     DisplayName = "Color Tint",
                     Description = "Holographic color theme",
                     Choices = ["Cyan", "Blue", "Green", "Purple"],
-                    DefaultValue = "Cyan"
+                    DefaultValue = "Blue"
                 },
                 new FloatParameter
                 {
@@ -118,7 +137,7 @@ public sealed class HologramFactory : IEffectFactory
                     Description = "Amount of static/noise overlay",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 0.2f,
+                    DefaultValue = 0f,
                     Step = 0.05f
                 },
                 new FloatParameter
