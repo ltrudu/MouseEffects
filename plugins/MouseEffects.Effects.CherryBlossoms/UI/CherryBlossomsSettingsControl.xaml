@@ -24,29 +24,52 @@
 
         <StackPanel Margin="0,8,0,0">
 
+            <!-- Max Petals Section -->
+            <TextBlock Text="Max Petals" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="MaxPetalsSlider" Minimum="1" Maximum="2500" Value="500"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxPetalsSlider_ValueChanged"/>
+            <TextBlock x:Name="MaxPetalsValue" Text="500" Opacity="0.7" FontSize="11"/>
+
+            <!-- Cursor Interaction Section -->
+            <TextBlock Text="Cursor Interaction" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+
+            <TextBlock Text="Interaction Mode" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="CursorInteractionCombo" Margin="0,0,0,8" SelectionChanged="CursorInteractionCombo_SelectionChanged">
+                <ComboBoxItem Content="None"/>
+                <ComboBoxItem Content="Attract" IsSelected="True"/>
+                <ComboBoxItem Content="Repel"/>
+            </ComboBox>
+
+            <StackPanel x:Name="CursorInteractionPanel" Visibility="Collapsed">
+                <TextBlock Text="Force Strength" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="CursorForceSlider" Minimum="10" Maximum="5000" Value="2500"
+                        Style="{StaticResource SliderStyle}" ValueChanged="CursorForceSlider_ValueChanged"/>
+                <TextBlock x:Name="CursorForceValue" Text="2500" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Field Radius" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="CursorRadiusSlider" Minimum="50" Maximum="500" Value="140"
+                        Style="{StaticResource SliderStyle}" ValueChanged="CursorRadiusSlider_ValueChanged"/>
+                <TextBlock x:Name="CursorRadiusValue" Text="140" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
             <!-- Spawn Settings Section -->
-            <TextBlock Text="Spawn Settings" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+            <TextBlock Text="Spawn Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Petal Count (per second)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="PetalCountSlider" Minimum="10" Maximum="100" Value="30"
                     Style="{StaticResource SliderStyle}" ValueChanged="PetalCountSlider_ValueChanged"/>
             <TextBlock x:Name="PetalCountValue" Text="30" Opacity="0.7" FontSize="11"/>
 
-            <TextBlock Text="Spawn Radius" Style="{StaticResource LabelStyle}"/>
+            <TextBlock Text="Spawn Spread" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="SpawnRadiusSlider" Minimum="50" Maximum="400" Value="180"
                     Style="{StaticResource SliderStyle}" ValueChanged="SpawnRadiusSlider_ValueChanged"/>
             <TextBlock x:Name="SpawnRadiusValue" Text="180" Opacity="0.7" FontSize="11"/>
-
-            <TextBlock Text="Petal Lifetime (seconds)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="LifetimeSlider" Minimum="3" Maximum="20" Value="10"
-                    Style="{StaticResource SliderStyle}" ValueChanged="LifetimeSlider_ValueChanged"/>
-            <TextBlock x:Name="LifetimeValue" Text="10" Opacity="0.7" FontSize="11"/>
 
             <!-- Motion Settings Section -->
             <TextBlock Text="Motion Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Fall Speed" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="FallSpeedSlider" Minimum="20" Maximum="150" Value="60"
+            <Slider x:Name="FallSpeedSlider" Minimum="5" Maximum="250" Value="60"
                     Style="{StaticResource SliderStyle}" ValueChanged="FallSpeedSlider_ValueChanged"/>
             <TextBlock x:Name="FallSpeedValue" Text="60" Opacity="0.7" FontSize="11"/>
 
@@ -68,6 +91,19 @@
             <!-- Appearance Settings Section -->
             <TextBlock Text="Appearance Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
+            <TextBlock Text="Color Palette" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="ColorPaletteCombo" Margin="0,0,0,8" SelectionChanged="ColorPaletteCombo_SelectionChanged">
+                <ComboBoxItem Content="Cherry Blossom" IsSelected="True"/>
+                <ComboBoxItem Content="Autumn Leaves"/>
+                <ComboBoxItem Content="Winter Snow"/>
+                <ComboBoxItem Content="Spring Bloom"/>
+                <ComboBoxItem Content="Summer Sun"/>
+                <ComboBoxItem Content="Aquatic Blue"/>
+                <ComboBoxItem Content="Green Pastel"/>
+                <ComboBoxItem Content="Fire"/>
+                <ComboBoxItem Content="Rainbow"/>
+            </ComboBox>
+
             <TextBlock Text="Min Size" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="MinSizeSlider" Minimum="5" Maximum="25" Value="10"
                     Style="{StaticResource SliderStyle}" ValueChanged="MinSizeSlider_ValueChanged"/>
@@ -82,6 +118,63 @@
             <Slider x:Name="GlowIntensitySlider" Minimum="0.1" Maximum="2" Value="0.8"
                     Style="{StaticResource SliderStyle}" ValueChanged="GlowIntensitySlider_ValueChanged"/>
             <TextBlock x:Name="GlowIntensityValue" Text="0.8" Opacity="0.7" FontSize="11"/>
+
+            <!-- Wind Settings Section -->
+            <TextBlock Text="Wind Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+
+            <CheckBox x:Name="WindEnabledCheckBox" Content="Enable Wind" Style="{StaticResource CheckBoxStyle}"
+                      Checked="WindEnabledCheckBox_Changed" Unchecked="WindEnabledCheckBox_Changed"/>
+
+            <StackPanel x:Name="WindSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Wind Strength" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="WindStrengthSlider" Minimum="0" Maximum="200" Value="50"
+                        Style="{StaticResource SliderStyle}" ValueChanged="WindStrengthSlider_ValueChanged"/>
+                <TextBlock x:Name="WindStrengthValue" Text="50" Opacity="0.7" FontSize="11"/>
+
+                <CheckBox x:Name="WindRandomCheckBox" Content="Random Direction" Style="{StaticResource CheckBoxStyle}"
+                          Checked="WindRandomCheckBox_Changed" Unchecked="WindRandomCheckBox_Changed"/>
+
+                <StackPanel x:Name="WindFixedPanel" Visibility="Collapsed">
+                    <TextBlock Text="Wind Direction (degrees)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="WindDirectionSlider" Minimum="-180" Maximum="180" Value="0"
+                            Style="{StaticResource SliderStyle}" ValueChanged="WindDirectionSlider_ValueChanged"/>
+                    <TextBlock x:Name="WindDirectionValue" Text="0" Opacity="0.7" FontSize="11"/>
+                </StackPanel>
+
+                <StackPanel x:Name="WindRandomPanel">
+                    <TextBlock Text="Min Direction (degrees)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="WindMinDirSlider" Minimum="-180" Maximum="180" Value="-154"
+                            Style="{StaticResource SliderStyle}" ValueChanged="WindMinDirSlider_ValueChanged"/>
+                    <TextBlock x:Name="WindMinDirValue" Text="-154" Opacity="0.7" FontSize="11"/>
+
+                    <TextBlock Text="Max Direction (degrees)" Style="{StaticResource LabelStyle}"/>
+                    <Slider x:Name="WindMaxDirSlider" Minimum="-180" Maximum="180" Value="120"
+                            Style="{StaticResource SliderStyle}" ValueChanged="WindMaxDirSlider_ValueChanged"/>
+                    <TextBlock x:Name="WindMaxDirValue" Text="120" Opacity="0.7" FontSize="11"/>
+                </StackPanel>
+
+                <TextBlock Text="Transition Mode" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="WindTransitionCombo" Margin="0,0,0,8" SelectionChanged="WindTransitionCombo_SelectionChanged">
+                    <ComboBoxItem Content="Instant"/>
+                    <ComboBoxItem Content="Linear"/>
+                    <ComboBoxItem Content="Ease In"/>
+                    <ComboBoxItem Content="Ease Out"/>
+                    <ComboBoxItem Content="Smooth Step"/>
+                    <ComboBoxItem Content="Ease In/Out"/>
+                    <ComboBoxItem Content="Exponential"/>
+                    <ComboBoxItem Content="Logarithmic" IsSelected="True"/>
+                </ComboBox>
+
+                <TextBlock Text="Transition Duration (seconds)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="WindTransDurationSlider" Minimum="0.1" Maximum="10" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="WindTransDurationSlider_ValueChanged"/>
+                <TextBlock x:Name="WindTransDurationValue" Text="2.0" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Direction Change Frequency (seconds)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="WindChangeFreqSlider" Minimum="1" Maximum="30" Value="5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="WindChangeFreqSlider_ValueChanged"/>
+                <TextBlock x:Name="WindChangeFreqValue" Text="5.0" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
         </StackPanel>
     </StackPanel>
 </UserControl>

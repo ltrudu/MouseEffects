@@ -55,11 +55,9 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
         return output;
     }
 
-    // Calculate alpha based on lifetime (fade in and out)
-    float lifeFraction = petal.Lifetime / petal.MaxLifetime;
-    float fadeIn = saturate((1.0 - lifeFraction) * 5.0); // Quick fade in
-    float fadeOut = saturate(lifeFraction * 2.0); // Slower fade out
-    float alpha = min(fadeIn, fadeOut);
+    // Calculate alpha based on screen Y position (full at top, zero at bottom)
+    float normalizedY = petal.Position.y / ViewportSize.y;
+    float alpha = saturate(1.0 - normalizedY); // 1.0 at top (y=0), 0.0 at bottom (y=viewport height)
 
     // Generate quad vertices (two triangles)
     // Vertex order: 0-1-2, 2-1-3
@@ -197,24 +195,25 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float glow3 = 1.0 - smoothstep(0.0, 0.4, dist);
 
     // Combine layers with different intensities
-    float intensity = core * 1.8 + glow1 * 1.0 + glow2 * 0.5 + glow3 * 0.25;
+    float intensity = core * 1.0 + glow1 * 0.6 + glow2 * 0.3 + glow3 * 0.15;
     intensity *= input.GlowIntensity;
 
     // Add subtle petal texture
     float petalTex = PetalTexture(input.UV, 0.8);
-    intensity *= (0.9 + petalTex * 0.1);
+    intensity *= (0.95 + petalTex * 0.05);
 
     // Add very subtle shimmer effect
-    float shimmer = 0.95 + 0.05 * sin(Time * 2.0 + input.Position.x * 0.05);
+    float shimmer = 0.98 + 0.02 * sin(Time * 2.0 + input.Position.x * 0.05);
     intensity *= shimmer;
 
-    // Apply color
+    // Apply color - preserve saturation by not over-brightening
     float4 color = input.Color;
-    color.rgb *= intensity;
-    color.a = saturate(intensity * input.Alpha * 0.85); // Slight transparency for delicate look
+    float brightness = saturate(intensity);
+    color.rgb *= brightness;
+    color.a = saturate(brightness * input.Alpha);
 
-    // Apply HDR multiplier for bright displays
-    color.rgb *= HdrMultiplier;
+    // Apply HDR multiplier for bright displays (with limit to prevent washout)
+    color.rgb *= min(HdrMultiplier, 1.5);
 
     return color;
 }

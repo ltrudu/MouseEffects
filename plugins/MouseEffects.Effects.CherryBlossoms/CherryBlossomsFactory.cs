@@ -24,6 +24,9 @@ public sealed class CherryBlossomsFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
+        // Max Petals
+        config.Set("cb_maxPetals", 500);
+
         // Cherry Blossom Settings (cb_ prefix)
         config.Set("cb_petalCount", 30);
         config.Set("cb_fallSpeed", 60f);
@@ -34,7 +37,24 @@ public sealed class CherryBlossomsFactory : IEffectFactory
         config.Set("cb_spinSpeed", 1.5f);
         config.Set("cb_glowIntensity", 0.8f);
         config.Set("cb_spawnRadius", 180f);
-        config.Set("cb_lifetime", 10f);
+        config.Set("cb_lifetime", 60f);
+        config.Set("cb_colorPalette", 0); // Cherry Blossom default
+
+        // Cursor interaction
+        config.Set("cb_cursorInteraction", 1); // Attract
+        config.Set("cb_cursorForceStrength", 2500f);
+        config.Set("cb_cursorFieldRadius", 140f);
+
+        // Wind settings
+        config.Set("cb_windEnabled", true);
+        config.Set("cb_windStrength", 50f);
+        config.Set("cb_windDirection", 0f);
+        config.Set("cb_windRandomDirection", true);
+        config.Set("cb_windMinDirection", -154f);
+        config.Set("cb_windMaxDirection", 120f);
+        config.Set("cb_windTransitionMode", 7); // Logarithmic
+        config.Set("cb_windTransitionDuration", 2f);
+        config.Set("cb_windChangeFrequency", 5f);
 
         return config;
     }
@@ -45,6 +65,17 @@ public sealed class CherryBlossomsFactory : IEffectFactory
         {
             Parameters =
             [
+                // Max Petals
+                new IntParameter
+                {
+                    Key = "cb_maxPetals",
+                    DisplayName = "Max Petals",
+                    Description = "Maximum number of petals on screen",
+                    MinValue = 1,
+                    MaxValue = 2500,
+                    DefaultValue = 500
+                },
+
                 // Petal Count
                 new IntParameter
                 {
@@ -62,8 +93,8 @@ public sealed class CherryBlossomsFactory : IEffectFactory
                     Key = "cb_fallSpeed",
                     DisplayName = "Fall Speed",
                     Description = "Downward falling speed of petals",
-                    MinValue = 20f,
-                    MaxValue = 150f,
+                    MinValue = 5f,
+                    MaxValue = 250f,
                     DefaultValue = 60f,
                     Step = 5f
                 },
@@ -144,8 +175,8 @@ public sealed class CherryBlossomsFactory : IEffectFactory
                 new FloatParameter
                 {
                     Key = "cb_spawnRadius",
-                    DisplayName = "Spawn Radius",
-                    Description = "Radius around cursor where petals spawn",
+                    DisplayName = "Spawn Spread",
+                    Description = "Horizontal spread around mouse X position where petals spawn from top",
                     MinValue = 50f,
                     MaxValue = 400f,
                     DefaultValue = 180f,
@@ -157,11 +188,138 @@ public sealed class CherryBlossomsFactory : IEffectFactory
                 {
                     Key = "cb_lifetime",
                     DisplayName = "Petal Lifetime",
-                    Description = "How long petals exist before fading",
-                    MinValue = 3f,
-                    MaxValue = 20f,
-                    DefaultValue = 10f,
-                    Step = 1f
+                    Description = "How long petals exist before fading (they also reset when off-screen)",
+                    MinValue = 5f,
+                    MaxValue = 120f,
+                    DefaultValue = 60f,
+                    Step = 5f
+                },
+
+                // Color Palette
+                new IntParameter
+                {
+                    Key = "cb_colorPalette",
+                    DisplayName = "Color Palette",
+                    Description = "Color theme for the petals",
+                    MinValue = 0,
+                    MaxValue = 8,
+                    DefaultValue = 0
+                },
+
+                // Cursor Interaction
+                new IntParameter
+                {
+                    Key = "cb_cursorInteraction",
+                    DisplayName = "Cursor Interaction",
+                    Description = "How petals react to the cursor (0=None, 1=Attract, 2=Repel)",
+                    MinValue = 0,
+                    MaxValue = 2,
+                    DefaultValue = 1
+                },
+                new FloatParameter
+                {
+                    Key = "cb_cursorForceStrength",
+                    DisplayName = "Cursor Force",
+                    Description = "Strength of cursor attraction/repulsion",
+                    MinValue = 10f,
+                    MaxValue = 5000f,
+                    DefaultValue = 2500f,
+                    Step = 10f
+                },
+                new FloatParameter
+                {
+                    Key = "cb_cursorFieldRadius",
+                    DisplayName = "Cursor Field Radius",
+                    Description = "Radius of cursor influence on petals",
+                    MinValue = 50f,
+                    MaxValue = 500f,
+                    DefaultValue = 140f,
+                    Step = 10f
+                },
+
+                // Wind Settings
+                new BoolParameter
+                {
+                    Key = "cb_windEnabled",
+                    DisplayName = "Enable Wind",
+                    Description = "Enable wind effect on petals",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "cb_windStrength",
+                    DisplayName = "Wind Strength",
+                    Description = "How strong the wind pushes petals",
+                    MinValue = 0f,
+                    MaxValue = 200f,
+                    DefaultValue = 50f,
+                    Step = 5f
+                },
+                new FloatParameter
+                {
+                    Key = "cb_windDirection",
+                    DisplayName = "Wind Direction",
+                    Description = "Fixed wind direction in degrees (0=right, 90=down, 180=left, -90=up)",
+                    MinValue = -180f,
+                    MaxValue = 180f,
+                    DefaultValue = 0f,
+                    Step = 5f
+                },
+                new BoolParameter
+                {
+                    Key = "cb_windRandomDirection",
+                    DisplayName = "Random Wind Direction",
+                    Description = "Enable random wind direction changes",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "cb_windMinDirection",
+                    DisplayName = "Min Random Direction",
+                    Description = "Minimum random wind direction in degrees",
+                    MinValue = -180f,
+                    MaxValue = 180f,
+                    DefaultValue = -154f,
+                    Step = 5f
+                },
+                new FloatParameter
+                {
+                    Key = "cb_windMaxDirection",
+                    DisplayName = "Max Random Direction",
+                    Description = "Maximum random wind direction in degrees",
+                    MinValue = -180f,
+                    MaxValue = 180f,
+                    DefaultValue = 120f,
+                    Step = 5f
+                },
+                new IntParameter
+                {
+                    Key = "cb_windTransitionMode",
+                    DisplayName = "Wind Transition Mode",
+                    Description = "How wind direction changes (0=Instant, 1=Linear, 2=EaseIn, 3=EaseOut, 4=SmoothStep, 5=EaseInOut, 6=Exponential, 7=Logarithmic)",
+                    MinValue = 0,
+                    MaxValue = 7,
+                    DefaultValue = 7
+                },
+                new FloatParameter
+                {
+                    Key = "cb_windTransitionDuration",
+                    DisplayName = "Transition Duration",
+                    Description = "How long it takes to transition between wind directions (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 10f,
+                    DefaultValue = 2f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "cb_windChangeFrequency",
+                    DisplayName = "Direction Change Frequency",
+                    Description = "How often wind direction changes (seconds)",
+                    MinValue = 1f,
+                    MaxValue = 30f,
+                    DefaultValue = 5f,
+                    Step = 0.5f
                 }
             ]
         };
