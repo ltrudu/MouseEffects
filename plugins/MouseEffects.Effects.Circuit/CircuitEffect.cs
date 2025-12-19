@@ -50,7 +50,7 @@ public sealed class CircuitEffect : EffectBase
     }
 
     // Constants
-    private const int MaxSegments = 512;
+    private const int MaxSegmentsBuffer = 2048;  // Buffer size (max configurable)
     private const float SegmentLength = 40f;     // Length of each trace segment
 
     // GPU Resources
@@ -60,10 +60,14 @@ public sealed class CircuitEffect : EffectBase
     private IShader? _pixelShader;
 
     // Trace management (CPU side)
-    private readonly TraceSegment[] _segments = new TraceSegment[MaxSegments];
-    private readonly TraceSegment[] _gpuSegments = new TraceSegment[MaxSegments];
+    private readonly TraceSegment[] _segments = new TraceSegment[MaxSegmentsBuffer];
+    private readonly TraceSegment[] _gpuSegments = new TraceSegment[MaxSegmentsBuffer];
+    private readonly float[] _originalAlpha = new float[MaxSegmentsBuffer];  // Store original alpha for fade
+    private readonly int[] _recycleQueue = new int[64];   // Indices of segments being recycled
+    private int _recycleQueueCount;
     private int _nextSegmentIndex;
     private int _activeSegmentCount;
+    private int _maxSegments = 512;              // Configurable max segments
 
     // Mouse tracking
     private Vector2 _lastMousePos;
@@ -75,26 +79,48 @@ public sealed class CircuitEffect : EffectBase
     private float _growthSpeed = 150f;           // Growth rate
     private float _maxLength = 200f;             // Max trace length
     private float _branchProbability = 0.3f;     // Probability of branching
-    private float _nodeSize = 4f;                // Size of connection nodes
-    private float _glowIntensity = 1.5f;         // Glow intensity
-    private float _lineThickness = 2.5f;         // Trace thickness
-    private float _traceLifetime = 1.5f;         // How long traces persist
+    private float _nodeSize = 2f;                 // Size of connection nodes
+    private float _glowIntensity = 0.5f;         // Glow intensity
+    private bool _glowAnimationEnabled = true;   // Animate glow
+    private float _glowAnimationSpeed = 0.5f;    // Animation speed
+    private float _glowMinIntensity = 0.3f;      // Min glow when animating
+    private float _glowMaxIntensity = 1.0f;      // Max glow when animating
+    private float _lineThickness = 1f;           // Trace thickness
+    private float _traceLifetime = 5f;           // How long traces persist
     private float _spawnThreshold = 50f;         // Distance threshold for spawning
-    private int _colorPreset = 0;                // 0=Green, 1=Cyan, 2=Gold, 3=Orange, 4=Purple, 5=Custom
+    private int _colorPreset = 5;                // 0=Green, 1=Cyan, 2=Gold, 3=Orange, 4=Purple, 5=Custom
     private Vector4 _customColor = new(0f, 1f, 0f, 1f);  // Custom color
+    private bool _rainbowEnabled = true;         // Rainbow color mode
+    private float _rainbowSpeed = 1.0f;          // Rainbow cycle speed
+    private float _elapsedTime;                  // Time tracking for rainbow
 
     // Public properties for UI binding
+    public int MaxSegments { get => _maxSegments; set => _maxSegments = Math.Clamp(value, 64, MaxSegmentsBuffer); }
     public int TraceCount { get => _traceCount; set => _traceCount = value; }
     public float GrowthSpeed { get => _growthSpeed; set => _growthSpeed = value; }
     public float MaxLength { get => _maxLength; set => _maxLength = value; }
     public float BranchProbability { get => _branchProbability; set => _branchProbability = value; }
     public float NodeSize { get => _nodeSize; set => _nodeSize = value; }
     public float GlowIntensity { get => _glowIntensity; set => _glowIntensity = value; }
+    public bool GlowAnimationEnabled { get => _glowAnimationEnabled; set => _glowAnimationEnabled = value; }
+    public float GlowAnimationSpeed { get => _glowAnimationSpeed; set => _glowAnimationSpeed = value; }
+    public float GlowMinIntensity
+    {
+        get => _glowMinIntensity;
+        set => _glowMinIntensity = Math.Min(value, _glowMaxIntensity - 0.1f);
+    }
+    public float GlowMaxIntensity
+    {
+        get => _glowMaxIntensity;
+        set => _glowMaxIntensity = Math.Max(value, _glowMinIntensity + 0.1f);
+    }
     public float LineThickness { get => _lineThickness; set => _lineThickness = value; }
     public float TraceLifetime { get => _traceLifetime; set => _traceLifetime = value; }
     public float SpawnThreshold { get => _spawnThreshold; set => _spawnThreshold = value; }
     public int ColorPreset { get => _colorPreset; set => _colorPreset = value; }
     public Vector4 CustomColor { get => _customColor; set => _customColor = value; }
+    public bool RainbowEnabled { get => _rainbowEnabled; set => _rainbowEnabled = value; }
+    public float RainbowSpeed { get => _rainbowSpeed; set => _rainbowSpeed = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -114,7 +140,7 @@ public sealed class CircuitEffect : EffectBase
         // Create segment structured buffer
         _segmentBuffer = context.CreateBuffer(new BufferDescription
         {
-            Size = Marshal.SizeOf<TraceSegment>() * MaxSegments,
+            Size = Marshal.SizeOf<TraceSegment>() * MaxSegmentsBuffer,
             Type = BufferType.Structured,
             Dynamic = true,
             StructureStride = Marshal.SizeOf<TraceSegment>()
@@ -125,6 +151,8 @@ public sealed class CircuitEffect : EffectBase
 
     protected override void OnConfigurationChanged()
     {
+        if (Configuration.TryGet("cir_maxSegments", out int maxSeg))
+            _maxSegments = Math.Clamp(maxSeg, 64, MaxSegmentsBuffer);
         if (Configuration.TryGet("cir_traceCount", out int count))
             _traceCount = count;
         if (Configuration.TryGet("cir_growthSpeed", out float speed))
@@ -137,6 +165,14 @@ public sealed class CircuitEffect : EffectBase
             _nodeSize = nodeSize;
         if (Configuration.TryGet("cir_glowIntensity", out float glow))
             _glowIntensity = glow;
+        if (Configuration.TryGet("cir_glowAnimationEnabled", out bool glowAnim))
+            _glowAnimationEnabled = glowAnim;
+        if (Configuration.TryGet("cir_glowAnimationSpeed", out float glowAnimSpeed))
+            _glowAnimationSpeed = glowAnimSpeed;
+        if (Configuration.TryGet("cir_glowMinIntensity", out float glowMin))
+            _glowMinIntensity = glowMin;
+        if (Configuration.TryGet("cir_glowMaxIntensity", out float glowMax))
+            _glowMaxIntensity = glowMax;
         if (Configuration.TryGet("cir_lineThickness", out float thickness))
             _lineThickness = thickness;
         if (Configuration.TryGet("cir_traceLifetime", out float lifetime))
@@ -147,11 +183,16 @@ public sealed class CircuitEffect : EffectBase
             _colorPreset = preset;
         if (Configuration.TryGet("cir_customColor", out Vector4 color))
             _customColor = color;
+        if (Configuration.TryGet("cir_rainbowEnabled", out bool rainbow))
+            _rainbowEnabled = rainbow;
+        if (Configuration.TryGet("cir_rainbowSpeed", out float rainbowSpeed))
+            _rainbowSpeed = rainbowSpeed;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
         float deltaTime = gameTime.DeltaSeconds;
+        _elapsedTime += deltaTime;
 
         // Skip first frame to avoid huge line from (0,0)
         if (_isFirstUpdate)
@@ -165,11 +206,26 @@ public sealed class CircuitEffect : EffectBase
         float distanceFromLast = Vector2.Distance(mouseState.Position, _lastMousePos);
         _accumulatedDistance += distanceFromLast;
 
+        // When at capacity and moving, prepare segments for recycling with fade
+        if (_activeSegmentCount >= _maxSegments && _accumulatedDistance > 0)
+        {
+            // Mark oldest segments for recycling if not already marked
+            if (_recycleQueueCount == 0)
+            {
+                MarkOldestForRecycle(_traceCount);
+            }
+
+            // Apply fade based on distance progress toward threshold
+            float fadeProgress = Math.Clamp(_accumulatedDistance / _spawnThreshold, 0f, 1f);
+            ApplyRecycleFade(fadeProgress);
+        }
+
         // Spawn new traces when threshold is reached
         if (_accumulatedDistance >= _spawnThreshold)
         {
             SpawnTraces(mouseState.Position);
             _accumulatedDistance = 0f;
+            _recycleQueueCount = 0; // Clear recycle queue after spawning
         }
 
         // Update last mouse position
@@ -179,14 +235,69 @@ public sealed class CircuitEffect : EffectBase
         UpdateSegments(deltaTime);
     }
 
+    private void MarkOldestForRecycle(int count)
+    {
+        // Find the oldest segments by lifetime ratio (lowest remaining lifetime = oldest)
+        var candidates = new List<(int index, float remainingRatio)>();
+
+        for (int i = 0; i < MaxSegmentsBuffer; i++)
+        {
+            if (_segments[i].Lifetime > 0 && _segments[i].MaxLifetime > 0)
+            {
+                float ratio = _segments[i].Lifetime / _segments[i].MaxLifetime;
+                candidates.Add((i, ratio));
+            }
+        }
+
+        // Sort by remaining lifetime ratio (lowest first = oldest)
+        candidates.Sort((a, b) => a.remainingRatio.CompareTo(b.remainingRatio));
+
+        // Mark the oldest 'count' segments for recycling
+        _recycleQueueCount = Math.Min(count, candidates.Count);
+        for (int i = 0; i < _recycleQueueCount; i++)
+        {
+            int idx = candidates[i].index;
+            _recycleQueue[i] = idx;
+            _originalAlpha[idx] = _segments[idx].Color.W; // Store original alpha
+        }
+    }
+
+    private void ApplyRecycleFade(float fadeProgress)
+    {
+        // Apply fade to segments marked for recycling
+        for (int i = 0; i < _recycleQueueCount; i++)
+        {
+            int idx = _recycleQueue[i];
+            if (_segments[idx].Lifetime > 0)
+            {
+                // Fade from original alpha to 0 based on progress
+                _segments[idx].Color.W = _originalAlpha[idx] * (1f - fadeProgress);
+            }
+        }
+    }
+
     private void SpawnTraces(Vector2 origin)
     {
         Vector4 traceColor = GetTraceColor();
+        int recycleIndex = 0;
 
         for (int i = 0; i < _traceCount; i++)
         {
-            if (_activeSegmentCount >= MaxSegments)
-                break;
+            // If at capacity, recycle faded segments
+            if (_activeSegmentCount >= _maxSegments)
+            {
+                if (recycleIndex < _recycleQueueCount)
+                {
+                    // Kill the faded segment to make room
+                    int recycleSlot = _recycleQueue[recycleIndex++];
+                    _segments[recycleSlot].Lifetime = 0;
+                    _activeSegmentCount--;
+                }
+                else
+                {
+                    break; // No more segments to recycle
+                }
+            }
 
             // Random initial direction (0=right, 1=down, 2=left, 3=up)
             int direction = Random.Shared.Next(4);
@@ -197,7 +308,7 @@ public sealed class CircuitEffect : EffectBase
 
     private void SpawnSegment(Vector2 start, int direction, Vector4 color, int depth)
     {
-        if (depth > 3 || _activeSegmentCount >= MaxSegments)
+        if (depth > 3 || _activeSegmentCount >= _maxSegments)
             return;
 
         // Calculate end position based on direction
@@ -213,7 +324,7 @@ public sealed class CircuitEffect : EffectBase
         segment.Direction = direction;
         segment.Color = color;
 
-        _nextSegmentIndex = (_nextSegmentIndex + 1) % MaxSegments;
+        _nextSegmentIndex = (_nextSegmentIndex + 1) % _maxSegments;
         _activeSegmentCount++;
 
         // Branch with probability
@@ -249,7 +360,7 @@ public sealed class CircuitEffect : EffectBase
     {
         _activeSegmentCount = 0;
 
-        for (int i = 0; i < MaxSegments; i++)
+        for (int i = 0; i < MaxSegmentsBuffer; i++)
         {
             if (_segments[i].Lifetime > 0)
             {
@@ -271,6 +382,12 @@ public sealed class CircuitEffect : EffectBase
 
     private Vector4 GetTraceColor()
     {
+        // Rainbow mode when in custom preset and rainbow enabled
+        if (_colorPreset == 5 && _rainbowEnabled)
+        {
+            return HsvToRgb(_elapsedTime * _rainbowSpeed % 1.0f, 1.0f, 1.0f);
+        }
+
         return _colorPreset switch
         {
             0 => new Vector4(0f, 1f, 0f, 1f),           // Classic Green
@@ -283,6 +400,29 @@ public sealed class CircuitEffect : EffectBase
         };
     }
 
+    private static Vector4 HsvToRgb(float h, float s, float v)
+    {
+        float c = v * s;
+        float x = c * (1.0f - MathF.Abs(h * 6.0f % 2.0f - 1.0f));
+        float m = v - c;
+
+        float r, g, b;
+        if (h < 1.0f / 6.0f)
+            (r, g, b) = (c, x, 0);
+        else if (h < 2.0f / 6.0f)
+            (r, g, b) = (x, c, 0);
+        else if (h < 3.0f / 6.0f)
+            (r, g, b) = (0, c, x);
+        else if (h < 4.0f / 6.0f)
+            (r, g, b) = (0, x, c);
+        else if (h < 5.0f / 6.0f)
+            (r, g, b) = (x, 0, c);
+        else
+            (r, g, b) = (c, 0, x);
+
+        return new Vector4(r + m, g + m, b + m, 1.0f);
+    }
+
     protected override void OnRender(IRenderContext context)
     {
         if (_activeSegmentCount == 0) return;
@@ -291,7 +431,7 @@ public sealed class CircuitEffect : EffectBase
 
         // Build GPU segment buffer
         int gpuIndex = 0;
-        for (int i = 0; i < MaxSegments && gpuIndex < MaxSegments; i++)
+        for (int i = 0; i < MaxSegmentsBuffer && gpuIndex < _maxSegments; i++)
         {
             if (_segments[i].Lifetime > 0)
             {
@@ -300,7 +440,7 @@ public sealed class CircuitEffect : EffectBase
         }
 
         // Fill remaining with zeroed segments
-        for (int i = gpuIndex; i < MaxSegments; i++)
+        for (int i = gpuIndex; i < MaxSegmentsBuffer; i++)
         {
             _gpuSegments[i] = default;
         }
@@ -308,12 +448,21 @@ public sealed class CircuitEffect : EffectBase
         // Update segment buffer
         context.UpdateBuffer(_segmentBuffer!, (ReadOnlySpan<TraceSegment>)_gpuSegments.AsSpan());
 
+        // Calculate glow intensity (static or animated)
+        float glowValue = _glowIntensity;
+        if (_glowAnimationEnabled && _glowAnimationSpeed > 0)
+        {
+            // Oscillate between min and max using sine wave
+            float pulse = MathF.Sin(_elapsedTime * _glowAnimationSpeed * MathF.PI * 2f) * 0.5f + 0.5f;
+            glowValue = _glowMinIntensity + pulse * (_glowMaxIntensity - _glowMinIntensity);
+        }
+
         // Update constant buffer
         var constants = new CircuitConstants
         {
             ViewportSize = context.ViewportSize,
             Time = currentTime,
-            GlowIntensity = _glowIntensity,
+            GlowIntensity = glowValue,
             NodeSize = _nodeSize,
             LineThickness = _lineThickness,
             HdrMultiplier = context.HdrPeakBrightness,

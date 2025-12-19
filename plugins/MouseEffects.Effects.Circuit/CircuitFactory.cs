@@ -25,23 +25,30 @@ public sealed class CircuitFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // Trace settings (cir_ prefix for Circuit)
+        config.Set("cir_maxSegments", 512);
         config.Set("cir_traceCount", 12);
         config.Set("cir_growthSpeed", 150f);
         config.Set("cir_maxLength", 200f);
         config.Set("cir_branchProbability", 0.3f);
 
         // Appearance settings
-        config.Set("cir_nodeSize", 4f);
-        config.Set("cir_glowIntensity", 1.5f);
-        config.Set("cir_lineThickness", 2.5f);
+        config.Set("cir_nodeSize", 2f);
+        config.Set("cir_glowIntensity", 0.5f);
+        config.Set("cir_glowAnimationEnabled", true);
+        config.Set("cir_glowAnimationSpeed", 0.5f);
+        config.Set("cir_glowMinIntensity", 0.3f);
+        config.Set("cir_glowMaxIntensity", 1.0f);
+        config.Set("cir_lineThickness", 1f);
 
         // Lifetime and spawn
-        config.Set("cir_traceLifetime", 1.5f);
+        config.Set("cir_traceLifetime", 5f);
         config.Set("cir_spawnThreshold", 50f);
 
         // Color settings
-        config.Set("cir_colorPreset", 0);  // Classic Green
+        config.Set("cir_colorPreset", 5);  // Custom
         config.Set("cir_customColor", new Vector4(0f, 1f, 0f, 1f));
+        config.Set("cir_rainbowEnabled", true);
+        config.Set("cir_rainbowSpeed", 1.0f);
 
         return config;
     }
@@ -53,6 +60,15 @@ public sealed class CircuitFactory : IEffectFactory
             Parameters =
             [
                 // Trace Settings
+                new IntParameter
+                {
+                    Key = "cir_maxSegments",
+                    DisplayName = "Max Segments",
+                    Description = "Maximum number of circuit segments that can exist at once",
+                    MinValue = 64,
+                    MaxValue = 2048,
+                    DefaultValue = 512
+                },
                 new IntParameter
                 {
                     Key = "cir_traceCount",
@@ -101,7 +117,7 @@ public sealed class CircuitFactory : IEffectFactory
                     Description = "Size of connection point nodes",
                     MinValue = 2f,
                     MaxValue = 10f,
-                    DefaultValue = 4f,
+                    DefaultValue = 2f,
                     Step = 0.5f
                 },
                 new FloatParameter
@@ -111,7 +127,44 @@ public sealed class CircuitFactory : IEffectFactory
                     Description = "Intensity of the electronic glow",
                     MinValue = 0.5f,
                     MaxValue = 3f,
-                    DefaultValue = 1.5f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new BoolParameter
+                {
+                    Key = "cir_glowAnimationEnabled",
+                    DisplayName = "Animate Glow",
+                    Description = "Enable glow intensity animation",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "cir_glowAnimationSpeed",
+                    DisplayName = "Glow Animation Speed",
+                    Description = "Speed of glow animation",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "cir_glowMinIntensity",
+                    DisplayName = "Min Glow",
+                    Description = "Minimum glow intensity when animating",
+                    MinValue = 0.1f,
+                    MaxValue = 2.9f,
+                    DefaultValue = 0.3f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "cir_glowMaxIntensity",
+                    DisplayName = "Max Glow",
+                    Description = "Maximum glow intensity when animating",
+                    MinValue = 0.2f,
+                    MaxValue = 3f,
+                    DefaultValue = 1.0f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -121,7 +174,7 @@ public sealed class CircuitFactory : IEffectFactory
                     Description = "Thickness of circuit trace lines",
                     MinValue = 1f,
                     MaxValue = 6f,
-                    DefaultValue = 2.5f,
+                    DefaultValue = 1f,
                     Step = 0.5f
                 },
 
@@ -133,7 +186,7 @@ public sealed class CircuitFactory : IEffectFactory
                     Description = "How long traces persist (seconds)",
                     MinValue = 0.5f,
                     MaxValue = 5f,
-                    DefaultValue = 1.5f,
+                    DefaultValue = 5f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -154,7 +207,7 @@ public sealed class CircuitFactory : IEffectFactory
                     DisplayName = "Color Preset",
                     Description = "Choose a color theme for circuit traces",
                     Choices = ["Classic Green", "Cyan", "Gold PCB", "Orange", "Purple", "Custom"],
-                    DefaultValue = "Classic Green"
+                    DefaultValue = "Custom"
                 },
                 new ColorParameter
                 {
@@ -163,6 +216,23 @@ public sealed class CircuitFactory : IEffectFactory
                     Description = "Custom color for circuit traces",
                     DefaultValue = new Vector4(0f, 1f, 0f, 1f),
                     SupportsAlpha = false
+                },
+                new BoolParameter
+                {
+                    Key = "cir_rainbowEnabled",
+                    DisplayName = "Rainbow Mode",
+                    Description = "Enable rainbow color cycling (Custom preset only)",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "cir_rainbowSpeed",
+                    DisplayName = "Rainbow Speed",
+                    Description = "Speed of rainbow color cycling",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
                 }
             ]
         };

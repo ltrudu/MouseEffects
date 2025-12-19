@@ -29,12 +29,18 @@ public partial class CircuitSettingsControl : UserControl
         _isLoading = true;
         try
         {
+            MaxSegmentsSlider.Value = _effect.MaxSegments;
             TraceCountSlider.Value = _effect.TraceCount;
             GrowthSpeedSlider.Value = _effect.GrowthSpeed;
             MaxLengthSlider.Value = _effect.MaxLength;
             BranchProbSlider.Value = _effect.BranchProbability;
             NodeSizeSlider.Value = _effect.NodeSize;
             GlowSlider.Value = _effect.GlowIntensity;
+            GlowAnimationCheckBox.IsChecked = _effect.GlowAnimationEnabled;
+            GlowAnimSpeedSlider.Value = _effect.GlowAnimationSpeed;
+            GlowMinSlider.Value = _effect.GlowMinIntensity;
+            GlowMaxSlider.Value = _effect.GlowMaxIntensity;
+            UpdateGlowAnimationVisibility();
             ThicknessSlider.Value = _effect.LineThickness;
             LifetimeSlider.Value = _effect.TraceLifetime;
             ThresholdSlider.Value = _effect.SpawnThreshold;
@@ -44,13 +50,24 @@ public partial class CircuitSettingsControl : UserControl
             CustomGSlider.Value = _effect.CustomColor.Y;
             CustomBSlider.Value = _effect.CustomColor.Z;
 
+            RainbowCheckBox.IsChecked = _effect.RainbowEnabled;
+            RainbowSpeedSlider.Value = _effect.RainbowSpeed;
+
             UpdateCustomColorVisibility();
+            UpdateRainbowVisibility();
             UpdateColorPreview();
         }
         finally
         {
             _isLoading = false;
         }
+    }
+
+    private void MaxSegmentsSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.MaxSegments = (int)MaxSegmentsSlider.Value;
+        _effect.Configuration.Set("cir_maxSegments", _effect.MaxSegments);
     }
 
     private void TraceCountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -93,6 +110,58 @@ public partial class CircuitSettingsControl : UserControl
         if (_effect == null || _isLoading) return;
         _effect.GlowIntensity = (float)GlowSlider.Value;
         _effect.Configuration.Set("cir_glowIntensity", _effect.GlowIntensity);
+    }
+
+    private void GlowAnimationCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.GlowAnimationEnabled = GlowAnimationCheckBox.IsChecked == true;
+        _effect.Configuration.Set("cir_glowAnimationEnabled", _effect.GlowAnimationEnabled);
+        UpdateGlowAnimationVisibility();
+    }
+
+    private void GlowAnimSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.GlowAnimationSpeed = (float)GlowAnimSpeedSlider.Value;
+        _effect.Configuration.Set("cir_glowAnimationSpeed", _effect.GlowAnimationSpeed);
+    }
+
+    private void GlowMinSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        // Ensure min < max
+        if (GlowMinSlider.Value >= GlowMaxSlider.Value - 0.1)
+        {
+            GlowMinSlider.Value = GlowMaxSlider.Value - 0.1;
+            return;
+        }
+
+        _effect.GlowMinIntensity = (float)GlowMinSlider.Value;
+        _effect.Configuration.Set("cir_glowMinIntensity", _effect.GlowMinIntensity);
+    }
+
+    private void GlowMaxSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+
+        // Ensure max > min
+        if (GlowMaxSlider.Value <= GlowMinSlider.Value + 0.1)
+        {
+            GlowMaxSlider.Value = GlowMinSlider.Value + 0.1;
+            return;
+        }
+
+        _effect.GlowMaxIntensity = (float)GlowMaxSlider.Value;
+        _effect.Configuration.Set("cir_glowMaxIntensity", _effect.GlowMaxIntensity);
+    }
+
+    private void UpdateGlowAnimationVisibility()
+    {
+        GlowAnimationPanel.Visibility = GlowAnimationCheckBox.IsChecked == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 
     private void ThicknessSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -142,11 +211,34 @@ public partial class CircuitSettingsControl : UserControl
         UpdateColorPreview();
     }
 
+    private void RainbowCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.RainbowEnabled = RainbowCheckBox.IsChecked == true;
+        _effect.Configuration.Set("cir_rainbowEnabled", _effect.RainbowEnabled);
+
+        UpdateRainbowVisibility();
+    }
+
+    private void RainbowSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.RainbowSpeed = (float)RainbowSpeedSlider.Value;
+        _effect.Configuration.Set("cir_rainbowSpeed", _effect.RainbowSpeed);
+    }
+
     private void UpdateCustomColorVisibility()
     {
         CustomColorPanel.Visibility = ColorPresetCombo.SelectedIndex == 5
             ? Visibility.Visible
             : Visibility.Collapsed;
+    }
+
+    private void UpdateRainbowVisibility()
+    {
+        bool isRainbow = RainbowCheckBox.IsChecked == true;
+        RainbowSpeedPanel.Visibility = isRainbow ? Visibility.Visible : Visibility.Collapsed;
+        StaticColorPanel.Visibility = isRainbow ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private void UpdateColorPreview()
