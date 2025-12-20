@@ -24,8 +24,115 @@
 
         <StackPanel Margin="0,8,0,0">
 
+            <!-- Animation Settings Section -->
+            <TextBlock Text="Animation Settings" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+
+            <!-- Appears Animation -->
+            <TextBlock Text="Appears" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="AppearsCombo" Margin="0,0,0,8" SelectionChanged="AppearsCombo_SelectionChanged">
+                <ComboBoxItem Content="No Animation"/>
+                <ComboBoxItem Content="Fade In"/>
+                <ComboBoxItem Content="Zoom In" IsSelected="True"/>
+            </ComboBox>
+
+            <!-- Fade In Settings -->
+            <StackPanel x:Name="FadeInPanel" Visibility="Collapsed" Margin="10,0,0,8">
+                <TextBlock Text="Fade In Speed" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FadeInSpeedSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FadeInSpeedSlider_ValueChanged"/>
+                <TextBlock x:Name="FadeInSpeedValue" Text="0.5" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Start Alpha" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FadeInStartAlphaSlider" Minimum="0" Maximum="1" Value="0"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FadeInStartAlphaSlider_ValueChanged"/>
+                <TextBlock x:Name="FadeInStartAlphaValue" Text="0.00" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="End Alpha" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FadeInEndAlphaSlider" Minimum="0" Maximum="1" Value="1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FadeInEndAlphaSlider_ValueChanged"/>
+                <TextBlock x:Name="FadeInEndAlphaValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Zoom In Settings -->
+            <StackPanel x:Name="ZoomInPanel" Visibility="Visible" Margin="10,0,0,8">
+                <TextBlock Text="Zoom In Speed" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ZoomInSpeedSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ZoomInSpeedSlider_ValueChanged"/>
+                <TextBlock x:Name="ZoomInSpeedValue" Text="0.5" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Start Scale" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ZoomInStartScaleSlider" Minimum="0" Maximum="2" Value="0"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ZoomInStartScaleSlider_ValueChanged"/>
+                <TextBlock x:Name="ZoomInStartScaleValue" Text="0.00" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="End Scale" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ZoomInEndScaleSlider" Minimum="0.5" Maximum="2" Value="1.1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ZoomInEndScaleSlider_ValueChanged"/>
+                <TextBlock x:Name="ZoomInEndScaleValue" Text="1.10" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Disappears Animation -->
+            <TextBlock Text="Disappears" Style="{StaticResource LabelStyle}"/>
+            <ComboBox x:Name="DisappearsCombo" Margin="0,0,0,8" SelectionChanged="DisappearsCombo_SelectionChanged">
+                <ComboBoxItem Content="No Animation"/>
+                <ComboBoxItem Content="Fade Out"/>
+                <ComboBoxItem Content="Zoom Out"/>
+                <ComboBoxItem Content="Pop Out" IsSelected="True"/>
+            </ComboBox>
+
+            <!-- Fade Out Settings -->
+            <StackPanel x:Name="FadeOutPanel" Visibility="Collapsed" Margin="10,0,0,8">
+                <TextBlock Text="Fade Out Speed" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FadeOutSpeedSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FadeOutSpeedSlider_ValueChanged"/>
+                <TextBlock x:Name="FadeOutSpeedValue" Text="0.5" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Start Alpha" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FadeOutStartAlphaSlider" Minimum="0" Maximum="1" Value="1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FadeOutStartAlphaSlider_ValueChanged"/>
+                <TextBlock x:Name="FadeOutStartAlphaValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="End Alpha" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FadeOutEndAlphaSlider" Minimum="0" Maximum="1" Value="0"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FadeOutEndAlphaSlider_ValueChanged"/>
+                <TextBlock x:Name="FadeOutEndAlphaValue" Text="0.00" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Zoom Out Settings -->
+            <StackPanel x:Name="ZoomOutPanel" Visibility="Collapsed" Margin="10,0,0,8">
+                <TextBlock Text="Zoom Out Speed" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ZoomOutSpeedSlider" Minimum="0.1" Maximum="3" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ZoomOutSpeedSlider_ValueChanged"/>
+                <TextBlock x:Name="ZoomOutSpeedValue" Text="0.5" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="Start Scale" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ZoomOutStartScaleSlider" Minimum="0.5" Maximum="2" Value="1"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ZoomOutStartScaleSlider_ValueChanged"/>
+                <TextBlock x:Name="ZoomOutStartScaleValue" Text="1.00" Opacity="0.7" FontSize="11"/>
+
+                <TextBlock Text="End Scale" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ZoomOutEndScaleSlider" Minimum="0" Maximum="2" Value="0"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ZoomOutEndScaleSlider_ValueChanged"/>
+                <TextBlock x:Name="ZoomOutEndScaleValue" Text="0.00" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- Pop Out Settings -->
+            <StackPanel x:Name="PopOutPanel" Visibility="Visible" Margin="10,0,0,8">
+                <TextBlock Text="Pop Duration (seconds)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="PopDurationSlider" Minimum="0.1" Maximum="1" Value="0.24"
+                        Style="{StaticResource SliderStyle}" ValueChanged="PopDurationSlider_ValueChanged"/>
+                <TextBlock x:Name="PopDurationValue" Text="0.24" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <Separator Margin="0,8"/>
+
             <!-- Bubble Settings Section -->
             <TextBlock Text="Bubble Settings" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
+
+            <TextBlock Text="Max Bubbles" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="MaxBubblesSlider" Minimum="1" Maximum="500" Value="150"
+                    Style="{StaticResource SliderStyle}" ValueChanged="MaxBubblesSlider_ValueChanged"/>
+            <TextBlock x:Name="MaxBubblesValue" Text="150" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Bubble Count (per second)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="BubbleCountSlider" Minimum="5" Maximum="50" Value="10"
@@ -43,17 +150,17 @@
             <TextBlock x:Name="MaxSizeValue" Text="35" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Lifetime (seconds)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="LifetimeSlider" Minimum="5" Maximum="30" Value="12"
+            <Slider x:Name="LifetimeSlider" Minimum="5" Maximum="30" Value="15"
                     Style="{StaticResource SliderStyle}" ValueChanged="LifetimeSlider_ValueChanged"/>
-            <TextBlock x:Name="LifetimeValue" Text="12" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="LifetimeValue" Text="15" Opacity="0.7" FontSize="11"/>
 
             <!-- Motion Settings Section -->
             <TextBlock Text="Motion Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Float Speed" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="FloatSpeedSlider" Minimum="5" Maximum="100" Value="25"
+            <Slider x:Name="FloatSpeedSlider" Minimum="5" Maximum="100" Value="27"
                     Style="{StaticResource SliderStyle}" ValueChanged="FloatSpeedSlider_ValueChanged"/>
-            <TextBlock x:Name="FloatSpeedValue" Text="25" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="FloatSpeedValue" Text="27" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Wobble Amount" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="WobbleAmountSlider" Minimum="0" Maximum="50" Value="15"
@@ -61,9 +168,9 @@
             <TextBlock x:Name="WobbleAmountValue" Text="15" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Wobble Speed" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="WobbleFrequencySlider" Minimum="0.1" Maximum="5" Value="1.5"
+            <Slider x:Name="WobbleFrequencySlider" Minimum="0.1" Maximum="5" Value="1.36"
                     Style="{StaticResource SliderStyle}" ValueChanged="WobbleFrequencySlider_ValueChanged"/>
-            <TextBlock x:Name="WobbleFrequencyValue" Text="1.5" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="WobbleFrequencyValue" Text="1.36" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Drift Speed" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="DriftSpeedSlider" Minimum="0" Maximum="60" Value="20"
@@ -74,9 +181,9 @@
             <TextBlock Text="Visual Effects" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Iridescence Intensity" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="IridescenceIntensitySlider" Minimum="0" Maximum="2" Value="1.0"
+            <Slider x:Name="IridescenceIntensitySlider" Minimum="0" Maximum="2" Value="1.3"
                     Style="{StaticResource SliderStyle}" ValueChanged="IridescenceIntensitySlider_ValueChanged"/>
-            <TextBlock x:Name="IridescenceIntensityValue" Text="1.0" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="IridescenceIntensityValue" Text="1.3" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Iridescence Speed" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="IridescenceSpeedSlider" Minimum="0" Maximum="2" Value="0.5"
@@ -84,26 +191,25 @@
             <TextBlock x:Name="IridescenceSpeedValue" Text="0.5" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Transparency" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="TransparencySlider" Minimum="0.3" Maximum="1" Value="0.7"
+            <Slider x:Name="TransparencySlider" Minimum="0.3" Maximum="1" Value="1.0"
                     Style="{StaticResource SliderStyle}" ValueChanged="TransparencySlider_ValueChanged"/>
-            <TextBlock x:Name="TransparencyValue" Text="0.7" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="TransparencyValue" Text="1.00" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Rim Thickness" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="RimThicknessSlider" Minimum="0.02" Maximum="0.2" Value="0.08"
+            <Slider x:Name="RimThicknessSlider" Minimum="0.02" Maximum="0.2" Value="0.088"
                     Style="{StaticResource SliderStyle}" ValueChanged="RimThicknessSlider_ValueChanged"/>
-            <TextBlock x:Name="RimThicknessValue" Text="0.08" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="RimThicknessValue" Text="0.088" Opacity="0.7" FontSize="11"/>
 
-            <!-- Pop Effect Section -->
-            <TextBlock Text="Pop Effect" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+            <CheckBox x:Name="DiffractionCheckBox" Content="Diffraction Effect" IsChecked="True"
+                      Style="{StaticResource CheckBoxStyle}" Checked="DiffractionCheckBox_Changed" Unchecked="DiffractionCheckBox_Changed"/>
 
-            <CheckBox x:Name="PopEnabledCheckBox" Content="Enable Pop Animation"
-                      IsChecked="True" Style="{StaticResource CheckBoxStyle}"
-                      Checked="PopEnabledCheckBox_Changed" Unchecked="PopEnabledCheckBox_Changed"/>
-
-            <TextBlock Text="Pop Duration (seconds)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="PopDurationSlider" Minimum="0.1" Maximum="1" Value="0.3"
-                    Style="{StaticResource SliderStyle}" ValueChanged="PopDurationSlider_ValueChanged"/>
-            <TextBlock x:Name="PopDurationValue" Text="0.3" Opacity="0.7" FontSize="11"/>
+            <!-- Diffraction Settings -->
+            <StackPanel x:Name="DiffractionPanel" Visibility="Visible" Margin="10,0,0,8">
+                <TextBlock Text="Diffraction Strength" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="DiffractionStrengthSlider" Minimum="0.05" Maximum="1.0" Value="0.4"
+                        Style="{StaticResource SliderStyle}" ValueChanged="DiffractionStrengthSlider_ValueChanged"/>
+                <TextBlock x:Name="DiffractionStrengthValue" Text="0.40" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
 
         </StackPanel>
     </StackPanel>

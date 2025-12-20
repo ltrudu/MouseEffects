@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MouseEffects.Core\MouseEffects.Core.csproj" />
     <ProjectReference Include="..\..\src\MouseEffects.DirectX\MouseEffects.DirectX.csproj" />
+    <ProjectReference Include="..\MouseEffects.Effects.DandelionSeeds\MouseEffects.Effects.DandelionSeeds.csproj" />
   </ItemGroup>
 
   <ItemGroup>

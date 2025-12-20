@@ -25,10 +25,10 @@ public sealed class CrystalGrowthFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // Crystal settings (cg_ prefix for CrystalGrowth)
-        config.Set("cg_crystalsPerClick", 3);
+        config.Set("cg_crystalsPerClick", 5);
         config.Set("cg_growthSpeed", 120f);
         config.Set("cg_maxSize", 100f);
-        config.Set("cg_branchProbability", 0.7f);
+        config.Set("cg_branchProbability", 0.9f);
         config.Set("cg_maxGenerations", 3);
 
         // Appearance settings
@@ -37,11 +37,23 @@ public sealed class CrystalGrowthFactory : IEffectFactory
         config.Set("cg_sparkleIntensity", 1.2f);
 
         // Lifetime
-        config.Set("cg_lifetime", 2.5f);
+        config.Set("cg_lifetime", 0.8f);
 
         // Color settings
-        config.Set("cg_colorPreset", 0);  // Ice Blue
+        config.Set("cg_colorPreset", 5);  // Rainbow
         config.Set("cg_customColor", new Vector4(0.53f, 0.81f, 0.92f, 1f));
+
+        // Rainbow settings
+        config.Set("cg_rainbowSpeed", 1.0f);
+        config.Set("cg_rainbowMultiColor", true);
+
+        // Rotation settings
+        config.Set("cg_rotationEnabled", true);
+        config.Set("cg_rotationDirection", 2);  // Random
+        config.Set("cg_rotationRandomSpeed", true);
+        config.Set("cg_rotationSpeed", 1.0f);
+        config.Set("cg_rotationMinSpeed", 0.5f);
+        config.Set("cg_rotationMaxSpeed", 2.0f);
 
         // Trigger settings
         config.Set("cg_leftClickEnabled", true);
@@ -156,7 +168,7 @@ public sealed class CrystalGrowthFactory : IEffectFactory
                     Key = "cg_colorPreset",
                     DisplayName = "Crystal Color",
                     Description = "Choose a color for the crystals",
-                    Choices = ["Ice Blue", "Amethyst", "Emerald", "Diamond", "Custom"],
+                    Choices = ["Ice Blue", "Amethyst", "Emerald", "Diamond", "Custom", "Rainbow"],
                     DefaultValue = "Ice Blue"
                 },
                 new ColorParameter
@@ -166,6 +178,77 @@ public sealed class CrystalGrowthFactory : IEffectFactory
                     Description = "Custom color for crystals",
                     DefaultValue = new Vector4(0.53f, 0.81f, 0.92f, 1f),
                     SupportsAlpha = false
+                },
+                new FloatParameter
+                {
+                    Key = "cg_rainbowSpeed",
+                    DisplayName = "Rainbow Speed",
+                    Description = "How fast the rainbow cycles through colors",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
+                },
+                new BoolParameter
+                {
+                    Key = "cg_rainbowMultiColor",
+                    DisplayName = "Multi-color",
+                    Description = "Each crystal has multiple fading rainbow colors instead of one solid color",
+                    DefaultValue = false
+                },
+
+                // Rotation Settings
+                new BoolParameter
+                {
+                    Key = "cg_rotationEnabled",
+                    DisplayName = "Enable Rotation",
+                    Description = "Enable rotation animation for crystals",
+                    DefaultValue = false
+                },
+                new ChoiceParameter
+                {
+                    Key = "cg_rotationDirection",
+                    DisplayName = "Rotation Direction",
+                    Description = "Direction of rotation",
+                    Choices = ["Clockwise", "Counter-Clockwise", "Random"],
+                    DefaultValue = "Clockwise"
+                },
+                new BoolParameter
+                {
+                    Key = "cg_rotationRandomSpeed",
+                    DisplayName = "Random Speed",
+                    Description = "Use random rotation speed for each crystal",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "cg_rotationSpeed",
+                    DisplayName = "Rotation Speed",
+                    Description = "Speed of rotation (radians/second)",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "cg_rotationMinSpeed",
+                    DisplayName = "Min Speed",
+                    Description = "Minimum rotation speed when random",
+                    MinValue = 0.1f,
+                    MaxValue = 4.9f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "cg_rotationMaxSpeed",
+                    DisplayName = "Max Speed",
+                    Description = "Maximum rotation speed when random",
+                    MinValue = 0.2f,
+                    MaxValue = 5f,
+                    DefaultValue = 2.0f,
+                    Step = 0.1f
                 },
 
                 // Trigger Settings

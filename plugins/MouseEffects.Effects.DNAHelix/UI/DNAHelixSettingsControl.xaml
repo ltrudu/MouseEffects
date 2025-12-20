@@ -4,218 +4,214 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="600" d:DesignWidth="400">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10">
-            <TextBlock Text="DNA Helix Settings" FontWeight="Bold" FontSize="16" Margin="0,0,0,10"/>
+             d:DesignWidth="400">
+    <StackPanel Margin="0">
+        <!-- Structure Settings -->
+        <GroupBox Header="Helix Structure" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <!-- Helix Height -->
+                <TextBlock Text="Helix Height:" Margin="0,5,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="HelixHeightSlider"
+                            Minimum="100" Maximum="800"
+                            TickFrequency="50"
+                            IsSnapToTickEnabled="True"
+                            ValueChanged="HelixHeightSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=HelixHeightSlider, StringFormat='{}{0:F0}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
 
-            <!-- Structure Settings -->
-            <GroupBox Header="Helix Structure" Margin="0,0,0,10">
-                <StackPanel Margin="5">
-                    <!-- Helix Height -->
-                    <TextBlock Text="Helix Height:" Margin="0,5,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="HelixHeightSlider"
-                                Minimum="100" Maximum="800"
-                                TickFrequency="50"
-                                IsSnapToTickEnabled="True"
-                                ValueChanged="HelixHeightSlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=HelixHeightSlider, StringFormat='{}{0:F0}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
+                <!-- Helix Radius -->
+                <TextBlock Text="Helix Radius:" Margin="0,10,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="HelixRadiusSlider"
+                            Minimum="20" Maximum="120"
+                            TickFrequency="5"
+                            IsSnapToTickEnabled="True"
+                            ValueChanged="HelixRadiusSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=HelixRadiusSlider, StringFormat='{}{0:F0}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
 
-                    <!-- Helix Radius -->
-                    <TextBlock Text="Helix Radius:" Margin="0,10,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="HelixRadiusSlider"
-                                Minimum="20" Maximum="120"
-                                TickFrequency="5"
-                                IsSnapToTickEnabled="True"
-                                ValueChanged="HelixRadiusSlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=HelixRadiusSlider, StringFormat='{}{0:F0}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
+                <!-- Twist Rate -->
+                <TextBlock Text="Twist Rate:" Margin="0,10,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="TwistRateSlider"
+                            Minimum="0.01" Maximum="0.1"
+                            TickFrequency="0.005"
+                            IsSnapToTickEnabled="False"
+                            ValueChanged="TwistRateSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=TwistRateSlider, StringFormat='{}{0:F3}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
 
-                    <!-- Twist Rate -->
-                    <TextBlock Text="Twist Rate:" Margin="0,10,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="TwistRateSlider"
-                                Minimum="0.01" Maximum="0.1"
-                                TickFrequency="0.005"
-                                IsSnapToTickEnabled="False"
-                                ValueChanged="TwistRateSlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=TwistRateSlider, StringFormat='{}{0:F3}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
+                <!-- Base Pair Count -->
+                <TextBlock Text="Base Pair Count:" Margin="0,10,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="BasePairCountSlider"
+                            Minimum="5" Maximum="30"
+                            TickFrequency="1"
+                            IsSnapToTickEnabled="True"
+                            ValueChanged="BasePairCountSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=BasePairCountSlider, StringFormat='{}{0:F0}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </GroupBox>
 
-                    <!-- Base Pair Count -->
-                    <TextBlock Text="Base Pair Count:" Margin="0,10,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="BasePairCountSlider"
-                                Minimum="5" Maximum="30"
-                                TickFrequency="1"
-                                IsSnapToTickEnabled="True"
-                                ValueChanged="BasePairCountSlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=BasePairCountSlider, StringFormat='{}{0:F0}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
+        <!-- Animation Settings -->
+        <GroupBox Header="Animation" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <!-- Rotation Speed -->
+                <TextBlock Text="Rotation Speed:" Margin="0,5,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="RotationSpeedSlider"
+                            Minimum="0" Maximum="5"
+                            TickFrequency="0.1"
+                            IsSnapToTickEnabled="False"
+                            ValueChanged="RotationSpeedSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=RotationSpeedSlider, StringFormat='{}{0:F1}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Appearance Settings -->
+        <GroupBox Header="Appearance" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <!-- Strand Thickness -->
+                <TextBlock Text="Strand Thickness:" Margin="0,5,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="StrandThicknessSlider"
+                            Minimum="1" Maximum="10"
+                            TickFrequency="0.5"
+                            IsSnapToTickEnabled="False"
+                            ValueChanged="StrandThicknessSlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=StrandThicknessSlider, StringFormat='{}{0:F1}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
+
+                <!-- Glow Intensity -->
+                <TextBlock Text="Glow Intensity:" Margin="0,10,0,2"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="GlowIntensitySlider"
+                            Minimum="0" Maximum="2"
+                            TickFrequency="0.1"
+                            IsSnapToTickEnabled="False"
+                            ValueChanged="GlowIntensitySlider_ValueChanged"/>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding Value, ElementName=GlowIntensitySlider, StringFormat='{}{0:F1}'}"
+                               HorizontalAlignment="Right"
+                               VerticalAlignment="Center"
+                               Margin="5,0,0,0"/>
+                </Grid>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Color Settings -->
+        <GroupBox Header="Colors" Margin="0,0,0,10">
+            <StackPanel Margin="5">
+                <!-- Strand 1 Color -->
+                <TextBlock Text="Strand 1 Color (Blue):" Margin="0,5,0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="Strand1ColorButton"
+                            Width="60" Height="30"
+                            Click="Strand1ColorButton_Click"
+                            Background="#4169E1"/>
+                    <TextBlock Text="Click to change"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
                 </StackPanel>
-            </GroupBox>
 
-            <!-- Animation Settings -->
-            <GroupBox Header="Animation" Margin="0,0,0,10">
-                <StackPanel Margin="5">
-                    <!-- Rotation Speed -->
-                    <TextBlock Text="Rotation Speed:" Margin="0,5,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="RotationSpeedSlider"
-                                Minimum="0" Maximum="5"
-                                TickFrequency="0.1"
-                                IsSnapToTickEnabled="False"
-                                ValueChanged="RotationSpeedSlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=RotationSpeedSlider, StringFormat='{}{0:F1}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
+                <!-- Strand 2 Color -->
+                <TextBlock Text="Strand 2 Color (Red):" Margin="0,5,0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="Strand2ColorButton"
+                            Width="60" Height="30"
+                            Click="Strand2ColorButton_Click"
+                            Background="#DC143C"/>
+                    <TextBlock Text="Click to change"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
                 </StackPanel>
-            </GroupBox>
 
-            <!-- Appearance Settings -->
-            <GroupBox Header="Appearance" Margin="0,0,0,10">
-                <StackPanel Margin="5">
-                    <!-- Strand Thickness -->
-                    <TextBlock Text="Strand Thickness:" Margin="0,5,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="StrandThicknessSlider"
-                                Minimum="1" Maximum="10"
-                                TickFrequency="0.5"
-                                IsSnapToTickEnabled="False"
-                                ValueChanged="StrandThicknessSlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=StrandThicknessSlider, StringFormat='{}{0:F1}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
-
-                    <!-- Glow Intensity -->
-                    <TextBlock Text="Glow Intensity:" Margin="0,10,0,2"/>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="60"/>
-                        </Grid.ColumnDefinitions>
-                        <Slider x:Name="GlowIntensitySlider"
-                                Minimum="0" Maximum="2"
-                                TickFrequency="0.1"
-                                IsSnapToTickEnabled="False"
-                                ValueChanged="GlowIntensitySlider_ValueChanged"/>
-                        <TextBlock Grid.Column="1"
-                                   Text="{Binding Value, ElementName=GlowIntensitySlider, StringFormat='{}{0:F1}'}"
-                                   HorizontalAlignment="Right"
-                                   VerticalAlignment="Center"
-                                   Margin="5,0,0,0"/>
-                    </Grid>
+                <!-- Base Pair Color 1 -->
+                <TextBlock Text="Base Pair Color 1 (Green):" Margin="0,5,0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="BasePair1ColorButton"
+                            Width="60" Height="30"
+                            Click="BasePair1ColorButton_Click"
+                            Background="#32CD32"/>
+                    <TextBlock Text="Click to change"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
                 </StackPanel>
-            </GroupBox>
 
-            <!-- Color Settings -->
-            <GroupBox Header="Colors" Margin="0,0,0,10">
-                <StackPanel Margin="5">
-                    <!-- Strand 1 Color -->
-                    <TextBlock Text="Strand 1 Color (Blue):" Margin="0,5,0,2"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="Strand1ColorButton"
-                                Width="60" Height="30"
-                                Click="Strand1ColorButton_Click"
-                                Background="#4169E1"/>
-                        <TextBlock Text="Click to change"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"/>
-                    </StackPanel>
-
-                    <!-- Strand 2 Color -->
-                    <TextBlock Text="Strand 2 Color (Red):" Margin="0,5,0,2"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="Strand2ColorButton"
-                                Width="60" Height="30"
-                                Click="Strand2ColorButton_Click"
-                                Background="#DC143C"/>
-                        <TextBlock Text="Click to change"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"/>
-                    </StackPanel>
-
-                    <!-- Base Pair Color 1 -->
-                    <TextBlock Text="Base Pair Color 1 (Green):" Margin="0,5,0,2"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="BasePair1ColorButton"
-                                Width="60" Height="30"
-                                Click="BasePair1ColorButton_Click"
-                                Background="#32CD32"/>
-                        <TextBlock Text="Click to change"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"/>
-                    </StackPanel>
-
-                    <!-- Base Pair Color 2 -->
-                    <TextBlock Text="Base Pair Color 2 (Yellow):" Margin="0,5,0,2"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <Button x:Name="BasePair2ColorButton"
-                                Width="60" Height="30"
-                                Click="BasePair2ColorButton_Click"
-                                Background="#FFD700"/>
-                        <TextBlock Text="Click to change"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"/>
-                    </StackPanel>
+                <!-- Base Pair Color 2 -->
+                <TextBlock Text="Base Pair Color 2 (Yellow):" Margin="0,5,0,2"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button x:Name="BasePair2ColorButton"
+                            Width="60" Height="30"
+                            Click="BasePair2ColorButton_Click"
+                            Background="#FFD700"/>
+                    <TextBlock Text="Click to change"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"/>
                 </StackPanel>
-            </GroupBox>
+            </StackPanel>
+        </GroupBox>
 
-            <!-- Reset Button -->
-            <Button Content="Reset to Defaults"
-                    Click="ResetButton_Click"
-                    HorizontalAlignment="Stretch"
-                    Padding="10,5"
-                    Margin="0,10,0,0"/>
-        </StackPanel>
-    </ScrollViewer>
+        <!-- Reset Button -->
+        <Button Content="Reset to Defaults"
+                Click="ResetButton_Click"
+                HorizontalAlignment="Stretch"
+                Padding="10,5"
+                Margin="0,10,0,0"/>
+    </StackPanel>
 </UserControl>

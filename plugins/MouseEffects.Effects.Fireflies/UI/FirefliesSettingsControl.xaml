@@ -23,14 +23,14 @@
             <TextBlock Text="General Settings" FontWeight="Bold" FontSize="13" Margin="0,8,0,4"/>
 
             <TextBlock Text="Firefly Count" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="FireflyCountSlider" Minimum="5" Maximum="50" Value="15"
+            <Slider x:Name="FireflyCountSlider" Minimum="5" Maximum="500" Value="49"
                     Style="{StaticResource SliderStyle}" ValueChanged="FireflyCountSlider_ValueChanged"/>
-            <TextBlock x:Name="FireflyCountValue" Text="15" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="FireflyCountValue" Text="49" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Glow Size" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="GlowSizeSlider" Minimum="10" Maximum="40" Value="20"
+            <Slider x:Name="GlowSizeSlider" Minimum="10" Maximum="40" Value="15"
                     Style="{StaticResource SliderStyle}" ValueChanged="GlowSizeSlider_ValueChanged"/>
-            <TextBlock x:Name="GlowSizeValue" Text="20" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="GlowSizeValue" Text="15" Opacity="0.7" FontSize="11"/>
 
             <!-- Pulse Settings Section -->
             <TextBlock Text="Pulse Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
@@ -51,17 +51,17 @@
             <TextBlock x:Name="MinBrightnessValue" Text="0.20" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Max Brightness" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="MaxBrightnessSlider" Minimum="0.5" Maximum="2.0" Value="1.0"
+            <Slider x:Name="MaxBrightnessSlider" Minimum="0.5" Maximum="2.0" Value="0.6"
                     Style="{StaticResource SliderStyle}" ValueChanged="MaxBrightnessSlider_ValueChanged"/>
-            <TextBlock x:Name="MaxBrightnessValue" Text="1.0" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="MaxBrightnessValue" Text="0.6" Opacity="0.7" FontSize="11"/>
 
             <!-- Movement Settings Section -->
             <TextBlock Text="Movement Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Attraction Strength" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="AttractionStrengthSlider" Minimum="0" Maximum="2.0" Value="0.5"
+            <Slider x:Name="AttractionStrengthSlider" Minimum="0" Maximum="2.0" Value="1.1"
                     Style="{StaticResource SliderStyle}" ValueChanged="AttractionStrengthSlider_ValueChanged"/>
-            <TextBlock x:Name="AttractionStrengthValue" Text="0.50" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="AttractionStrengthValue" Text="1.1" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Wander Strength" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="WanderStrengthSlider" Minimum="0" Maximum="100" Value="30"
@@ -69,21 +69,26 @@
             <TextBlock x:Name="WanderStrengthValue" Text="30" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Max Speed" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="MaxSpeedSlider" Minimum="20" Maximum="200" Value="100"
+            <Slider x:Name="MaxSpeedSlider" Minimum="20" Maximum="200" Value="140"
                     Style="{StaticResource SliderStyle}" ValueChanged="MaxSpeedSlider_ValueChanged"/>
-            <TextBlock x:Name="MaxSpeedValue" Text="100" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="MaxSpeedValue" Text="140" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Wander Change Rate" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="WanderChangeRateSlider" Minimum="0.5" Maximum="5.0" Value="2.0"
                     Style="{StaticResource SliderStyle}" ValueChanged="WanderChangeRateSlider_ValueChanged"/>
             <TextBlock x:Name="WanderChangeRateValue" Text="2.0" Opacity="0.7" FontSize="11"/>
 
-            <!-- Visual Settings Section -->
-            <TextBlock Text="Visual Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
+            <!-- Explosion Settings Section -->
+            <TextBlock Text="Explosion Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
-            <TextBlock Text="HDR Multiplier" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="HdrMultiplierSlider" Minimum="0.5" Maximum="3.0" Value="1.5"
-                    Style="{StaticResource SliderStyle}" ValueChanged="HdrMultiplierSlider_ValueChanged"/>
-            <TextBlock x:Name="HdrMultiplierValue" Text="1.5" Opacity="0.7" FontSize="11"/>
+            <CheckBox x:Name="ExplosionEnabledCheckBox" Content="Explode on Click" IsChecked="True"
+                      Style="{StaticResource CheckBoxStyle}" Checked="ExplosionEnabledCheckBox_Changed" Unchecked="ExplosionEnabledCheckBox_Changed"/>
+
+            <StackPanel x:Name="ExplosionSettingsPanel">
+                <TextBlock Text="Explosion Strength" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="ExplosionStrengthSlider" Minimum="100" Maximum="2000" Value="1500"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ExplosionStrengthSlider_ValueChanged"/>
+                <TextBlock x:Name="ExplosionStrengthValue" Text="1500" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
     </StackPanel>
 </UserControl>

@@ -50,7 +50,7 @@ public sealed class FirefliesEffect : EffectBase
     }
 
     // Constants
-    private const int MaxFireflies = 50;
+    private const int MaxFireflies = 500;
 
     // GPU Resources
     private IBuffer? _constantBuffer;
@@ -77,6 +77,10 @@ public sealed class FirefliesEffect : EffectBase
     private float _wanderChangeRate = 2.0f;
     private float _hdrMultiplier = 1.5f;
 
+    // Explosion settings
+    private bool _explosionEnabled = true;
+    private float _explosionStrength = 500f;
+
     // Public properties for UI binding
     public int FireflyCount { get => _fireflyCount; set => _fireflyCount = Math.Clamp(value, 5, MaxFireflies); }
     public float GlowSize { get => _glowSize; set => _glowSize = value; }
@@ -90,6 +94,8 @@ public sealed class FirefliesEffect : EffectBase
     public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = value; }
     public float WanderChangeRate { get => _wanderChangeRate; set => _wanderChangeRate = value; }
     public float HdrMultiplier { get => _hdrMultiplier; set => _hdrMultiplier = value; }
+    public bool ExplosionEnabled { get => _explosionEnabled; set => _explosionEnabled = value; }
+    public float ExplosionStrength { get => _explosionStrength; set => _explosionStrength = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -145,12 +151,25 @@ public sealed class FirefliesEffect : EffectBase
             _wanderChangeRate = wanderRate;
         if (Configuration.TryGet("ff_hdrMultiplier", out float hdr))
             _hdrMultiplier = hdr;
+        if (Configuration.TryGet("ff_explosionEnabled", out bool explosionEnabled))
+            _explosionEnabled = explosionEnabled;
+        if (Configuration.TryGet("ff_explosionStrength", out float explosion))
+            _explosionStrength = explosion;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
         float deltaTime = gameTime.DeltaSeconds;
         float totalTime = gameTime.TotalSeconds;
+
+        // Detect mouse click (left or right button pressed this frame)
+        bool clicked = mouseState.IsButtonPressed(MouseButtons.Left) || mouseState.IsButtonPressed(MouseButtons.Right);
+
+        // Explode fireflies on click (if enabled)
+        if (_explosionEnabled && clicked)
+        {
+            ExplodeFireflies(mouseState.Position);
+        }
 
         // Spawn fireflies if we don't have enough
         while (_activeFireflyCount < _fireflyCount)
@@ -168,6 +187,39 @@ public sealed class FirefliesEffect : EffectBase
         for (int i = 0; i < _activeFireflyCount; i++)
         {
             UpdateFirefly(ref _fireflies[i], mouseState.Position, deltaTime, totalTime);
+        }
+    }
+
+    private void ExplodeFireflies(Vector2 explosionCenter)
+    {
+        for (int i = 0; i < _activeFireflyCount; i++)
+        {
+            ref var ff = ref _fireflies[i];
+
+            // Calculate direction away from explosion center
+            Vector2 direction = ff.Position - explosionCenter;
+            float distance = direction.Length();
+
+            if (distance < 1f)
+            {
+                // If firefly is at explosion center, give it a random direction
+                float angle = Random.Shared.NextSingle() * MathF.PI * 2f;
+                direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+                distance = 1f;
+            }
+            else
+            {
+                direction = Vector2.Normalize(direction);
+            }
+
+            // Apply explosion force (stronger for closer fireflies)
+            float falloff = MathF.Max(0.1f, 1f - (distance / 500f));
+            float force = _explosionStrength * falloff;
+
+            // Add random variation to make it more organic
+            force *= 0.7f + Random.Shared.NextSingle() * 0.6f;
+
+            ff.Velocity += direction * force;
         }
     }
 

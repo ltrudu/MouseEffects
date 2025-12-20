@@ -102,9 +102,6 @@ public sealed class LightningStormEffect : EffectBase
     // Viewport
     private Vector2 _viewportSize;
 
-    // Configuration fields with ls_ prefix
-    private bool _isLoading = true;
-
     // Trigger settings
     private bool _onClickTrigger = true;
     private bool _onMoveTrigger;
@@ -137,6 +134,10 @@ public sealed class LightningStormEffect : EffectBase
     // Colors
     private int _colorMode; // 0=White/Blue, 1=Purple, 2=Green, 3=Custom
     private Vector4 _customColor = new(0.4f, 0.6f, 1f, 1f);
+    private bool _rainbowEnabled;
+    private float _rainbowSpeed = 1.0f;
+    private bool _fullStormColor = true;
+    private float _rainbowPhase; // Current rainbow phase for full storm color
 
     // Sparks
     private bool _enableSparks = true;
@@ -168,6 +169,9 @@ public sealed class LightningStormEffect : EffectBase
     public float PersistenceFade { get => _persistenceFade; set => _persistenceFade = value; }
     public int ColorMode { get => _colorMode; set => _colorMode = value; }
     public Vector4 CustomColor { get => _customColor; set => _customColor = value; }
+    public bool RainbowEnabled { get => _rainbowEnabled; set => _rainbowEnabled = value; }
+    public float RainbowSpeed { get => _rainbowSpeed; set => _rainbowSpeed = value; }
+    public bool FullStormColor { get => _fullStormColor; set => _fullStormColor = value; }
     public bool EnableSparks { get => _enableSparks; set => _enableSparks = value; }
     public int SparkCount { get => _sparkCount; set => _sparkCount = value; }
     public float SparkLifetime { get => _sparkLifetime; set => _sparkLifetime = value; }
@@ -264,6 +268,12 @@ public sealed class LightningStormEffect : EffectBase
             _colorMode = colorMode;
         if (Configuration.TryGet("ls_customColor", out Vector4 customCol))
             _customColor = customCol;
+        if (Configuration.TryGet("ls_rainbowEnabled", out bool rainbow))
+            _rainbowEnabled = rainbow;
+        if (Configuration.TryGet("ls_rainbowSpeed", out float rainbowSpd))
+            _rainbowSpeed = rainbowSpd;
+        if (Configuration.TryGet("ls_fullStormColor", out bool fullStorm))
+            _fullStormColor = fullStorm;
 
         if (Configuration.TryGet("ls_enableSparks", out bool sparks))
             _enableSparks = sparks;
@@ -279,6 +289,10 @@ public sealed class LightningStormEffect : EffectBase
     {
         float deltaTime = gameTime.DeltaSeconds;
         float totalTime = gameTime.TotalSeconds;
+
+        // Update rainbow phase
+        _rainbowPhase += deltaTime * _rainbowSpeed;
+        if (_rainbowPhase > 1.0f) _rainbowPhase -= 1.0f;
 
         // Update flash effect (decay)
         if (_flashIntensity > 0)
@@ -435,6 +449,22 @@ public sealed class LightningStormEffect : EffectBase
 
     private Vector4 GetBoltColor()
     {
+        // If rainbow is enabled and color mode is Custom (3)
+        if (_colorMode == 3 && _rainbowEnabled)
+        {
+            if (_fullStormColor)
+            {
+                // Whole storm has the same rainbow color
+                return HueToRgb(_rainbowPhase);
+            }
+            else
+            {
+                // Each bolt/part has different rainbow colors
+                float randomOffset = Random.Shared.NextSingle();
+                return HueToRgb((_rainbowPhase + randomOffset) % 1.0f);
+            }
+        }
+
         return _colorMode switch
         {
             0 => new Vector4(0.8f, 0.9f, 1f, 1f),      // White/Blue
@@ -443,6 +473,25 @@ public sealed class LightningStormEffect : EffectBase
             3 => _customColor,                          // Custom
             _ => new Vector4(0.8f, 0.9f, 1f, 1f)
         };
+    }
+
+    private static Vector4 HueToRgb(float hue)
+    {
+        hue -= MathF.Floor(hue);
+        float h = hue * 6f;
+        float x = 1f - MathF.Abs(h % 2f - 1f);
+
+        Vector3 rgb = (int)h switch
+        {
+            0 => new Vector3(1f, x, 0f),
+            1 => new Vector3(x, 1f, 0f),
+            2 => new Vector3(0f, 1f, x),
+            3 => new Vector3(0f, x, 1f),
+            4 => new Vector3(x, 0f, 1f),
+            _ => new Vector3(1f, 0f, x),
+        };
+
+        return new Vector4(rgb.X, rgb.Y, rgb.Z, 1f);
     }
 
     private void UpdateBolts(float deltaTime)

@@ -25,16 +25,19 @@ public sealed class PixelExplosionFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         config.Set("maxPixels", 5000);
-        config.Set("pixelCountMin", 20);
-        config.Set("pixelCountMax", 60);
+        config.Set("pixelCountMin", 30);
+        config.Set("pixelCountMax", 49);
         config.Set("pixelSizeMin", 3f);
         config.Set("pixelSizeMax", 8f);
         config.Set("explosionForce", 400f);
         config.Set("gravity", 250f);
         config.Set("lifetime", 2.0f);
-        config.Set("colorPalette", 0); // Fire
+        config.Set("colorPalette", 5); // Animated Rainbow
+        config.Set("rainbowSpeed", 3.07f);
         config.Set("spawnOnLeftClick", true);
         config.Set("spawnOnRightClick", false);
+        config.Set("spawnOnMouseMove", true);
+        config.Set("mouseThreshold", 150f);
 
         return config;
     }
@@ -126,10 +129,20 @@ public sealed class PixelExplosionFactory : IEffectFactory
                 {
                     Key = "colorPalette",
                     DisplayName = "Color Palette",
-                    Description = "0=Fire, 1=Ice, 2=Rainbow, 3=Retro, 4=Neon",
+                    Description = "0=Fire, 1=Ice, 2=Rainbow, 3=Retro, 4=Neon, 5=Animated Rainbow",
                     MinValue = 0,
-                    MaxValue = 4,
+                    MaxValue = 5,
                     DefaultValue = 0
+                },
+                new FloatParameter
+                {
+                    Key = "rainbowSpeed",
+                    DisplayName = "Rainbow Speed",
+                    Description = "Speed of rainbow color cycling (for Animated Rainbow palette)",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
                 },
                 new BoolParameter
                 {
@@ -144,6 +157,23 @@ public sealed class PixelExplosionFactory : IEffectFactory
                     DisplayName = "Spawn on Right Click",
                     Description = "Create explosion when right mouse button is clicked",
                     DefaultValue = false
+                },
+                new BoolParameter
+                {
+                    Key = "spawnOnMouseMove",
+                    DisplayName = "Spawn on Mouse Move",
+                    Description = "Create explosions while moving the mouse",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "mouseThreshold",
+                    DisplayName = "Mouse Threshold",
+                    Description = "Distance in pixels before spawning explosion on mouse move",
+                    MinValue = 10f,
+                    MaxValue = 200f,
+                    DefaultValue = 50f,
+                    Step = 10f
                 }
             ]
         };

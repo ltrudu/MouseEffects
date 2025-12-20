@@ -138,19 +138,37 @@
                 <ComboBoxItem Content="Custom" />
             </ComboBox>
 
-            <TextBlock Text="Custom Color" Margin="0,4,0,2" />
-            <Grid Margin="0,4,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <Border Name="CustomColorPreview" Grid.Column="0" Width="24" Height="24"
-                        CornerRadius="4" Background="#6699FF" BorderBrush="Gray"
-                        BorderThickness="1" Margin="0,0,10,0" />
-                <Button Grid.Column="1" Content="Pick Color" Background="#45475A"
-                        Foreground="#CDD6F4" BorderThickness="0" Padding="10,4"
-                        Click="CustomColorButton_Click" />
-            </Grid>
+            <!-- Custom Color Options (visible when Custom is selected) -->
+            <StackPanel Name="CustomColorPanel" Visibility="Collapsed">
+                <TextBlock Text="Custom Color" Margin="0,4,0,2" />
+                <Grid Margin="0,4,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Name="CustomColorPreview" Grid.Column="0" Width="24" Height="24"
+                            CornerRadius="4" Background="#6699FF" BorderBrush="Gray"
+                            BorderThickness="1" Margin="0,0,10,0" />
+                    <Button Grid.Column="1" Content="Pick Color" Background="#45475A"
+                            Foreground="#CDD6F4" BorderThickness="0" Padding="10,4"
+                            Click="CustomColorButton_Click" />
+                </Grid>
+
+                <CheckBox Name="RainbowCheckBox" Content="Rainbow Color" Margin="0,4,0,4"
+                          IsChecked="False" Checked="RainbowCheckBox_Changed" Unchecked="RainbowCheckBox_Changed" />
+
+                <!-- Rainbow Options (visible when Rainbow is checked) -->
+                <StackPanel Name="RainbowOptionsPanel" Visibility="Collapsed" Margin="10,0,0,0">
+                    <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}" />
+                    <Slider Name="RainbowSpeedSlider" Minimum="0.1" Maximum="5" Value="1.0"
+                            Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_ValueChanged" />
+                    <TextBlock Name="RainbowSpeedValue" Text="1.0" Opacity="0.7" FontSize="11" />
+
+                    <CheckBox Name="FullStormColorCheckBox" Content="Full Storm Color" Margin="0,8,0,4"
+                              IsChecked="True" Checked="FullStormColorCheckBox_Changed" Unchecked="FullStormColorCheckBox_Changed"
+                              ToolTip="When checked, the whole storm has the same rainbow color. When unchecked, each bolt has different rainbow colors." />
+                </StackPanel>
+            </StackPanel>
 
             <!-- Sparks -->
             <TextBlock Text="Impact Sparks" Style="{StaticResource SectionStyle}" />

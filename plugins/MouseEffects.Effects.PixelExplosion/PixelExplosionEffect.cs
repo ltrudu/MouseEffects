@@ -75,16 +75,21 @@ public sealed class PixelExplosionEffect : EffectBase
 
     // Configuration values
     private int _maxPixels = 5000;
-    private int _pixelCountMin = 20;
-    private int _pixelCountMax = 60;
+    private int _pixelCountMin = 30;
+    private int _pixelCountMax = 49;
     private float _pixelSizeMin = 3f;
     private float _pixelSizeMax = 8f;
     private float _explosionForce = 400f;
     private float _gravity = 250f;
     private float _lifetime = 2.0f;
-    private int _colorPalette; // 0=fire, 1=ice, 2=rainbow, 3=retro, 4=neon
+    private int _colorPalette = 5; // 0=fire, 1=ice, 2=rainbow, 3=retro, 4=neon, 5=animated rainbow
     private bool _spawnOnLeftClick = true;
     private bool _spawnOnRightClick;
+    private bool _spawnOnMouseMove = true;
+    private float _mouseThreshold = 150f;
+    private float _rainbowSpeed = 3.07f;
+    private float _currentTime;
+    private float _accumulatedDistance;
 
     public override EffectMetadata Metadata => _metadata;
 
@@ -149,11 +154,21 @@ public sealed class PixelExplosionEffect : EffectBase
 
         if (Configuration.TryGet("spawnOnRightClick", out bool rightClick))
             _spawnOnRightClick = rightClick;
+
+        if (Configuration.TryGet("spawnOnMouseMove", out bool mouseMove))
+            _spawnOnMouseMove = mouseMove;
+
+        if (Configuration.TryGet("mouseThreshold", out float threshold))
+            _mouseThreshold = threshold;
+
+        if (Configuration.TryGet("rainbowSpeed", out float rainbowSpd))
+            _rainbowSpeed = rainbowSpd;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
         float dt = (float)gameTime.DeltaTime.TotalSeconds;
+        _currentTime += dt;
 
         UpdatePixels(dt);
 
@@ -170,6 +185,20 @@ public sealed class PixelExplosionEffect : EffectBase
         {
             int pixelCount = Random.Shared.Next(_pixelCountMin, _pixelCountMax + 1);
             SpawnExplosion(mouseState.Position, pixelCount);
+        }
+
+        // Mouse move spawning
+        if (_spawnOnMouseMove)
+        {
+            float distance = Vector2.Distance(mouseState.Position, _lastMousePos);
+            _accumulatedDistance += distance;
+
+            while (_accumulatedDistance >= _mouseThreshold)
+            {
+                _accumulatedDistance -= _mouseThreshold;
+                int pixelCount = Random.Shared.Next(_pixelCountMin, _pixelCountMax + 1);
+                SpawnExplosion(mouseState.Position, pixelCount);
+            }
         }
 
         _wasLeftPressed = leftPressed;
@@ -244,8 +273,16 @@ public sealed class PixelExplosionEffect : EffectBase
             2 => HueToRgb(Random.Shared.NextSingle()),
             3 => GetRetroColor(),
             4 => GetNeonColor(),
+            5 => GetAnimatedRainbowColor(),
             _ => GetFireColor()
         };
+    }
+
+    private Vector4 GetAnimatedRainbowColor()
+    {
+        // Cycle through hue based on time and speed, with slight random offset per particle
+        float hue = (_currentTime * _rainbowSpeed + Random.Shared.NextSingle() * 0.1f) % 1.0f;
+        return HueToRgb(hue);
     }
 
     private static Vector4 GetFireColor()

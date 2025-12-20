@@ -1,11 +1,14 @@
-// Bubbles Shader - Floating soap bubbles with rainbow iridescence
+// Bubbles Shader - Floating soap bubbles with rainbow iridescence and optional diffraction
 
 cbuffer FrameConstants : register(b0)
 {
     float2 ViewportSize;
     float Time;
     float HdrMultiplier;
-    float4 Padding;
+    float DiffractionEnabled;
+    float DiffractionStrength;
+    float Padding1;
+    float Padding2;
 }
 
 struct BubbleInstance
@@ -27,11 +30,17 @@ struct BubbleInstance
     float RimThickness;
     float Transparency;
     float HighlightIntensity;
-    float Padding1;
-    float Padding2;
+    float AlphaMultiplier;
+    float ScaleMultiplier;
+    float AppearProgress;
+    float DisappearProgress;
+    float BubblePadding1;
+    float BubblePadding2;
 };
 
 StructuredBuffer<BubbleInstance> Bubbles : register(t0);
+Texture2D<float4> ScreenTexture : register(t1);
+SamplerState LinearSampler : register(s0);
 
 struct VSOutput
 {
@@ -43,6 +52,8 @@ struct VSOutput
     float RimThickness : TEXCOORD3;
     float HighlightIntensity : TEXCOORD4;
     float PopProgress : TEXCOORD5;
+    float2 ScreenUV : TEXCOORD6;
+    float BubbleSize : TEXCOORD7;
 };
 
 // Convert HSV to RGB for rainbow iridescence
@@ -80,14 +91,16 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
         output.RimThickness = 0;
         output.HighlightIntensity = 0;
         output.PopProgress = 0;
+        output.ScreenUV = float2(0, 0);
+        output.BubbleSize = 0;
         return output;
     }
 
-    // Calculate alpha based on lifetime (fade in and out)
-    float lifeFraction = bubble.Lifetime / bubble.MaxLifetime;
-    float fadeIn = saturate((1.0 - lifeFraction) * 4.0); // Quick fade in
-    float fadeOut = saturate(lifeFraction * 2.0); // Slower fade out
-    float alpha = min(fadeIn, fadeOut) * bubble.Transparency;
+    // Base alpha from transparency setting
+    float alpha = bubble.Transparency;
+
+    // Apply animation alpha multiplier (fade in/out effects)
+    alpha *= bubble.AlphaMultiplier;
 
     // Generate quad vertices (two triangles)
     float2 quadUV;
@@ -98,9 +111,10 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     else if (vertexId == 4) quadUV = float2(1, -1);
     else quadUV = float2(1, 1);
 
-    // Scale by bubble size (with pop expansion)
+    // Calculate scale with animation multiplier and pop effect
     float popScale = 1.0 + bubble.PopProgress * bubble.PopProgress * 0.5; // Expand when popping
-    float2 offset = quadUV * bubble.Size * popScale;
+    float finalScale = bubble.ScaleMultiplier * popScale;
+    float2 offset = quadUV * bubble.Size * finalScale;
 
     // Position in screen space
     float2 screenPos = bubble.Position + offset;
@@ -108,6 +122,9 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     // Convert to NDC
     float2 ndc = (screenPos / ViewportSize) * 2.0 - 1.0;
     ndc.y = -ndc.y; // Flip Y for DirectX
+
+    // Calculate screen UV for this pixel (for diffraction sampling)
+    float2 screenUV = screenPos / ViewportSize;
 
     output.Position = float4(ndc, 0, 1);
     output.UV = quadUV;
@@ -117,11 +134,13 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     output.RimThickness = bubble.RimThickness;
     output.HighlightIntensity = bubble.HighlightIntensity;
     output.PopProgress = bubble.PopProgress;
+    output.ScreenUV = screenUV;
+    output.BubbleSize = bubble.Size * finalScale;
 
     return output;
 }
 
-// Pixel shader - Render bubble with iridescence and highlight
+// Pixel shader - Render bubble with iridescence, highlight, and optional diffraction
 float4 PSMain(VSOutput input) : SV_TARGET
 {
     if (input.Alpha <= 0.001)
@@ -155,12 +174,47 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float highlight = 1.0 - smoothstep(0.0, 0.3, highlightDist);
     highlight = pow(highlight, 3.0) * input.HighlightIntensity;
 
-    // Combine colors
-    float3 bubbleColor = lerp(
-        input.BaseColor.rgb * 0.5, // Base tint (subtle)
-        iridescenceColor,           // Iridescence color
-        rimMask * input.HighlightIntensity // More iridescence on rim
-    );
+    // Initialize bubble color
+    float3 bubbleColor;
+
+    // Apply diffraction effect if enabled
+    if (DiffractionEnabled > 0.5)
+    {
+        // Spherical lens refraction - distort based on distance from center
+        // The bubble acts like a lens, magnifying/distorting what's behind it
+
+        // Calculate refraction offset - stronger toward edges, inverted like a lens
+        // Using a parabolic distortion for more realistic lens effect
+        float lensDistortion = (1.0 - dist * dist) * DiffractionStrength;
+
+        // Offset UV toward center (magnification effect)
+        float2 refractOffset = input.UV * lensDistortion;
+
+        // Calculate refracted screen UV
+        float2 refractedUV = input.ScreenUV - refractOffset / ViewportSize * input.BubbleSize;
+
+        // Clamp to valid UV range
+        refractedUV = saturate(refractedUV);
+
+        // Sample the screen at the refracted position
+        float3 screenColor = ScreenTexture.SampleLevel(LinearSampler, refractedUV, 0).rgb;
+
+        // Tint screen color subtly with base color
+        screenColor *= lerp(float3(1, 1, 1), input.BaseColor.rgb, 0.3);
+
+        // Only show iridescence on the rim, not in the center
+        // rimMask is 0 in center, 1 on edge
+        bubbleColor = lerp(screenColor, iridescenceColor * input.BaseColor.rgb, rimMask * 0.6);
+    }
+    else
+    {
+        // Original non-diffraction bubble color
+        bubbleColor = lerp(
+            input.BaseColor.rgb * 0.5, // Base tint (subtle)
+            iridescenceColor,           // Iridescence color
+            rimMask * input.HighlightIntensity // More iridescence on rim
+        );
+    }
 
     // Add highlight (white reflection)
     bubbleColor += highlight * float3(1.0, 1.0, 1.0);

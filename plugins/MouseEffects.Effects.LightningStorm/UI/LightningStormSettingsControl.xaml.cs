@@ -141,6 +141,22 @@ public partial class LightningStormSettingsControl : System.Windows.Controls.Use
             UpdateCustomColorPreview();
         }
 
+        if (_effect.Configuration.TryGet<bool>("ls_rainbowEnabled", out var rainbow))
+            RainbowCheckBox.IsChecked = rainbow;
+
+        if (_effect.Configuration.TryGet<float>("ls_rainbowSpeed", out var rainbowSpd))
+        {
+            RainbowSpeedSlider.Value = rainbowSpd;
+            RainbowSpeedValue.Text = rainbowSpd.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<bool>("ls_fullStormColor", out var fullStorm))
+            FullStormColorCheckBox.IsChecked = fullStorm;
+
+        // Update visibility based on loaded settings
+        UpdateCustomColorPanelVisibility();
+        UpdateRainbowOptionsVisibility();
+
         if (_effect.Configuration.TryGet<bool>("ls_enableSparks", out var sparks))
             EnableSparksCheckBox.IsChecked = sparks;
 
@@ -350,6 +366,44 @@ public partial class LightningStormSettingsControl : System.Windows.Controls.Use
     {
         if (_isLoading) return;
         SavePropertyAndConfig("ls_colorMode", ColorModeCombo.SelectedIndex);
+        UpdateCustomColorPanelVisibility();
+    }
+
+    private void UpdateCustomColorPanelVisibility()
+    {
+        // Show custom color options when "Custom" (index 3) is selected
+        CustomColorPanel.Visibility = ColorModeCombo.SelectedIndex == 3
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void UpdateRainbowOptionsVisibility()
+    {
+        // Show rainbow options when rainbow checkbox is checked
+        RainbowOptionsPanel.Visibility = RainbowCheckBox.IsChecked == true
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void RainbowCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        SavePropertyAndConfig("ls_rainbowEnabled", RainbowCheckBox.IsChecked == true);
+        UpdateRainbowOptionsVisibility();
+    }
+
+    private void RainbowSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        var value = (float)RainbowSpeedSlider.Value;
+        RainbowSpeedValue.Text = value.ToString("F1");
+        SavePropertyAndConfig("ls_rainbowSpeed", value);
+    }
+
+    private void FullStormColorCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        SavePropertyAndConfig("ls_fullStormColor", FullStormColorCheckBox.IsChecked == true);
     }
 
     private void CustomColorButton_Click(object sender, RoutedEventArgs e)

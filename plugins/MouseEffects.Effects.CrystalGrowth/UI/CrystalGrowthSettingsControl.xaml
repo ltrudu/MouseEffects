@@ -4,9 +4,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             d:DesignHeight="800" d:DesignWidth="400">
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10">
+             d:DesignWidth="400">
+    <StackPanel Margin="0">
 
             <!-- Trigger Settings -->
             <TextBlock Text="Trigger Settings" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
@@ -22,7 +21,7 @@
             <TextBlock Text="Crystals Per Click" Margin="0,5,0,2"/>
             <DockPanel Margin="0,0,0,10">
                 <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=CrystalCountSlider, StringFormat=F0}" TextAlignment="Right" Margin="5,0,0,0"/>
-                <Slider x:Name="CrystalCountSlider" Minimum="2" Maximum="8" Value="3" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CrystalCountSlider_Changed"/>
+                <Slider x:Name="CrystalCountSlider" Minimum="2" Maximum="8" Value="5" TickFrequency="1" IsSnapToTickEnabled="True" ValueChanged="CrystalCountSlider_Changed"/>
             </DockPanel>
 
             <TextBlock Text="Growth Speed (px/s)" Margin="0,5,0,2"/>
@@ -40,7 +39,7 @@
             <TextBlock Text="Branch Probability" Margin="0,5,0,2"/>
             <DockPanel Margin="0,0,0,10">
                 <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=BranchProbSlider, StringFormat=F2}" TextAlignment="Right" Margin="5,0,0,0"/>
-                <Slider x:Name="BranchProbSlider" Minimum="0" Maximum="1" Value="0.7" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="BranchProbSlider_Changed"/>
+                <Slider x:Name="BranchProbSlider" Minimum="0" Maximum="1" Value="0.9" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="BranchProbSlider_Changed"/>
             </DockPanel>
 
             <TextBlock Text="Max Generations" Margin="0,5,0,2"/>
@@ -80,8 +79,50 @@
             <TextBlock Text="Crystal Lifetime (seconds)" Margin="0,5,0,2"/>
             <DockPanel Margin="0,0,0,10">
                 <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=LifetimeSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
-                <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="10" Value="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="LifetimeSlider_Changed"/>
+                <Slider x:Name="LifetimeSlider" Minimum="0.5" Maximum="10" Value="0.8" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="LifetimeSlider_Changed"/>
             </DockPanel>
+
+            <Separator Margin="0,10"/>
+
+            <!-- Rotation Animation Settings -->
+            <TextBlock Text="Rotation Animation" FontWeight="Bold" FontSize="14" Margin="0,10,0,10"/>
+
+            <CheckBox x:Name="RotationEnabledCheck" Content="Enable Rotation" IsChecked="True" Margin="0,0,0,5" Checked="RotationEnabledCheck_Changed" Unchecked="RotationEnabledCheck_Changed"/>
+
+            <StackPanel x:Name="RotationSettingsPanel" Visibility="Visible" Margin="10,0,0,0">
+                <TextBlock Text="Rotation Direction" Margin="0,5,0,2"/>
+                <ComboBox x:Name="RotationDirectionCombo" Margin="0,0,0,10" SelectionChanged="RotationDirectionCombo_Changed">
+                    <ComboBoxItem Content="Clockwise"/>
+                    <ComboBoxItem Content="Counter-Clockwise"/>
+                    <ComboBoxItem Content="Random" IsSelected="True"/>
+                </ComboBox>
+
+                <CheckBox x:Name="RandomSpeedCheck" Content="Random Speed" IsChecked="True" Margin="0,0,0,5" Checked="RandomSpeedCheck_Changed" Unchecked="RandomSpeedCheck_Changed"/>
+
+                <!-- Fixed Speed (when not random) -->
+                <StackPanel x:Name="FixedSpeedPanel" Visibility="Collapsed">
+                    <TextBlock Text="Rotation Speed" Margin="0,5,0,2"/>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=RotationSpeedSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                        <Slider x:Name="RotationSpeedSlider" Minimum="0.1" Maximum="5" Value="1.0" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="RotationSpeedSlider_Changed"/>
+                    </DockPanel>
+                </StackPanel>
+
+                <!-- Random Speed (when random checked) -->
+                <StackPanel x:Name="RandomSpeedPanel" Visibility="Visible">
+                    <TextBlock Text="Min Speed" Margin="0,5,0,2"/>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=MinSpeedSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                        <Slider x:Name="MinSpeedSlider" Minimum="0.1" Maximum="4.9" Value="0.5" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="MinSpeedSlider_Changed"/>
+                    </DockPanel>
+
+                    <TextBlock Text="Max Speed" Margin="0,5,0,2"/>
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=MaxSpeedSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                        <Slider x:Name="MaxSpeedSlider" Minimum="0.2" Maximum="5" Value="2.0" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="MaxSpeedSlider_Changed"/>
+                    </DockPanel>
+                </StackPanel>
+            </StackPanel>
 
             <Separator Margin="0,10"/>
 
@@ -90,14 +131,26 @@
 
             <TextBlock Text="Crystal Color" Margin="0,5,0,2"/>
             <ComboBox x:Name="ColorPresetCombo" Margin="0,0,0,10" SelectionChanged="ColorPresetCombo_Changed">
-                <ComboBoxItem Content="Ice Blue" IsSelected="True"/>
+                <ComboBoxItem Content="Ice Blue"/>
                 <ComboBoxItem Content="Amethyst"/>
                 <ComboBoxItem Content="Emerald"/>
                 <ComboBoxItem Content="Diamond"/>
                 <ComboBoxItem Content="Custom"/>
+                <ComboBoxItem Content="Rainbow" IsSelected="True"/>
             </ComboBox>
 
-            <StackPanel x:Name="CustomColorPanel" Visibility="Collapsed" Margin="0,10,0,0">
+            <!-- Rainbow Settings Panel -->
+            <StackPanel x:Name="RainbowPanel" Visibility="Visible" Margin="0,0,0,10">
+                <TextBlock Text="Rainbow Speed" Margin="0,5,0,2"/>
+                <DockPanel Margin="0,0,0,10">
+                    <TextBlock DockPanel.Dock="Right" Width="50" Text="{Binding Value, ElementName=RainbowSpeedSlider, StringFormat=F1}" TextAlignment="Right" Margin="5,0,0,0"/>
+                    <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="5" Value="1.0" TickFrequency="0.1" IsSnapToTickEnabled="True" ValueChanged="RainbowSpeedSlider_Changed"/>
+                </DockPanel>
+
+                <CheckBox x:Name="MultiColorCheck" Content="Multi-color (fading rainbow per crystal)" IsChecked="True" Margin="0,0,0,5" Checked="MultiColorCheck_Changed" Unchecked="MultiColorCheck_Changed"/>
+            </StackPanel>
+
+            <StackPanel x:Name="CustomColorPanel" Visibility="Collapsed" Margin="0,0,0,0">
                 <TextBlock Text="Custom Color (RGB)" Margin="0,0,0,5"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -128,6 +181,5 @@
                 <Border x:Name="ColorPreview" Height="30" Background="#87CEEB" CornerRadius="3" Margin="0,10,0,0"/>
             </StackPanel>
 
-        </StackPanel>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>

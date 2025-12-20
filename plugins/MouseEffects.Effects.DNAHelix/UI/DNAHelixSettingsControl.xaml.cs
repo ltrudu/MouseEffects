@@ -3,7 +3,6 @@ using System.Windows;
 using Button = System.Windows.Controls.Button;
 using UserControl = System.Windows.Controls.UserControl;
 using WpfColor = System.Windows.Media.Color;
-using FormsColor = System.Drawing.Color;
 
 namespace MouseEffects.Effects.DNAHelix.UI;
 
@@ -211,4 +210,5 @@ public partial class DNAHelixSettingsControl : UserControl
         LoadSettings();
         _isLoading = false;
     }
+
 }

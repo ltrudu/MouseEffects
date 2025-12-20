@@ -23,21 +23,43 @@ public sealed class BubblesFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
+        // Animation Settings - Appears (0=None, 1=FadeIn, 2=ZoomIn)
+        config.Set("b_appearsAnimation", 2); // Zoom In
+        config.Set("b_fadeInSpeed", 0.5f);
+        config.Set("b_fadeInStartAlpha", 0f);
+        config.Set("b_fadeInEndAlpha", 1f);
+        config.Set("b_zoomInSpeed", 0.5f);
+        config.Set("b_zoomInStartScale", 0f);
+        config.Set("b_zoomInEndScale", 1.1f);
+
+        // Animation Settings - Disappears (0=None, 1=FadeOut, 2=ZoomOut, 3=PopOut)
+        config.Set("b_disappearsAnimation", 3); // Pop Out
+        config.Set("b_fadeOutSpeed", 0.5f);
+        config.Set("b_fadeOutStartAlpha", 1f);
+        config.Set("b_fadeOutEndAlpha", 0f);
+        config.Set("b_zoomOutSpeed", 0.5f);
+        config.Set("b_zoomOutStartScale", 1f);
+        config.Set("b_zoomOutEndScale", 0f);
+        config.Set("b_popDuration", 0.24f);
+
         // Bubble Settings (b_ prefix)
+        config.Set("b_maxBubbles", 150);
         config.Set("b_bubbleCount", 10);
         config.Set("b_minSize", 15f);
         config.Set("b_maxSize", 35f);
-        config.Set("b_floatSpeed", 25f);
+        config.Set("b_floatSpeed", 27f);
         config.Set("b_wobbleAmount", 15f);
-        config.Set("b_wobbleFrequency", 1.5f);
+        config.Set("b_wobbleFrequency", 1.36f);
         config.Set("b_driftSpeed", 20f);
-        config.Set("b_iridescenceIntensity", 1.0f);
+        config.Set("b_iridescenceIntensity", 1.3f);
         config.Set("b_iridescenceSpeed", 0.5f);
-        config.Set("b_lifetime", 12f);
-        config.Set("b_popEnabled", true);
-        config.Set("b_popDuration", 0.3f);
-        config.Set("b_transparency", 0.7f);
-        config.Set("b_rimThickness", 0.08f);
+        config.Set("b_lifetime", 15f);
+        config.Set("b_transparency", 1.0f);
+        config.Set("b_rimThickness", 0.088f);
+
+        // Diffraction settings
+        config.Set("b_diffractionEnabled", true);
+        config.Set("b_diffractionStrength", 0.4f);
 
         return config;
     }
@@ -48,6 +70,167 @@ public sealed class BubblesFactory : IEffectFactory
         {
             Parameters =
             [
+                // Animation - Appears
+                new ChoiceParameter
+                {
+                    Key = "b_appearsAnimation",
+                    DisplayName = "Appears Animation",
+                    Description = "Animation when bubble first appears",
+                    Choices = ["No Animation", "Fade In", "Zoom In"],
+                    DefaultValue = "No Animation"
+                },
+                new FloatParameter
+                {
+                    Key = "b_fadeInSpeed",
+                    DisplayName = "Fade In Speed",
+                    Description = "Duration of fade in animation (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 3f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "b_fadeInStartAlpha",
+                    DisplayName = "Fade In Start Alpha",
+                    Description = "Starting opacity for fade in",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_fadeInEndAlpha",
+                    DisplayName = "Fade In End Alpha",
+                    Description = "Ending opacity for fade in",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 1f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_zoomInSpeed",
+                    DisplayName = "Zoom In Speed",
+                    Description = "Duration of zoom in animation (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 3f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "b_zoomInStartScale",
+                    DisplayName = "Zoom In Start Scale",
+                    Description = "Starting scale for zoom in",
+                    MinValue = 0f,
+                    MaxValue = 2f,
+                    DefaultValue = 0f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_zoomInEndScale",
+                    DisplayName = "Zoom In End Scale",
+                    Description = "Ending scale for zoom in",
+                    MinValue = 0.5f,
+                    MaxValue = 2f,
+                    DefaultValue = 1f,
+                    Step = 0.05f
+                },
+
+                // Animation - Disappears
+                new ChoiceParameter
+                {
+                    Key = "b_disappearsAnimation",
+                    DisplayName = "Disappears Animation",
+                    Description = "Animation when bubble disappears",
+                    Choices = ["No Animation", "Fade Out", "Zoom Out", "Pop Out"],
+                    DefaultValue = "Pop Out"
+                },
+                new FloatParameter
+                {
+                    Key = "b_fadeOutSpeed",
+                    DisplayName = "Fade Out Speed",
+                    Description = "Duration of fade out animation (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 3f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "b_fadeOutStartAlpha",
+                    DisplayName = "Fade Out Start Alpha",
+                    Description = "Starting opacity for fade out",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 1f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_fadeOutEndAlpha",
+                    DisplayName = "Fade Out End Alpha",
+                    Description = "Ending opacity for fade out",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_zoomOutSpeed",
+                    DisplayName = "Zoom Out Speed",
+                    Description = "Duration of zoom out animation (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 3f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "b_zoomOutStartScale",
+                    DisplayName = "Zoom Out Start Scale",
+                    Description = "Starting scale for zoom out",
+                    MinValue = 0.5f,
+                    MaxValue = 2f,
+                    DefaultValue = 1f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_zoomOutEndScale",
+                    DisplayName = "Zoom Out End Scale",
+                    Description = "Ending scale for zoom out",
+                    MinValue = 0f,
+                    MaxValue = 2f,
+                    DefaultValue = 0f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "b_popDuration",
+                    DisplayName = "Pop Duration",
+                    Description = "Duration of pop animation (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.3f,
+                    Step = 0.05f
+                },
+
+                // Max Bubbles
+                new IntParameter
+                {
+                    Key = "b_maxBubbles",
+                    DisplayName = "Max Bubbles",
+                    Description = "Maximum number of bubbles on screen at once",
+                    MinValue = 1,
+                    MaxValue = 500,
+                    DefaultValue = 150
+                },
+
                 // Bubble Count
                 new IntParameter
                 {
@@ -160,23 +343,11 @@ public sealed class BubblesFactory : IEffectFactory
                 {
                     Key = "b_lifetime",
                     DisplayName = "Lifetime",
-                    Description = "How long bubbles float before popping (seconds)",
+                    Description = "How long bubbles float before disappearing (seconds)",
                     MinValue = 5f,
                     MaxValue = 30f,
                     DefaultValue = 12f,
                     Step = 1f
-                },
-
-                // Pop Duration
-                new FloatParameter
-                {
-                    Key = "b_popDuration",
-                    DisplayName = "Pop Duration",
-                    Description = "Duration of pop animation (seconds)",
-                    MinValue = 0.1f,
-                    MaxValue = 1f,
-                    DefaultValue = 0.3f,
-                    Step = 0.05f
                 },
 
                 // Transparency
@@ -201,6 +372,27 @@ public sealed class BubblesFactory : IEffectFactory
                     MaxValue = 0.2f,
                     DefaultValue = 0.08f,
                     Step = 0.01f
+                },
+
+                // Diffraction Effect
+                new BoolParameter
+                {
+                    Key = "b_diffractionEnabled",
+                    DisplayName = "Diffraction Effect",
+                    Description = "Enable screen refraction through bubbles",
+                    DefaultValue = false
+                },
+
+                // Diffraction Strength
+                new FloatParameter
+                {
+                    Key = "b_diffractionStrength",
+                    DisplayName = "Diffraction Strength",
+                    Description = "Intensity of lens distortion effect",
+                    MinValue = 0.05f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.3f,
+                    Step = 0.05f
                 }
             ]
         };

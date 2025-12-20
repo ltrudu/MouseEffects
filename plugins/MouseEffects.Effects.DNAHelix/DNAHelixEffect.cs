@@ -69,71 +69,71 @@ public sealed class DNAHelixEffect : EffectBase
     private Vector3 _basePairColor1 = new Vector3(0.196f, 0.804f, 0.196f); // Green #32CD32
     private Vector3 _basePairColor2 = new Vector3(1.0f, 0.843f, 0.0f); // Yellow #FFD700
 
-    // Public properties for UI binding
+    // Public properties for UI binding (don't call OnConfigurationChanged - it reads FROM config)
     public float HelixHeight
     {
         get => _helixHeight;
-        set { _helixHeight = value; OnConfigurationChanged(); }
+        set => _helixHeight = value;
     }
 
     public float RotationSpeed
     {
         get => _rotationSpeed;
-        set { _rotationSpeed = value; OnConfigurationChanged(); }
+        set => _rotationSpeed = value;
     }
 
     public float StrandThickness
     {
         get => _strandThickness;
-        set { _strandThickness = value; OnConfigurationChanged(); }
+        set => _strandThickness = value;
     }
 
     public int BasePairCount
     {
         get => _basePairCount;
-        set { _basePairCount = Math.Max(1, Math.Min(50, value)); OnConfigurationChanged(); }
+        set => _basePairCount = Math.Max(1, Math.Min(50, value));
     }
 
     public float GlowIntensity
     {
         get => _glowIntensity;
-        set { _glowIntensity = value; OnConfigurationChanged(); }
+        set => _glowIntensity = value;
     }
 
     public float HelixRadius
     {
         get => _helixRadius;
-        set { _helixRadius = value; OnConfigurationChanged(); }
+        set => _helixRadius = value;
     }
 
     public float TwistRate
     {
         get => _twistRate;
-        set { _twistRate = value; OnConfigurationChanged(); }
+        set => _twistRate = value;
     }
 
     public Vector3 Strand1Color
     {
         get => _strand1Color;
-        set { _strand1Color = value; OnConfigurationChanged(); }
+        set => _strand1Color = value;
     }
 
     public Vector3 Strand2Color
     {
         get => _strand2Color;
-        set { _strand2Color = value; OnConfigurationChanged(); }
+        set => _strand2Color = value;
     }
 
     public Vector3 BasePairColor1
     {
         get => _basePairColor1;
-        set { _basePairColor1 = value; OnConfigurationChanged(); }
+        set => _basePairColor1 = value;
     }
 
     public Vector3 BasePairColor2
     {
         get => _basePairColor2;
-        set { _basePairColor2 = value; OnConfigurationChanged(); }
+        set => _basePairColor2 = value;
     }
 
     protected override void OnInitialize(IRenderContext context)
@@ -154,13 +154,21 @@ public sealed class DNAHelixEffect : EffectBase
 
     protected override void OnConfigurationChanged()
     {
-        Configuration.TryGet("helixHeight", out _helixHeight);
-        Configuration.TryGet("rotationSpeed", out _rotationSpeed);
-        Configuration.TryGet("strandThickness", out _strandThickness);
-        Configuration.TryGet("basePairCount", out _basePairCount);
-        Configuration.TryGet("glowIntensity", out _glowIntensity);
-        Configuration.TryGet("helixRadius", out _helixRadius);
-        Configuration.TryGet("twistRate", out _twistRate);
+        // Only update fields if the key exists in configuration (preserve defaults otherwise)
+        if (Configuration.TryGet("helixHeight", out float helixHeight))
+            _helixHeight = helixHeight;
+        if (Configuration.TryGet("rotationSpeed", out float rotationSpeed))
+            _rotationSpeed = rotationSpeed;
+        if (Configuration.TryGet("strandThickness", out float strandThickness))
+            _strandThickness = strandThickness;
+        if (Configuration.TryGet("basePairCount", out int basePairCount))
+            _basePairCount = basePairCount;
+        if (Configuration.TryGet("glowIntensity", out float glowIntensity))
+            _glowIntensity = glowIntensity;
+        if (Configuration.TryGet("helixRadius", out float helixRadius))
+            _helixRadius = helixRadius;
+        if (Configuration.TryGet("twistRate", out float twistRate))
+            _twistRate = twistRate;
 
         if (Configuration.TryGet("strand1ColorR", out float s1r) &&
             Configuration.TryGet("strand1ColorG", out float s1g) &&

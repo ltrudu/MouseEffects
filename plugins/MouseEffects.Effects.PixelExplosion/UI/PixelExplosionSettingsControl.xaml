@@ -35,18 +35,30 @@
                       Style="{StaticResource CheckBoxStyle}"
                       Checked="SpawnOnRightClickCheckBox_Changed" Unchecked="SpawnOnRightClickCheckBox_Changed"/>
 
+            <CheckBox x:Name="SpawnOnMouseMoveCheckBox" Content="Spawn on Mouse Move" IsChecked="True"
+                      Style="{StaticResource CheckBoxStyle}"
+                      Checked="SpawnOnMouseMoveCheckBox_Changed" Unchecked="SpawnOnMouseMoveCheckBox_Changed"/>
+
+            <!-- Mouse Threshold Settings (visible when Spawn on Mouse Move is checked) -->
+            <StackPanel x:Name="MouseThresholdPanel" Visibility="Visible" Margin="10,0,0,8">
+                <TextBlock Text="Mouse Threshold (pixels)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="MouseThresholdSlider" Minimum="10" Maximum="200" Value="150"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MouseThresholdSlider_ValueChanged"/>
+                <TextBlock x:Name="MouseThresholdValue" Text="150" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
             <!-- Explosion Settings Section -->
             <TextBlock Text="Explosion Settings" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>
 
             <TextBlock Text="Min Pixels per Explosion" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="PixelCountMinSlider" Minimum="10" Maximum="200" Value="20"
+            <Slider x:Name="PixelCountMinSlider" Minimum="10" Maximum="200" Value="30"
                     Style="{StaticResource SliderStyle}" ValueChanged="PixelCountMinSlider_ValueChanged"/>
-            <TextBlock x:Name="PixelCountMinValue" Text="20" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="PixelCountMinValue" Text="30" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Max Pixels per Explosion" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="PixelCountMaxSlider" Minimum="10" Maximum="200" Value="60"
+            <Slider x:Name="PixelCountMaxSlider" Minimum="10" Maximum="200" Value="49"
                     Style="{StaticResource SliderStyle}" ValueChanged="PixelCountMaxSlider_ValueChanged"/>
-            <TextBlock x:Name="PixelCountMaxValue" Text="60" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="PixelCountMaxValue" Text="49" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Explosion Force" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="ExplosionForceSlider" Minimum="100" Maximum="1000" Value="400"
@@ -84,12 +96,21 @@
 
             <ComboBox x:Name="ColorPaletteCombo" SelectionChanged="ColorPaletteCombo_Changed"
                       Margin="0,4,0,8">
-                <ComboBoxItem Content="Fire (Red/Orange/Yellow)" IsSelected="True"/>
+                <ComboBoxItem Content="Fire (Red/Orange/Yellow)"/>
                 <ComboBoxItem Content="Ice (Blue/Cyan/White)"/>
-                <ComboBoxItem Content="Rainbow (All Colors)"/>
+                <ComboBoxItem Content="Rainbow (Random Colors)"/>
                 <ComboBoxItem Content="Retro (8-bit Colors)"/>
                 <ComboBoxItem Content="Neon (Bright Colors)"/>
+                <ComboBoxItem Content="Animated Rainbow" IsSelected="True"/>
             </ComboBox>
+
+            <!-- Rainbow Speed Settings (visible when Animated Rainbow selected) -->
+            <StackPanel x:Name="RainbowSpeedPanel" Visibility="Visible" Margin="10,0,0,8">
+                <TextBlock Text="Rainbow Speed" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="5" Value="3.07"
+                        Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_ValueChanged"/>
+                <TextBlock x:Name="RainbowSpeedValue" Text="3.1" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
 
             <!-- Performance Section -->
             <TextBlock Text="Performance" FontWeight="Bold" FontSize="13" Margin="0,16,0,4"/>

@@ -22,7 +22,101 @@ public partial class BubblesSettingsControl : UserControl
 
     private void LoadConfiguration()
     {
+        // Animation settings
+        if (_effect.Configuration.TryGet("b_appearsAnimation", out int appearsAnim))
+        {
+            AppearsCombo.SelectedIndex = appearsAnim;
+            UpdateAppearsPanelVisibility(appearsAnim);
+        }
+
+        if (_effect.Configuration.TryGet("b_disappearsAnimation", out int disappearsAnim))
+        {
+            DisappearsCombo.SelectedIndex = disappearsAnim;
+            UpdateDisappearsPanelVisibility(disappearsAnim);
+        }
+
+        // Fade In settings
+        if (_effect.Configuration.TryGet("b_fadeInSpeed", out float fadeInSpeed))
+        {
+            FadeInSpeedSlider.Value = fadeInSpeed;
+            FadeInSpeedValue.Text = fadeInSpeed.ToString("F1");
+        }
+        if (_effect.Configuration.TryGet("b_fadeInStartAlpha", out float fadeInStartAlpha))
+        {
+            FadeInStartAlphaSlider.Value = fadeInStartAlpha;
+            FadeInStartAlphaValue.Text = fadeInStartAlpha.ToString("F2");
+        }
+        if (_effect.Configuration.TryGet("b_fadeInEndAlpha", out float fadeInEndAlpha))
+        {
+            FadeInEndAlphaSlider.Value = fadeInEndAlpha;
+            FadeInEndAlphaValue.Text = fadeInEndAlpha.ToString("F2");
+        }
+
+        // Zoom In settings
+        if (_effect.Configuration.TryGet("b_zoomInSpeed", out float zoomInSpeed))
+        {
+            ZoomInSpeedSlider.Value = zoomInSpeed;
+            ZoomInSpeedValue.Text = zoomInSpeed.ToString("F1");
+        }
+        if (_effect.Configuration.TryGet("b_zoomInStartScale", out float zoomInStartScale))
+        {
+            ZoomInStartScaleSlider.Value = zoomInStartScale;
+            ZoomInStartScaleValue.Text = zoomInStartScale.ToString("F2");
+        }
+        if (_effect.Configuration.TryGet("b_zoomInEndScale", out float zoomInEndScale))
+        {
+            ZoomInEndScaleSlider.Value = zoomInEndScale;
+            ZoomInEndScaleValue.Text = zoomInEndScale.ToString("F2");
+        }
+
+        // Fade Out settings
+        if (_effect.Configuration.TryGet("b_fadeOutSpeed", out float fadeOutSpeed))
+        {
+            FadeOutSpeedSlider.Value = fadeOutSpeed;
+            FadeOutSpeedValue.Text = fadeOutSpeed.ToString("F1");
+        }
+        if (_effect.Configuration.TryGet("b_fadeOutStartAlpha", out float fadeOutStartAlpha))
+        {
+            FadeOutStartAlphaSlider.Value = fadeOutStartAlpha;
+            FadeOutStartAlphaValue.Text = fadeOutStartAlpha.ToString("F2");
+        }
+        if (_effect.Configuration.TryGet("b_fadeOutEndAlpha", out float fadeOutEndAlpha))
+        {
+            FadeOutEndAlphaSlider.Value = fadeOutEndAlpha;
+            FadeOutEndAlphaValue.Text = fadeOutEndAlpha.ToString("F2");
+        }
+
+        // Zoom Out settings
+        if (_effect.Configuration.TryGet("b_zoomOutSpeed", out float zoomOutSpeed))
+        {
+            ZoomOutSpeedSlider.Value = zoomOutSpeed;
+            ZoomOutSpeedValue.Text = zoomOutSpeed.ToString("F1");
+        }
+        if (_effect.Configuration.TryGet("b_zoomOutStartScale", out float zoomOutStartScale))
+        {
+            ZoomOutStartScaleSlider.Value = zoomOutStartScale;
+            ZoomOutStartScaleValue.Text = zoomOutStartScale.ToString("F2");
+        }
+        if (_effect.Configuration.TryGet("b_zoomOutEndScale", out float zoomOutEndScale))
+        {
+            ZoomOutEndScaleSlider.Value = zoomOutEndScale;
+            ZoomOutEndScaleValue.Text = zoomOutEndScale.ToString("F2");
+        }
+
+        // Pop Out settings
+        if (_effect.Configuration.TryGet("b_popDuration", out float popDur))
+        {
+            PopDurationSlider.Value = popDur;
+            PopDurationValue.Text = popDur.ToString("F1");
+        }
+
         // Bubble settings
+        if (_effect.Configuration.TryGet("b_maxBubbles", out int maxBubbles))
+        {
+            MaxBubblesSlider.Value = maxBubbles;
+            MaxBubblesValue.Text = maxBubbles.ToString();
+        }
+
         if (_effect.Configuration.TryGet("b_bubbleCount", out int count))
         {
             BubbleCountSlider.Value = count;
@@ -97,17 +191,31 @@ public partial class BubblesSettingsControl : UserControl
             RimThicknessValue.Text = rim.ToString("F2");
         }
 
-        // Pop effect
-        if (_effect.Configuration.TryGet("b_popEnabled", out bool popEnabled))
+        // Diffraction settings
+        if (_effect.Configuration.TryGet("b_diffractionEnabled", out bool diffractionEnabled))
         {
-            PopEnabledCheckBox.IsChecked = popEnabled;
+            DiffractionCheckBox.IsChecked = diffractionEnabled;
+            DiffractionPanel.Visibility = diffractionEnabled ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        if (_effect.Configuration.TryGet("b_popDuration", out float popDur))
+        if (_effect.Configuration.TryGet("b_diffractionStrength", out float diffractionStrength))
         {
-            PopDurationSlider.Value = popDur;
-            PopDurationValue.Text = popDur.ToString("F1");
+            DiffractionStrengthSlider.Value = diffractionStrength;
+            DiffractionStrengthValue.Text = diffractionStrength.ToString("F2");
         }
+    }
+
+    private void UpdateAppearsPanelVisibility(int selectedIndex)
+    {
+        FadeInPanel.Visibility = selectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        ZoomInPanel.Visibility = selectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateDisappearsPanelVisibility(int selectedIndex)
+    {
+        FadeOutPanel.Visibility = selectedIndex == 1 ? Visibility.Visible : Visibility.Collapsed;
+        ZoomOutPanel.Visibility = selectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+        PopOutPanel.Visibility = selectedIndex == 3 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateConfiguration()
@@ -116,7 +224,35 @@ public partial class BubblesSettingsControl : UserControl
 
         var config = new EffectConfiguration();
 
+        // Animation settings
+        config.Set("b_appearsAnimation", AppearsCombo.SelectedIndex);
+        config.Set("b_disappearsAnimation", DisappearsCombo.SelectedIndex);
+
+        // Fade In settings
+        config.Set("b_fadeInSpeed", (float)FadeInSpeedSlider.Value);
+        config.Set("b_fadeInStartAlpha", (float)FadeInStartAlphaSlider.Value);
+        config.Set("b_fadeInEndAlpha", (float)FadeInEndAlphaSlider.Value);
+
+        // Zoom In settings
+        config.Set("b_zoomInSpeed", (float)ZoomInSpeedSlider.Value);
+        config.Set("b_zoomInStartScale", (float)ZoomInStartScaleSlider.Value);
+        config.Set("b_zoomInEndScale", (float)ZoomInEndScaleSlider.Value);
+
+        // Fade Out settings
+        config.Set("b_fadeOutSpeed", (float)FadeOutSpeedSlider.Value);
+        config.Set("b_fadeOutStartAlpha", (float)FadeOutStartAlphaSlider.Value);
+        config.Set("b_fadeOutEndAlpha", (float)FadeOutEndAlphaSlider.Value);
+
+        // Zoom Out settings
+        config.Set("b_zoomOutSpeed", (float)ZoomOutSpeedSlider.Value);
+        config.Set("b_zoomOutStartScale", (float)ZoomOutStartScaleSlider.Value);
+        config.Set("b_zoomOutEndScale", (float)ZoomOutEndScaleSlider.Value);
+
+        // Pop Out settings
+        config.Set("b_popDuration", (float)PopDurationSlider.Value);
+
         // Bubble settings
+        config.Set("b_maxBubbles", (int)MaxBubblesSlider.Value);
         config.Set("b_bubbleCount", (int)BubbleCountSlider.Value);
         config.Set("b_minSize", (float)MinSizeSlider.Value);
         config.Set("b_maxSize", (float)MaxSizeSlider.Value);
@@ -134,14 +270,126 @@ public partial class BubblesSettingsControl : UserControl
         config.Set("b_transparency", (float)TransparencySlider.Value);
         config.Set("b_rimThickness", (float)RimThicknessSlider.Value);
 
-        // Pop effect
-        config.Set("b_popEnabled", PopEnabledCheckBox.IsChecked ?? true);
-        config.Set("b_popDuration", (float)PopDurationSlider.Value);
+        // Diffraction settings
+        config.Set("b_diffractionEnabled", DiffractionCheckBox.IsChecked == true);
+        config.Set("b_diffractionStrength", (float)DiffractionStrengthSlider.Value);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
+    // Animation dropdown handlers
+    private void AppearsCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FadeInPanel == null || ZoomInPanel == null) return;
+        UpdateAppearsPanelVisibility(AppearsCombo.SelectedIndex);
+        UpdateConfiguration();
+    }
+
+    private void DisappearsCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FadeOutPanel == null || ZoomOutPanel == null || PopOutPanel == null) return;
+        UpdateDisappearsPanelVisibility(DisappearsCombo.SelectedIndex);
+        UpdateConfiguration();
+    }
+
+    // Fade In handlers
+    private void FadeInSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FadeInSpeedValue != null)
+            FadeInSpeedValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void FadeInStartAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FadeInStartAlphaValue != null)
+            FadeInStartAlphaValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void FadeInEndAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FadeInEndAlphaValue != null)
+            FadeInEndAlphaValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    // Zoom In handlers
+    private void ZoomInSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ZoomInSpeedValue != null)
+            ZoomInSpeedValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void ZoomInStartScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ZoomInStartScaleValue != null)
+            ZoomInStartScaleValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void ZoomInEndScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ZoomInEndScaleValue != null)
+            ZoomInEndScaleValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    // Fade Out handlers
+    private void FadeOutSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FadeOutSpeedValue != null)
+            FadeOutSpeedValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void FadeOutStartAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FadeOutStartAlphaValue != null)
+            FadeOutStartAlphaValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void FadeOutEndAlphaSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FadeOutEndAlphaValue != null)
+            FadeOutEndAlphaValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    // Zoom Out handlers
+    private void ZoomOutSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ZoomOutSpeedValue != null)
+            ZoomOutSpeedValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void ZoomOutStartScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ZoomOutStartScaleValue != null)
+            ZoomOutStartScaleValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    private void ZoomOutEndScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ZoomOutEndScaleValue != null)
+            ZoomOutEndScaleValue.Text = e.NewValue.ToString("F2");
+        UpdateConfiguration();
+    }
+
+    // Pop Out handler
+    private void PopDurationSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (PopDurationValue != null)
+            PopDurationValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    // Bubble settings handlers
     private void BubbleCountSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (BubbleCountValue != null)
@@ -170,6 +418,7 @@ public partial class BubblesSettingsControl : UserControl
         UpdateConfiguration();
     }
 
+    // Motion settings handlers
     private void FloatSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (FloatSpeedValue != null)
@@ -198,6 +447,7 @@ public partial class BubblesSettingsControl : UserControl
         UpdateConfiguration();
     }
 
+    // Visual effects handlers
     private void IridescenceIntensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
         if (IridescenceIntensityValue != null)
@@ -226,15 +476,26 @@ public partial class BubblesSettingsControl : UserControl
         UpdateConfiguration();
     }
 
-    private void PopEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
+    // Max bubbles handler
+    private void MaxBubblesSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
+        if (MaxBubblesValue != null)
+            MaxBubblesValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
     }
 
-    private void PopDurationSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    // Diffraction handlers
+    private void DiffractionCheckBox_Changed(object sender, RoutedEventArgs e)
     {
-        if (PopDurationValue != null)
-            PopDurationValue.Text = e.NewValue.ToString("F1");
+        if (DiffractionPanel != null)
+            DiffractionPanel.Visibility = DiffractionCheckBox.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        UpdateConfiguration();
+    }
+
+    private void DiffractionStrengthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (DiffractionStrengthValue != null)
+            DiffractionStrengthValue.Text = e.NewValue.ToString("F2");
         UpdateConfiguration();
     }
 }

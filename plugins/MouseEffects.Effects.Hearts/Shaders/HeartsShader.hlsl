@@ -98,24 +98,39 @@ VSOutput VSMain(uint vertexId : SV_VertexID, uint instanceId : SV_InstanceID)
     return output;
 }
 
-// Heart SDF - Creates a heart shape using two circles and a triangle
+// Heart SDF - Creates a proper heart shape (based on Inigo Quilez's formula)
 float sdHeart(float2 p, float size)
 {
-    // Adjust position for proper centering
-    p.y -= size * 0.3;
+    // Normalize coordinates
+    p = p / size;
 
-    // Make p.x absolute for symmetry
+    // Flip and center the heart (point at bottom)
+    p.y = -p.y + 0.5;
+
+    // Mirror for symmetry
     p.x = abs(p.x);
 
-    // Two circles at the top (lobes of the heart)
-    float circle = length(p - float2(size * 0.25, size * 0.25)) - size * 0.35;
+    // Heart shape using parametric boundary
+    if (p.y + p.x > 1.0)
+    {
+        // Upper lobe region - circle centered at (0.25, 0.75)
+        float2 c = float2(0.25, 0.75);
+        float r = 0.3536; // sqrt(2)/4
+        return (length(p - c) - r) * size;
+    }
+    else
+    {
+        // Lower region - distance to corner/point
+        float d1 = length(p - float2(0.0, 1.0));
 
-    // Triangle at the bottom (point of the heart)
-    float2 q = p - float2(0, -size * 0.5);
-    float tri = max(q.x * 0.866 + q.y * 0.5, -q.y) - size * 0.5;
+        float2 q = p - 0.5 * max(p.x + p.y, 0.0);
+        float d2 = length(q);
 
-    // Combine shapes (union operation)
-    return min(circle, tri);
+        float d = min(d1, d2);
+        float s = sign(p.x - p.y);
+
+        return d * s * size;
+    }
 }
 
 // Sparkle pattern - creates twinkling effect

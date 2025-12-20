@@ -52,8 +52,10 @@ public sealed class CrystalGrowthEffect : EffectBase
         public float MaxLength;           // 4 bytes - Maximum branch length
         public float Generation;          // 4 bytes - Branch generation (0=main, 1=sub, etc)
         public float SparklePhase;        // 4 bytes - Random phase for sparkle animation
-        public float Padding;             // 4 bytes = 64
-        public Vector4 Padding2;          // 16 bytes = 80
+        public float RotationAngle;       // 4 bytes = 64 - Current rotation angle
+        public Vector2 CrystalOrigin;     // 8 bytes - Origin point for rotation
+        public float RotationSpeed;       // 4 bytes - Rotation speed (radians/sec)
+        public float Padding;             // 4 bytes = 80
     }
 
     // Constants
@@ -82,13 +84,26 @@ public sealed class CrystalGrowthEffect : EffectBase
     private float _growthSpeed = 120f;
     private float _maxSize = 100f;
     private float _branchProbability = 0.7f;
-    private int _colorPreset = 0; // 0=IceBlue, 1=Amethyst, 2=Emerald, 3=Diamond, 4=Custom
+    private int _colorPreset = 0; // 0=IceBlue, 1=Amethyst, 2=Emerald, 3=Diamond, 4=Custom, 5=Rainbow
     private Vector4 _customColor = new(0.53f, 0.81f, 0.92f, 1f); // Light sky blue
     private float _sparkleIntensity = 1.2f;
     private float _lifetime = 2.5f;
     private float _branchThickness = 1.5f;
     private float _glowIntensity = 1.0f;
     private int _maxGenerations = 3;
+
+    // Rainbow settings
+    private float _rainbowSpeed = 1.0f;
+    private bool _rainbowMultiColor = false;
+    private float _rainbowHueOffset = 0f; // Tracks current rainbow position
+
+    // Rotation settings
+    private bool _rotationEnabled = false;
+    private int _rotationDirection = 0; // 0=Clockwise, 1=Counter-Clockwise, 2=Random
+    private bool _rotationRandomSpeed = false;
+    private float _rotationSpeed = 1.0f;
+    private float _rotationMinSpeed = 0.5f;
+    private float _rotationMaxSpeed = 2.0f;
 
     // Trigger settings
     private bool _leftClickEnabled = true;
@@ -108,6 +123,14 @@ public sealed class CrystalGrowthEffect : EffectBase
     public int MaxGenerations { get => _maxGenerations; set => _maxGenerations = value; }
     public bool LeftClickEnabled { get => _leftClickEnabled; set => _leftClickEnabled = value; }
     public bool RightClickEnabled { get => _rightClickEnabled; set => _rightClickEnabled = value; }
+    public float RainbowSpeed { get => _rainbowSpeed; set => _rainbowSpeed = value; }
+    public bool RainbowMultiColor { get => _rainbowMultiColor; set => _rainbowMultiColor = value; }
+    public bool RotationEnabled { get => _rotationEnabled; set => _rotationEnabled = value; }
+    public int RotationDirection { get => _rotationDirection; set => _rotationDirection = value; }
+    public bool RotationRandomSpeed { get => _rotationRandomSpeed; set => _rotationRandomSpeed = value; }
+    public float RotationSpeed { get => _rotationSpeed; set => _rotationSpeed = value; }
+    public float RotationMinSpeed { get => _rotationMinSpeed; set => _rotationMinSpeed = value; }
+    public float RotationMaxSpeed { get => _rotationMaxSpeed; set => _rotationMaxSpeed = value; }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -164,11 +187,34 @@ public sealed class CrystalGrowthEffect : EffectBase
             _leftClickEnabled = leftEnabled;
         if (Configuration.TryGet("cg_rightClickEnabled", out bool rightEnabled))
             _rightClickEnabled = rightEnabled;
+        if (Configuration.TryGet("cg_rainbowSpeed", out float rainbowSpeed))
+            _rainbowSpeed = rainbowSpeed;
+        if (Configuration.TryGet("cg_rainbowMultiColor", out bool rainbowMulti))
+            _rainbowMultiColor = rainbowMulti;
+        if (Configuration.TryGet("cg_rotationEnabled", out bool rotEnabled))
+            _rotationEnabled = rotEnabled;
+        if (Configuration.TryGet("cg_rotationDirection", out int rotDir))
+            _rotationDirection = rotDir;
+        if (Configuration.TryGet("cg_rotationRandomSpeed", out bool rotRandom))
+            _rotationRandomSpeed = rotRandom;
+        if (Configuration.TryGet("cg_rotationSpeed", out float rotSpeed))
+            _rotationSpeed = rotSpeed;
+        if (Configuration.TryGet("cg_rotationMinSpeed", out float rotMinSpeed))
+            _rotationMinSpeed = rotMinSpeed;
+        if (Configuration.TryGet("cg_rotationMaxSpeed", out float rotMaxSpeed))
+            _rotationMaxSpeed = rotMaxSpeed;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
         float deltaTime = gameTime.DeltaSeconds;
+
+        // Advance rainbow hue offset
+        if (_colorPreset == 5) // Rainbow mode
+        {
+            _rainbowHueOffset += deltaTime * _rainbowSpeed;
+            if (_rainbowHueOffset > 1f) _rainbowHueOffset -= 1f;
+        }
 
         // Handle left click trigger
         bool leftPressed = mouseState.IsButtonPressed(CoreMouseButtons.Left);
@@ -195,7 +241,28 @@ public sealed class CrystalGrowthEffect : EffectBase
 
     private void SpawnCrystal(Vector2 origin)
     {
-        Vector4 crystalColor = GetCrystalColor();
+        // Calculate rotation speed for this crystal
+        float crystalRotationSpeed = 0f;
+        if (_rotationEnabled)
+        {
+            if (_rotationRandomSpeed)
+            {
+                crystalRotationSpeed = _rotationMinSpeed + Random.Shared.NextSingle() * (_rotationMaxSpeed - _rotationMinSpeed);
+            }
+            else
+            {
+                crystalRotationSpeed = _rotationSpeed;
+            }
+
+            // Apply direction: 0=Clockwise (negative), 1=Counter-Clockwise (positive), 2=Random
+            float direction = _rotationDirection switch
+            {
+                0 => -1f,  // Clockwise
+                1 => 1f,   // Counter-Clockwise
+                _ => Random.Shared.NextSingle() > 0.5f ? 1f : -1f  // Random
+            };
+            crystalRotationSpeed *= direction;
+        }
 
         // Spawn main branches (typically 6 for hexagonal symmetry)
         for (int i = 0; i < _crystalsPerClick; i++)
@@ -206,22 +273,45 @@ public sealed class CrystalGrowthEffect : EffectBase
             // Calculate evenly distributed angles
             float angle = (MathF.PI * 2f / _crystalsPerClick) * i + (Random.Shared.NextSingle() - 0.5f) * 0.2f;
 
-            SpawnBranch(origin, angle, crystalColor, 0);
+            // For rainbow multi-color mode, each main branch gets a different rainbow color
+            Vector4 branchColor;
+            if (_colorPreset == 5 && _rainbowMultiColor)
+            {
+                // Distribute colors across the rainbow for each branch
+                float hueOffset = (float)i / _crystalsPerClick;
+                branchColor = GetRainbowColor((_rainbowHueOffset + hueOffset) % 1f);
+            }
+            else
+            {
+                branchColor = GetCrystalColor();
+            }
+
+            SpawnBranch(origin, angle, branchColor, 0, _rainbowHueOffset + (float)i / _crystalsPerClick, origin, crystalRotationSpeed);
         }
     }
 
-    private void SpawnBranch(Vector2 start, float angle, Vector4 color, int generation)
+    private void SpawnBranch(Vector2 start, float angle, Vector4 color, int generation, float baseHue = 0f, Vector2 crystalOrigin = default, float rotationSpeed = 0f)
     {
         if (generation >= _maxGenerations || _activeBranchCount >= MaxBranches)
             return;
 
-        // Calculate length with variation
+        // Calculate length with variation (use exponential decay to avoid negative lengths)
         float lengthVariation = 0.7f + Random.Shared.NextSingle() * 0.6f;
-        float branchLength = _maxSize * lengthVariation * (1f - generation * 0.3f);
+        float generationScale = MathF.Pow(0.65f, generation); // 1.0, 0.65, 0.42, 0.27, 0.18, 0.12...
+        float branchLength = _maxSize * lengthVariation * generationScale;
 
         // Calculate end position
         Vector2 direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
         Vector2 end = start + direction * branchLength;
+
+        // For multi-color rainbow mode, shift color slightly for each generation
+        Vector4 branchColor = color;
+        if (_colorPreset == 5 && _rainbowMultiColor && generation > 0)
+        {
+            // Each generation shifts the hue slightly for a fading rainbow effect
+            float hueShift = generation * 0.1f;
+            branchColor = GetRainbowColor((baseHue + hueShift) % 1f);
+        }
 
         // Create branch
         ref CrystalBranch branch = ref _branches[_nextBranchIndex];
@@ -231,12 +321,14 @@ public sealed class CrystalGrowthEffect : EffectBase
         branch.Lifetime = _lifetime;
         branch.MaxLifetime = _lifetime;
         branch.Angle = angle;
-        branch.Color = color;
+        branch.Color = branchColor;
         branch.MaxLength = branchLength;
         branch.Generation = generation;
         branch.SparklePhase = Random.Shared.NextSingle() * MathF.PI * 2f;
+        branch.RotationAngle = 0f;
+        branch.CrystalOrigin = crystalOrigin;
+        branch.RotationSpeed = rotationSpeed;
         branch.Padding = 0f;
-        branch.Padding2 = Vector4.Zero;
 
         _nextBranchIndex = (_nextBranchIndex + 1) % MaxBranches;
         _activeBranchCount++;
@@ -252,8 +344,8 @@ public sealed class CrystalGrowthEffect : EffectBase
             float subAngle1 = angle + BranchAngle;
             float subAngle2 = angle - BranchAngle;
 
-            SpawnBranch(subBranchStart, subAngle1, color, generation + 1);
-            SpawnBranch(subBranchStart, subAngle2, color, generation + 1);
+            SpawnBranch(subBranchStart, subAngle1, branchColor, generation + 1, baseHue, crystalOrigin, rotationSpeed);
+            SpawnBranch(subBranchStart, subAngle2, branchColor, generation + 1, baseHue, crystalOrigin, rotationSpeed);
         }
     }
 
@@ -278,6 +370,12 @@ public sealed class CrystalGrowthEffect : EffectBase
                     _branches[i].Lifetime -= deltaTime;
                 }
 
+                // Update rotation angle
+                if (_branches[i].RotationSpeed != 0f)
+                {
+                    _branches[i].RotationAngle += _branches[i].RotationSpeed * deltaTime;
+                }
+
                 if (_branches[i].Lifetime > 0)
                     _activeBranchCount++;
             }
@@ -293,8 +391,42 @@ public sealed class CrystalGrowthEffect : EffectBase
             2 => new Vector4(0.31f, 0.78f, 0.47f, 1f),  // Emerald
             3 => new Vector4(0.9f, 0.95f, 1f, 1f),      // Diamond (near white with blue tint)
             4 => _customColor,                          // Custom
+            5 => GetRainbowColor(_rainbowHueOffset),    // Rainbow (single color per crystal)
             _ => new Vector4(0.53f, 0.81f, 0.92f, 1f)
         };
+    }
+
+    private Vector4 GetRainbowColor(float hue)
+    {
+        // HSV to RGB conversion (S=1, V=1 for vibrant colors)
+        float h = hue * 6f;
+        int i = (int)MathF.Floor(h);
+        float f = h - i;
+        float q = 1f - f;
+        float t = f;
+
+        Vector3 rgb = (i % 6) switch
+        {
+            0 => new Vector3(1f, t, 0f),
+            1 => new Vector3(q, 1f, 0f),
+            2 => new Vector3(0f, 1f, t),
+            3 => new Vector3(0f, q, 1f),
+            4 => new Vector3(t, 0f, 1f),
+            _ => new Vector3(1f, 0f, q)
+        };
+
+        return new Vector4(rgb.X, rgb.Y, rgb.Z, 1f);
+    }
+
+    private static Vector2 RotatePoint(Vector2 point, Vector2 origin, float angle)
+    {
+        float cos = MathF.Cos(angle);
+        float sin = MathF.Sin(angle);
+        Vector2 translated = point - origin;
+        return new Vector2(
+            translated.X * cos - translated.Y * sin + origin.X,
+            translated.X * sin + translated.Y * cos + origin.Y
+        );
     }
 
     protected override void OnRender(IRenderContext context)
@@ -303,13 +435,22 @@ public sealed class CrystalGrowthEffect : EffectBase
 
         float currentTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
 
-        // Build GPU branch buffer
+        // Build GPU branch buffer with rotation applied
         int gpuIndex = 0;
         for (int i = 0; i < MaxBranches && gpuIndex < MaxBranches; i++)
         {
             if (_branches[i].Lifetime > 0)
             {
-                _gpuBranches[gpuIndex++] = _branches[i];
+                var branch = _branches[i];
+
+                // Apply rotation if enabled
+                if (branch.RotationAngle != 0f)
+                {
+                    branch.Start = RotatePoint(branch.Start, branch.CrystalOrigin, branch.RotationAngle);
+                    branch.End = RotatePoint(branch.End, branch.CrystalOrigin, branch.RotationAngle);
+                }
+
+                _gpuBranches[gpuIndex++] = branch;
             }
         }
 

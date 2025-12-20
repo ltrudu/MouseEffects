@@ -25,24 +25,28 @@ public sealed class FirefliesFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // General settings (ff_ prefix for fireflies)
-        config.Set("ff_fireflyCount", 15);
-        config.Set("ff_glowSize", 20f);
+        config.Set("ff_fireflyCount", 49);
+        config.Set("ff_glowSize", 15f);
         config.Set("ff_glowColor", new Vector4(0.8f, 1.0f, 0.3f, 1f)); // Warm yellow-green
 
         // Pulse settings
         config.Set("ff_pulseSpeed", 3.0f);
         config.Set("ff_pulseRandomness", 0.5f);
         config.Set("ff_minBrightness", 0.2f);
-        config.Set("ff_maxBrightness", 1.0f);
+        config.Set("ff_maxBrightness", 0.6f);
 
         // Movement settings
-        config.Set("ff_attractionStrength", 0.5f);
+        config.Set("ff_attractionStrength", 1.1f);
         config.Set("ff_wanderStrength", 30f);
-        config.Set("ff_maxSpeed", 100f);
+        config.Set("ff_maxSpeed", 140f);
         config.Set("ff_wanderChangeRate", 2.0f);
 
         // HDR settings
         config.Set("ff_hdrMultiplier", 1.5f);
+
+        // Explosion settings
+        config.Set("ff_explosionEnabled", true);
+        config.Set("ff_explosionStrength", 1500f);
 
         return config;
     }
@@ -60,8 +64,8 @@ public sealed class FirefliesFactory : IEffectFactory
                     DisplayName = "Firefly Count",
                     Description = "Number of fireflies to display",
                     MinValue = 5,
-                    MaxValue = 50,
-                    DefaultValue = 15
+                    MaxValue = 500,
+                    DefaultValue = 49
                 },
                 new FloatParameter
                 {
@@ -70,7 +74,7 @@ public sealed class FirefliesFactory : IEffectFactory
                     Description = "Size of the firefly glow in pixels",
                     MinValue = 10f,
                     MaxValue = 40f,
-                    DefaultValue = 20f,
+                    DefaultValue = 15f,
                     Step = 1f
                 },
                 new ColorParameter
@@ -120,7 +124,7 @@ public sealed class FirefliesFactory : IEffectFactory
                     Description = "Maximum brightness when pulsing on",
                     MinValue = 0.5f,
                     MaxValue = 2f,
-                    DefaultValue = 1.0f,
+                    DefaultValue = 0.6f,
                     Step = 0.1f
                 },
 
@@ -132,7 +136,7 @@ public sealed class FirefliesFactory : IEffectFactory
                     Description = "How strongly fireflies are attracted to the cursor",
                     MinValue = 0f,
                     MaxValue = 2f,
-                    DefaultValue = 0.5f,
+                    DefaultValue = 1.1f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -152,7 +156,7 @@ public sealed class FirefliesFactory : IEffectFactory
                     Description = "Maximum movement speed of fireflies",
                     MinValue = 20f,
                     MaxValue = 200f,
-                    DefaultValue = 100f,
+                    DefaultValue = 140f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -176,6 +180,25 @@ public sealed class FirefliesFactory : IEffectFactory
                     MaxValue = 3f,
                     DefaultValue = 1.5f,
                     Step = 0.1f
+                },
+
+                // Explosion
+                new BoolParameter
+                {
+                    Key = "ff_explosionEnabled",
+                    DisplayName = "Explosion on Click",
+                    Description = "Explode fireflies outward when clicking",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "ff_explosionStrength",
+                    DisplayName = "Explosion Strength",
+                    Description = "How strongly fireflies are pushed when exploding",
+                    MinValue = 100f,
+                    MaxValue = 2000f,
+                    DefaultValue = 1500f,
+                    Step = 50f
                 }
             ]
         };

@@ -29,6 +29,18 @@ public partial class PixelExplosionSettingsControl : System.Windows.Controls.Use
         if (_effect.Configuration.TryGet("spawnOnRightClick", out bool rightClick))
             SpawnOnRightClickCheckBox.IsChecked = rightClick;
 
+        if (_effect.Configuration.TryGet("spawnOnMouseMove", out bool mouseMove))
+        {
+            SpawnOnMouseMoveCheckBox.IsChecked = mouseMove;
+            UpdateMouseThresholdVisibility(mouseMove);
+        }
+
+        if (_effect.Configuration.TryGet("mouseThreshold", out float threshold))
+        {
+            MouseThresholdSlider.Value = threshold;
+            MouseThresholdValue.Text = threshold.ToString("F0");
+        }
+
         // Explosion settings
         if (_effect.Configuration.TryGet("pixelCountMin", out int minCount))
         {
@@ -78,6 +90,14 @@ public partial class PixelExplosionSettingsControl : System.Windows.Controls.Use
         if (_effect.Configuration.TryGet("colorPalette", out int palette))
         {
             ColorPaletteCombo.SelectedIndex = palette;
+            UpdateRainbowSpeedVisibility(palette);
+        }
+
+        // Rainbow speed
+        if (_effect.Configuration.TryGet("rainbowSpeed", out float rainbowSpeed))
+        {
+            RainbowSpeedSlider.Value = rainbowSpeed;
+            RainbowSpeedValue.Text = rainbowSpeed.ToString("F1");
         }
 
         // Performance settings
@@ -97,6 +117,8 @@ public partial class PixelExplosionSettingsControl : System.Windows.Controls.Use
         // Trigger settings
         config.Set("spawnOnLeftClick", SpawnOnLeftClickCheckBox.IsChecked ?? true);
         config.Set("spawnOnRightClick", SpawnOnRightClickCheckBox.IsChecked ?? false);
+        config.Set("spawnOnMouseMove", SpawnOnMouseMoveCheckBox.IsChecked ?? false);
+        config.Set("mouseThreshold", (float)MouseThresholdSlider.Value);
 
         // Explosion settings
         config.Set("pixelCountMin", (int)PixelCountMinSlider.Value);
@@ -114,6 +136,9 @@ public partial class PixelExplosionSettingsControl : System.Windows.Controls.Use
         // Color palette
         config.Set("colorPalette", ColorPaletteCombo.SelectedIndex);
 
+        // Rainbow speed
+        config.Set("rainbowSpeed", (float)RainbowSpeedSlider.Value);
+
         // Performance settings
         config.Set("maxPixels", (int)MaxPixelsSlider.Value);
 
@@ -128,6 +153,27 @@ public partial class PixelExplosionSettingsControl : System.Windows.Controls.Use
 
     private void SpawnOnRightClickCheckBox_Changed(object sender, RoutedEventArgs e)
     {
+        UpdateConfiguration();
+    }
+
+    private void SpawnOnMouseMoveCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateMouseThresholdVisibility(SpawnOnMouseMoveCheckBox.IsChecked ?? false);
+        UpdateConfiguration();
+    }
+
+    private void UpdateMouseThresholdVisibility(bool visible)
+    {
+        if (MouseThresholdPanel != null)
+        {
+            MouseThresholdPanel.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void MouseThresholdSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MouseThresholdValue != null)
+            MouseThresholdValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
     }
 
@@ -182,6 +228,23 @@ public partial class PixelExplosionSettingsControl : System.Windows.Controls.Use
 
     private void ColorPaletteCombo_Changed(object sender, SelectionChangedEventArgs e)
     {
+        UpdateRainbowSpeedVisibility(ColorPaletteCombo.SelectedIndex);
+        UpdateConfiguration();
+    }
+
+    private void UpdateRainbowSpeedVisibility(int paletteIndex)
+    {
+        if (RainbowSpeedPanel != null)
+        {
+            // Index 5 = Animated Rainbow
+            RainbowSpeedPanel.Visibility = paletteIndex == 5 ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void RainbowSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RainbowSpeedValue != null)
+            RainbowSpeedValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
     }
 

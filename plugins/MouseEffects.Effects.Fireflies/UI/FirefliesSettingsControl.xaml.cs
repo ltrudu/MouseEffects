@@ -85,12 +85,25 @@ public partial class FirefliesSettingsControl : UserControl
             WanderChangeRateValue.Text = wanderRate.ToString("F1");
         }
 
-        // Visual settings
-        if (_effect.Configuration.TryGet("ff_hdrMultiplier", out float hdr))
+        // Explosion settings
+        if (_effect.Configuration.TryGet("ff_explosionEnabled", out bool explosionEnabled))
         {
-            HdrMultiplierSlider.Value = hdr;
-            HdrMultiplierValue.Text = hdr.ToString("F1");
+            ExplosionEnabledCheckBox.IsChecked = explosionEnabled;
+            UpdateExplosionVisibility();
         }
+
+        if (_effect.Configuration.TryGet("ff_explosionStrength", out float explosionStrength))
+        {
+            ExplosionStrengthSlider.Value = explosionStrength;
+            ExplosionStrengthValue.Text = explosionStrength.ToString("F0");
+        }
+    }
+
+    private void UpdateExplosionVisibility()
+    {
+        if (ExplosionSettingsPanel == null) return;
+        ExplosionSettingsPanel.Visibility = ExplosionEnabledCheckBox.IsChecked == true
+            ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateConfiguration()
@@ -115,8 +128,9 @@ public partial class FirefliesSettingsControl : UserControl
         config.Set("ff_maxSpeed", (float)MaxSpeedSlider.Value);
         config.Set("ff_wanderChangeRate", (float)WanderChangeRateSlider.Value);
 
-        // Visual settings
-        config.Set("ff_hdrMultiplier", (float)HdrMultiplierSlider.Value);
+        // Explosion settings
+        config.Set("ff_explosionEnabled", ExplosionEnabledCheckBox.IsChecked == true);
+        config.Set("ff_explosionStrength", (float)ExplosionStrengthSlider.Value);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
@@ -192,10 +206,16 @@ public partial class FirefliesSettingsControl : UserControl
         UpdateConfiguration();
     }
 
-    private void HdrMultiplierSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private void ExplosionEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
     {
-        if (HdrMultiplierValue != null)
-            HdrMultiplierValue.Text = e.NewValue.ToString("F1");
+        UpdateExplosionVisibility();
+        UpdateConfiguration();
+    }
+
+    private void ExplosionStrengthSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ExplosionStrengthValue != null)
+            ExplosionStrengthValue.Text = e.NewValue.ToString("F0");
         UpdateConfiguration();
     }
 }
