@@ -44,7 +44,8 @@ public sealed class FireTrailEffect : EffectBase
         public float FireStyle;           // 4 bytes - 0=Campfire, 1=Torch, 2=Inferno
         public float ColorSaturation;     // 4 bytes
         public float FlickerSpeed;        // 4 bytes = 64
-        public Vector4 Padding;           // 16 bytes = 80
+        public int ParticleCount;         // 4 bytes - Active particle count
+        public Vector3 Padding;           // 12 bytes = 80
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 64)]
@@ -102,8 +103,6 @@ public sealed class FireTrailEffect : EffectBase
     private float _particleLifetime = 1.5f;
     private float _minSpeed = 20f;
     private float _maxSpeed = 60f;
-    private bool _hdrEnabled = true;
-    private float _hdrBrightness = 2.0f;
 
     // Public properties for UI binding
     public bool Enabled { get => _enabled; set => _enabled = value; }
@@ -120,8 +119,6 @@ public sealed class FireTrailEffect : EffectBase
     public float ParticleLifetime { get => _particleLifetime; set => _particleLifetime = Math.Clamp(value, 0.5f, 3f); }
     public float MinSpeed { get => _minSpeed; set => _minSpeed = Math.Clamp(value, 10f, 100f); }
     public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = Math.Clamp(value, 20f, 150f); }
-    public bool HdrEnabled { get => _hdrEnabled; set => _hdrEnabled = value; }
-    public float HdrBrightness { get => _hdrBrightness; set => _hdrBrightness = Math.Clamp(value, 1f, 5f); }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -138,12 +135,13 @@ public sealed class FireTrailEffect : EffectBase
             Dynamic = true
         });
 
-        // Create particle buffer
+        // Create particle buffer (structured buffer for shader access)
         _particleBuffer = context.CreateBuffer(new BufferDescription
         {
             Size = Marshal.SizeOf<FireParticle>() * MaxParticles,
-            Type = BufferType.Vertex,
-            Dynamic = true
+            Type = BufferType.Structured,
+            Dynamic = true,
+            StructureStride = Marshal.SizeOf<FireParticle>()
         });
 
         // Initialize particles array
@@ -197,10 +195,6 @@ public sealed class FireTrailEffect : EffectBase
             _minSpeed = minSpeed;
         if (Configuration.TryGet("ft_maxSpeed", out float maxSpeed))
             _maxSpeed = maxSpeed;
-        if (Configuration.TryGet("ft_hdrEnabled", out bool hdrEnabled))
-            _hdrEnabled = hdrEnabled;
-        if (Configuration.TryGet("ft_hdrBrightness", out float hdrBrightness))
-            _hdrBrightness = hdrBrightness;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -376,6 +370,16 @@ public sealed class FireTrailEffect : EffectBase
         if (!_enabled || _constantBuffer == null || _particleBuffer == null) return;
         if (_activeParticleCount == 0) return;
 
+        // Copy particles to GPU array (only active particles)
+        int gpuIndex = 0;
+        for (int i = 0; i < MaxParticles && gpuIndex < _activeParticleCount; i++)
+        {
+            if (_particles[i].Lifetime > 0)
+            {
+                _gpuParticles[gpuIndex++] = _particles[i];
+            }
+        }
+
         // Update constant buffer
         var constants = new FireConstants
         {
@@ -389,27 +393,21 @@ public sealed class FireTrailEffect : EffectBase
             SmokeAmount = _smokeAmount,
             EmberAmount = _emberAmount,
             GlowIntensity = _glowIntensity,
-            HdrMultiplier = _hdrEnabled ? _hdrBrightness : 1.0f,
+            HdrMultiplier = context.HdrPeakBrightness,
             FireStyle = _fireStyle,
             ColorSaturation = _colorSaturation,
             FlickerSpeed = _flickerSpeed,
-            Padding = Vector4.Zero
+            ParticleCount = gpuIndex,
+            Padding = Vector3.Zero
         };
 
         context.UpdateBuffer(_constantBuffer, constants);
 
-        // Copy particles to GPU array (only active particles)
-        int gpuIndex = 0;
-        for (int i = 0; i < MaxParticles && gpuIndex < _activeParticleCount; i++)
-        {
-            if (_particles[i].Lifetime > 0)
-            {
-                _gpuParticles[gpuIndex++] = _particles[i];
-            }
-        }
-
         // Update particle buffer
-        context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<FireParticle>)_gpuParticles.AsSpan(0, _activeParticleCount));
+        if (gpuIndex > 0)
+        {
+            context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<FireParticle>)_gpuParticles.AsSpan(0, gpuIndex));
+        }
 
         // Set shaders
         context.SetVertexShader(_vertexShader!);
@@ -418,13 +416,12 @@ public sealed class FireTrailEffect : EffectBase
         // Set resources
         context.SetConstantBuffer(ShaderStage.Vertex, 0, _constantBuffer);
         context.SetConstantBuffer(ShaderStage.Pixel, 0, _constantBuffer);
-        context.SetVertexBuffer(_particleBuffer, Marshal.SizeOf<FireParticle>());
+        context.SetShaderResource(ShaderStage.Pixel, 0, _particleBuffer!);
 
-        // Draw particles with additive blending
+        // Draw fullscreen quad with additive blending
         context.SetBlendState(BlendMode.Additive);
-        context.SetPrimitiveTopology(PrimitiveTopology.PointList);
-        context.Draw(_activeParticleCount, 0);
-
+        context.SetPrimitiveTopology(PrimitiveTopology.TriangleStrip);
+        context.Draw(4, 0);
     }
 
     protected override void OnDispose()

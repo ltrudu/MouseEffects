@@ -1,5 +1,5 @@
 // Fire Trail Shader - GPU-accelerated particle rendering with realistic fire effects
-// Features: Temperature-based color gradients, flickering, glow, and HDR support
+// Uses fullscreen quad approach with structured buffer for particles
 
 cbuffer FireConstants : register(b0)
 {
@@ -17,7 +17,8 @@ cbuffer FireConstants : register(b0)
     float FireStyle;          // 0=Campfire, 1=Torch, 2=Inferno
     float ColorSaturation;    // Color vibrancy
     float FlickerSpeed;       // Flicker animation speed
-    float4 Padding;           // Padding to 80 bytes
+    int ParticleCount;        // Active particle count
+    float3 Padding;           // Padding to align
 };
 
 struct FireParticle
@@ -39,35 +40,20 @@ struct VSOutput
 {
     float4 Position : SV_POSITION;
     float2 TexCoord : TEXCOORD0;
-    float4 Color : COLOR0;
-    float Size : TEXCOORD1;
-    float ParticleType : TEXCOORD2;
-    float Temperature : TEXCOORD3;
-    float Brightness : TEXCOORD4;
 };
 
-// Vertex Shader - Converts point particles to screen quads
-VSOutput VSMain(FireParticle input, uint vertexId : SV_VertexID)
+StructuredBuffer<FireParticle> Particles : register(t0);
+
+// Vertex Shader - Fullscreen quad
+VSOutput VSMain(uint vertexId : SV_VertexID)
 {
     VSOutput output;
 
-    // Calculate life factor (0 = dead, 1 = just born)
-    float lifeFactor = saturate(input.Lifetime / input.MaxLifetime);
-
-    // Convert world position to NDC
-    float2 ndcPos = (input.Position / ViewportSize) * 2.0 - 1.0;
-    ndcPos.y = -ndcPos.y; // Flip Y for screen space
-
-    // Expand point to quad (geometry shader emulation)
-    // We'll use point sprites and let pixel shader handle the shape
-    output.Position = float4(ndcPos, 0.0, 1.0);
-    output.TexCoord = float2(0.5, 0.5); // Center of particle
-    output.Color = input.Color;
-    output.Color.a *= lifeFactor; // Fade out over lifetime
-    output.Size = input.Size;
-    output.ParticleType = input.ParticleType;
-    output.Temperature = input.Temperature;
-    output.Brightness = input.Brightness;
+    // Generate fullscreen triangle strip: 0,1,2,3 -> positions
+    float2 uv = float2((vertexId << 1) & 2, vertexId & 2);
+    output.Position = float4(uv * 2.0 - 1.0, 0.0, 1.0);
+    output.Position.y = -output.Position.y; // Flip Y for DirectX
+    output.TexCoord = uv;
 
     return output;
 }
@@ -149,97 +135,111 @@ float3 temperatureToColor(float temp, float saturation)
     return color;
 }
 
-// Pixel Shader - Renders particle with fire effects
+// Pixel Shader - Renders all particles
 float4 PSMain(VSOutput input) : SV_TARGET
 {
-    // Render particles as point sprites
-    // For proper quads, we'd need geometry shader or instancing
-    // Simplified version using screen-space distance
+    float2 pixelPos = input.TexCoord * ViewportSize;
+    float4 finalColor = float4(0, 0, 0, 0);
 
-    float2 pixelPos = input.Position.xy;
-    float2 particleCenter = input.Position.xy;
-    float dist = length(pixelPos - particleCenter);
-
-    // Create soft circular particle
-    float radius = input.Size;
-    float softEdge = 0.5;
-    float alpha = 1.0 - smoothstep(radius - softEdge, radius + softEdge, dist);
-
-    float4 finalColor = input.Color;
-    float particleType = input.ParticleType;
-
-    // Fire particle (type 0)
-    if (particleType < 0.5)
+    // Loop through all active particles
+    for (int i = 0; i < ParticleCount; i++)
     {
-        // Apply temperature-based color
-        float3 fireColor = temperatureToColor(input.Temperature, ColorSaturation);
+        FireParticle particle = Particles[i];
 
-        // Add flickering using noise
-        float flicker = fbm(input.Position * 0.05 + Time * FlickerSpeed);
-        flicker = 0.7 + flicker * 0.3;
+        // Skip dead particles
+        if (particle.Lifetime <= 0)
+            continue;
 
-        // Apply fire style modulation
-        if (FireStyle > 0.5 && FireStyle < 1.5) // Torch
+        // Distance from pixel to particle center
+        float2 toPixel = pixelPos - particle.Position;
+        float dist = length(toPixel);
+
+        // Skip if too far from particle
+        float maxRadius = particle.Size * 2.0;
+        if (dist > maxRadius)
+            continue;
+
+        // Calculate life factor (0 = dead, 1 = just born)
+        float lifeFactor = saturate(particle.Lifetime / particle.MaxLifetime);
+
+        // Create soft circular particle
+        float radius = particle.Size;
+        float softEdge = radius * 0.5;
+        float alpha = 1.0 - smoothstep(radius - softEdge, radius + softEdge, dist);
+
+        float4 particleColor = particle.Color;
+        float particleType = particle.ParticleType;
+
+        // Fire particle (type 0)
+        if (particleType < 0.5)
         {
-            // Torch: more vertical, less turbulent
-            flicker *= 0.9;
-            fireColor *= 1.1;
+            // Apply temperature-based color
+            float3 fireColor = temperatureToColor(particle.Temperature, ColorSaturation);
+
+            // Add flickering using noise
+            float flicker = fbm(particle.Position * 0.05 + Time * FlickerSpeed);
+            flicker = 0.7 + flicker * 0.3;
+
+            // Apply fire style modulation
+            if (FireStyle > 0.5 && FireStyle < 1.5) // Torch
+            {
+                flicker *= 0.9;
+                fireColor *= 1.1;
+            }
+            else if (FireStyle > 1.5) // Inferno
+            {
+                flicker *= 1.3;
+                fireColor *= 1.3;
+                fireColor = saturate(fireColor);
+            }
+
+            particleColor.rgb = fireColor * flicker * particle.Brightness * GlowIntensity;
+
+            // Add core glow (brighter center)
+            float coreFactor = 1.0 - dist / radius;
+            coreFactor = saturate(coreFactor);
+            coreFactor = pow(coreFactor, 2.0);
+            particleColor.rgb += fireColor * coreFactor * 0.5;
+
+            // Apply HDR multiplier to fire
+            particleColor.rgb *= HdrMultiplier;
         }
-        else if (FireStyle > 1.5) // Inferno
+        // Smoke particle (type 1)
+        else if (particleType > 0.5 && particleType < 1.5)
         {
-            // Inferno: intense, bright, chaotic
-            flicker *= 1.3;
-            fireColor *= 1.3;
-            fireColor = saturate(fireColor);
+            // Smoke is darker, less saturated
+            float3 smokeColor = float3(0.2, 0.2, 0.25);
+
+            // Add turbulence to smoke
+            float smokeTurb = fbm(particle.Position * 0.03 + Time * 2.0);
+            smokeColor *= 0.5 + smokeTurb * 0.5;
+
+            particleColor.rgb = smokeColor * particle.Brightness;
+            alpha *= 0.5; // Smoke is more transparent
+        }
+        // Ember particle (type 2)
+        else
+        {
+            // Embers are small, bright, orange-red
+            float3 emberColor = float3(1.0, 0.4, 0.1);
+
+            // Embers flicker rapidly
+            float emberFlicker = noise(particle.Position * 0.1 + Time * 20.0);
+            emberFlicker = 0.5 + emberFlicker * 0.5;
+
+            particleColor.rgb = emberColor * emberFlicker * particle.Brightness * 2.0;
+
+            // Make embers really bright for HDR
+            particleColor.rgb *= HdrMultiplier;
         }
 
-        finalColor.rgb = fireColor * flicker * input.Brightness * GlowIntensity;
+        // Apply alpha with life factor fade
+        float finalAlpha = alpha * lifeFactor * particle.Color.a;
 
-        // Add core glow (brighter center)
-        float coreFactor = 1.0 - dist / radius;
-        coreFactor = pow(coreFactor, 2.0);
-        finalColor.rgb += fireColor * coreFactor * 0.5;
+        // Additive blend
+        finalColor.rgb += particleColor.rgb * finalAlpha;
+        finalColor.a = saturate(finalColor.a + finalAlpha * 0.5);
     }
-    // Smoke particle (type 1)
-    else if (particleType > 0.5 && particleType < 1.5)
-    {
-        // Smoke is darker, less saturated
-        float3 smokeColor = float3(0.2, 0.2, 0.25);
-
-        // Add turbulence to smoke
-        float smokeTurb = fbm(input.Position * 0.03 + Time * 2.0);
-        smokeColor *= 0.5 + smokeTurb * 0.5;
-
-        finalColor.rgb = smokeColor * input.Brightness;
-        finalColor.a *= 0.5; // Smoke is more transparent
-    }
-    // Ember particle (type 2)
-    else
-    {
-        // Embers are small, bright, orange-red
-        float3 emberColor = float3(1.0, 0.4, 0.1);
-
-        // Embers flicker rapidly
-        float emberFlicker = noise(input.Position * 0.1 + Time * 20.0);
-        emberFlicker = 0.5 + emberFlicker * 0.5;
-
-        finalColor.rgb = emberColor * emberFlicker * input.Brightness * 2.0;
-
-        // Make embers really bright for HDR
-        finalColor.rgb *= HdrMultiplier;
-    }
-
-    // Apply alpha
-    finalColor.a *= alpha * input.Color.a;
-
-    // Apply HDR multiplier to fire
-    if (particleType < 0.5)
-    {
-        finalColor.rgb *= HdrMultiplier;
-    }
-
-    // Clamp alpha to prevent over-blending
-    finalColor.a = saturate(finalColor.a);
 
     return finalColor;
 }

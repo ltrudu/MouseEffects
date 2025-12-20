@@ -60,11 +60,6 @@ public partial class FireTrailSettingsControl : System.Windows.Controls.UserCont
             SmokeValue.Text = _effect.SmokeAmount.ToString("F2");
             EmberSlider.Value = _effect.EmberAmount;
             EmberValue.Text = _effect.EmberAmount.ToString("F2");
-
-            // HDR
-            HdrEnabledCheckBox.IsChecked = _effect.HdrEnabled;
-            HdrBrightnessSlider.Value = _effect.HdrBrightness;
-            HdrBrightnessValue.Text = _effect.HdrBrightness.ToString("F1");
         }
         finally
         {
@@ -157,20 +152,5 @@ public partial class FireTrailSettingsControl : System.Windows.Controls.UserCont
         _effect.EmberAmount = (float)EmberSlider.Value;
         EmberValue.Text = _effect.EmberAmount.ToString("F2");
         _effect.Configuration.Set("ft_emberAmount", _effect.EmberAmount);
-    }
-
-    private void HdrEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.HdrEnabled = HdrEnabledCheckBox.IsChecked ?? false;
-        _effect.Configuration.Set("ft_hdrEnabled", _effect.HdrEnabled);
-    }
-
-    private void HdrBrightnessSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (_effect == null || _isLoading) return;
-        _effect.HdrBrightness = (float)HdrBrightnessSlider.Value;
-        HdrBrightnessValue.Text = _effect.HdrBrightness.ToString("F1");
-        _effect.Configuration.Set("ft_hdrBrightness", _effect.HdrBrightness);
     }
 }

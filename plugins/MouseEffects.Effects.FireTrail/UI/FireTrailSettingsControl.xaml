@@ -164,23 +164,6 @@
             <Slider x:Name="EmberSlider" Minimum="0" Maximum="1" Value="0.2" TickFrequency="0.05"
                     ValueChanged="EmberSlider_Changed"/>
 
-            <!-- HDR Settings -->
-            <TextBlock Text="HDR Settings" Style="{StaticResource SectionStyle}"/>
-
-            <CheckBox x:Name="HdrEnabledCheckBox" Content="Enable HDR"
-                      IsChecked="True" Checked="HdrEnabledCheckBox_Changed" Unchecked="HdrEnabledCheckBox_Changed"/>
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="HDR Brightness" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
-                <TextBlock x:Name="HdrBrightnessValue" Text="2.0" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
-            </Grid>
-            <Slider x:Name="HdrBrightnessSlider" Minimum="1" Maximum="5" Value="2.0" TickFrequency="0.1"
-                    ValueChanged="HdrBrightnessSlider_Changed"/>
-
         </StackPanel>
     </StackPanel>
 </UserControl>
