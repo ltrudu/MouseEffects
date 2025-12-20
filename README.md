@@ -24,20 +24,85 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 
 ## Built-in Effects
 
+MouseEffects includes **43 stunning visual effects** organized into categories:
+
+### 🌟 Particle Effects
+
 | Effect | Description |
 |--------|-------------|
-| **Particle Trail** | Colorful particles that follow your cursor with physics simulation |
-| **Laser Work** | Directional lasers shooting from cursor with collision detection |
-| **Screen Distortion** | Real-time lens/ripple distortion effect |
-| **Color Blindness** | CVD simulation & correction with 17 filter types (Machado/Strict algorithms), zone layouts, and comparison view |
-| **Color Blindness NG** | Next-gen CVD plugin with per-zone configuration, 4 correction algorithms (LUT, Daltonization, Hue Rotation, CIELAB), custom presets, interactive visual controls (gradient editor, color spectrum preview, blend mode swatches, CIELAB axis control), Circle/Rectangle cursor-following modes, Simulation-Guided Correction, and Re-simulation mode |
-| **Radial Dithering** | Bayer-pattern dithering effect around cursor |
+| **Bubbles** | Floating soap bubbles with rainbow iridescence and optional screen refraction |
+| **Cherry Blossoms** | Beautiful sakura petals floating gently with realistic tumbling motion |
+| **Confetti** | Colorful confetti particles bursting from clicks or trailing the cursor |
+| **Dandelion Seeds** | Delicate dandelion seeds floating on the breeze with wispy filaments |
+| **Falling Leaves** | Autumn leaves drifting down with natural tumbling and color variations |
+| **Fireflies** | Magical glowing fireflies that pulse and drift around the cursor |
+| **Hearts** | Floating heart particles perfect for romantic or Valentine themes |
+| **Particle Trail** | Colorful particles following your cursor with physics simulation |
+| **Pixie Dust** | Sparkling magical dust particles with glitter trail effects |
+| **Smoke** | Realistic smoke wisps rising and dissipating from the cursor |
+| **Snowfall** | Gentle snowflakes drifting down with wind effects |
+
+### 🔥 Fire & Energy
+
+| Effect | Description |
+|--------|-------------|
+| **Aurora** | Northern lights effect with flowing colorful ribbons |
+| **Fire Trail** | Realistic fire and flames trailing behind the cursor with smoke and embers |
+| **Laser Work** | Directional lasers shooting from cursor with collision explosions |
+| **Lightning Storm** | Electric lightning bolts crackling around the cursor |
+| **Neon Glow** | Vibrant neon glow effect following cursor movement |
+| **Shockwave** | Expanding shockwave rings emanating from clicks |
+| **Tesla** | Electric arcs and tesla coil effects around the cursor |
+
+### 🌌 Space & Cosmic
+
+| Effect | Description |
+|--------|-------------|
+| **Black Hole** | Gravitational distortion effect pulling in nearby particles |
+| **Gravity Well** | Particles orbiting and being attracted to the cursor |
+| **Nebula** | Cosmic nebula clouds with swirling colors and stars |
+| **Portal** | Swirling interdimensional portal effect at cursor position |
+| **Starfield Warp** | Hyperspace starfield warping toward or away from cursor |
+
+### 🎨 Visual Filters (Screen Capture)
+
+| Effect | Description |
+|--------|-------------|
+| **ASCIIZer** | Renders screen as ASCII art with 6 modes: Classic, Matrix Rain, Dot Matrix, Typewriter, Braille, and Edge ASCII. Includes CRT effects |
+| **Color Blindness** | CVD simulation & correction with 17 filter types using Machado/Strict algorithms |
+| **Color Blindness NG** | Next-gen CVD plugin with LUT correction, custom presets, and interactive controls |
+| **Glitch** | Digital glitch and distortion effects on screen content |
+| **Hologram** | Holographic display effect with scan lines and chromatic aberration |
+| **Kaleidoscope** | Kaleidoscopic mirror effect centered on cursor |
+| **Radial Dithering** | Bayer-pattern dithering effect radiating from cursor |
+| **Retro** | Retro gaming filters: CRT scanlines, LCD grid, VHS, Gameboy, and more |
+| **Screen Distortion** | Real-time lens, ripple, and wave distortion effects |
 | **Tile Vibration** | Vibrating tiles that capture and display screen content |
-| **Water Ripple** | Expanding water ripples on click with realistic wave interference |
-| **Zoom** | Magnifying lens effect with circle or rectangle shape and hotkey support |
-| **Firework** | Stunning firework explosions with rockets, trails, and secondary explosions |
-| **Space Invaders** | Defend against neon invaders with rockets - includes scoring and leaderboard |
-| **ASCIIZer** | Renders screen as ASCII art with 6 filter modes: ASCII Art Classic (luminance-to-character mapping), Matrix Rain (falling green characters), Dot Matrix (LED display simulation), Typewriter (mechanical typewriter with ink variations and wear effects), Braille (Unicode patterns with 2x4 dot grids), and Edge ASCII (Sobel edge detection with directional characters). Includes post-processing effects: scanlines, CRT curvature, vignette, chromatic aberration, noise, flicker, and phosphor glow. Supports fullscreen, circle, and rectangle cursor-following layouts | 
+| **Water Ripple** | Expanding water ripples on click with realistic wave physics |
+| **Zoom** | Magnifying lens effect with circle or rectangle shape |
+
+### ✨ Artistic & Geometric
+
+| Effect | Description |
+|--------|-------------|
+| **Circuit** | Electronic circuit board patterns growing from cursor |
+| **Crystal Growth** | Crystalline structures growing and branching outward |
+| **DNA Helix** | Rotating DNA double helix structure following the cursor |
+| **Flower Bloom** | Flowers blooming and petals unfurling at cursor position |
+| **Ink Blot** | Ink splatter and watercolor bleeding effects |
+| **Paint Splatter** | Colorful paint splashes and drips from cursor movement |
+| **Pixel Explosion** | Retro pixel-style explosions bursting from clicks |
+| **Runes** | Ancient mystical runes appearing and fading around cursor |
+| **Sacred Geometries** | Sacred geometry patterns: Flower of Life, Metatron's Cube, Sri Yantra |
+| **Spirograph** | Mathematical spirograph patterns drawn by cursor movement |
+| **Spotlight** | Dramatic spotlight effect illuminating area around cursor |
+
+### 🎮 Interactive & Games
+
+| Effect | Description |
+|--------|-------------|
+| **Firework** | Stunning firework explosions with rockets, trails, and secondary bursts |
+| **Space Invaders** | Defend against neon invaders with rockets - includes scoring and leaderboard | 
 
 ## Screenshots
 
@@ -121,19 +186,50 @@ MouseEffects/
 │   ├── MouseEffects.Overlay/     # Overlay window management
 │   ├── MouseEffects.Plugins/     # Plugin loading system
 │   └── MouseEffects.App/         # Main application
-├── plugins/                      # Built-in effect plugins
-│   ├── MouseEffects.Effects.ParticleTrail/
-│   ├── MouseEffects.Effects.LaserWork/
-│   ├── MouseEffects.Effects.ScreenDistortion/
+├── plugins/                      # 43 built-in effect plugins
+│   ├── MouseEffects.Effects.ASCIIZer/
+│   ├── MouseEffects.Effects.Aurora/
+│   ├── MouseEffects.Effects.BlackHole/
+│   ├── MouseEffects.Effects.Bubbles/
+│   ├── MouseEffects.Effects.CherryBlossoms/
+│   ├── MouseEffects.Effects.Circuit/
 │   ├── MouseEffects.Effects.ColorBlindness/
 │   ├── MouseEffects.Effects.ColorBlindnessNG/
+│   ├── MouseEffects.Effects.Confetti/
+│   ├── MouseEffects.Effects.CrystalGrowth/
+│   ├── MouseEffects.Effects.DandelionSeeds/
+│   ├── MouseEffects.Effects.DNAHelix/
+│   ├── MouseEffects.Effects.FallingLeaves/
+│   ├── MouseEffects.Effects.Fireflies/
+│   ├── MouseEffects.Effects.FireTrail/
+│   ├── MouseEffects.Effects.Firework/
+│   ├── MouseEffects.Effects.Glitch/
+│   ├── MouseEffects.Effects.GravityWell/
+│   ├── MouseEffects.Effects.Hearts/
+│   ├── MouseEffects.Effects.Hologram/
+│   ├── MouseEffects.Effects.InkBlot/
+│   ├── MouseEffects.Effects.Invaders/
+│   ├── MouseEffects.Effects.Kaleidoscope/
+│   ├── MouseEffects.Effects.LaserWork/
+│   ├── MouseEffects.Effects.LightningStorm/
+│   ├── MouseEffects.Effects.Nebula/
+│   ├── MouseEffects.Effects.ParticleTrail/
+│   ├── MouseEffects.Effects.PixelExplosion/
+│   ├── MouseEffects.Effects.PixieDust/
+│   ├── MouseEffects.Effects.Portal/
 │   ├── MouseEffects.Effects.RadialDithering/
+│   ├── MouseEffects.Effects.Retro/
+│   ├── MouseEffects.Effects.SacredGeometries/
+│   ├── MouseEffects.Effects.Shockwave/
+│   ├── MouseEffects.Effects.Smoke/
+│   ├── MouseEffects.Effects.Snowfall/
+│   ├── MouseEffects.Effects.Spirograph/
+│   ├── MouseEffects.Effects.Spotlight/
+│   ├── MouseEffects.Effects.StarfieldWarp/
+│   ├── MouseEffects.Effects.Tesla/
 │   ├── MouseEffects.Effects.TileVibration/
 │   ├── MouseEffects.Effects.WaterRipple/
-│   ├── MouseEffects.Effects.Zoom/
-│   ├── MouseEffects.Effects.Firework/
-│   ├── MouseEffects.Effects.Invaders/
-│   └── MouseEffects.Effects.ASCIIZer/
+│   └── MouseEffects.Effects.Zoom/
 ├── packaging/                    # MSIX packaging files
 └── Wiki/                         # Documentation
 ```
