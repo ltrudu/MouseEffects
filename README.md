@@ -36,6 +36,7 @@ MouseEffects includes **43 stunning visual effects** organized into categories:
 | **Dandelion Seeds** | Delicate dandelion seeds floating on the breeze with wispy filaments |
 | **Falling Leaves** | Autumn leaves drifting down with natural tumbling and color variations |
 | **Fireflies** | Magical glowing fireflies that pulse and drift around the cursor |
+| **Firework** | Stunning firework explosions with rockets, trails, and secondary bursts |
 | **Hearts** | Floating heart particles perfect for romantic or Valentine themes |
 | **Particle Trail** | Colorful particles following your cursor with physics simulation |
 | **Pixie Dust** | Sparkling magical dust particles with glitter trail effects |
@@ -101,7 +102,6 @@ MouseEffects includes **43 stunning visual effects** organized into categories:
 
 | Effect | Description |
 |--------|-------------|
-| **Firework** | Stunning firework explosions with rockets, trails, and secondary bursts |
 | **Space Invaders** | Defend against neon invaders with rockets - includes scoring and leaderboard | 
 
 ## Screenshots
