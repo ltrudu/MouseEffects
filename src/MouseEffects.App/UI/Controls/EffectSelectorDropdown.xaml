@@ -52,7 +52,8 @@
                PlacementTarget="{Binding ElementName=DropdownToggle}"
                Placement="Bottom"
                AllowsTransparency="True"
-               PopupAnimation="Slide">
+               PopupAnimation="Slide"
+               Opened="DropdownPopup_Opened">
             <Border Background="{DynamicResource SystemControlBackgroundChromeMediumBrush}"
                     BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                     BorderThickness="1"

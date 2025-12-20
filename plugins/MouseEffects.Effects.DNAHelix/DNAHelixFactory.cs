@@ -14,7 +14,7 @@ public class DNAHelixFactory : IEffectFactory
         Description = "Animated double helix DNA structure around the mouse cursor with base pairs and 3D rotation",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Physics
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

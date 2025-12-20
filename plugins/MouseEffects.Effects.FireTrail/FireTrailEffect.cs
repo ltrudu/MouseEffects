@@ -21,7 +21,7 @@ public sealed class FireTrailEffect : EffectBase
         Description = "Creates realistic fire and flames that trail behind the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Trail
+        Category = EffectCategory.FireEnergy
     };
 
     public override EffectMetadata Metadata => _metadata;

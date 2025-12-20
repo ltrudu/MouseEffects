@@ -38,7 +38,7 @@ public sealed class RadialDitheringEffect : EffectBase
         Description = "Creates a Bayer-pattern dithering effect in a circular area around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Screen
+        Category = EffectCategory.VisualFilter
     };
 
     // GPU resources

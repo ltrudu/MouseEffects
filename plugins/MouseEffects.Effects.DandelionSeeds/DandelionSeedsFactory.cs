@@ -12,7 +12,7 @@ public sealed class DandelionSeedsFactory : IEffectFactory
         Description = "Delicate dandelion seeds floating away from the mouse cursor on the wind",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Nature
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

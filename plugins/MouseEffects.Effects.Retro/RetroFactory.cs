@@ -15,7 +15,7 @@ public sealed class RetroFactory : IEffectFactory
         Description = "Retro scaling filters (xSaI, Super Eagle, etc.) for pixel art style effects with CRT post-processing",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Screen
+        Category = EffectCategory.VisualFilter
     };
 
     public EffectMetadata Metadata => _metadata;

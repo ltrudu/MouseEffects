@@ -16,7 +16,7 @@ public sealed class LaserWorkFactory : IEffectFactory
         Description = "Shoots glowing lasers from the mouse pointer that bounce off screen edges",
         Version = new Version(1, 0, 0),
         Author = "MouseEffects",
-        Category = EffectCategory.Light
+        Category = EffectCategory.FireEnergy
     };
 
     public EffectMetadata Metadata => _metadata;

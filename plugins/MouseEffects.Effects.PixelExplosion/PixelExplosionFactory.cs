@@ -13,7 +13,7 @@ public sealed class PixelExplosionFactory : IEffectFactory
         Description = "Retro 8-bit style pixel explosions on clicks with gravity physics",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Particle
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

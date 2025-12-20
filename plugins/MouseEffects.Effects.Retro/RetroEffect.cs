@@ -21,7 +21,7 @@ public sealed class RetroEffect : EffectBase
         Description = "Retro scaling filters for pixel art style effects",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Screen
+        Category = EffectCategory.VisualFilter
     };
 
     // GPU resources - shared

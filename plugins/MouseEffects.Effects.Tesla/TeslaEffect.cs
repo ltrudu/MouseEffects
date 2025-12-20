@@ -20,7 +20,7 @@ public sealed class TeslaEffect : EffectBase
         Description = "Creates electrical lightning bolt effects around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Other
+        Category = EffectCategory.FireEnergy
     };
 
     public override EffectMetadata Metadata => _metadata;

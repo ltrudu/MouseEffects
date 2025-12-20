@@ -15,7 +15,7 @@ public sealed class FireTrailFactory : IEffectFactory
         Description = "Creates realistic fire and flames that trail behind the mouse cursor with particle effects",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Trail
+        Category = EffectCategory.FireEnergy
     };
 
     public EffectMetadata Metadata => _metadata;

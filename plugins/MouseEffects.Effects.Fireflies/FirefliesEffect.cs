@@ -18,7 +18,7 @@ public sealed class FirefliesEffect : EffectBase
         Description = "Glowing fireflies that swarm around the mouse cursor with pulsing bioluminescence",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Nature
+        Category = EffectCategory.Particle
     };
 
     public override EffectMetadata Metadata => _metadata;

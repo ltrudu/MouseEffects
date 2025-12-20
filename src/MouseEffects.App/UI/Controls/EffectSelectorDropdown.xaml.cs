@@ -85,15 +85,11 @@ public partial class EffectSelectorDropdown : System.Windows.Controls.UserContro
         return category switch
         {
             EffectCategory.Particle => "Particle Effects",
-            EffectCategory.Cosmic => "Cosmic & Space",
-            EffectCategory.Nature => "Nature",
-            EffectCategory.Trail => "Trails",
-            EffectCategory.Digital => "Digital & Tech",
-            EffectCategory.Artistic => "Artistic",
-            EffectCategory.Physics => "Physics",
-            EffectCategory.Light => "Light & Glow",
-            EffectCategory.Screen => "Screen Effects",
-            EffectCategory.Other => "Other",
+            EffectCategory.FireEnergy => "Fire & Energy",
+            EffectCategory.Cosmic => "Space & Cosmic",
+            EffectCategory.VisualFilter => "Visual Filters",
+            EffectCategory.Artistic => "Artistic & Geometric",
+            EffectCategory.Interactive => "Interactive & Games",
             _ => category.ToString()
         };
     }
@@ -237,6 +233,37 @@ public partial class EffectSelectorDropdown : System.Windows.Controls.UserContro
         {
             scrollViewer.ScrollToVerticalOffset(scrollViewer.VerticalOffset - e.Delta / 3.0);
             e.Handled = true;
+        }
+    }
+
+    private void DropdownPopup_Opened(object? sender, EventArgs e)
+    {
+        // Scroll to the selected effect when the dropdown opens
+        if (string.IsNullOrEmpty(_selectedEffectId))
+        {
+            // "None" is selected, scroll to top
+            DropdownScrollViewer.ScrollToTop();
+            return;
+        }
+
+        // Find the selected effect TreeViewItem and scroll it into view
+        foreach (var categoryItem in EffectTreeView.Items.OfType<TreeViewItem>())
+        {
+            foreach (var effectItem in categoryItem.Items.OfType<TreeViewItem>())
+            {
+                if (effectItem.Tag is string id && id == _selectedEffectId)
+                {
+                    // Ensure the category is expanded
+                    categoryItem.IsExpanded = true;
+
+                    // Use Dispatcher to scroll after layout is complete
+                    Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Loaded, () =>
+                    {
+                        effectItem.BringIntoView();
+                    });
+                    return;
+                }
+            }
         }
     }
 }

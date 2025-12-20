@@ -13,7 +13,7 @@ public sealed class InvadersFactory : IEffectFactory
         Description = "Defend against waves of neon space invaders with rockets from your cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Other
+        Category = EffectCategory.Interactive
     };
 
     public EffectMetadata Metadata => _metadata;

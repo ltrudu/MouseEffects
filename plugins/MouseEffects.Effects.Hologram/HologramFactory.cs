@@ -12,7 +12,7 @@ public sealed class HologramFactory : IEffectFactory
         Description = "Sci-fi holographic projection effect with scan lines and flickering around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Digital
+        Category = EffectCategory.VisualFilter
     };
 
     public EffectMetadata Metadata => _metadata;

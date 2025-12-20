@@ -13,7 +13,7 @@ public sealed class CherryBlossomsFactory : IEffectFactory
         Description = "Beautiful sakura petals floating gently around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Nature
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

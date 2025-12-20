@@ -13,7 +13,7 @@ public sealed class SmokeFactory : IEffectFactory
         Description = "Soft, wispy smoke trails following the mouse cursor with rising motion and turbulence",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Trail
+        Category = EffectCategory.Particle
     };
 
     public EffectMetadata Metadata => _metadata;

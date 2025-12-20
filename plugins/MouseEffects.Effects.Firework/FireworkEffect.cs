@@ -73,7 +73,7 @@ public sealed class FireworkEffect : EffectBase
         Description = "Creates stunning firework explosions with colorful particles and trails",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Other
+        Category = EffectCategory.Interactive
     };
 
     private IBuffer? _particleBuffer;

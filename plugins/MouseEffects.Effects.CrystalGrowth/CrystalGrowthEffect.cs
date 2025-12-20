@@ -20,7 +20,7 @@ public sealed class CrystalGrowthEffect : EffectBase
         Description = "Ice/crystal structures that grow from mouse clicks with geometric, angular branches",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Other
+        Category = EffectCategory.Artistic
     };
 
     public override EffectMetadata Metadata => _metadata;

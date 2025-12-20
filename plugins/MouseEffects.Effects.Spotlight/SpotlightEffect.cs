@@ -21,7 +21,7 @@ public sealed class SpotlightEffect : EffectBase
         Description = "Creates a dramatic theater spotlight effect centered on the mouse cursor, darkening everything outside the lit area",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Light
+        Category = EffectCategory.Artistic
     };
 
     // GPU resources

@@ -16,7 +16,7 @@ public sealed class ShockwaveFactory : IEffectFactory
         Description = "Creates expanding circular shockwave rings on click with glow and optional distortion",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Physics
+        Category = EffectCategory.FireEnergy
     };
 
     public EffectMetadata Metadata => _metadata;

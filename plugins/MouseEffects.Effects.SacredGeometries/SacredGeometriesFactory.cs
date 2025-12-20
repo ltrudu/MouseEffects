@@ -13,7 +13,7 @@ public sealed class SacredGeometriesFactory : IEffectFactory
         Description = "Mystical mandala patterns with sacred geometry around the mouse cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
-        Category = EffectCategory.Other
+        Category = EffectCategory.Artistic
     };
 
     public EffectMetadata Metadata => _metadata;

@@ -24,7 +24,7 @@ public sealed record EffectMetadata
     public string? IconPath { get; init; }
 
     /// <summary>Effect category for organization.</summary>
-    public EffectCategory Category { get; init; } = EffectCategory.Other;
+    public EffectCategory Category { get; init; } = EffectCategory.Particle;
 
     /// <summary>Default trigger mode.</summary>
     public EffectTrigger DefaultTrigger { get; init; } = EffectTrigger.Always;
@@ -35,35 +35,23 @@ public sealed record EffectMetadata
 /// </summary>
 public enum EffectCategory
 {
-    /// <summary>Particle effects like sparkles, confetti, snow.</summary>
+    /// <summary>Particle effects like bubbles, confetti, snow, cherry blossoms.</summary>
     Particle,
 
-    /// <summary>Cosmic and space-themed effects.</summary>
+    /// <summary>Fire and energy effects like flames, lasers, lightning, tesla.</summary>
+    FireEnergy,
+
+    /// <summary>Space and cosmic effects like black holes, nebula, portals, starfields.</summary>
     Cosmic,
 
-    /// <summary>Nature-inspired effects.</summary>
-    Nature,
+    /// <summary>Visual filter effects that transform screen content (screen capture based).</summary>
+    VisualFilter,
 
-    /// <summary>Trail effects that follow mouse movement.</summary>
-    Trail,
-
-    /// <summary>Digital and tech-themed effects.</summary>
-    Digital,
-
-    /// <summary>Artistic and creative effects.</summary>
+    /// <summary>Artistic and geometric effects like circuits, crystals, sacred geometry.</summary>
     Artistic,
 
-    /// <summary>Physics-based and abstract effects.</summary>
-    Physics,
-
-    /// <summary>Light and glow effects.</summary>
-    Light,
-
-    /// <summary>Screen transformation effects.</summary>
-    Screen,
-
-    /// <summary>Other effects that don't fit other categories.</summary>
-    Other
+    /// <summary>Interactive and game effects like fireworks and space invaders.</summary>
+    Interactive
 }
 
 /// <summary>
