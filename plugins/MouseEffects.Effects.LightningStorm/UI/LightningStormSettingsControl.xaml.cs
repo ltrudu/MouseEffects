@@ -371,8 +371,8 @@ public partial class LightningStormSettingsControl : System.Windows.Controls.Use
 
     private void UpdateCustomColorPanelVisibility()
     {
-        // Show custom color options when "Custom" (index 3) is selected
-        CustomColorPanel.Visibility = ColorModeCombo.SelectedIndex == 3
+        // Show custom color options when "Custom" (index 8) is selected
+        CustomColorPanel.Visibility = ColorModeCombo.SelectedIndex == 8
             ? Visibility.Visible
             : Visibility.Collapsed;
     }

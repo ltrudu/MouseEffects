@@ -63,12 +63,6 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="DistortionStrengthSlider_ValueChanged"/>
             <TextBlock x:Name="DistortionStrengthValue" Text="20" Opacity="0.7" FontSize="11"/>
 
-            <!-- HDR Brightness -->
-            <TextBlock Text="HDR Brightness" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="HdrBrightnessSlider" Minimum="0.1" Maximum="10" Value="1"
-                    Style="{StaticResource SliderStyle}" ValueChanged="HdrBrightnessSlider_ValueChanged"/>
-            <TextBlock x:Name="HdrBrightnessValue" Text="1.0" Opacity="0.7" FontSize="11"/>
-
             <!-- Click Triggers -->
             <TextBlock Text="Click Trigger" Style="{StaticResource LabelStyle}" FontSize="13" Margin="0,12,0,4"/>
             <CheckBox x:Name="LeftClickCheckBox" Content="Spawn on Left Click"
@@ -105,8 +99,17 @@
                 <ComboBoxItem Content="Energy Blue" IsSelected="True"/>
                 <ComboBoxItem Content="Fire Red"/>
                 <ComboBoxItem Content="White"/>
+                <ComboBoxItem Content="Rainbow"/>
                 <ComboBoxItem Content="Custom"/>
             </ComboBox>
+
+            <!-- Rainbow Speed (visible when Rainbow is selected) -->
+            <StackPanel x:Name="RainbowPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                <TextBlock Text="Rainbow Speed" Margin="0,0,0,2"/>
+                <Slider x:Name="RainbowSpeedSlider" Minimum="0.1" Maximum="5" Value="1.0"
+                        Style="{StaticResource SliderStyle}" ValueChanged="RainbowSpeedSlider_ValueChanged"/>
+                <TextBlock x:Name="RainbowSpeedValue" Text="1.0" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
 
             <!-- Custom Color Picker -->
             <Grid Margin="0,4,0,0" x:Name="CustomColorPanel" Visibility="Collapsed">

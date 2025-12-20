@@ -76,12 +76,6 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
             DistortionStrengthValue.Text = distortionStrength.ToString("F0");
         }
 
-        if (_effect.Configuration.TryGet("sw_hdrBrightness", out float hdrBrightness))
-        {
-            HdrBrightnessSlider.Value = hdrBrightness;
-            HdrBrightnessValue.Text = hdrBrightness.ToString("F1");
-        }
-
         if (_effect.Configuration.TryGet("sw_spawnOnLeftClick", out bool leftClick))
         {
             LeftClickCheckBox.IsChecked = leftClick;
@@ -118,13 +112,19 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
         if (_effect.Configuration.TryGet("sw_colorPreset", out int colorPreset))
         {
             ColorPresetCombo.SelectedIndex = colorPreset;
-            UpdateCustomColorVisibility();
+            UpdateColorPanelVisibility();
         }
 
         if (_effect.Configuration.TryGet("sw_customColor", out Vector4 customColor))
         {
             _customColor = customColor;
             UpdateCustomColorPreview();
+        }
+
+        if (_effect.Configuration.TryGet("sw_rainbowSpeed", out float rainbowSpeed))
+        {
+            RainbowSpeedSlider.Value = rainbowSpeed;
+            RainbowSpeedValue.Text = rainbowSpeed.ToString("F1");
         }
     }
 
@@ -141,7 +141,6 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
         config.Set("sw_glowIntensity", (float)GlowIntensitySlider.Value);
         config.Set("sw_enableDistortion", DistortionCheckBox.IsChecked ?? true);
         config.Set("sw_distortionStrength", (float)DistortionStrengthSlider.Value);
-        config.Set("sw_hdrBrightness", (float)HdrBrightnessSlider.Value);
         config.Set("sw_spawnOnLeftClick", LeftClickCheckBox.IsChecked ?? true);
         config.Set("sw_spawnOnRightClick", RightClickCheckBox.IsChecked ?? false);
         config.Set("sw_spawnOnMove", SpawnOnMoveCheckBox.IsChecked ?? false);
@@ -150,6 +149,7 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
         config.Set("sw_moveExpansionSpeed", (float)MoveExpansionSpeedSlider.Value);
         config.Set("sw_colorPreset", ColorPresetCombo.SelectedIndex);
         config.Set("sw_customColor", _customColor);
+        config.Set("sw_rainbowSpeed", (float)RainbowSpeedSlider.Value);
 
         _effect.Configure(config);
 
@@ -157,10 +157,18 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
 
-    private void UpdateCustomColorVisibility()
+    private void UpdateColorPanelVisibility()
     {
-        // Show custom color picker only when "Custom" is selected (index 3)
-        CustomColorPanel.Visibility = ColorPresetCombo.SelectedIndex == 3
+        // Guard against calls during initialization when controls aren't ready
+        if (CustomColorPanel == null || ColorPresetCombo == null || RainbowPanel == null) return;
+
+        // Show rainbow panel when "Rainbow" is selected (index 3)
+        RainbowPanel.Visibility = ColorPresetCombo.SelectedIndex == 3
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+
+        // Show custom color picker only when "Custom" is selected (index 4)
+        CustomColorPanel.Visibility = ColorPresetCombo.SelectedIndex == 4
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
@@ -228,13 +236,6 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
         UpdateConfiguration();
     }
 
-    private void HdrBrightnessSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (HdrBrightnessValue != null)
-            HdrBrightnessValue.Text = e.NewValue.ToString("F1");
-        UpdateConfiguration();
-    }
-
     private void LeftClickCheckBox_Changed(object sender, RoutedEventArgs e)
     {
         UpdateConfiguration();
@@ -273,7 +274,14 @@ public partial class ShockwaveSettingsControl : System.Windows.Controls.UserCont
 
     private void ColorPresetCombo_Changed(object sender, SelectionChangedEventArgs e)
     {
-        UpdateCustomColorVisibility();
+        UpdateColorPanelVisibility();
+        UpdateConfiguration();
+    }
+
+    private void RainbowSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (RainbowSpeedValue != null)
+            RainbowSpeedValue.Text = e.NewValue.ToString("F1");
         UpdateConfiguration();
     }
 

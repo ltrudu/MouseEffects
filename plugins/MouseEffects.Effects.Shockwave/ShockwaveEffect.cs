@@ -65,8 +65,10 @@ public sealed class ShockwaveEffect : EffectBase
     private float _moveExpansionSpeed = 400f;
 
     // Color configuration
-    private int _colorPreset = 0; // 0=Energy Blue, 1=Fire Red, 2=White, 3=Custom
+    private int _colorPreset = 0; // 0=Energy Blue, 1=Fire Red, 2=White, 3=Rainbow, 4=Custom
     private Vector4 _customColor = new(0.0f, 0.5f, 1.0f, 1.0f);
+    private float _rainbowSpeed = 1.0f;
+    private float _rainbowPhase;
 
     public override EffectMetadata Metadata => _metadata;
 
@@ -167,12 +169,21 @@ public sealed class ShockwaveEffect : EffectBase
 
         if (Configuration.TryGet("sw_customColor", out Vector4 customColor))
             _customColor = customColor;
+
+        if (Configuration.TryGet("sw_rainbowSpeed", out float rainbowSpeed))
+            _rainbowSpeed = rainbowSpeed;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
     {
         var dt = (float)gameTime.DeltaTime.TotalSeconds;
         _totalTime = (float)gameTime.TotalTime.TotalSeconds;
+
+        // Update rainbow phase
+        if (_colorPreset == 3) // Rainbow
+        {
+            _rainbowPhase = (_rainbowPhase + dt * _rainbowSpeed) % 1.0f;
+        }
 
         // Update existing shockwaves
         for (int i = 0; i < HardMaxShockwaves; i++)
@@ -349,9 +360,28 @@ public sealed class ShockwaveEffect : EffectBase
             0 => new Vector4(0.0f, 0.5f, 1.0f, 1.0f), // Energy Blue
             1 => new Vector4(1.0f, 0.3f, 0.0f, 1.0f), // Fire Red
             2 => new Vector4(1.0f, 1.0f, 1.0f, 1.0f), // White
-            3 => _customColor, // Custom
-            _ => new Vector4(0.0f, 0.5f, 1.0f, 1.0f)  // Default to Energy Blue
+            3 => HueToRgb(_rainbowPhase),              // Rainbow
+            4 => _customColor,                          // Custom
+            _ => new Vector4(0.0f, 0.5f, 1.0f, 1.0f)   // Default to Energy Blue
         };
+    }
+
+    private static Vector4 HueToRgb(float hue)
+    {
+        float h = hue * 6.0f;
+        float x = 1.0f - MathF.Abs(h % 2.0f - 1.0f);
+
+        Vector4 color = (int)h switch
+        {
+            0 => new Vector4(1.0f, x, 0.0f, 1.0f),
+            1 => new Vector4(x, 1.0f, 0.0f, 1.0f),
+            2 => new Vector4(0.0f, 1.0f, x, 1.0f),
+            3 => new Vector4(0.0f, x, 1.0f, 1.0f),
+            4 => new Vector4(x, 0.0f, 1.0f, 1.0f),
+            _ => new Vector4(1.0f, 0.0f, x, 1.0f)
+        };
+
+        return color;
     }
 
     protected override void OnViewportSizeChanged(Vector2 newSize)

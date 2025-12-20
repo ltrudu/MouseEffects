@@ -135,6 +135,11 @@
                 <ComboBoxItem Content="White/Blue" IsSelected="True" />
                 <ComboBoxItem Content="Purple" />
                 <ComboBoxItem Content="Green" />
+                <ComboBoxItem Content="Red" />
+                <ComboBoxItem Content="Orange" />
+                <ComboBoxItem Content="Yellow" />
+                <ComboBoxItem Content="Blue" />
+                <ComboBoxItem Content="Pink" />
                 <ComboBoxItem Content="Custom" />
             </ComboBox>
 

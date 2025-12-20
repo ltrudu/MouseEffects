@@ -132,7 +132,8 @@ public sealed class LightningStormEffect : EffectBase
     private float _persistenceFade = 0.3f;
 
     // Colors
-    private int _colorMode; // 0=White/Blue, 1=Purple, 2=Green, 3=Custom
+    // 0=White/Blue, 1=Purple, 2=Green, 3=Red, 4=Orange, 5=Yellow, 6=Blue, 7=Pink, 8=Custom
+    private int _colorMode;
     private Vector4 _customColor = new(0.4f, 0.6f, 1f, 1f);
     private bool _rainbowEnabled;
     private float _rainbowSpeed = 1.0f;
@@ -355,7 +356,11 @@ public sealed class LightningStormEffect : EffectBase
     private void SpawnLightningStrike(Vector2 cursorPos)
     {
         int boltCount = Random.Shared.Next(_minBoltCount, _maxBoltCount + 1);
-        Vector4 color = GetBoltColor();
+
+        // Get base color once if using full storm color, otherwise get per-bolt
+        Vector4 baseColor = (_colorMode == 8 && _rainbowEnabled && !_fullStormColor)
+            ? Vector4.Zero  // Will be set per-bolt
+            : GetBoltColor();
 
         // Trigger flash effect
         _flashIntensity = _flashIntensityConfig;
@@ -366,6 +371,11 @@ public sealed class LightningStormEffect : EffectBase
             Vector2 currentPos = cursorPos;
             for (int i = 0; i < boltCount; i++)
             {
+                // Get different color for each bolt when not using full storm color
+                Vector4 color = (_colorMode == 8 && _rainbowEnabled && !_fullStormColor)
+                    ? GetBoltColor()
+                    : baseColor;
+
                 float angle = Random.Shared.NextSingle() * MathF.PI * 2f;
                 float distance = Random.Shared.NextSingle() * (_maxStrikeDistance - _minStrikeDistance) + _minStrikeDistance;
                 Vector2 endPos = currentPos + new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * distance;
@@ -387,6 +397,11 @@ public sealed class LightningStormEffect : EffectBase
             // Standard mode: bolts from/to cursor
             for (int i = 0; i < boltCount; i++)
             {
+                // Get different color for each bolt when not using full storm color
+                Vector4 color = (_colorMode == 8 && _rainbowEnabled && !_fullStormColor)
+                    ? GetBoltColor()
+                    : baseColor;
+
                 float angle = Random.Shared.NextSingle() * MathF.PI * 2f;
                 float distance = Random.Shared.NextSingle() * (_maxStrikeDistance - _minStrikeDistance) + _minStrikeDistance;
                 Vector2 offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * distance;
@@ -449,8 +464,8 @@ public sealed class LightningStormEffect : EffectBase
 
     private Vector4 GetBoltColor()
     {
-        // If rainbow is enabled and color mode is Custom (3)
-        if (_colorMode == 3 && _rainbowEnabled)
+        // If rainbow is enabled and color mode is Custom (8)
+        if (_colorMode == 8 && _rainbowEnabled)
         {
             if (_fullStormColor)
             {
@@ -470,7 +485,12 @@ public sealed class LightningStormEffect : EffectBase
             0 => new Vector4(0.8f, 0.9f, 1f, 1f),      // White/Blue
             1 => new Vector4(0.8f, 0.4f, 1f, 1f),      // Purple
             2 => new Vector4(0.4f, 1f, 0.6f, 1f),      // Green
-            3 => _customColor,                          // Custom
+            3 => new Vector4(1f, 0.3f, 0.3f, 1f),      // Red
+            4 => new Vector4(1f, 0.6f, 0.2f, 1f),      // Orange
+            5 => new Vector4(1f, 1f, 0.4f, 1f),        // Yellow
+            6 => new Vector4(0.3f, 0.5f, 1f, 1f),      // Blue
+            7 => new Vector4(1f, 0.5f, 0.8f, 1f),      // Pink
+            8 => _customColor,                          // Custom
             _ => new Vector4(0.8f, 0.9f, 1f, 1f)
         };
     }

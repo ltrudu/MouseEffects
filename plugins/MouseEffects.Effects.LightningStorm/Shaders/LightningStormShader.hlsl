@@ -162,7 +162,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
         }
 
         // Render branches
-        if (bolt.BranchCount > 0 && t >= 0 && t <= 1.0)
+        if (bolt.BranchCount > 0)
         {
             float branchStep = 1.0 / (bolt.BranchCount + 1);
 
@@ -176,29 +176,46 @@ float4 PSMain(VSOutput input) : SV_TARGET
                 float branchAngle = (branchSeed - 0.5) * 1.5; // +/- 85 degrees
                 float branchLength = boltLength * 0.3 * (0.5 + branchSeed * 0.5);
 
-                // Calculate branch direction
+                // Calculate branch direction and perpendicular
                 float2 branchDir = float2(
                     boltNorm.x * cos(branchAngle) - boltNorm.y * sin(branchAngle),
                     boltNorm.x * sin(branchAngle) + boltNorm.y * cos(branchAngle)
                 );
+                float2 branchPerp = float2(-branchDir.y, branchDir.x);
 
                 float2 branchEnd = branchStart + branchDir * branchLength;
 
-                // Branch displacement
-                float branchDist = distanceToSegment(pixelPos, branchStart, branchEnd);
-                float branchThickness = BoltThickness * 0.5;
+                // Calculate position along branch for jagged displacement
+                float branchLocalT = dot(pixelPos - branchStart, branchDir) / branchLength;
 
-                // Branch core and glow
-                float branchCore = 1.0 - smoothstep(0.0, branchThickness, branchDist);
-                float branchGlow = exp(-branchDist * branchDist / (branchThickness * branchThickness * 4.0)) * GlowIntensity * 0.7;
+                // Only render if we're in the branch range
+                if (branchLocalT >= 0 && branchLocalT <= 1.0)
+                {
+                    // Sample jagged displacement along the branch (similar to main bolt)
+                    float2 branchSamplePos = branchStart + branchDir * branchLocalT * branchLength;
+                    float branchNoiseScale = 12.0;
+                    float branchDisplacement = (noise(branchSamplePos * 0.15 + float2(Time * 10.0, i + b * 10)) - 0.5) * branchNoiseScale;
+                    branchDisplacement += (noise(branchSamplePos * 0.4 + float2(Time * 20.0, i * 2 + b * 5)) - 0.5) * branchNoiseScale * 0.5;
 
-                float branchIntensity = (branchCore + branchGlow) * lifeFactor * flickerValue * BranchIntensity;
+                    // Calculate jagged branch position
+                    float2 jaggedBranchOffset = branchPerp * branchDisplacement;
+                    float2 jaggedBranchPos = lerp(branchStart, branchEnd, saturate(branchLocalT)) + jaggedBranchOffset;
+                    float branchDist = length(pixelPos - jaggedBranchPos);
 
-                float4 branchColor = bolt.Color * branchIntensity;
-                branchColor.rgb *= 1.0 + branchCore * HdrMultiplier * 1.5;
+                    float branchThickness = BoltThickness * 0.5;
 
-                finalColor.rgb += branchColor.rgb;
-                finalColor.a = max(finalColor.a, branchColor.a);
+                    // Branch core and glow
+                    float branchCore = 1.0 - smoothstep(0.0, branchThickness, branchDist);
+                    float branchGlow = exp(-branchDist * branchDist / (branchThickness * branchThickness * 4.0)) * GlowIntensity * 0.7;
+
+                    float branchIntensity = (branchCore + branchGlow) * lifeFactor * flickerValue * BranchIntensity;
+
+                    float4 branchColor = bolt.Color * branchIntensity;
+                    branchColor.rgb *= 1.0 + branchCore * HdrMultiplier * 1.5;
+
+                    finalColor.rgb += branchColor.rgb;
+                    finalColor.a = max(finalColor.a, branchColor.a);
+                }
             }
         }
     }
