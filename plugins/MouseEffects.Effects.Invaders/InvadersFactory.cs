@@ -500,8 +500,8 @@ public sealed class InvadersFactory : IEffectFactory
                 new BoolParameter
                 {
                     Key = "enableResetHotkey",
-                    DisplayName = "Reset Hotkey (Ctrl+Shift+I)",
-                    Description = "Enable Ctrl+Shift+I to reset and restart the game",
+                    DisplayName = "Reset Hotkey (Alt+Shift+R)",
+                    Description = "Enable Alt+Shift+R to reset and restart the game",
                     DefaultValue = false
                 }
             ]

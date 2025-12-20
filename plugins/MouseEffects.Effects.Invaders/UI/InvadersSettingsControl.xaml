@@ -53,10 +53,10 @@
                             Background="#FF2266" Foreground="White" FontWeight="Bold"
                             Click="ResetButton_Click" ToolTip="Reset score and start timer"/>
                 </Grid>
-                <CheckBox x:Name="EnableResetHotkeyCheckBox" Content="Reset Hotkey (Ctrl+Shift+I)"
+                <CheckBox x:Name="EnableResetHotkeyCheckBox" Content="Reset Hotkey (Alt+Shift+R)"
                           Margin="0,8,0,0" FontSize="11"
                           IsChecked="False" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                          ToolTip="Enable Ctrl+Shift+I to reset and restart the game"/>
+                          ToolTip="Enable Alt+Shift+R to reset and restart the game"/>
             </StackPanel>
         </Border>
 

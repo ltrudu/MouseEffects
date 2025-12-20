@@ -230,8 +230,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         {
             Id = "reset",
             DisplayName = "Reset Game",
-            Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Shift,
-            Key = HotkeyKey.I,
+            Modifiers = HotkeyModifiers.Alt | HotkeyModifiers.Shift,
+            Key = HotkeyKey.R,
             IsEnabled = _enableResetHotkey,
             Callback = ResetGame
         };
