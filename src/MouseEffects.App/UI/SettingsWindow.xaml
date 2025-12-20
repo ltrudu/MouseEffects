@@ -167,6 +167,21 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Window Behavior -->
+                <Border Style="{StaticResource EffectCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Window Behavior" Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock Text="Settings window display options"
+                                   Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
+                        <CheckBox x:Name="AlwaysOnTopCheckBox"
+                                  Content="Always on top"
+                                  ToolTip="Keep the settings window above other windows"
+                                  Margin="0,0,0,5"
+                                  Checked="AlwaysOnTopCheckBox_Changed"
+                                  Unchecked="AlwaysOnTopCheckBox_Changed"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Hotkeys -->
                 <Border Style="{StaticResource EffectCardStyle}">
                     <StackPanel>
@@ -188,8 +203,26 @@
                         <CheckBox x:Name="ScreenCaptureHotkeyCheckBox"
                                   Content="Screen Capture (Alt+Shift+S)"
                                   ToolTip="Captures the screen with overlay and copies to clipboard"
+                                  Margin="0,0,0,5"
                                   Checked="ScreenCaptureHotkeyCheckBox_Changed"
                                   Unchecked="ScreenCaptureHotkeyCheckBox_Changed"/>
+                        <CheckBox x:Name="ForceTopmostHotkeyCheckBox"
+                                  Content="Force Topmost (Alt+Shift+T)"
+                                  ToolTip="Force the overlay to be the topmost window (use if another window takes priority)"
+                                  Margin="0,0,0,5"
+                                  Checked="ForceTopmostHotkeyCheckBox_Changed"
+                                  Unchecked="ForceTopmostHotkeyCheckBox_Changed"/>
+                        <CheckBox x:Name="PreviousEffectHotkeyCheckBox"
+                                  Content="Previous Effect (Alt+Shift+Up)"
+                                  ToolTip="Cycle to the previous effect in the list"
+                                  Margin="0,0,0,5"
+                                  Checked="PreviousEffectHotkeyCheckBox_Changed"
+                                  Unchecked="PreviousEffectHotkeyCheckBox_Changed"/>
+                        <CheckBox x:Name="NextEffectHotkeyCheckBox"
+                                  Content="Next Effect (Alt+Shift+Down)"
+                                  ToolTip="Cycle to the next effect in the list"
+                                  Checked="NextEffectHotkeyCheckBox_Changed"
+                                  Unchecked="NextEffectHotkeyCheckBox_Changed"/>
                     </StackPanel>
                 </Border>
 

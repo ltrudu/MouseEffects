@@ -52,7 +52,6 @@ public sealed class ShockwaveEffect : EffectBase
     private float _glowIntensity = 1.5f;
     private bool _enableDistortion = true;
     private float _distortionStrength = 20f;
-    private float _hdrBrightness = 1.0f;
 
     // Click configuration
     private bool _spawnOnLeftClick = true;
@@ -139,9 +138,6 @@ public sealed class ShockwaveEffect : EffectBase
 
         if (Configuration.TryGet("sw_distortionStrength", out float distortionStrength))
             _distortionStrength = distortionStrength;
-
-        if (Configuration.TryGet("sw_hdrBrightness", out float hdrBrightness))
-            _hdrBrightness = hdrBrightness;
 
         // Click settings
         if (Configuration.TryGet("sw_spawnOnLeftClick", out bool leftClick))
@@ -309,7 +305,7 @@ public sealed class ShockwaveEffect : EffectBase
             GlowIntensity = _glowIntensity,
             EnableDistortion = _enableDistortion ? 1.0f : 0.0f,
             DistortionStrength = _distortionStrength,
-            HdrBrightness = _hdrBrightness,
+            HdrBrightness = context.HdrPeakBrightness,
             RingColor = ringColor
         };
 

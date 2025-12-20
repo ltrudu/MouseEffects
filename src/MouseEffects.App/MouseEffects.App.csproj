@@ -15,7 +15,7 @@
     <Platforms>x64</Platforms>
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
     <!-- Version for Velopack (AssemblyVersion and FileVersion are derived automatically) -->
-    <Version>1.0.39</Version>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
   <!-- MSIX Packaging Configuration -->

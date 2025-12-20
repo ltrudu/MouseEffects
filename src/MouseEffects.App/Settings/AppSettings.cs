@@ -142,6 +142,29 @@ public class AppSettings
     /// </summary>
     public double? SettingsWindowHeight { get; set; }
 
+    /// <summary>
+    /// Whether to keep the settings window always on top of other windows.
+    /// </summary>
+    public bool AlwaysOnTop { get; set; } = true;
+
+    /// <summary>
+    /// Whether to enable the force topmost hotkey (ALT+SHIFT+T).
+    /// Forces the overlay to be the topmost window.
+    /// </summary>
+    public bool EnableForceTopmostHotkey { get; set; } = true;
+
+    /// <summary>
+    /// Whether to enable the previous effect hotkey (ALT+SHIFT+UP).
+    /// Cycles to the previous effect in the list.
+    /// </summary>
+    public bool EnablePreviousEffectHotkey { get; set; } = true;
+
+    /// <summary>
+    /// Whether to enable the next effect hotkey (ALT+SHIFT+DOWN).
+    /// Cycles to the next effect in the list.
+    /// </summary>
+    public bool EnableNextEffectHotkey { get; set; } = true;
+
     public static AppSettings Load()
     {
         try

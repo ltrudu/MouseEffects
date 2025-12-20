@@ -164,6 +164,37 @@
             <Slider x:Name="EmberSlider" Minimum="0" Maximum="1" Value="0.2" TickFrequency="0.05"
                     ValueChanged="EmberSlider_Changed"/>
 
+            <!-- Auto Fire -->
+            <TextBlock Text="Auto Fire" Style="{StaticResource SectionStyle}"/>
+
+            <CheckBox x:Name="AutoFireCheckBox" Content="Enable Auto Fire"
+                      IsChecked="False" Checked="AutoFireCheckBox_Changed" Unchecked="AutoFireCheckBox_Changed"
+                      Foreground="White" Margin="0,4,0,8"/>
+
+            <StackPanel x:Name="AutoFirePanel" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Spawn Rate (per sec)" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                    <TextBlock x:Name="AutoFireSpawnRateValue" Text="60" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+                </Grid>
+                <Slider x:Name="AutoFireSpawnRateSlider" Minimum="10" Maximum="200" Value="60" TickFrequency="10"
+                        ValueChanged="AutoFireSpawnRateSlider_Changed"/>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Flame Speed" Style="{StaticResource LabelStyle}" Grid.Column="0"/>
+                    <TextBlock x:Name="AutoFireSpeedValue" Text="80" Style="{StaticResource ValueStyle}" Grid.Column="1"/>
+                </Grid>
+                <Slider x:Name="AutoFireSpeedSlider" Minimum="20" Maximum="200" Value="80" TickFrequency="10"
+                        ValueChanged="AutoFireSpeedSlider_Changed"/>
+            </StackPanel>
+
         </StackPanel>
     </StackPanel>
 </UserControl>

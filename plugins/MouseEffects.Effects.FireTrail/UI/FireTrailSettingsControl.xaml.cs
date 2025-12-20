@@ -60,6 +60,14 @@ public partial class FireTrailSettingsControl : System.Windows.Controls.UserCont
             SmokeValue.Text = _effect.SmokeAmount.ToString("F2");
             EmberSlider.Value = _effect.EmberAmount;
             EmberValue.Text = _effect.EmberAmount.ToString("F2");
+
+            // Auto Fire
+            AutoFireCheckBox.IsChecked = _effect.AutoFire;
+            AutoFireSpawnRateSlider.Value = _effect.AutoFireSpawnRate;
+            AutoFireSpawnRateValue.Text = _effect.AutoFireSpawnRate.ToString("F0");
+            AutoFireSpeedSlider.Value = _effect.AutoFireSpeed;
+            AutoFireSpeedValue.Text = _effect.AutoFireSpeed.ToString("F0");
+            UpdateAutoFirePanelVisibility();
         }
         finally
         {
@@ -152,5 +160,37 @@ public partial class FireTrailSettingsControl : System.Windows.Controls.UserCont
         _effect.EmberAmount = (float)EmberSlider.Value;
         EmberValue.Text = _effect.EmberAmount.ToString("F2");
         _effect.Configuration.Set("ft_emberAmount", _effect.EmberAmount);
+    }
+
+    private void AutoFireCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.AutoFire = AutoFireCheckBox.IsChecked ?? false;
+        _effect.Configuration.Set("ft_autoFire", _effect.AutoFire);
+        UpdateAutoFirePanelVisibility();
+    }
+
+    private void AutoFireSpawnRateSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.AutoFireSpawnRate = (float)AutoFireSpawnRateSlider.Value;
+        AutoFireSpawnRateValue.Text = _effect.AutoFireSpawnRate.ToString("F0");
+        _effect.Configuration.Set("ft_autoFireSpawnRate", _effect.AutoFireSpawnRate);
+    }
+
+    private void AutoFireSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_effect == null || _isLoading) return;
+        _effect.AutoFireSpeed = (float)AutoFireSpeedSlider.Value;
+        AutoFireSpeedValue.Text = _effect.AutoFireSpeed.ToString("F0");
+        _effect.Configuration.Set("ft_autoFireSpeed", _effect.AutoFireSpeed);
+    }
+
+    private void UpdateAutoFirePanelVisibility()
+    {
+        if (AutoFirePanel == null) return;
+        AutoFirePanel.Visibility = (AutoFireCheckBox.IsChecked ?? false)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
     }
 }

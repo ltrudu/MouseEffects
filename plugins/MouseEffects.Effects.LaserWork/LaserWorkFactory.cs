@@ -31,22 +31,22 @@ public sealed class LaserWorkFactory : IEffectFactory
         config.Set("lasersPerSecond", 20f);
 
         // Size settings (random between min and max)
-        config.Set("minLaserLength", 80.47f);
-        config.Set("maxLaserLength", 153.23f);
+        config.Set("minLaserLength", 33f);
+        config.Set("maxLaserLength", 79f);
         config.Set("minLaserWidth", 2f);
         config.Set("maxLaserWidth", 6f);
-        config.Set("autoShrink", true);
+        config.Set("autoShrink", false);
 
         // Physics settings
-        config.Set("laserSpeed", 400f);
-        config.Set("laserLifespan", 7.44f);
+        config.Set("laserSpeed", 240f);
+        config.Set("laserLifespan", 3f);
 
         // Alpha settings
         config.Set("minAlpha", 0.1f);
         config.Set("maxAlpha", 1.0f);
 
         // Visual settings
-        config.Set("glowIntensity", 0.5f);
+        config.Set("glowIntensity", 1.75f);
         config.Set("laserColor", new Vector4(1f, 0.2f, 0.2f, 1f)); // Red by default
 
         // Rainbow settings
@@ -55,16 +55,16 @@ public sealed class LaserWorkFactory : IEffectFactory
 
         // Direction toggles
         config.Set("shootForward", true);
-        config.Set("shootBackward", true);
-        config.Set("shootLeft", true);
-        config.Set("shootRight", true);
+        config.Set("shootBackward", false);
+        config.Set("shootLeft", false);
+        config.Set("shootRight", false);
 
         // Collision explosion settings
         config.Set("enableCollisionExplosion", true);
-        config.Set("explosionLaserCount", 8f);
-        config.Set("explosionLifespanMultiplier", 0.5f);
+        config.Set("explosionLaserCount", 18f);
+        config.Set("explosionLifespanMultiplier", 0.78f);
         config.Set("explosionLasersCanCollide", false);
-        config.Set("maxCollisionCount", 3f);
+        config.Set("maxCollisionCount", 1f);
 
         return config;
     }
@@ -94,7 +94,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Minimum length of laser beams in pixels",
                     MinValue = 10f,
                     MaxValue = 200f,
-                    DefaultValue = 30f
+                    DefaultValue = 33f
                 },
                 new FloatParameter
                 {
@@ -103,7 +103,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Maximum length of laser beams in pixels",
                     MinValue = 10f,
                     MaxValue = 200f,
-                    DefaultValue = 70f
+                    DefaultValue = 79f
                 },
                 new FloatParameter
                 {
@@ -138,7 +138,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Speed of laser movement in pixels per second",
                     MinValue = 50f,
                     MaxValue = 1000f,
-                    DefaultValue = 400f
+                    DefaultValue = 240f
                 },
                 new FloatParameter
                 {
@@ -178,7 +178,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Intensity of the laser glow effect",
                     MinValue = 0f,
                     MaxValue = 2f,
-                    DefaultValue = 0.5f
+                    DefaultValue = 1.75f
                 },
 
                 // Color
@@ -246,7 +246,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Number of lasers spawned in explosion",
                     MinValue = 2f,
                     MaxValue = 24f,
-                    DefaultValue = 8f
+                    DefaultValue = 18f
                 },
                 new FloatParameter
                 {
@@ -255,7 +255,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Lifespan multiplier for explosion lasers (relative to normal lifespan)",
                     MinValue = 0.1f,
                     MaxValue = 1f,
-                    DefaultValue = 0.5f
+                    DefaultValue = 0.78f
                 },
                 new BoolParameter
                 {
@@ -270,7 +270,7 @@ public sealed class LaserWorkFactory : IEffectFactory
                     Description = "Maximum number of collisions a laser can participate in",
                     MinValue = 1f,
                     MaxValue = 10f,
-                    DefaultValue = 3f
+                    DefaultValue = 1f
                 }
             ]
         };

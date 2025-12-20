@@ -174,6 +174,19 @@ public sealed partial class OverlayManager : IDisposable
         }
     }
 
+    /// <summary>
+    /// Force topmost state for all overlays regardless of suspension state.
+    /// Use this for manual user-triggered topmost enforcement via hotkey.
+    /// </summary>
+    public void ForceTopmost()
+    {
+        foreach (var overlay in _overlays)
+        {
+            overlay.EnforceTopmost();
+        }
+        Log("Force topmost applied to all overlays");
+    }
+
     private static List<Rectangle> GetAllMonitors()
     {
         var monitors = new List<Rectangle>();

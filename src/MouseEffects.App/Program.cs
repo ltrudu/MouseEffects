@@ -469,6 +469,27 @@ static partial class Program
                 Log($"Settings hotkey registration (Alt+Shift+L): {(settingsHotkeyResult ? "SUCCESS" : $"FAILED (error: {settingsHotkeyError})")}");
             }
 
+            // Register force topmost hotkey (Alt+Shift+T) if enabled
+            if (_settings.EnableForceTopmostHotkey)
+            {
+                var forceTopmostResult = RegisterHotKey(nint.Zero, HOTKEY_FORCE_TOPMOST_ID, MOD_ALT | MOD_SHIFT, (uint)'T');
+                Log($"Force topmost hotkey registration (Alt+Shift+T): {(forceTopmostResult ? "SUCCESS" : "FAILED")}");
+            }
+
+            // Register previous effect hotkey (Alt+Shift+Up) if enabled
+            if (_settings.EnablePreviousEffectHotkey)
+            {
+                var prevResult = RegisterHotKey(nint.Zero, HOTKEY_PREVIOUS_EFFECT_ID, MOD_ALT | MOD_SHIFT, (uint)VK_UP);
+                Log($"Previous effect hotkey registration (Alt+Shift+Up): {(prevResult ? "SUCCESS" : "FAILED")}");
+            }
+
+            // Register next effect hotkey (Alt+Shift+Down) if enabled
+            if (_settings.EnableNextEffectHotkey)
+            {
+                var nextResult = RegisterHotKey(nint.Zero, HOTKEY_NEXT_EFFECT_ID, MOD_ALT | MOD_SHIFT, (uint)VK_DOWN);
+                Log($"Next effect hotkey registration (Alt+Shift+Down): {(nextResult ? "SUCCESS" : "FAILED")}");
+            }
+
             // Initialize FPS overlay if enabled
             if (_settings.ShowFpsOverlay)
             {
@@ -546,6 +567,9 @@ static partial class Program
         UnregisterHotKey(nint.Zero, HOTKEY_ID);
         UnregisterHotKey(nint.Zero, HOTKEY_SCREENSHOT_ID);
         UnregisterHotKey(nint.Zero, HOTKEY_SETTINGS_ID);
+        UnregisterHotKey(nint.Zero, HOTKEY_FORCE_TOPMOST_ID);
+        UnregisterHotKey(nint.Zero, HOTKEY_PREVIOUS_EFFECT_ID);
+        UnregisterHotKey(nint.Zero, HOTKEY_NEXT_EFFECT_ID);
 
         // Save all plugin settings before shutdown (each to its own file)
         Log("Saving plugin settings on shutdown...");
@@ -736,6 +760,18 @@ static partial class Program
                     else if (msg.wParam == HOTKEY_SETTINGS_ID)
                     {
                         ToggleSettingsWindow();
+                    }
+                    else if (msg.wParam == HOTKEY_FORCE_TOPMOST_ID)
+                    {
+                        ForceOverlayTopmost();
+                    }
+                    else if (msg.wParam == HOTKEY_PREVIOUS_EFFECT_ID)
+                    {
+                        CycleToPreviousEffect();
+                    }
+                    else if (msg.wParam == HOTKEY_NEXT_EFFECT_ID)
+                    {
+                        CycleToNextEffect();
                     }
                 }
 
@@ -1034,11 +1070,185 @@ static partial class Program
         }
     }
 
+    /// <summary>
+    /// Update the force topmost hotkey registration based on settings.
+    /// </summary>
+    public static void UpdateForceTopmostHotkey(bool enabled)
+    {
+        if (enabled)
+        {
+            var result = RegisterHotKey(nint.Zero, HOTKEY_FORCE_TOPMOST_ID, MOD_ALT | MOD_SHIFT, (uint)'T');
+            Log($"Force topmost hotkey registration: {(result ? "SUCCESS" : "FAILED")}");
+        }
+        else
+        {
+            UnregisterHotKey(nint.Zero, HOTKEY_FORCE_TOPMOST_ID);
+            Log("Force topmost hotkey unregistered");
+        }
+    }
+
+    /// <summary>
+    /// Force the overlay window to be the topmost window.
+    /// Use this hotkey if another window steals topmost priority.
+    /// </summary>
+    private static void ForceOverlayTopmost()
+    {
+        _overlayManager?.ForceTopmost();
+        _trayManager?.ShowBalloon("MouseEffects", "Overlay forced to topmost");
+        Log("Force topmost triggered via hotkey");
+    }
+
+    /// <summary>
+    /// Update the previous effect hotkey registration based on settings.
+    /// </summary>
+    public static void UpdatePreviousEffectHotkey(bool enabled)
+    {
+        if (enabled)
+        {
+            var result = RegisterHotKey(nint.Zero, HOTKEY_PREVIOUS_EFFECT_ID, MOD_ALT | MOD_SHIFT, (uint)VK_UP);
+            Log($"Previous effect hotkey registration: {(result ? "SUCCESS" : "FAILED")}");
+        }
+        else
+        {
+            UnregisterHotKey(nint.Zero, HOTKEY_PREVIOUS_EFFECT_ID);
+            Log("Previous effect hotkey unregistered");
+        }
+    }
+
+    /// <summary>
+    /// Update the next effect hotkey registration based on settings.
+    /// </summary>
+    public static void UpdateNextEffectHotkey(bool enabled)
+    {
+        if (enabled)
+        {
+            var result = RegisterHotKey(nint.Zero, HOTKEY_NEXT_EFFECT_ID, MOD_ALT | MOD_SHIFT, (uint)VK_DOWN);
+            Log($"Next effect hotkey registration: {(result ? "SUCCESS" : "FAILED")}");
+        }
+        else
+        {
+            UnregisterHotKey(nint.Zero, HOTKEY_NEXT_EFFECT_ID);
+            Log("Next effect hotkey unregistered");
+        }
+    }
+
+    /// <summary>
+    /// Get sorted list of effect IDs for cycling.
+    /// </summary>
+    private static List<string> GetSortedEffectIds()
+    {
+        if (_effectManager == null) return [];
+
+        return _effectManager.Factories.Values
+            .OrderBy(f => f.Metadata.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(f => f.Metadata.Id)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Cycle to the previous effect in the list.
+    /// If at "none", goes to the last effect.
+    /// </summary>
+    private static void CycleToPreviousEffect()
+    {
+        if (_effectManager == null) return;
+
+        var effectIds = GetSortedEffectIds();
+        if (effectIds.Count == 0) return;
+
+        var currentId = _effectManager.ActiveEffectId;
+        string? newEffectId;
+        string effectName;
+
+        if (string.IsNullOrEmpty(currentId))
+        {
+            // Currently "none" - go to last effect
+            newEffectId = effectIds[^1];
+            var factory = _effectManager.GetFactory(newEffectId);
+            effectName = factory?.Metadata.Name ?? newEffectId;
+        }
+        else
+        {
+            var currentIndex = effectIds.IndexOf(currentId);
+            if (currentIndex <= 0)
+            {
+                // At first effect or not found - go to "none"
+                newEffectId = null;
+                effectName = "None";
+            }
+            else
+            {
+                // Go to previous effect
+                newEffectId = effectIds[currentIndex - 1];
+                var factory = _effectManager.GetFactory(newEffectId);
+                effectName = factory?.Metadata.Name ?? newEffectId;
+            }
+        }
+
+        SetActiveEffect(newEffectId);
+        _trayManager?.ShowBalloon("MouseEffects", $"Effect: {effectName}");
+        Log($"Cycled to previous effect: {effectName}");
+
+        // Update settings window if open
+        _settingsWindow?.RefreshEffectEnabledState(newEffectId ?? "", newEffectId != null);
+    }
+
+    /// <summary>
+    /// Cycle to the next effect in the list.
+    /// If at the last effect, goes to "none".
+    /// </summary>
+    private static void CycleToNextEffect()
+    {
+        if (_effectManager == null) return;
+
+        var effectIds = GetSortedEffectIds();
+        if (effectIds.Count == 0) return;
+
+        var currentId = _effectManager.ActiveEffectId;
+        string? newEffectId;
+        string effectName;
+
+        if (string.IsNullOrEmpty(currentId))
+        {
+            // Currently "none" - go to first effect
+            newEffectId = effectIds[0];
+            var factory = _effectManager.GetFactory(newEffectId);
+            effectName = factory?.Metadata.Name ?? newEffectId;
+        }
+        else
+        {
+            var currentIndex = effectIds.IndexOf(currentId);
+            if (currentIndex >= effectIds.Count - 1)
+            {
+                // At last effect or not found - go to "none"
+                newEffectId = null;
+                effectName = "None";
+            }
+            else
+            {
+                // Go to next effect
+                newEffectId = effectIds[currentIndex + 1];
+                var factory = _effectManager.GetFactory(newEffectId);
+                effectName = factory?.Metadata.Name ?? newEffectId;
+            }
+        }
+
+        SetActiveEffect(newEffectId);
+        _trayManager?.ShowBalloon("MouseEffects", $"Effect: {effectName}");
+        Log($"Cycled to next effect: {effectName}");
+
+        // Update settings window if open
+        _settingsWindow?.RefreshEffectEnabledState(newEffectId ?? "", newEffectId != null);
+    }
+
     #region Native Methods
 
     private const int HOTKEY_ID = 1;
     private const int HOTKEY_SCREENSHOT_ID = 2;
     private const int HOTKEY_SETTINGS_ID = 3;
+    private const int HOTKEY_FORCE_TOPMOST_ID = 4;
+    private const int HOTKEY_PREVIOUS_EFFECT_ID = 5;
+    private const int HOTKEY_NEXT_EFFECT_ID = 6;
     private const uint MOD_ALT = 0x0001;
     private const uint MOD_CONTROL = 0x0002;
     private const uint MOD_SHIFT = 0x0004;
@@ -1050,6 +1260,8 @@ static partial class Program
     private const int VK_CONTROL = 0x11;
     private const int VK_SHIFT = 0x10;
     private const int VK_MENU = 0x12; // Alt key
+    private const int VK_UP = 0x26;   // Up arrow
+    private const int VK_DOWN = 0x28; // Down arrow
 
     // Screen metrics for multi-monitor support
     private const int SM_XVIRTUALSCREEN = 76;

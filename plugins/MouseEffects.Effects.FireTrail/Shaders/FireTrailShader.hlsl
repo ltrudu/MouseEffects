@@ -97,38 +97,32 @@ float fbm(float2 p)
     return value;
 }
 
-// Temperature to color mapping (blackbody radiation)
+// Temperature to color mapping - clamped to red/orange/yellow (no white)
 float3 temperatureToColor(float temp, float saturation)
 {
-    // Fire color gradient: dark red -> red -> orange -> yellow -> white
+    // Fire color gradient: dark red -> red -> orange -> bright yellow (NO white)
     float3 color;
 
-    if (temp < 0.25)
+    if (temp < 0.33)
     {
         // Dark red to red
-        float t = temp / 0.25;
-        color = lerp(float3(0.2, 0.0, 0.0), float3(1.0, 0.1, 0.0), t);
+        float t = temp / 0.33;
+        color = lerp(float3(0.3, 0.0, 0.0), float3(1.0, 0.15, 0.0), t);
     }
-    else if (temp < 0.5)
+    else if (temp < 0.66)
     {
         // Red to orange
-        float t = (temp - 0.25) / 0.25;
-        color = lerp(float3(1.0, 0.1, 0.0), float3(1.0, 0.5, 0.0), t);
-    }
-    else if (temp < 0.75)
-    {
-        // Orange to yellow
-        float t = (temp - 0.5) / 0.25;
-        color = lerp(float3(1.0, 0.5, 0.0), float3(1.0, 0.9, 0.2), t);
+        float t = (temp - 0.33) / 0.33;
+        color = lerp(float3(1.0, 0.15, 0.0), float3(1.0, 0.5, 0.0), t);
     }
     else
     {
-        // Yellow to white hot
-        float t = (temp - 0.75) / 0.25;
-        color = lerp(float3(1.0, 0.9, 0.2), float3(1.0, 1.0, 1.0), t);
+        // Orange to bright yellow (cap here, no white)
+        float t = (temp - 0.66) / 0.34;
+        color = lerp(float3(1.0, 0.5, 0.0), float3(1.0, 0.85, 0.1), t);
     }
 
-    // Apply saturation
+    // Apply saturation (bias toward keeping fire colors)
     float gray = dot(color, float3(0.299, 0.587, 0.114));
     color = lerp(float3(gray, gray, gray), color, saturation);
 
@@ -239,6 +233,25 @@ float4 PSMain(VSOutput input) : SV_TARGET
         // Additive blend
         finalColor.rgb += particleColor.rgb * finalAlpha;
         finalColor.a = saturate(finalColor.a + finalAlpha * 0.5);
+    }
+
+    // Clamp final color to fire spectrum (red/orange/yellow, avoid white)
+    // Keep red channel high, limit green to create orange/yellow, minimize blue
+    if (finalColor.r > 0.01)
+    {
+        // Preserve the fire color ratio - red should dominate
+        float maxIntensity = max(finalColor.r, max(finalColor.g, finalColor.b));
+        if (maxIntensity > 1.0)
+        {
+            // Normalize but bias toward fire colors
+            float3 normalized = finalColor.rgb / maxIntensity;
+            // Clamp green to not exceed red (keeps orange/yellow, prevents white)
+            normalized.g = min(normalized.g, normalized.r * 0.85);
+            // Keep blue very low for fire
+            normalized.b = min(normalized.b, normalized.r * 0.15);
+            // Scale back up with controlled intensity
+            finalColor.rgb = normalized * min(maxIntensity, 3.0);
+        }
     }
 
     return finalColor;

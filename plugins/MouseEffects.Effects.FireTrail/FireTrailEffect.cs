@@ -104,6 +104,12 @@ public sealed class FireTrailEffect : EffectBase
     private float _minSpeed = 20f;
     private float _maxSpeed = 60f;
 
+    // Auto Fire settings
+    private bool _autoFire = false;
+    private float _autoFireSpawnRate = 60f;  // Particles per second
+    private float _autoFireSpeed = 80f;       // Upward speed
+    private float _autoFireAccumulator = 0f;
+
     // Public properties for UI binding
     public bool Enabled { get => _enabled; set => _enabled = value; }
     public float Intensity { get => _intensity; set => _intensity = Math.Clamp(value, 0f, 2f); }
@@ -119,6 +125,9 @@ public sealed class FireTrailEffect : EffectBase
     public float ParticleLifetime { get => _particleLifetime; set => _particleLifetime = Math.Clamp(value, 0.5f, 3f); }
     public float MinSpeed { get => _minSpeed; set => _minSpeed = Math.Clamp(value, 10f, 100f); }
     public float MaxSpeed { get => _maxSpeed; set => _maxSpeed = Math.Clamp(value, 20f, 150f); }
+    public bool AutoFire { get => _autoFire; set => _autoFire = value; }
+    public float AutoFireSpawnRate { get => _autoFireSpawnRate; set => _autoFireSpawnRate = Math.Clamp(value, 10f, 200f); }
+    public float AutoFireSpeed { get => _autoFireSpeed; set => _autoFireSpeed = Math.Clamp(value, 20f, 200f); }
 
     protected override void OnInitialize(IRenderContext context)
     {
@@ -195,6 +204,12 @@ public sealed class FireTrailEffect : EffectBase
             _minSpeed = minSpeed;
         if (Configuration.TryGet("ft_maxSpeed", out float maxSpeed))
             _maxSpeed = maxSpeed;
+        if (Configuration.TryGet("ft_autoFire", out bool autoFire))
+            _autoFire = autoFire;
+        if (Configuration.TryGet("ft_autoFireSpawnRate", out float autoFireSpawnRate))
+            _autoFireSpawnRate = autoFireSpawnRate;
+        if (Configuration.TryGet("ft_autoFireSpeed", out float autoFireSpeed))
+            _autoFireSpeed = autoFireSpeed;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -204,22 +219,35 @@ public sealed class FireTrailEffect : EffectBase
         var mousePos = mouseState.Position;
         var deltaTime = (float)gameTime.DeltaTime.TotalSeconds;
 
-        // Calculate mouse movement
-        var mouseDelta = mousePos - _lastMousePos;
-        var mouseSpeed = mouseDelta.Length() / (deltaTime > 0 ? deltaTime : 0.016f);
-
-        // Accumulate distance for spawning
-        if (_lastMousePos != Vector2.Zero)
+        // Auto Fire mode - spawn particles continuously at mouse position
+        if (_autoFire)
         {
-            _accumulatedDistance += mouseDelta.Length();
+            _autoFireAccumulator += deltaTime * _autoFireSpawnRate;
+            while (_autoFireAccumulator >= 1f)
+            {
+                _autoFireAccumulator -= 1f;
+                SpawnAutoFireParticle(mousePos);
+            }
         }
-
-        // Spawn new particles based on mouse movement
-        var spawnInterval = 1f / (ParticleSpawnRate * _intensity);
-        if (gameTime.TotalTime.TotalSeconds - _lastSpawnTime >= spawnInterval && mouseSpeed > 5f)
+        else
         {
-            SpawnFireParticles(mousePos, mouseDelta, mouseSpeed, deltaTime);
-            _lastSpawnTime = (float)gameTime.TotalTime.TotalSeconds;
+            // Normal mode - spawn based on mouse movement
+            var mouseDelta = mousePos - _lastMousePos;
+            var mouseSpeed = mouseDelta.Length() / (deltaTime > 0 ? deltaTime : 0.016f);
+
+            // Accumulate distance for spawning
+            if (_lastMousePos != Vector2.Zero)
+            {
+                _accumulatedDistance += mouseDelta.Length();
+            }
+
+            // Spawn new particles based on mouse movement
+            var spawnInterval = 1f / (ParticleSpawnRate * _intensity);
+            if (gameTime.TotalTime.TotalSeconds - _lastSpawnTime >= spawnInterval && mouseSpeed > 5f)
+            {
+                SpawnFireParticles(mousePos, mouseDelta, mouseSpeed, deltaTime);
+                _lastSpawnTime = (float)gameTime.TotalTime.TotalSeconds;
+            }
         }
 
         // Update existing particles
@@ -228,30 +256,112 @@ public sealed class FireTrailEffect : EffectBase
         _lastMousePos = mousePos;
     }
 
+    private void SpawnAutoFireParticle(Vector2 position)
+    {
+        // Spawn fire particle with random horizontal spread
+        var perpendicular = new Vector2(1, 0); // Horizontal spread
+        var offset = perpendicular * ((float)_random.NextDouble() * 2 - 1) * _flameWidth * 0.5f;
+        position += offset;
+
+        var idx = _nextParticleIndex;
+        _nextParticleIndex = (_nextParticleIndex + 1) % MaxParticles;
+
+        // Style modifiers
+        float sizeMultiplier = _fireStyle switch { 1 => 0.7f, 2 => 1.5f, _ => 1.0f };
+        float tempBoost = _fireStyle switch { 1 => 0.15f, 2 => 0.1f, _ => 0.0f };
+        float brightnessMultiplier = _fireStyle switch { 1 => 1.1f, 2 => 1.4f, _ => 1.0f };
+
+        // Determine particle type based on settings
+        int particleType = 0; // Default fire
+        if (_random.NextDouble() < _smokeAmount * 0.5f)
+            particleType = 1; // Smoke
+        else if (_random.NextDouble() < _emberAmount)
+            particleType = 2; // Ember
+
+        var particle = new FireParticle
+        {
+            Position = position,
+            Lifetime = _particleLifetime,
+            MaxLifetime = _particleLifetime,
+            ParticleType = particleType
+        };
+
+        switch (particleType)
+        {
+            case 0: // Fire
+                particle.Velocity = new Vector2(
+                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 15f,
+                    -_autoFireSpeed * (0.8f + (float)_random.NextDouble() * 0.4f)
+                );
+                particle.Size = (8f + (float)_random.NextDouble() * 12f) * sizeMultiplier;
+                particle.Temperature = Math.Min(1.0f, 0.8f + (float)_random.NextDouble() * 0.2f + tempBoost);
+                particle.Color = new Vector4(1f, 0.8f, 0.2f, 1f);
+                particle.Brightness = (1.0f + (float)_random.NextDouble() * 0.5f) * brightnessMultiplier;
+                particle.Rotation = (float)_random.NextDouble() * MathF.PI * 2;
+                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 3f;
+                break;
+            case 1: // Smoke
+                particle.Velocity = new Vector2(
+                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 10f,
+                    -_autoFireSpeed * 0.4f * (0.8f + (float)_random.NextDouble() * 0.4f)
+                );
+                particle.Size = (12f + (float)_random.NextDouble() * 20f) * sizeMultiplier;
+                particle.Temperature = 0.2f;
+                particle.Color = new Vector4(0.3f, 0.3f, 0.3f, 0.5f);
+                particle.Brightness = 0.4f;
+                particle.Rotation = (float)_random.NextDouble() * MathF.PI * 2;
+                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 2f;
+                break;
+            case 2: // Ember
+                particle.Velocity = new Vector2(
+                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 30f,
+                    -_autoFireSpeed * (0.5f + (float)_random.NextDouble() * 0.8f)
+                );
+                particle.Size = 2f + (float)_random.NextDouble() * 3f;
+                particle.Temperature = 1.0f;
+                particle.Color = new Vector4(1f, 0.5f, 0.1f, 1f);
+                particle.Brightness = 2.0f;
+                particle.Rotation = (float)_random.NextDouble() * MathF.PI * 2;
+                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 8f;
+                break;
+        }
+
+        _particles[idx] = particle;
+        _activeParticleCount = Math.Min(_activeParticleCount + 1, MaxParticles);
+    }
+
     private void SpawnFireParticles(Vector2 position, Vector2 velocity, float speed, float deltaTime)
     {
         var normalizedVelocity = velocity.Length() > 0 ? Vector2.Normalize(velocity) : Vector2.Zero;
         var perpendicular = new Vector2(-normalizedVelocity.Y, normalizedVelocity.X);
 
-        // Spawn multiple particles per frame based on intensity
-        int particlesToSpawn = (int)(1 + _intensity * 3);
+        // Spawn multiple particles per frame based on intensity and style
+        // Campfire=normal, Torch=fewer but focused, Inferno=many chaotic
+        float styleSpawnMultiplier = _fireStyle switch { 1 => 0.8f, 2 => 1.6f, _ => 1.0f };
+        int particlesToSpawn = (int)(1 + _intensity * 3 * styleSpawnMultiplier);
+
+        // Adjust smoke/ember chances based on style
+        // Torch: less smoke, fewer embers (focused flame)
+        // Inferno: normal smoke, more embers (sparks flying)
+        float smokeChance = _fireStyle switch { 1 => _smokeAmount * 0.5f, 2 => _smokeAmount, _ => _smokeAmount };
+        float emberChance = _fireStyle switch { 1 => _emberAmount * 0.7f, 2 => _emberAmount * 1.8f, _ => _emberAmount };
 
         for (int i = 0; i < particlesToSpawn; i++)
         {
             // Fire particle
-            if (_random.NextDouble() < (1.0 - _smokeAmount))
+            if (_random.NextDouble() < (1.0 - smokeChance))
             {
                 SpawnParticle(position, perpendicular, 0); // Fire
             }
 
             // Smoke particle
-            if (_random.NextDouble() < _smokeAmount)
+            if (_random.NextDouble() < smokeChance)
             {
                 SpawnParticle(position, perpendicular, 1); // Smoke
             }
 
             // Ember particle
-            if (_random.NextDouble() < _emberAmount)
+            if (_random.NextDouble() < emberChance)
             {
                 SpawnParticle(position, perpendicular, 2); // Ember
             }
@@ -275,29 +385,36 @@ public sealed class FireTrailEffect : EffectBase
             ParticleType = type
         };
 
+        // Style modifiers: Campfire=0, Torch=1, Inferno=2
+        float sizeMultiplier = _fireStyle switch { 1 => 0.7f, 2 => 1.5f, _ => 1.0f };
+        float heightMultiplier = _fireStyle switch { 1 => 1.4f, 2 => 1.2f, _ => 1.0f };
+        float spreadMultiplier = _fireStyle switch { 1 => 0.4f, 2 => 1.8f, _ => 1.0f };
+        float tempBoost = _fireStyle switch { 1 => 0.15f, 2 => 0.1f, _ => 0.0f };
+        float brightnessMultiplier = _fireStyle switch { 1 => 1.1f, 2 => 1.4f, _ => 1.0f };
+
         switch (type)
         {
             case 0: // Fire
                 particle.Velocity = new Vector2(
-                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 20f,
-                    -_flameHeight * (0.5f + (float)_random.NextDouble() * 0.5f)
+                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 20f * spreadMultiplier,
+                    -_flameHeight * heightMultiplier * (0.5f + (float)_random.NextDouble() * 0.5f)
                 );
-                particle.Size = 8f + (float)_random.NextDouble() * 12f;
-                particle.Temperature = 0.8f + (float)_random.NextDouble() * 0.2f;
+                particle.Size = (8f + (float)_random.NextDouble() * 12f) * sizeMultiplier;
+                particle.Temperature = Math.Min(1.0f, 0.8f + (float)_random.NextDouble() * 0.2f + tempBoost);
                 particle.Color = new Vector4(1f, 0.8f, 0.2f, 1f);
-                particle.Brightness = 1.0f + (float)_random.NextDouble() * 0.5f;
+                particle.Brightness = (1.0f + (float)_random.NextDouble() * 0.5f) * brightnessMultiplier;
                 particle.Rotation = (float)_random.NextDouble() * MathF.PI * 2;
-                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 3f;
+                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 3f * (_fireStyle == 2 ? 2f : 1f);
                 break;
 
             case 1: // Smoke
                 particle.Velocity = new Vector2(
-                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 15f,
-                    -_flameHeight * 0.3f * (0.8f + (float)_random.NextDouble() * 0.4f)
+                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 15f * spreadMultiplier,
+                    -_flameHeight * 0.3f * heightMultiplier * (0.8f + (float)_random.NextDouble() * 0.4f)
                 );
-                particle.Size = 12f + (float)_random.NextDouble() * 20f;
+                particle.Size = (12f + (float)_random.NextDouble() * 20f) * sizeMultiplier;
                 particle.Temperature = 0.2f + (float)_random.NextDouble() * 0.1f;
-                particle.Color = new Vector4(0.3f, 0.3f, 0.3f, 0.6f);
+                particle.Color = new Vector4(0.3f, 0.3f, 0.3f, _fireStyle == 1 ? 0.4f : 0.6f);
                 particle.Brightness = 0.3f + (float)_random.NextDouble() * 0.3f;
                 particle.Rotation = (float)_random.NextDouble() * MathF.PI * 2;
                 particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 2f;
@@ -305,15 +422,15 @@ public sealed class FireTrailEffect : EffectBase
 
             case 2: // Ember
                 particle.Velocity = new Vector2(
-                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 25f,
-                    -_flameHeight * (0.3f + (float)_random.NextDouble() * 0.7f)
+                    ((float)_random.NextDouble() * 2 - 1) * _turbulenceAmount * 25f * spreadMultiplier * 1.5f,
+                    -_flameHeight * heightMultiplier * (0.3f + (float)_random.NextDouble() * 0.7f)
                 );
-                particle.Size = 2f + (float)_random.NextDouble() * 4f;
+                particle.Size = (2f + (float)_random.NextDouble() * 4f) * (_fireStyle == 2 ? 1.3f : 1f);
                 particle.Temperature = 1.0f;
                 particle.Color = new Vector4(1f, 0.5f, 0.1f, 1f);
-                particle.Brightness = 1.5f + (float)_random.NextDouble() * 1f;
+                particle.Brightness = (1.5f + (float)_random.NextDouble() * 1f) * brightnessMultiplier;
                 particle.Rotation = (float)_random.NextDouble() * MathF.PI * 2;
-                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 8f;
+                particle.RotationSpeed = ((float)_random.NextDouble() * 2 - 1) * 8f * (_fireStyle == 2 ? 1.5f : 1f);
                 break;
         }
 

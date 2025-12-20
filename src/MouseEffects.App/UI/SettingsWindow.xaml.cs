@@ -283,6 +283,10 @@ public partial class SettingsWindow : Window
         ToggleHotkeyCheckBox.IsChecked = settings.EnableToggleHotkey;
         SettingsHotkeyCheckBox.IsChecked = settings.EnableSettingsHotkey;
         ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
+        ForceTopmostHotkeyCheckBox.IsChecked = settings.EnableForceTopmostHotkey;
+        PreviousEffectHotkeyCheckBox.IsChecked = settings.EnablePreviousEffectHotkey;
+        NextEffectHotkeyCheckBox.IsChecked = settings.EnableNextEffectHotkey;
+        AlwaysOnTopCheckBox.IsChecked = settings.AlwaysOnTop;
     }
 
     private void ToggleHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -325,6 +329,62 @@ public partial class SettingsWindow : Window
 
         // Update hotkey registration
         Program.UpdateScreenCaptureHotkey(enabled);
+    }
+
+    private void ForceTopmostHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = ForceTopmostHotkeyCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableForceTopmostHotkey = enabled;
+        settings.Save();
+
+        // Update hotkey registration
+        Program.UpdateForceTopmostHotkey(enabled);
+    }
+
+    private void AlwaysOnTopCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var alwaysOnTop = AlwaysOnTopCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.AlwaysOnTop = alwaysOnTop;
+        settings.Save();
+
+        // Apply immediately to this window
+        Topmost = alwaysOnTop;
+    }
+
+    private void PreviousEffectHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = PreviousEffectHotkeyCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnablePreviousEffectHotkey = enabled;
+        settings.Save();
+
+        // Update hotkey registration
+        Program.UpdatePreviousEffectHotkey(enabled);
+    }
+
+    private void NextEffectHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = NextEffectHotkeyCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableNextEffectHotkey = enabled;
+        settings.Save();
+
+        // Update hotkey registration
+        Program.UpdateNextEffectHotkey(enabled);
     }
 
     private void LoadGpuList()
@@ -996,8 +1056,11 @@ public partial class SettingsWindow : Window
         // Suspend overlay topmost enforcement so settings window can stay on top
         Program.SuspendTopmostEnforcement();
 
-        // Make settings window topmost so it appears above the overlay
-        Topmost = true;
+        // Make settings window topmost so it appears above the overlay (if enabled)
+        if (Program.Settings.AlwaysOnTop)
+        {
+            Topmost = true;
+        }
 
         // Restart FPS timer when window becomes visible (if enabled)
         if (Program.Settings.ShowFpsCounter)

@@ -1149,7 +1149,7 @@ public sealed class SacredGeometriesEffect : EffectBase
             ViewportSize = _viewportSize,
             Time = totalTime,
             GlowIntensity = _glowIntensity,
-            HdrMultiplier = 1.5f,
+            HdrMultiplier = context.HdrPeakBrightness,
             LineThickness = _lineThickness,
             ActiveMandalaCount = _activeMandalaCount,
             TwinkleIntensity = _twinkleIntensity,

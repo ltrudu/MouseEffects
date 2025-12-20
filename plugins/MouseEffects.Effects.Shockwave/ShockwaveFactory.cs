@@ -36,7 +36,6 @@ public sealed class ShockwaveFactory : IEffectFactory
         config.Set("sw_glowIntensity", 1.5f);
         config.Set("sw_enableDistortion", true);
         config.Set("sw_distortionStrength", 20f);
-        config.Set("sw_hdrBrightness", 1.0f);
 
         // Click settings
         config.Set("sw_spawnOnLeftClick", true);
@@ -137,16 +136,6 @@ public sealed class ShockwaveFactory : IEffectFactory
                     MaxValue = 100f,
                     DefaultValue = 20f,
                     Step = 5f
-                },
-                new FloatParameter
-                {
-                    Key = "sw_hdrBrightness",
-                    DisplayName = "HDR Brightness",
-                    Description = "Brightness multiplier for HDR displays",
-                    MinValue = 0.1f,
-                    MaxValue = 10f,
-                    DefaultValue = 1.0f,
-                    Step = 0.1f
                 },
 
                 // Click settings

@@ -28,15 +28,15 @@ public sealed class FireTrailFactory : IEffectFactory
 
         // General settings
         config.Set("ft_enabled", true);
-        config.Set("ft_intensity", 1.0f);
-        config.Set("ft_particleLifetime", 1.5f);
+        config.Set("ft_intensity", 0.35f);
+        config.Set("ft_particleLifetime", 3.0f);
 
         // Flame appearance
         config.Set("ft_flameHeight", 80f);
         config.Set("ft_flameWidth", 40f);
         config.Set("ft_turbulenceAmount", 0.5f);
         config.Set("ft_flickerSpeed", 15f);
-        config.Set("ft_glowIntensity", 1.2f);
+        config.Set("ft_glowIntensity", 0.8f);
         config.Set("ft_colorSaturation", 1.0f);
 
         // Fire style
@@ -50,9 +50,10 @@ public sealed class FireTrailFactory : IEffectFactory
         config.Set("ft_minSpeed", 20f);
         config.Set("ft_maxSpeed", 60f);
 
-        // HDR settings
-        config.Set("ft_hdrEnabled", true);
-        config.Set("ft_hdrBrightness", 2.0f);
+        // Auto fire settings
+        config.Set("ft_autoFire", true);
+        config.Set("ft_autoFireSpawnRate", 50f);
+        config.Set("ft_autoFireSpeed", 120f);
 
         return config;
     }
@@ -187,23 +188,33 @@ public sealed class FireTrailFactory : IEffectFactory
                     Step = 0.05f
                 },
 
-                // HDR
+                // Auto Fire
                 new BoolParameter
                 {
-                    Key = "ft_hdrEnabled",
-                    DisplayName = "HDR Enabled",
-                    Description = "Enable HDR brightness for fire",
+                    Key = "ft_autoFire",
+                    DisplayName = "Auto Fire",
+                    Description = "Continuously spawn fire particles without mouse movement",
                     DefaultValue = true
                 },
                 new FloatParameter
                 {
-                    Key = "ft_hdrBrightness",
-                    DisplayName = "HDR Brightness",
-                    Description = "Peak brightness for HDR displays",
-                    MinValue = 1f,
-                    MaxValue = 5f,
-                    DefaultValue = 2.0f,
-                    Step = 0.1f
+                    Key = "ft_autoFireSpawnRate",
+                    DisplayName = "Auto Fire Spawn Rate",
+                    Description = "Particles spawned per second in auto fire mode",
+                    MinValue = 10f,
+                    MaxValue = 200f,
+                    DefaultValue = 50f,
+                    Step = 10f
+                },
+                new FloatParameter
+                {
+                    Key = "ft_autoFireSpeed",
+                    DisplayName = "Auto Fire Speed",
+                    Description = "Speed of auto fire particles",
+                    MinValue = 20f,
+                    MaxValue = 200f,
+                    DefaultValue = 120f,
+                    Step = 10f
                 }
             ]
         };
