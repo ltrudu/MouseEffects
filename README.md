@@ -24,7 +24,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 
 ## Built-in Effects
 
-MouseEffects includes **45 stunning visual effects** organized into categories:
+MouseEffects includes **46 stunning visual effects** organized into categories:
 
 ### 🌟 Particle Effects
 
@@ -93,6 +93,7 @@ MouseEffects includes **45 stunning visual effects** organized into categories:
 | **Ink Blot** | Ink splatter and watercolor bleeding effects |
 | **Paint Splatter** | Colorful paint splashes and drips from cursor movement |
 | **Pixel Explosion** | Retro pixel-style explosions bursting from clicks |
+| **Procedural Sigil** | Magical arcane sigil with procedural geometry, runes, counter-rotating rings, and glowing energy |
 | **Runes** | Ancient mystical runes appearing and fading around cursor |
 | **Sacred Geometries** | Sacred geometry patterns: Flower of Life, Metatron's Cube, Sri Yantra |
 | **Spirograph** | Mathematical spirograph patterns drawn by cursor movement |
@@ -189,7 +190,7 @@ MouseEffects/
 │   ├── MouseEffects.Overlay/     # Overlay window management
 │   ├── MouseEffects.Plugins/     # Plugin loading system
 │   └── MouseEffects.App/         # Main application
-├── plugins/                      # 45 built-in effect plugins
+├── plugins/                      # 46 built-in effect plugins
 │   ├── MouseEffects.Effects.ASCIIZer/
 │   ├── MouseEffects.Effects.Aurora/
 │   ├── MouseEffects.Effects.BlackHole/
@@ -221,6 +222,7 @@ MouseEffects/
 │   ├── MouseEffects.Effects.PixelExplosion/
 │   ├── MouseEffects.Effects.PixieDust/
 │   ├── MouseEffects.Effects.Portal/
+│   ├── MouseEffects.Effects.ProceduralSigil/
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.Retro/
 │   ├── MouseEffects.Effects.RetroCommand/
