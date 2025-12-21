@@ -67,7 +67,7 @@
             <TextBlock Text="Visual Style" Style="{StaticResource LabelStyle}"/>
             <ComboBox x:Name="RenderStyleCombo" SelectionChanged="RenderStyleCombo_Changed" Margin="0,0,0,4">
                 <ComboBoxItem Content="Modern (Neon)" IsSelected="True"/>
-                <ComboBoxItem Content="Retro (Atari)"/>
+                <ComboBoxItem Content="Retro (Arcade)"/>
             </ComboBox>
 
             <!-- ========== CANNON SETTINGS ========== -->
@@ -102,15 +102,15 @@
             <TextBlock Text="RETROPEDE SETTINGS" Style="{StaticResource SectionStyle}"/>
 
             <TextBlock Text="Base Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="BaseSpeedSlider" Minimum="30" Maximum="150" Value="60"
+            <Slider x:Name="BaseSpeedSlider" Minimum="30" Maximum="300" Value="80"
                     Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
-            <TextBlock x:Name="BaseSpeedValue" Text="60" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="BaseSpeedValue" Text="80" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Starting Segments" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="StartingSegmentsSlider" Minimum="6" Maximum="16" Value="10"
+            <Slider x:Name="StartingSegmentsSlider" Minimum="5" Maximum="50" Value="12"
                     Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"
                     IsSnapToTickEnabled="True" TickFrequency="1"/>
-            <TextBlock x:Name="StartingSegmentsValue" Text="10" Opacity="0.7" FontSize="11"/>
+            <TextBlock x:Name="StartingSegmentsValue" Text="12" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Segment Size (px)" Style="{StaticResource LabelStyle}"/>
             <Slider x:Name="SegmentSizeSlider" Minimum="12" Maximum="32" Value="20"
@@ -157,6 +157,12 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"
                     IsSnapToTickEnabled="True" TickFrequency="5"/>
             <TextBlock x:Name="InitialMushroomCountValue" Text="50" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Mushroom Free Zone (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="MushroomFreeZoneSlider" Minimum="0" Maximum="200" Value="80"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"
+                    IsSnapToTickEnabled="True" TickFrequency="10"/>
+            <TextBlock x:Name="MushroomFreeZoneValue" Text="80" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Mushroom Color" Style="{StaticResource LabelStyle}"/>
             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
@@ -297,10 +303,6 @@
                     Style="{StaticResource SliderStyle}" ValueChanged="TimerDurationSlider_ValueChanged"
                     IsSnapToTickEnabled="True" TickFrequency="15"/>
             <TextBlock x:Name="TimerDurationValue" Text="2:00" Opacity="0.7" FontSize="11"/>
-
-            <CheckBox x:Name="EnableResetHotkeyCheckBox" Content="Reset Hotkey (Alt+Shift+R)" Margin="0,8,0,4"
-                      IsChecked="False" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
-                      ToolTip="Enable Alt+Shift+R to reset and restart the game"/>
 
         </StackPanel>
     </StackPanel>

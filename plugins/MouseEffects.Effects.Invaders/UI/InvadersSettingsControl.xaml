@@ -21,7 +21,7 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <TextBlock Text="Defend against waves of neon space invaders with rockets from your cursor"
+        <TextBlock Text="Defend against waves of neon retro invaders with rockets from your cursor"
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
         <!-- Score Display -->
@@ -62,6 +62,16 @@
 
         <!-- Settings Panel -->
         <StackPanel Margin="0,8,0,0">
+
+            <!-- ========== STYLE ========== -->
+            <TextBlock Text="STYLE" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Render Style" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
+            <ComboBox x:Name="RenderStyleComboBox" Width="120" HorizontalAlignment="Left"
+                      SelectionChanged="RenderStyleComboBox_SelectionChanged">
+                <ComboBoxItem Content="Modern" IsSelected="True"/>
+                <ComboBoxItem Content="Retro"/>
+            </ComboBox>
 
             <!-- ========== ROCKET SETTINGS ========== -->
             <TextBlock Text="ROCKET SETTINGS" Style="{StaticResource SectionStyle}"/>

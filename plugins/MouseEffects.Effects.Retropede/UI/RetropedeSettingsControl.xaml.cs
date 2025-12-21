@@ -65,7 +65,7 @@ public partial class RetropedeSettingsControl : System.Windows.Controls.UserCont
             CopyCurrentSettingsToConfig(config);
 
             // Update high scores
-            config.Set("highScoresJson", highScoresJson);
+            config.Set("mp_highScoresJson", highScoresJson);
 
             _effect.Configure(config);
             SettingsChanged?.Invoke(_effect.Metadata.Id);
@@ -89,13 +89,14 @@ public partial class RetropedeSettingsControl : System.Windows.Controls.UserCont
         config.Set("mp_baseSpeed", (float)BaseSpeedSlider.Value);
         config.Set("mp_startingSegments", (int)StartingSegmentsSlider.Value);
         config.Set("mp_segmentSize", (float)SegmentSizeSlider.Value);
-        config.Set("mp_retropedeHeadColor", _retropedeHeadColor);
-        config.Set("mp_retropedeBodyColor", _retropedeBodyColor);
+        config.Set("mp_headColor", _retropedeHeadColor);
+        config.Set("mp_bodyColor", _retropedeBodyColor);
 
         // Mushroom settings
         config.Set("mp_mushroomSize", (float)MushroomSizeSlider.Value);
         config.Set("mp_mushroomHealth", (int)MushroomHealthSlider.Value);
         config.Set("mp_initialMushroomCount", (int)InitialMushroomCountSlider.Value);
+        config.Set("mp_mushroomFreeZoneHeight", (float)MushroomFreeZoneSlider.Value);
         config.Set("mp_mushroomColor", _mushroomColor);
 
         // Spider settings
@@ -131,13 +132,10 @@ public partial class RetropedeSettingsControl : System.Windows.Controls.UserCont
         // Timer duration
         config.Set("mp_timerDuration", (float)TimerDurationSlider.Value);
 
-        // Reset hotkey
-        config.Set("mp_enableResetHotkey", EnableResetHotkeyCheckBox.IsChecked ?? false);
-
         // Preserve existing high scores
         if (_effect is RetropedeEffect me)
         {
-            config.Set("highScoresJson", me.GetHighScoresJson());
+            config.Set("mp_highScoresJson", me.GetHighScoresJson());
         }
     }
 
@@ -250,6 +248,11 @@ public partial class RetropedeSettingsControl : System.Windows.Controls.UserCont
             InitialMushroomCountSlider.Value = mushroomCount;
             InitialMushroomCountValue.Text = mushroomCount.ToString();
         }
+        if (_effect.Configuration.TryGet("mp_mushroomFreeZoneHeight", out float freeZone))
+        {
+            MushroomFreeZoneSlider.Value = freeZone;
+            MushroomFreeZoneValue.Text = freeZone.ToString("F0");
+        }
         if (_effect.Configuration.TryGet("mp_mushroomColor", out Vector4 mushroomColor))
         {
             _mushroomColor = mushroomColor;
@@ -353,9 +356,6 @@ public partial class RetropedeSettingsControl : System.Windows.Controls.UserCont
             TimerDurationValue.Text = $"{minutes}:{seconds:D2}";
         }
 
-        // Reset hotkey
-        if (_effect.Configuration.TryGet("mp_enableResetHotkey", out bool resetHotkey))
-            EnableResetHotkeyCheckBox.IsChecked = resetHotkey;
     }
 
     private void UpdateConfiguration()
@@ -402,6 +402,8 @@ public partial class RetropedeSettingsControl : System.Windows.Controls.UserCont
             MushroomHealthValue.Text = ((int)MushroomHealthSlider.Value).ToString();
         if (InitialMushroomCountValue != null)
             InitialMushroomCountValue.Text = ((int)InitialMushroomCountSlider.Value).ToString();
+        if (MushroomFreeZoneValue != null)
+            MushroomFreeZoneValue.Text = MushroomFreeZoneSlider.Value.ToString("F0");
 
         // Spider
         if (SpiderSpawnRateValue != null)

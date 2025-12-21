@@ -11,7 +11,7 @@ public enum RenderStyle
     Modern = 0,
 
     /// <summary>
-    /// Retro Atari 2600 style with blocky pixels and limited color palette.
+    /// Retro arcade style with blocky pixels and limited color palette.
     /// </summary>
     Retro = 1
 }

@@ -28,7 +28,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         }
     }
 
-    // Invader types matching classic Space Invaders
+    // Invader types matching classic Retro Invaders
     private enum InvaderType
     {
         Small = 0,   // Squid - top row, 200 points
@@ -84,6 +84,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     {
         public Vector2 ViewportSize;
         public float Time;
+        public float RenderStyle;      // 0=Modern, 1=Retro
         public float GlowIntensity;
         public float EnableTrails;
         public float TrailLength;
@@ -96,7 +97,6 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         public float Padding5;
         public float Padding6;
         public float Padding7;
-        public float Padding8;
     }
 
     private const int MaxInvaders = 100;
@@ -106,8 +106,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private static readonly EffectMetadata _metadata = new()
     {
         Id = "invaders",
-        Name = "Space Invaders",
-        Description = "Defend against waves of neon space invaders with rockets from your cursor",
+        Name = "Retro Invaders",
+        Description = "Defend against waves of neon retro invaders with rockets from your cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
         Category = EffectCategory.Interactive
@@ -168,6 +168,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private float _explosionGlowIntensity = 1.5f;
 
     // Visual configuration
+    private int _renderStyle = 0; // 0=Modern, 1=Retro
     private float _glowIntensity = 1.2f;
     private float _neonIntensity = 1.0f;
     private bool _enableTrails = true;
@@ -198,6 +199,10 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private bool _isGameOver; // True if ended due to collision (not timer)
     private string _gameOverReason = "";
     private bool _showWelcomeScreen = true;
+
+    // Clickable text constants
+    private const string ClickToStartText = "CLICK HERE TO START";
+    private const string ClickToRestartText = "CLICK HERE TO RESTART";
 
     // Reset hotkey
     private bool _enableResetHotkey;
@@ -368,6 +373,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             _explosionGlowIntensity = expGlow;
 
         // Visual settings
+        if (Configuration.TryGet("renderStyle", out int style))
+            _renderStyle = style;
         if (Configuration.TryGet("glowIntensity", out float glow))
             _glowIntensity = glow;
         if (Configuration.TryGet("neonIntensity", out float neon))
@@ -523,25 +530,59 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             if (_rainbowHue > 1f) _rainbowHue -= 1f;
         }
 
-        // Handle welcome screen - click to start
+        // Handle welcome screen - click on text to start
         if (_showWelcomeScreen)
         {
             bool leftPressed = mouseState.IsButtonPressed(MouseButtons.Left);
             if (leftPressed && !_wasLeftPressed)
             {
-                _showWelcomeScreen = false;
+                float centerX = _viewportWidth / 2f;
+                float centerY = _viewportHeight / 2f;
+                var textPos = new Vector2(centerX, centerY + _scoreOverlaySize * 3f);
+                float textSize = _scoreOverlaySize * 0.8f;
+
+                if (IsPointInCenteredText(mouseState.Position, ClickToStartText, textPos, textSize))
+                {
+                    _showWelcomeScreen = false;
+                    _isGameActive = true; // Start the game when welcome screen is dismissed
+                }
             }
             _wasLeftPressed = leftPressed;
             return; // Skip all game logic while showing welcome screen
         }
 
-        // Handle game over/success - click to restart (go back to welcome screen)
+        // Handle game over/success - click on text to restart (go back to welcome screen)
         if (_isGameEnded)
         {
             bool leftPressed = mouseState.IsButtonPressed(MouseButtons.Left);
             if (leftPressed && !_wasLeftPressed)
             {
-                ResetGame(); // This sets _showWelcomeScreen = true
+                float textSize = _scoreOverlaySize * 0.8f;
+                Vector2 textPos;
+
+                if (_isGameOver)
+                {
+                    // Game over screen - text below game over message
+                    var center = new Vector2(_viewportWidth / 2f, _viewportHeight / 2f);
+                    textPos = center + new Vector2(0, _scoreOverlaySize * 7f);
+                }
+                else
+                {
+                    // High scores screen - text below score entries (like Retropede)
+                    float hsCenterX = _viewportWidth / 2f;
+                    float hsCenterY = _viewportHeight / 2f;
+                    float hsEntrySize = _scoreOverlaySize * 1.0f;
+                    float entryY = hsCenterY - hsEntrySize * 1.5f;
+                    float entryLineHeight = hsEntrySize * 2.5f;
+                    int scoreCount = Math.Min(_highScores.Count, 5);
+                    entryY += scoreCount * entryLineHeight;
+                    textPos = new Vector2(hsCenterX, entryY + hsEntrySize);
+                }
+
+                if (IsPointInCenteredText(mouseState.Position, ClickToRestartText, textPos, textSize))
+                {
+                    ResetGame(); // This sets _showWelcomeScreen = true
+                }
             }
             _wasLeftPressed = leftPressed;
             return; // Skip game logic when ended
@@ -938,6 +979,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         {
             ViewportSize = context.ViewportSize,
             Time = totalTime,
+            RenderStyle = _renderStyle,
             GlowIntensity = _glowIntensity,
             EnableTrails = _enableTrails ? 1f : 0f,
             TrailLength = _trailLength,
@@ -1076,7 +1118,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         };
 
         _textOverlay.AddTextCentered("INVADERS", new Vector2(centerX, centerY - _scoreOverlaySize * 2f), titleStyle);
-        _textOverlay.AddTextCentered("PRESS LEFT MOUSE BUTTON TO START", new Vector2(centerX, centerY + _scoreOverlaySize * 3f), promptStyle);
+        _textOverlay.AddTextCentered(ClickToStartText, new Vector2(centerX, centerY + _scoreOverlaySize * 3f), promptStyle);
     }
 
     private void RenderTextOverlay(IRenderContext context, float totalTime)
@@ -1165,11 +1207,11 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 
             var gameOverStyle = new TextStyle
             {
-                Color = new Vector4(1f, 0.15f + colorShift, 0.1f + colorShift * 0.5f, glowPulse),
+                Color = new Vector4(1f, 1f, 1f, 1f),
                 Size = _scoreOverlaySize * 2.5f,
                 Spacing = _scoreOverlaySpacing,
                 GlowIntensity = 2.0f,
-                Animation = TextAnimation.Pulse(3f, 0.4f)
+                Animation = TextAnimation.Wave(2f, 8f, 0.15f)
             };
 
             var reasonStyle = new TextStyle
@@ -1186,13 +1228,13 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 Size = _scoreOverlaySize * 0.8f,
                 Spacing = _scoreOverlaySpacing,
                 GlowIntensity = 1.5f,
-                Animation = TextAnimation.Rainbow(0.5f)
+                Animation = TextAnimation.Wave(2f, 5f, 0.15f)
             };
 
             var center = new Vector2(_viewportWidth / 2f, _viewportHeight / 2f);
             _textOverlay.AddTextCentered("GAME OVER", center, gameOverStyle);
             _textOverlay.AddTextCentered(_gameOverReason, center + new Vector2(0, _scoreOverlaySize * 4f), reasonStyle);
-            _textOverlay.AddTextCentered("CLICK LEFT MOUSE TO RESTART", center + new Vector2(0, _scoreOverlaySize * 7f), restartStyle);
+            _textOverlay.AddTextCentered(ClickToRestartText, center + new Vector2(0, _scoreOverlaySize * 7f), restartStyle);
         }
 
         // High scores display (when game ends with win)
@@ -1214,11 +1256,11 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 
         var titleStyle = new TextStyle
         {
-            Color = new Vector4(0f, 0.9f, 1f, titlePulse),
+            Color = new Vector4(1f, 1f, 1f, 1f),
             Size = _scoreOverlaySize * 1.8f,
             Spacing = _scoreOverlaySpacing,
-            GlowIntensity = 1.5f,
-            Animation = TextAnimation.Pulse(1f, 0.3f)
+            GlowIntensity = 2.0f,
+            Animation = TextAnimation.Wave(2f, 8f, 0.15f)
         };
 
         float hsCenterX = _viewportWidth / 2f;
@@ -1268,16 +1310,16 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             entryY += entryLineHeight;
         }
 
-        // Add restart prompt
+        // Add restart prompt just below the last entry (like Retropede)
         var restartStyle = new TextStyle
         {
             Color = new Vector4(1f, 1f, 1f, 1f),
             Size = _scoreOverlaySize * 0.8f,
             Spacing = _scoreOverlaySpacing,
             GlowIntensity = 1.5f,
-            Animation = TextAnimation.Rainbow(0.5f)
+            Animation = TextAnimation.Wave(2f, 5f, 0.15f)
         };
-        _textOverlay.AddTextCentered("CLICK LEFT MOUSE TO RESTART", new Vector2(hsCenterX, hsCenterY + _scoreOverlaySize * 7f), restartStyle);
+        _textOverlay.AddTextCentered(ClickToRestartText, new Vector2(hsCenterX, entryY + hsEntrySize), restartStyle);
     }
 
     private static string FormatTimer(float remainingSeconds)
@@ -1287,6 +1329,22 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         return $"{minutes:D2}:{seconds:D2}";
+    }
+
+    private bool IsPointInCenteredText(Vector2 point, string text, Vector2 textCenter, float fontSize)
+    {
+        // Estimate text dimensions based on character count and font size
+        // Each character is roughly 0.7 * fontSize wide with spacing
+        float charWidth = fontSize * 0.7f * _scoreOverlaySpacing;
+        float textWidth = text.Length * charWidth;
+        float textHeight = fontSize * 1.5f; // Add some vertical padding
+
+        float left = textCenter.X - textWidth / 2f;
+        float right = textCenter.X + textWidth / 2f;
+        float top = textCenter.Y - textHeight / 2f;
+        float bottom = textCenter.Y + textHeight / 2f;
+
+        return point.X >= left && point.X <= right && point.Y >= top && point.Y <= bottom;
     }
 
     protected override void OnDispose()

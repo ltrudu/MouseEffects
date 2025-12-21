@@ -573,11 +573,17 @@ float4 PSMain(VSOutput input) : SV_TARGET
         float pulse = 0.6 + 0.4 * sin(animTime);
         baseColor.a *= pulse;
     }
+    else if (animType == 2) // Wave - also apply rainbow colors per character
+    {
+        float hue = frac(animTime * 0.3 + input.AnimationPhase * 2.0);
+        float3 rainbowColor = HsvToRgb(float3(hue, 0.9, 1.0));
+        baseColor.rgb = rainbowColor;
+    }
     else if (animType == 3) // Rainbow
     {
-        float hue = frac(animTime * 0.1 + input.AnimationPhase);
-        float3 rainbowColor = HsvToRgb(float3(hue, 0.8, 1.0));
-        baseColor.rgb = rainbowColor * baseColor.a;
+        float hue = frac(animTime * 0.3 + input.AnimationPhase * 2.0);
+        float3 rainbowColor = HsvToRgb(float3(hue, 0.9, 1.0));
+        baseColor.rgb = rainbowColor;
     }
     else if (animType == 4) // Breathing (size handled in VS, color pulse here)
     {

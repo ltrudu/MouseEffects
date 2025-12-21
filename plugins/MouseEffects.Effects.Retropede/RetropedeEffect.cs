@@ -137,7 +137,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     }
 
     private const int MaxRetropedeChains = 20;
-    private const int MaxSegmentsPerChain = 16;
+    private const int MaxSegmentsPerChain = 50;
     private const int MaxMushrooms = 200;
     private const int MaxLasers = 10;
     private const int MaxParticles = 2000;
@@ -193,6 +193,10 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     private string _gameOverReason = "";
     private float _playerZoneHeight = 200f; // Bottom area where cannon can move
 
+    // Clickable text constants
+    private const string ClickToStartText = "CLICK HERE TO START";
+    private const string ClickToRestartText = "CLICK HERE TO RESTART";
+
     // Laser configuration
     private bool _fireOnLeftClick = true;
     private bool _fireOnRightClick;
@@ -203,16 +207,17 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     private Vector4 _laserColor = new(0f, 1f, 0.5f, 1f);
 
     // Retropede configuration
-    private float _retropedeSegmentSize = 24f;
+    private float _retropedeSegmentSize = 20f;
     private float _retropedeSpeed = 80f;
     private float _retropedeDropDistance = 30f;
-    private int _initialSegments = 12;
+    private int _initialSegments = 12; // Configurable from 5 to 50
     private Vector4 _retropedeHeadColor = new(1f, 0.2f, 0.2f, 1f); // Red
     private Vector4 _retropedeBodyColor = new(0.8f, 0.2f, 1f, 1f); // Purple
 
     // Mushroom configuration
     private float _mushroomSize = 20f;
     private int _initialMushroomCount = 50;
+    private float _mushroomFreeZoneHeight = 80f; // Top zone where initial mushrooms won't spawn
     private Vector4 _mushroomColor = new(0f, 1f, 0.5f, 1f);
 
     // Spider configuration
@@ -261,8 +266,6 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     // Timer
     private float _timerDuration = 90f;
 
-    // Reset hotkey
-    private bool _enableResetHotkey = true;
 
     // High scores
     private List<HighScoreEntry> _highScores = new();
@@ -280,7 +283,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     public string GameOverReason => _gameOverReason;
     public bool WaitingForFirstHit => _waitingForFirstHit;
     public float PointsPerMinute => _elapsedTime > 0 ? (_score / (_elapsedTime / 60f)) : 0f;
-    public bool EnableResetHotkey => _enableResetHotkey;
+    public bool EnableResetHotkey => true;
     public IReadOnlyList<HighScoreEntry> HighScores => _highScores;
     public int NewHighScoreIndex => _newHighScoreIndex;
     public int CurrentWave => _currentWave;
@@ -295,7 +298,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
             DisplayName = "Reset Game",
             Modifiers = HotkeyModifiers.Alt | HotkeyModifiers.Shift,
             Key = HotkeyKey.R,
-            IsEnabled = _enableResetHotkey,
+            IsEnabled = true, // Always enabled
             Callback = ResetGame
         };
     }
@@ -407,63 +410,57 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
             _laserColor = laserCol;
 
         // Retropede settings
-        if (Configuration.TryGet("retropedeSegmentSize", out float segSize))
+        if (Configuration.TryGet("mp_segmentSize", out float segSize))
             _retropedeSegmentSize = segSize;
-        if (Configuration.TryGet("retropedeSpeed", out float millSpeed))
+        if (Configuration.TryGet("mp_baseSpeed", out float millSpeed))
             _retropedeSpeed = millSpeed;
-        if (Configuration.TryGet("retropedeDropDistance", out float dropDist))
-            _retropedeDropDistance = dropDist;
-        if (Configuration.TryGet("initialSegments", out int initSegs))
+        if (Configuration.TryGet("mp_startingSegments", out int initSegs))
             _initialSegments = Math.Clamp(initSegs, 1, MaxSegmentsPerChain);
-        if (Configuration.TryGet("retropedeHeadColor", out Vector4 headCol))
+        if (Configuration.TryGet("mp_headColor", out Vector4 headCol))
             _retropedeHeadColor = headCol;
-        if (Configuration.TryGet("retropedeBodyColor", out Vector4 bodyCol))
+        if (Configuration.TryGet("mp_bodyColor", out Vector4 bodyCol))
             _retropedeBodyColor = bodyCol;
 
         // Mushroom settings
-        if (Configuration.TryGet("mushroomSize", out float mushSize))
+        if (Configuration.TryGet("mp_mushroomSize", out float mushSize))
             _mushroomSize = mushSize;
-        if (Configuration.TryGet("initialMushroomCount", out int mushCount))
+        if (Configuration.TryGet("mp_initialMushroomCount", out int mushCount))
             _initialMushroomCount = Math.Clamp(mushCount, 0, MaxMushrooms);
-        if (Configuration.TryGet("mushroomColor", out Vector4 mushCol))
+        if (Configuration.TryGet("mp_mushroomFreeZoneHeight", out float freeZone))
+            _mushroomFreeZoneHeight = freeZone;
+        if (Configuration.TryGet("mp_mushroomColor", out Vector4 mushCol))
             _mushroomColor = mushCol;
 
         // Spider settings
-        if (Configuration.TryGet("spiderSize", out float spiderSz))
+        if (Configuration.TryGet("mp_spiderSize", out float spiderSz))
             _spiderSize = spiderSz;
-        if (Configuration.TryGet("spiderSpeed", out float spiderSpd))
+        if (Configuration.TryGet("mp_spiderSpeed", out float spiderSpd))
             _spiderSpeed = spiderSpd;
-        if (Configuration.TryGet("spiderSpawnRate", out float spiderRate))
+        if (Configuration.TryGet("mp_spiderSpawnRate", out float spiderRate))
             _spiderSpawnRate = spiderRate;
-        if (Configuration.TryGet("spiderColor", out Vector4 spiderCol))
+        if (Configuration.TryGet("mp_spiderColor", out Vector4 spiderCol))
             _spiderColor = spiderCol;
 
         // DDT settings
-        if (Configuration.TryGet("ddtSize", out float ddtSz))
-            _ddtSize = ddtSz;
-        if (Configuration.TryGet("ddtSpawnRate", out float ddtRate))
-            _ddtSpawnRate = ddtRate;
-        if (Configuration.TryGet("ddtExplosionDuration", out float ddtDur))
+        if (Configuration.TryGet("mp_ddtExplosionDuration", out float ddtDur))
             _ddtExplosionDuration = ddtDur;
-        if (Configuration.TryGet("ddtMaxGasRadius", out float ddtRadius))
+        if (Configuration.TryGet("mp_ddtExplosionRadius", out float ddtRadius))
             _ddtMaxGasRadius = ddtRadius;
-        if (Configuration.TryGet("ddtColor", out Vector4 ddtCol))
+        if (Configuration.TryGet("mp_ddtColor", out Vector4 ddtCol))
             _ddtColor = ddtCol;
 
         // Cannon settings
-        if (Configuration.TryGet("cannonSize", out float cannonSz))
+        if (Configuration.TryGet("mp_cannonSize", out float cannonSz))
             _cannonSize = cannonSz;
-        if (Configuration.TryGet("cannonColor", out Vector4 cannonCol))
-            _cannonColor = cannonCol;
-        if (Configuration.TryGet("playerZoneHeight", out float zoneHeight))
+        if (Configuration.TryGet("mp_playerZoneHeight", out float zoneHeight))
             _playerZoneHeight = zoneHeight;
 
         // Visual settings
-        if (Configuration.TryGet("glowIntensity", out float glow))
+        if (Configuration.TryGet("mp_glowIntensity", out float glow))
             _glowIntensity = glow;
-        if (Configuration.TryGet("neonIntensity", out float neon))
+        if (Configuration.TryGet("mp_neonIntensity", out float neon))
             _neonIntensity = neon;
-        if (Configuration.TryGet("animSpeed", out float anim))
+        if (Configuration.TryGet("mp_animSpeed", out float anim))
             _animSpeed = anim;
         if (Configuration.TryGet("mp_renderStyle", out float style))
             _renderStyle = style;
@@ -473,47 +470,35 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
             _retroPixelScale = pixelScale;
 
         // Scoring
-        if (Configuration.TryGet("scoreRetropedeHead", out int scoreHead))
+        if (Configuration.TryGet("mp_scoreHead", out int scoreHead))
             _scoreRetropedeHead = scoreHead;
-        if (Configuration.TryGet("scoreRetropedeBody", out int scoreBody))
+        if (Configuration.TryGet("mp_scoreBody", out int scoreBody))
             _scoreRetropedeBody = scoreBody;
-        if (Configuration.TryGet("scoreMushroom", out int scoreMush))
+        if (Configuration.TryGet("mp_scoreMushroom", out int scoreMush))
             _scoreMushroom = scoreMush;
-        if (Configuration.TryGet("scoreSpiderClose", out int scoreSpiderC))
+        if (Configuration.TryGet("mp_scoreSpiderClose", out int scoreSpiderC))
             _scoreSpiderClose = scoreSpiderC;
-        if (Configuration.TryGet("scoreSpiderMedium", out int scoreSpiderM))
+        if (Configuration.TryGet("mp_scoreSpiderMedium", out int scoreSpiderM))
             _scoreSpiderMedium = scoreSpiderM;
-        if (Configuration.TryGet("scoreSpiderFar", out int scoreSpiderF))
+        if (Configuration.TryGet("mp_scoreSpiderFar", out int scoreSpiderF))
             _scoreSpiderFar = scoreSpiderF;
 
         // Score overlay
-        if (Configuration.TryGet("showScoreOverlay", out bool showOverlay))
+        if (Configuration.TryGet("mp_showScoreOverlay", out bool showOverlay))
             _showScoreOverlay = showOverlay;
-        if (Configuration.TryGet("scoreOverlaySize", out float overlaySize))
+        if (Configuration.TryGet("mp_scoreOverlaySize", out float overlaySize))
             _scoreOverlaySize = overlaySize;
-        if (Configuration.TryGet("scoreOverlaySpacing", out float overlaySpacing))
-            _scoreOverlaySpacing = overlaySpacing;
-        if (Configuration.TryGet("scoreOverlayMargin", out float overlayMargin))
-            _scoreOverlayMargin = overlayMargin;
-        if (Configuration.TryGet("scoreOverlayBgOpacity", out float bgOpacity))
-            _scoreOverlayBgOpacity = bgOpacity;
-        if (Configuration.TryGet("scoreOverlayColor", out Vector4 overlayColor))
-            _scoreOverlayColor = overlayColor;
-        if (Configuration.TryGet("scoreOverlayX", out float overlayX))
+        if (Configuration.TryGet("mp_scoreOverlayX", out float overlayX))
             _scoreOverlayX = overlayX;
-        if (Configuration.TryGet("scoreOverlayY", out float overlayY))
+        if (Configuration.TryGet("mp_scoreOverlayY", out float overlayY))
             _scoreOverlayY = overlayY;
 
         // Timer
-        if (Configuration.TryGet("timerDuration", out float timerDur))
+        if (Configuration.TryGet("mp_timerDuration", out float timerDur))
             _timerDuration = timerDur;
 
-        // Reset hotkey
-        if (Configuration.TryGet("enableResetHotkey", out bool resetHotkey))
-            _enableResetHotkey = resetHotkey;
-
         // High scores
-        if (Configuration.TryGet("highScoresJson", out string? highScoresJson) && !string.IsNullOrEmpty(highScoresJson))
+        if (Configuration.TryGet("mp_highScoresJson", out string? highScoresJson) && !string.IsNullOrEmpty(highScoresJson))
         {
             try
             {
@@ -539,6 +524,22 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 new(500, "20/12/2025"),
                 new(200, "20/12/2025")
             };
+        }
+
+        // Apply speed changes to active segments in real-time
+        ApplySpeedToActiveSegments();
+    }
+
+    private void ApplySpeedToActiveSegments()
+    {
+        for (int i = 0; i < MaxRetropedeChains * MaxSegmentsPerChain; i++)
+        {
+            ref RetropedeSegment seg = ref _retropedeSegments[i];
+            if (!seg.IsActive) continue;
+
+            // Preserve direction, update speed magnitude
+            float direction = seg.MovingRight ? 1f : -1f;
+            seg.Velocity.X = direction * _retropedeSpeed;
         }
     }
 
@@ -605,25 +606,58 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     {
         float dt = (float)gameTime.DeltaTime.TotalSeconds;
 
-        // Handle welcome screen - click to start
+        // Handle welcome screen - click on text to start
         if (_showWelcomeScreen)
         {
             bool leftPressed = mouseState.IsButtonPressed(MouseButtons.Left);
             if (leftPressed && !_wasLeftPressed)
             {
-                _showWelcomeScreen = false;
+                float centerX = _viewportWidth / 2f;
+                float centerY = _viewportHeight / 2f;
+                var textPos = new Vector2(centerX, centerY + _scoreOverlaySize * 3f);
+                float textSize = _scoreOverlaySize * 0.8f;
+
+                if (IsPointInCenteredText(mouseState.Position, ClickToStartText, textPos, textSize))
+                {
+                    _showWelcomeScreen = false;
+                }
             }
             _wasLeftPressed = leftPressed;
             return; // Skip all game logic while showing welcome screen
         }
 
-        // Handle game over/success - click to restart (go back to welcome screen)
+        // Handle game over/success - click on text to restart (go back to welcome screen)
         if (_isGameEnded)
         {
             bool leftPressed = mouseState.IsButtonPressed(MouseButtons.Left);
             if (leftPressed && !_wasLeftPressed)
             {
-                ResetGame(); // This sets _showWelcomeScreen = true
+                float textSize = _scoreOverlaySize * 0.8f;
+                Vector2 textPos;
+
+                if (_isGameOver)
+                {
+                    // Game over screen - text below game over message
+                    var center = new Vector2(_viewportWidth / 2f, _viewportHeight / 2f);
+                    textPos = center + new Vector2(0, _scoreOverlaySize * 7f);
+                }
+                else
+                {
+                    // High scores screen - text below score entries
+                    float hsCenterX = _viewportWidth / 2f;
+                    float hsCenterY = _viewportHeight / 2f;
+                    float hsEntrySize = _scoreOverlaySize * 1.0f;
+                    float entryY = hsCenterY - hsEntrySize * 1.5f;
+                    float entryLineHeight = hsEntrySize * 2.5f;
+                    int scoreCount = Math.Min(_highScores.Count, 5);
+                    entryY += scoreCount * entryLineHeight;
+                    textPos = new Vector2(hsCenterX, entryY + hsEntrySize);
+                }
+
+                if (IsPointInCenteredText(mouseState.Position, ClickToRestartText, textPos, textSize))
+                {
+                    ResetGame(); // This sets _showWelcomeScreen = true
+                }
             }
             _wasLeftPressed = leftPressed;
             return; // Skip game logic when ended
@@ -1208,12 +1242,16 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
 
     private void SpawnInitialMushrooms()
     {
-        float playAreaHeight = _viewportHeight - _playerZoneHeight;
+        // Calculate spawn area: from mushroom free zone to player zone
+        float minY = _mushroomFreeZoneHeight;
+        float maxY = _viewportHeight - _playerZoneHeight;
+        float spawnHeight = maxY - minY;
+
         for (int i = 0; i < _initialMushroomCount; i++)
         {
             Vector2 pos = new Vector2(
                 Random.Shared.NextSingle() * _viewportWidth,
-                Random.Shared.NextSingle() * playAreaHeight * 0.7f + 50f
+                Random.Shared.NextSingle() * spawnHeight + minY
             );
 
             CreateMushroom(pos);
@@ -1412,7 +1450,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 Life = 1f,
                 MaxLife = 1f,
                 EntityType = seg.IsHead ? 3f : 4f,
-                RenderStyle = 0f,
+                RenderStyle = _renderStyle,
                 AnimPhase = seg.AnimPhase,
                 Health = 1f
             };
@@ -1435,7 +1473,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 Life = 1f,
                 MaxLife = 1f,
                 EntityType = entityType,
-                RenderStyle = 0f,
+                RenderStyle = _renderStyle,
                 AnimPhase = 0f,
                 Health = mush.Health
             };
@@ -1454,7 +1492,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 Life = 1f,
                 MaxLife = 1f,
                 EntityType = 9f,
-                RenderStyle = 0f,
+                RenderStyle = _renderStyle,
                 AnimPhase = _spider.AnimPhase,
                 Health = 1f
             };
@@ -1479,7 +1517,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                     Life = ddt.ExplosionTimer / _ddtExplosionDuration,
                     MaxLife = 1f,
                     EntityType = 11f,
-                    RenderStyle = 0f,
+                    RenderStyle = _renderStyle,
                     AnimPhase = 0f,
                     Health = 1f
                 };
@@ -1496,7 +1534,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                     Life = 1f,
                     MaxLife = 1f,
                     EntityType = 10f,
-                    RenderStyle = 0f,
+                    RenderStyle = _renderStyle,
                     AnimPhase = 0f,
                     Health = 1f
                 };
@@ -1519,7 +1557,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 Life = 1f,
                 MaxLife = 1f,
                 EntityType = 1f,
-                RenderStyle = 0f,
+                RenderStyle = _renderStyle,
                 AnimPhase = 0f,
                 Health = 1f
             };
@@ -1538,7 +1576,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 Life = 1f,
                 MaxLife = 1f,
                 EntityType = 2f,
-                RenderStyle = 0f,
+                RenderStyle = _renderStyle,
                 AnimPhase = 0f,
                 Health = 1f
             };
@@ -1628,7 +1666,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
         };
 
         _textOverlay.AddTextCentered("RETROPEDE", new Vector2(centerX, centerY - _scoreOverlaySize * 2f), titleStyle);
-        _textOverlay.AddTextCentered("PRESS LEFT MOUSE BUTTON TO START", new Vector2(centerX, centerY + _scoreOverlaySize * 3f), promptStyle);
+        _textOverlay.AddTextCentered(ClickToStartText, new Vector2(centerX, centerY + _scoreOverlaySize * 3f), promptStyle);
     }
 
     private void RenderTextOverlay(IRenderContext context, float totalTime)
@@ -1717,11 +1755,11 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
 
             var gameOverStyle = new TextStyle
             {
-                Color = new Vector4(1f, 0.15f + colorShift, 0.1f + colorShift * 0.5f, glowPulse),
+                Color = new Vector4(1f, 1f, 1f, 1f),
                 Size = _scoreOverlaySize * 2.5f,
                 Spacing = _scoreOverlaySpacing,
                 GlowIntensity = 2.0f,
-                Animation = TextAnimation.Pulse(3f, 0.4f)
+                Animation = TextAnimation.Wave(2f, 8f, 0.15f)
             };
 
             var reasonStyle = new TextStyle
@@ -1732,19 +1770,20 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 GlowIntensity = 1.5f
             };
 
+            // Restart text with wave animation and rainbow colors (shader handles rainbow)
             var restartStyle = new TextStyle
             {
                 Color = new Vector4(1f, 1f, 1f, 1f),
                 Size = _scoreOverlaySize * 0.8f,
                 Spacing = _scoreOverlaySpacing,
                 GlowIntensity = 1.5f,
-                Animation = TextAnimation.Rainbow(0.5f)
+                Animation = TextAnimation.Wave(2f, 5f, 0.15f)
             };
 
             var center = new Vector2(_viewportWidth / 2f, _viewportHeight / 2f);
             _textOverlay.AddTextCentered("GAME OVER", center, gameOverStyle);
             _textOverlay.AddTextCentered(_gameOverReason, center + new Vector2(0, _scoreOverlaySize * 4f), reasonStyle);
-            _textOverlay.AddTextCentered("CLICK LEFT MOUSE TO RESTART", center + new Vector2(0, _scoreOverlaySize * 7f), restartStyle);
+            _textOverlay.AddTextCentered(ClickToRestartText, center + new Vector2(0, _scoreOverlaySize * 7f), restartStyle);
         }
 
         // High scores display (when game ends with win)
@@ -1766,11 +1805,11 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
 
         var titleStyle = new TextStyle
         {
-            Color = new Vector4(0f, 0.9f, 1f, titlePulse),
+            Color = new Vector4(1f, 1f, 1f, 1f),
             Size = _scoreOverlaySize * 1.8f,
             Spacing = _scoreOverlaySpacing,
-            GlowIntensity = 1.5f,
-            Animation = TextAnimation.Pulse(1f, 0.3f)
+            GlowIntensity = 2.0f,
+            Animation = TextAnimation.Wave(2f, 8f, 0.15f)
         };
 
         float hsCenterX = _viewportWidth / 2f;
@@ -1820,16 +1859,16 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
             entryY += entryLineHeight;
         }
 
-        // Restart instruction with rainbow colors
+        // Restart instruction with wave animation and rainbow colors
         var restartStyle = new TextStyle
         {
             Color = new Vector4(1f, 1f, 1f, 1f),
             Size = _scoreOverlaySize * 0.8f,
             Spacing = _scoreOverlaySpacing,
             GlowIntensity = 1.5f,
-            Animation = TextAnimation.Rainbow(0.5f)
+            Animation = TextAnimation.Wave(2f, 5f, 0.15f)
         };
-        _textOverlay.AddTextCentered("CLICK LEFT MOUSE TO RESTART", new Vector2(hsCenterX, entryY + hsEntrySize), restartStyle);
+        _textOverlay.AddTextCentered(ClickToRestartText, new Vector2(hsCenterX, entryY + hsEntrySize), restartStyle);
     }
 
     private static string FormatTimer(float remainingSeconds)
@@ -1839,6 +1878,22 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
         int minutes = totalSeconds / 60;
         int seconds = totalSeconds % 60;
         return $"{minutes:D2}:{seconds:D2}";
+    }
+
+    private bool IsPointInCenteredText(Vector2 point, string text, Vector2 textCenter, float fontSize)
+    {
+        // Estimate text dimensions based on character count and font size
+        // Each character is roughly 0.7 * fontSize wide with spacing
+        float charWidth = fontSize * 0.7f * _scoreOverlaySpacing;
+        float textWidth = text.Length * charWidth;
+        float textHeight = fontSize * 1.5f; // Add some vertical padding
+
+        float left = textCenter.X - textWidth / 2f;
+        float right = textCenter.X + textWidth / 2f;
+        float top = textCenter.Y - textHeight / 2f;
+        float bottom = textCenter.Y + textHeight / 2f;
+
+        return point.X >= left && point.X <= right && point.Y >= top && point.Y <= bottom;
     }
 
     protected override void OnDispose()

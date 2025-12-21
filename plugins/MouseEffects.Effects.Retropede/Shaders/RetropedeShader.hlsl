@@ -1,4 +1,4 @@
-// Retropede shader with Modern (neon glow) and Retro (Atari 2600) rendering modes
+// Retropede shader with Modern (neon glow) and Retro (arcade) rendering modes
 // Entity types: 0=particle, 1=laser, 2=cannon
 // Entity types: 3=retropede head, 4=retropede body
 // Entity types: 5-8=mushroom (health 4 to 1)
@@ -239,6 +239,168 @@ float4 DrawSpiderModern(float2 uv, float anim, float4 baseColor)
     return float4(finalCol, totalAlpha);
 }
 
+// Quantize UV to pixel grid
+float2 QuantizeUV(float2 uv, float pixelScale)
+{
+    return floor(uv * pixelScale) / pixelScale;
+}
+
+// Retro color quantization (limited palette)
+float3 QuantizeColor(float3 color)
+{
+    // Quantize to 4 levels per channel (retro arcade style)
+    return floor(color * 4.0) / 4.0;
+}
+
+// Spider retro arcade style - blocky pixelated look
+float4 DrawSpiderRetro(float2 uv, float anim, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Pixelate coordinates for blocky look
+    float pixelSize = 0.15;
+    p = floor(p / pixelSize) * pixelSize;
+
+    // Blocky body (square-ish)
+    float2 bodySize = float2(0.4, 0.5);
+    float body = step(abs(p.x), bodySize.x) * step(abs(p.y), bodySize.y);
+
+    // Blocky eyes
+    float eyeL = step(abs(p.x + 0.2), 0.1) * step(abs(p.y + 0.2), 0.1);
+    float eyeR = step(abs(p.x - 0.2), 0.1) * step(abs(p.y + 0.2), 0.1);
+    float eyes = max(eyeL, eyeR);
+
+    // Blocky legs with simple animation
+    float legs = 0.0;
+    float legPhase = anim * 2.0;
+
+    for (int side = 0; side < 2; side++)
+    {
+        float xSign = side == 0 ? -1.0 : 1.0;
+        for (int i = 0; i < 4; i++)
+        {
+            float yOff = (i - 1.5) * 0.25;
+            float legAnim = step(0.0, sin(legPhase + i * 1.5)) * 0.1;
+            float2 legPos = float2(xSign * (0.55 + legAnim), yOff);
+            float leg = step(abs(p.x - legPos.x), 0.12) * step(abs(p.y - legPos.y), 0.08);
+            legs = max(legs, leg);
+        }
+    }
+
+    float totalAlpha = saturate(body + eyes + legs);
+
+    // Quantized colors for retro look
+    float3 bodyCol = QuantizeColor(baseColor.rgb);
+    float3 legCol = QuantizeColor(baseColor.rgb * 0.7);
+    float3 eyeCol = QuantizeColor(float3(1.0, 1.0, 0.0)); // Yellow eyes
+
+    float3 finalCol = bodyCol * body * (1.0 - eyes) + legCol * legs + eyeCol * eyes;
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Laser Retro (big square 8-bit pixel)
+float4 DrawLaserRetro(float2 uv, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Big square pixel - no pixelation needed, just a solid square
+    float pixel = step(abs(p.x), 0.7) * step(abs(p.y), 0.7);
+
+    float totalAlpha = pixel;
+
+    // Solid quantized color for classic 8-bit look
+    float3 pixelCol = QuantizeColor(baseColor.rgb);
+
+    return float4(pixelCol, totalAlpha);
+}
+
+// Cannon Retro (blocky player ship)
+float4 DrawCannonRetro(float2 uv, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Pixelate for blocky look
+    float pixelSize = 0.15;
+    p = floor(p / pixelSize) * pixelSize;
+
+    // Blocky base (wide rectangle)
+    float shipBase = step(abs(p.x), 0.5) * step(abs(p.y - 0.5), 0.2);
+
+    // Middle section
+    float middle = step(abs(p.x), 0.35) * step(abs(p.y - 0.15), 0.25);
+
+    // Top turret (narrow rectangle)
+    float turret = step(abs(p.x), 0.12) * step(abs(p.y + 0.5), 0.4);
+
+    float totalAlpha = saturate(shipBase + middle + turret);
+
+    float3 finalCol = QuantizeColor(baseColor.rgb) * totalAlpha;
+
+    return float4(finalCol, totalAlpha);
+}
+
+// DDT Bomb Retro (blocky canister)
+float4 DrawDDTBombRetro(float2 uv, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Pixelate for blocky look
+    float pixelSize = 0.12;
+    p = floor(p / pixelSize) * pixelSize;
+
+    // Blocky cylindrical body
+    float body = step(abs(p.x), 0.3) * step(abs(p.y), 0.55);
+
+    // Top cap (wider)
+    float cap = step(abs(p.x), 0.4) * step(abs(p.y + 0.65), 0.12);
+
+    // Label stripes (blocky horizontal bands)
+    float stripes = 0.0;
+    if (abs(p.y) < 0.35)
+    {
+        stripes = step(0.5, frac(p.y * 4.0 + 0.25));
+    }
+
+    float totalAlpha = saturate(body + cap);
+
+    float3 bodyCol = QuantizeColor(baseColor.rgb);
+    float3 stripeCol = QuantizeColor(float3(0.2, 0.2, 0.2));
+
+    float3 finalCol = lerp(bodyCol, stripeCol, stripes * body * 0.6);
+    finalCol += QuantizeColor(baseColor.rgb * 0.8) * cap;
+
+    return float4(finalCol, totalAlpha);
+}
+
+// DDT Gas Retro (blocky expanding cloud)
+float4 DrawDDTGasRetro(float2 uv, float lifeFactor, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Pixelate for blocky look
+    float pixelSize = 0.15;
+    p = floor(p / pixelSize) * pixelSize;
+
+    // Expanding blocky cloud (diamond shape)
+    float cloudSize = 0.3 + lifeFactor * 1.2;
+    float dist = abs(p.x) + abs(p.y); // Manhattan distance for diamond shape
+    float cloud = step(dist, cloudSize);
+
+    // Inner denser core
+    float core = step(dist, cloudSize * 0.5);
+
+    // Fade out as it expands
+    float alpha = cloud * (1.0 - lifeFactor * 0.6);
+
+    float3 gasCol = QuantizeColor(baseColor.rgb * float3(0.6, 1.2, 0.6)); // Green tint
+    float3 coreCol = QuantizeColor(baseColor.rgb * float3(0.8, 1.5, 0.8));
+
+    float3 finalCol = lerp(gasCol, coreCol, core);
+
+    return float4(finalCol, alpha * 0.7);
+}
+
 // DDT Bomb (cylindrical canister)
 float4 DrawDDTBombModern(float2 uv, float4 baseColor)
 {
@@ -334,21 +496,6 @@ float4 DrawLaserModern(float2 uv, float4 baseColor)
     return float4(finalCol, totalAlpha);
 }
 
-// Retro Mode Rendering Functions (pixel-based with hard edges)
-
-// Quantize UV to pixel grid
-float2 QuantizeUV(float2 uv, float pixelScale)
-{
-    return floor(uv * pixelScale) / pixelScale;
-}
-
-// Retro color quantization (limited palette)
-float3 QuantizeColor(float3 color)
-{
-    // Quantize to 4 levels per channel (Atari-style)
-    return floor(color * 4.0) / 4.0;
-}
-
 // Retro versions use step functions instead of smoothstep
 float4 DrawRetropedeHeadRetro(float2 uv, float anim, float4 baseColor)
 {
@@ -417,6 +564,16 @@ float DrawParticle(float2 uv, float lifeFactor)
     float2 center = uv - 0.5;
     float dist = length(center) * 2.0;
     float alpha = 1.0 - smoothstep(0.3, 1.0, dist);
+    return alpha * lifeFactor;
+}
+
+// Explosion particle retro (big solid 8-bit square)
+float DrawParticleRetro(float2 uv, float lifeFactor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Big solid square - classic 8-bit arcade style
+    float alpha = step(abs(p.x), 0.75) * step(abs(p.y), 0.75);
     return alpha * lifeFactor;
 }
 
@@ -748,16 +905,16 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Dispatch to appropriate rendering function
     if (entityType < 0.5) // Particle
     {
-        float shape = DrawParticle(uv, lifeFactor);
+        float shape = isRetro ? DrawParticleRetro(uv, lifeFactor) : DrawParticle(uv, lifeFactor);
         coloredResult = float4(baseColor.rgb, shape);
     }
     else if (entityType < 1.5) // Laser
     {
-        coloredResult = DrawLaserModern(uv, baseColor);
+        coloredResult = isRetro ? DrawLaserRetro(uv, baseColor) : DrawLaserModern(uv, baseColor);
     }
     else if (entityType < 2.5) // Cannon
     {
-        coloredResult = DrawCannonModern(uv, baseColor);
+        coloredResult = isRetro ? DrawCannonRetro(uv, baseColor) : DrawCannonModern(uv, baseColor);
     }
     else if (entityType < 3.5) // Retropede head
     {
@@ -774,15 +931,15 @@ float4 PSMain(VSOutput input) : SV_TARGET
     }
     else if (entityType < 9.5) // Spider
     {
-        coloredResult = DrawSpiderModern(uv, anim, baseColor);
+        coloredResult = isRetro ? DrawSpiderRetro(uv, anim, baseColor) : DrawSpiderModern(uv, anim, baseColor);
     }
     else if (entityType < 10.5) // DDT Bomb
     {
-        coloredResult = DrawDDTBombModern(uv, baseColor);
+        coloredResult = isRetro ? DrawDDTBombRetro(uv, baseColor) : DrawDDTBombModern(uv, baseColor);
     }
     else if (entityType < 11.5) // DDT Gas
     {
-        coloredResult = DrawDDTGasModern(uv, lifeFactor, baseColor);
+        coloredResult = isRetro ? DrawDDTGasRetro(uv, lifeFactor, baseColor) : DrawDDTGasModern(uv, lifeFactor, baseColor);
     }
     else if (entityType >= 12.0 && entityType < 22.0) // Digits 0-9
     {

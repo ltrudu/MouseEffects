@@ -26,41 +26,42 @@ public sealed class RetropedeFactory : IEffectFactory
 
         // Cannon/Laser settings
         config.Set("mp_spawnOnLeftClick", true);
-        config.Set("mp_spawnOnMove", false);
+        config.Set("mp_spawnOnMove", true);
         config.Set("mp_moveFireThreshold", 50f);
-        config.Set("mp_laserSpeed", 800f);
+        config.Set("mp_laserSpeed", 1000f);
         config.Set("mp_laserSize", 6f);
         config.Set("mp_cannonSize", 24f);
-        config.Set("mp_playerZoneHeight", 200f);
+        config.Set("mp_playerZoneHeight", 150f);
 
         // Retropede settings
-        config.Set("mp_baseSpeed", 60f);
+        config.Set("mp_baseSpeed", 100f);
         config.Set("mp_speedIncrement", 5f);
-        config.Set("mp_startingSegments", 12);
+        config.Set("mp_startingSegments", 25);
         config.Set("mp_segmentSize", 20f);
-        config.Set("mp_headColor", new Vector4(0.2f, 0.8f, 0.2f, 1f));
-        config.Set("mp_bodyColor", new Vector4(0.1f, 0.6f, 0.1f, 1f));
+        config.Set("mp_headColor", new Vector4(1f, 0.2f, 0.4f, 1f));
+        config.Set("mp_bodyColor", new Vector4(1f, 0.4f, 0.6f, 1f));
 
         // Mushroom settings
         config.Set("mp_mushroomSize", 16f);
-        config.Set("mp_mushroomHealth", 4);
-        config.Set("mp_initialMushroomCount", 30);
-        config.Set("mp_mushroomColor", new Vector4(0.9f, 0.3f, 0.3f, 1f));
+        config.Set("mp_mushroomHealth", 3);
+        config.Set("mp_initialMushroomCount", 50);
+        config.Set("mp_mushroomFreeZoneHeight", 130f);
+        config.Set("mp_mushroomColor", new Vector4(0.4f, 1f, 0.4f, 1f));
 
         // Spider settings
         config.Set("mp_spiderEnabled", true);
         config.Set("mp_spiderSpawnRate", 8f);
-        config.Set("mp_spiderSpeed", 100f);
+        config.Set("mp_spiderSpeed", 120f);
         config.Set("mp_spiderSize", 28f);
-        config.Set("mp_spiderColor", new Vector4(0.8f, 0.2f, 0.8f, 1f));
+        config.Set("mp_spiderColor", new Vector4(1f, 1f, 0.2f, 1f));
 
         // DDT settings
         config.Set("mp_ddtEnabled", true);
-        config.Set("mp_ddtMaxOnField", 4);
+        config.Set("mp_ddtMaxOnField", 3);
         config.Set("mp_ddtExplosionRadius", 80f);
         config.Set("mp_ddtExplosionDuration", 1.5f);
-        config.Set("mp_ddtColor", new Vector4(0.3f, 0.8f, 0.3f, 1f));
-        config.Set("mp_ddtGasColor", new Vector4(0.5f, 1f, 0.5f, 0.5f));
+        config.Set("mp_ddtColor", new Vector4(1f, 0f, 1f, 1f));
+        config.Set("mp_ddtGasColor", new Vector4(0f, 1f, 0f, 1f));
 
         // Scoring settings
         config.Set("mp_scoreHead", 100);
@@ -72,12 +73,12 @@ public sealed class RetropedeFactory : IEffectFactory
         config.Set("mp_scoreDDTKill", 200);
 
         // Visual settings
-        config.Set("mp_renderStyle", 0);
-        config.Set("mp_glowIntensity", 1.2f);
+        config.Set("mp_renderStyle", 1);
+        config.Set("mp_glowIntensity", 1.5f);
         config.Set("mp_neonIntensity", 1.0f);
         config.Set("mp_retroScanlines", 0.3f);
         config.Set("mp_retroPixelScale", 2f);
-        config.Set("mp_animSpeed", 2.0f);
+        config.Set("mp_animSpeed", 1.5f);
 
         // Explosion settings
         config.Set("mp_explosionParticleCount", 30);
@@ -89,8 +90,7 @@ public sealed class RetropedeFactory : IEffectFactory
         config.Set("mp_scoreOverlaySize", 32f);
         config.Set("mp_scoreOverlayX", 70f);
         config.Set("mp_scoreOverlayY", 50f);
-        config.Set("mp_timerDuration", 120f);
-        config.Set("mp_enableResetHotkey", false);
+        config.Set("mp_timerDuration", 30f);
 
         // Default high scores (stored as JSON, not shown in settings UI)
         config.Set("mp_highScoresJson", "[{\"PointsPerMinute\":2000,\"Date\":\"20/12/2025\"},{\"PointsPerMinute\":1500,\"Date\":\"20/12/2025\"},{\"PointsPerMinute\":1000,\"Date\":\"20/12/2025\"},{\"PointsPerMinute\":500,\"Date\":\"20/12/2025\"},{\"PointsPerMinute\":200,\"Date\":\"20/12/2025\"}]");
@@ -177,9 +177,9 @@ public sealed class RetropedeFactory : IEffectFactory
                     DisplayName = "Base Retropede Speed",
                     Description = "Starting speed of retropede (px/sec)",
                     MinValue = 30f,
-                    MaxValue = 150f,
-                    DefaultValue = 60f,
-                    Step = 5f
+                    MaxValue = 300f,
+                    DefaultValue = 100f,
+                    Step = 10f
                 },
                 new FloatParameter
                 {
@@ -196,9 +196,9 @@ public sealed class RetropedeFactory : IEffectFactory
                     Key = "mp_startingSegments",
                     DisplayName = "Starting Segments",
                     Description = "Number of segments in first wave",
-                    MinValue = 6,
-                    MaxValue = 16,
-                    DefaultValue = 12
+                    MinValue = 5,
+                    MaxValue = 50,
+                    DefaultValue = 25
                 },
                 new FloatParameter
                 {
@@ -215,7 +215,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Key = "mp_headColor",
                     DisplayName = "Head Color",
                     Description = "Color of retropede head segment",
-                    DefaultValue = new Vector4(0.2f, 0.8f, 0.2f, 1f),
+                    DefaultValue = new Vector4(1f, 0.2f, 0.4f, 1f),
                     SupportsAlpha = false
                 },
                 new ColorParameter
@@ -223,7 +223,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Key = "mp_bodyColor",
                     DisplayName = "Body Color",
                     Description = "Color of retropede body segments",
-                    DefaultValue = new Vector4(0.1f, 0.6f, 0.1f, 1f),
+                    DefaultValue = new Vector4(1f, 0.4f, 0.6f, 1f),
                     SupportsAlpha = false
                 },
 
@@ -245,7 +245,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Hits required to destroy a mushroom",
                     MinValue = 1,
                     MaxValue = 4,
-                    DefaultValue = 4
+                    DefaultValue = 3
                 },
                 new IntParameter
                 {
@@ -254,14 +254,24 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Number of random mushrooms at start",
                     MinValue = 10,
                     MaxValue = 100,
-                    DefaultValue = 30
+                    DefaultValue = 50
+                },
+                new FloatParameter
+                {
+                    Key = "mp_mushroomFreeZoneHeight",
+                    DisplayName = "Mushroom Free Zone",
+                    Description = "Top zone height where initial mushrooms won't spawn (px)",
+                    MinValue = 0f,
+                    MaxValue = 200f,
+                    DefaultValue = 130f,
+                    Step = 10f
                 },
                 new ColorParameter
                 {
                     Key = "mp_mushroomColor",
                     DisplayName = "Mushroom Color",
                     Description = "Color of mushrooms",
-                    DefaultValue = new Vector4(0.9f, 0.3f, 0.3f, 1f),
+                    DefaultValue = new Vector4(0.4f, 1f, 0.4f, 1f),
                     SupportsAlpha = false
                 },
 
@@ -290,7 +300,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Movement speed of spider (px/sec)",
                     MinValue = 50f,
                     MaxValue = 200f,
-                    DefaultValue = 100f,
+                    DefaultValue = 120f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -308,7 +318,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Key = "mp_spiderColor",
                     DisplayName = "Spider Color",
                     Description = "Color of spider",
-                    DefaultValue = new Vector4(0.8f, 0.2f, 0.8f, 1f),
+                    DefaultValue = new Vector4(1f, 1f, 0.2f, 1f),
                     SupportsAlpha = false
                 },
 
@@ -327,7 +337,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Maximum DDT bombs on screen",
                     MinValue = 1,
                     MaxValue = 6,
-                    DefaultValue = 4
+                    DefaultValue = 3
                 },
                 new FloatParameter
                 {
@@ -354,7 +364,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Key = "mp_ddtColor",
                     DisplayName = "DDT Bomb Color",
                     Description = "Color of DDT bomb",
-                    DefaultValue = new Vector4(0.3f, 0.8f, 0.3f, 1f),
+                    DefaultValue = new Vector4(1f, 0f, 1f, 1f),
                     SupportsAlpha = false
                 },
                 new ColorParameter
@@ -362,7 +372,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Key = "mp_ddtGasColor",
                     DisplayName = "DDT Gas Color",
                     Description = "Color of DDT gas cloud",
-                    DefaultValue = new Vector4(0.5f, 1f, 0.5f, 0.5f),
+                    DefaultValue = new Vector4(0f, 1f, 0f, 1f),
                     SupportsAlpha = true
                 },
 
@@ -439,7 +449,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "0=Modern (glow), 1=Retro (scanlines)",
                     MinValue = 0,
                     MaxValue = 1,
-                    DefaultValue = 0
+                    DefaultValue = 1
                 },
                 new FloatParameter
                 {
@@ -448,7 +458,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Glow intensity for modern style",
                     MinValue = 0f,
                     MaxValue = 3f,
-                    DefaultValue = 1.2f,
+                    DefaultValue = 1.5f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -488,7 +498,7 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Speed of animations",
                     MinValue = 0.5f,
                     MaxValue = 5f,
-                    DefaultValue = 2.0f,
+                    DefaultValue = 1.5f,
                     Step = 0.25f
                 },
 
@@ -570,18 +580,10 @@ public sealed class RetropedeFactory : IEffectFactory
                     Description = "Duration of the game in seconds",
                     MinValue = 30f,
                     MaxValue = 300f,
-                    DefaultValue = 120f,
+                    DefaultValue = 30f,
                     Step = 15f
                 },
 
-                // ========== HOTKEYS ==========
-                new BoolParameter
-                {
-                    Key = "mp_enableResetHotkey",
-                    DisplayName = "Reset Hotkey (Alt+Shift+R)",
-                    Description = "Enable Alt+Shift+R to reset and restart the game",
-                    DefaultValue = false
-                }
             ]
         };
     }
