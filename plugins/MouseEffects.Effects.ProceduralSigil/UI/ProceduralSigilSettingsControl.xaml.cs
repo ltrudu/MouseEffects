@@ -19,6 +19,9 @@ public partial class ProceduralSigilSettingsControl : UserControl
     {
         _isLoading = true;
 
+        // Alpha
+        SigilAlphaSlider.Value = _effect.SigilAlpha;
+
         // Style
         SigilStyleCombo.SelectedIndex = (int)_effect.Style;
         UpdateStylePanelsVisibility();
@@ -62,6 +65,15 @@ public partial class ProceduralSigilSettingsControl : UserControl
         TreeOfLifeScaleSlider.Value = _effect.TreeOfLifeScale;
         CosmicGlowSlider.Value = _effect.CosmicGlowIntensity;
 
+        // Energy Particles
+        ParticleTypeCombo.SelectedIndex = (int)_effect.ParticleType;
+        ParticleIntensitySlider.Value = _effect.ParticleIntensity;
+        ParticleSpeedSlider.Value = _effect.ParticleSpeed;
+        ParticleEntropySlider.Value = _effect.ParticleEntropy;
+        ParticleSizeSlider.Value = _effect.ParticleSize;
+        FireRiseHeightSlider.Value = _effect.FireRiseHeight;
+        ElectricitySpreadSlider.Value = _effect.ElectricitySpread;
+
         _isLoading = false;
     }
 
@@ -72,6 +84,13 @@ public partial class ProceduralSigilSettingsControl : UserControl
             ? Visibility.Visible : Visibility.Collapsed;
         MoonPanel.Visibility = style == ProceduralSigilEffect.SigilStyle.Moon
             ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SigilAlphaSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.SigilAlpha = (float)e.NewValue;
+        _effect.Configuration.Set("sigilAlpha", (float)e.NewValue);
     }
 
     private void SigilStyleCombo_Changed(object sender, SelectionChangedEventArgs e)
@@ -255,5 +274,55 @@ public partial class ProceduralSigilSettingsControl : UserControl
         if (_isLoading) return;
         _effect.CosmicGlowIntensity = (float)e.NewValue;
         _effect.Configuration.Set("cosmicGlowIntensity", (float)e.NewValue);
+    }
+
+    // Energy particle event handlers
+    private void ParticleTypeCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.ParticleType = (uint)ParticleTypeCombo.SelectedIndex;
+        _effect.Configuration.Set("particleType", ParticleTypeCombo.SelectedIndex);
+    }
+
+    private void ParticleIntensitySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ParticleIntensity = (float)e.NewValue;
+        _effect.Configuration.Set("particleIntensity", (float)e.NewValue);
+    }
+
+    private void ParticleSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ParticleSpeed = (float)e.NewValue;
+        _effect.Configuration.Set("particleSpeed", (float)e.NewValue);
+    }
+
+    private void ParticleEntropySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ParticleEntropy = (float)e.NewValue;
+        _effect.Configuration.Set("particleEntropy", (float)e.NewValue);
+    }
+
+    private void ParticleSizeSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ParticleSize = (float)e.NewValue;
+        _effect.Configuration.Set("particleSize", (float)e.NewValue);
+    }
+
+    private void FireRiseHeightSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireRiseHeight = (float)e.NewValue;
+        _effect.Configuration.Set("fireRiseHeight", (float)e.NewValue);
+    }
+
+    private void ElectricitySpreadSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ElectricitySpread = (float)e.NewValue;
+        _effect.Configuration.Set("electricitySpread", (float)e.NewValue);
     }
 }

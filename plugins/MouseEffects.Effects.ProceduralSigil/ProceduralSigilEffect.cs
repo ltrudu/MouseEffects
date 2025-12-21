@@ -83,6 +83,7 @@ public sealed class ProceduralSigilEffect : EffectBase
     // Effect Parameters
     private SigilStyle _sigilStyle = SigilStyle.ArcaneCircle;
     private PositionMode _positionMode = PositionMode.FollowCursor;
+    private float _sigilAlpha = 0.7f;
     private float _sigilRadius = 200f;
     private float _lineThickness = 2.0f;
     private float _glowIntensity = 1.5f;
@@ -112,6 +113,15 @@ public sealed class ProceduralSigilEffect : EffectBase
     private float _starfieldDensity = 0.5f;
     private float _cosmicGlowIntensity = 1.0f;
 
+    // Energy particle parameters
+    private float _particleIntensity = 0f;
+    private float _particleSpeed = 1f;
+    private uint _particleType = 0; // 0=None, 1=Fire, 2=Electricity, 3=Mixed
+    private float _particleEntropy = 0.5f;
+    private float _particleSize = 1f;
+    private float _fireRiseHeight = 0.4f;
+    private float _electricitySpread = 1f;
+
     // Colors
     private Vector4 _coreColor = new(1.0f, 0.6f, 0.1f, 1.0f);  // Orange/gold
     private Vector4 _midColor = new(1.0f, 0.4f, 0.0f, 1.0f);   // Orange
@@ -128,7 +138,7 @@ public sealed class ProceduralSigilEffect : EffectBase
     // Click tracking for ClickAtCursor mode
     private bool _wasLeftButtonDown;
 
-    [StructLayout(LayoutKind.Sequential, Size = 192)]
+    [StructLayout(LayoutKind.Sequential, Size = 208)]
     private struct SigilConstants
     {
         public Vector2 ViewportSize;
@@ -173,6 +183,17 @@ public sealed class ProceduralSigilEffect : EffectBase
         public float TreeOfLifeScale;
         public float StarfieldDensity;
         public float CosmicGlowIntensity;
+
+        // Energy particle parameters
+        public float ParticleIntensity;
+        public float ParticleSpeed;
+        public uint ParticleType;
+        public float ParticleEntropy;
+
+        public float ParticleSize;
+        public float FireRiseHeight;
+        public float ElectricitySpread;
+        public float SigilAlpha;
     }
 
     // Public properties for UI binding
@@ -186,6 +207,12 @@ public sealed class ProceduralSigilEffect : EffectBase
     {
         get => _positionMode;
         set => _positionMode = value;
+    }
+
+    public float SigilAlpha
+    {
+        get => _sigilAlpha;
+        set => _sigilAlpha = Math.Clamp(value, 0f, 1f);
     }
 
     public float SigilRadius
@@ -356,6 +383,49 @@ public sealed class ProceduralSigilEffect : EffectBase
         set => _cosmicGlowIntensity = Math.Clamp(value, 0.5f, 2f);
     }
 
+    // Energy particle properties
+    public float ParticleIntensity
+    {
+        get => _particleIntensity;
+        set => _particleIntensity = Math.Clamp(value, 0f, 1f);
+    }
+
+    public float ParticleSpeed
+    {
+        get => _particleSpeed;
+        set => _particleSpeed = Math.Clamp(value, 0.1f, 3f);
+    }
+
+    public uint ParticleType
+    {
+        get => _particleType;
+        set => _particleType = Math.Min(value, 3); // 0=None, 1=Fire, 2=Electricity, 3=Mixed
+    }
+
+    public float ParticleEntropy
+    {
+        get => _particleEntropy;
+        set => _particleEntropy = Math.Clamp(value, 0f, 1f);
+    }
+
+    public float ParticleSize
+    {
+        get => _particleSize;
+        set => _particleSize = Math.Clamp(value, 0.1f, 5f);
+    }
+
+    public float FireRiseHeight
+    {
+        get => _fireRiseHeight;
+        set => _fireRiseHeight = Math.Clamp(value, 0.1f, 2f);
+    }
+
+    public float ElectricitySpread
+    {
+        get => _electricitySpread;
+        set => _electricitySpread = Math.Clamp(value, 0.1f, 5f);
+    }
+
     private void ApplyColorPreset(ColorPreset preset)
     {
         switch (preset)
@@ -401,7 +471,7 @@ public sealed class ProceduralSigilEffect : EffectBase
         // Create constant buffer
         var bufferDesc = new BufferDescription
         {
-            Size = 192,
+            Size = 208,
             Type = BufferType.Constant,
             Dynamic = true
         };
@@ -431,6 +501,8 @@ public sealed class ProceduralSigilEffect : EffectBase
             _sigilStyle = (SigilStyle)sigilStyle;
         if (Configuration.TryGet("positionMode", out int positionMode))
             _positionMode = (PositionMode)positionMode;
+        if (Configuration.TryGet("sigilAlpha", out float sigilAlpha))
+            _sigilAlpha = sigilAlpha;
         if (Configuration.TryGet("sigilRadius", out float sigilRadius))
             _sigilRadius = sigilRadius;
         if (Configuration.TryGet("lineThickness", out float lineThickness))
@@ -492,6 +564,22 @@ public sealed class ProceduralSigilEffect : EffectBase
             _starfieldDensity = starfieldDensity;
         if (Configuration.TryGet("cosmicGlowIntensity", out float cosmicGlowIntensity))
             _cosmicGlowIntensity = cosmicGlowIntensity;
+
+        // Energy particle parameters
+        if (Configuration.TryGet("particleIntensity", out float particleIntensity))
+            _particleIntensity = particleIntensity;
+        if (Configuration.TryGet("particleSpeed", out float particleSpeed))
+            _particleSpeed = particleSpeed;
+        if (Configuration.TryGet("particleType", out int particleType))
+            _particleType = (uint)particleType;
+        if (Configuration.TryGet("particleEntropy", out float particleEntropy))
+            _particleEntropy = particleEntropy;
+        if (Configuration.TryGet("particleSize", out float particleSize))
+            _particleSize = particleSize;
+        if (Configuration.TryGet("fireRiseHeight", out float fireRiseHeight))
+            _fireRiseHeight = fireRiseHeight;
+        if (Configuration.TryGet("electricitySpread", out float electricitySpread))
+            _electricitySpread = electricitySpread;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -621,7 +709,16 @@ public sealed class ProceduralSigilEffect : EffectBase
             MoonPhaseOffset = _moonPhaseOffset,
             TreeOfLifeScale = _treeOfLifeScale,
             StarfieldDensity = _starfieldDensity,
-            CosmicGlowIntensity = _cosmicGlowIntensity
+            CosmicGlowIntensity = _cosmicGlowIntensity,
+            // Energy particle parameters
+            ParticleIntensity = _particleIntensity,
+            ParticleSpeed = _particleSpeed,
+            ParticleType = _particleType,
+            ParticleEntropy = _particleEntropy,
+            ParticleSize = _particleSize,
+            FireRiseHeight = _fireRiseHeight,
+            ElectricitySpread = _electricitySpread,
+            SigilAlpha = _sigilAlpha
         };
 
         context.UpdateBuffer(_constantBuffer, constants);

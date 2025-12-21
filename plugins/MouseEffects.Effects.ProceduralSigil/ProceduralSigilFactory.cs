@@ -27,6 +27,9 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         // Style
         config.Set("sigilStyle", 0); // ArcaneCircle
 
+        // General
+        config.Set("sigilAlpha", 0.7f);
+
         // Position
         config.Set("positionMode", 0); // FollowCursor
         config.Set("sigilRadius", 200f);
@@ -69,6 +72,15 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         config.Set("starfieldDensity", 0.5f);
         config.Set("cosmicGlowIntensity", 1.0f);
 
+        // Energy particles
+        config.Set("particleIntensity", 0f);
+        config.Set("particleSpeed", 1f);
+        config.Set("particleType", 0);
+        config.Set("particleEntropy", 0.5f);
+        config.Set("particleSize", 1f);
+        config.Set("fireRiseHeight", 0.4f);
+        config.Set("electricitySpread", 1f);
+
         return config;
     }
 
@@ -86,6 +98,18 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "The visual style of the sigil",
                     Choices = ["Arcane Circle", "Triangle Mandala", "Moon"],
                     DefaultValue = "Arcane Circle"
+                },
+
+                // General
+                new FloatParameter
+                {
+                    Key = "sigilAlpha",
+                    DisplayName = "Sigil Alpha",
+                    Description = "Overall opacity of the sigil",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.7f,
+                    Step = 0.05f
                 },
 
                 // Position
@@ -351,6 +375,76 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     MinValue = 0.5f,
                     MaxValue = 2f,
                     DefaultValue = 1.0f,
+                    Step = 0.1f
+                },
+
+                // Energy particles
+                new ChoiceParameter
+                {
+                    Key = "particleType",
+                    DisplayName = "Particle Type",
+                    Description = "Type of energy particles along sigil edges",
+                    Choices = ["None", "Fire", "Electricity", "Mixed"],
+                    DefaultValue = "None"
+                },
+                new FloatParameter
+                {
+                    Key = "particleIntensity",
+                    DisplayName = "Particle Intensity",
+                    Description = "Intensity of energy particles (0 = off)",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "particleSpeed",
+                    DisplayName = "Particle Speed",
+                    Description = "Animation speed of particles",
+                    MinValue = 0.1f,
+                    MaxValue = 3f,
+                    DefaultValue = 1f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "particleEntropy",
+                    DisplayName = "Particle Entropy",
+                    Description = "Chaos and movement of particles (0 = static, 1 = chaotic)",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.5f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "particleSize",
+                    DisplayName = "Particle Size",
+                    Description = "Size of energy particles",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "fireRiseHeight",
+                    DisplayName = "Fire Rise Height",
+                    Description = "How high fire particles rise before fading",
+                    MinValue = 0.1f,
+                    MaxValue = 2f,
+                    DefaultValue = 0.4f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "electricitySpread",
+                    DisplayName = "Electricity Spread",
+                    Description = "How far electricity spreads from sigil edges",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 1f,
                     Step = 0.1f
                 }
             ]

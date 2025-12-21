@@ -66,6 +66,17 @@ cbuffer Constants : register(b0)
     float TreeOfLifeScale;
     float StarfieldDensity;
     float CosmicGlowIntensity;
+
+    // Energy particle parameters
+    float ParticleIntensity;
+    float ParticleSpeed;
+    uint ParticleType;
+    float ParticleEntropy;
+
+    float ParticleSize;
+    float FireRiseHeight;
+    float ElectricitySpread;
+    float SigilAlpha;
 };
 
 struct VSOutput
@@ -211,6 +222,168 @@ float2 opRepeatPolar(float2 p, int count)
     float segmentAngle = TAU / float(count);
     angle = fmod(angle + segmentAngle * 0.5, segmentAngle) - segmentAngle * 0.5;
     return float2(cos(angle), sin(angle)) * length(p);
+}
+
+// ============================================
+// Energy Particle Functions
+// ============================================
+
+// Hash function for pseudo-random numbers
+float hash(float2 p)
+{
+    float3 p3 = frac(float3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return frac((p3.x + p3.y) * p3.z);
+}
+
+// Flicker function for electricity effect
+float flicker(float t, float speed)
+{
+    float f1 = sin(t * speed) * 0.5 + 0.5;
+    float f2 = sin(t * speed * 2.7) * 0.5 + 0.5;
+    float f3 = sin(t * speed * 4.3) * 0.5 + 0.5;
+    return (f1 * 0.5 + f2 * 0.3 + f3 * 0.2) * 0.6 + 0.4;
+}
+
+// Compute crackling energy particles along sigil geometry
+// Fire particles rise upward like embers, electricity crackles in place
+float3 ComputeEnergyParticles(float2 p, float sdfDist, float radius, float time,
+                               float3 baseColor, float intensity, float speed, uint particleType,
+                               float entropy, float pSize, float fireHeight, float elecSpread)
+{
+    if (particleType == 0) // None - no particles
+    {
+        return float3(0, 0, 0);
+    }
+
+    // Determine if this is a fire-type particle (rises) or electricity-type (stays)
+    bool isFireType = (particleType == 1);
+    bool isMixed = (particleType == 3);
+
+    // For mixed mode, use position hash to determine particle behavior
+    float mixHash = hash(floor(p / (LineThickness * 5.0)));
+    bool behavesAsFire = isMixed ? (mixHash > 0.5) : isFireType;
+
+    float3 result = float3(0, 0, 0);
+
+    if (behavesAsFire)
+    {
+        // === FIRE PARTICLES: Rise upward like embers ===
+        float riseSpeed = speed * 50.0 * (1.0 + entropy * 0.5) * fireHeight;
+        float cellSize = LineThickness * 3.0 * pSize;
+
+        // Create rising particle streams
+        float2 fireP = p;
+        // Offset Y by time to create rising effect (negative Y = upward in screen space)
+        fireP.y += time * riseSpeed;
+
+        // Add horizontal wobble as particles rise - more dramatic with higher size
+        float wobbleAmount = LineThickness * 2.0 * pSize * (1.0 + entropy);
+        float wobble = sin(time * speed * 4.0 + p.x * 0.05 + hash(floor(p.x / cellSize)) * 6.28) * wobbleAmount;
+        fireP.x += wobble * entropy;
+
+        float2 cellId = floor(fireP / cellSize);
+        float cellHash = hash(cellId);
+
+        // Particle spawn based on proximity to sigil edge - spread affects spawn area
+        float spawnRange = LineThickness * 3.0 * pSize;
+        float edgeProximity = 1.0 - smoothstep(0.0, spawnRange, abs(sdfDist));
+
+        // Calculate particle lifetime based on how far it has risen
+        // fireHeight controls how long particles live/how high they go
+        float risePhase = frac(time * speed * (0.5 / fireHeight) + cellHash);
+        float maxRiseHeight = radius * fireHeight; // How high particle can rise
+
+        // Particles spawn at edge and fade as they rise
+        float spawnProb = step(0.6 - entropy * 0.2, cellHash);
+        float lifetimeFade = 1.0 - smoothstep(0.0, 1.0, risePhase);
+        lifetimeFade *= lifetimeFade; // Quadratic falloff
+
+        // Check if this pixel is near a rising ember
+        float2 cellCenter = (cellId + 0.5) * cellSize;
+        // Add some random offset per particle
+        cellCenter.x += (hash(cellId + 0.5) - 0.5) * cellSize * 0.8;
+
+        float particleDist = length(fireP - cellCenter);
+
+        // Particle size - affected by pSize parameter, shrinks as it rises
+        float baseParticleSize = LineThickness * pSize * 1.5;
+        float currentSize = baseParticleSize * lerp(1.0, 0.3, risePhase) * (1.0 + entropy * 0.3);
+        float glow = exp(-particleDist * particleDist / (currentSize * currentSize * 2.0));
+
+        // Flicker
+        float flick = flicker(time * speed + cellHash * 20.0, 15.0 + entropy * 10.0);
+
+        // Fire color - hotter (brighter/yellower) at spawn, cooler (darker/redder) as it rises
+        float heat = 1.0 - risePhase * 0.7;
+        heat += hash(cellId + time * 0.1) * 0.3;
+        float3 fireColor = lerp(float3(0.8, 0.1, 0.0), float3(1.0, 0.9, 0.4), saturate(heat));
+        // Add white-hot sparks occasionally - more with larger size
+        fireColor = lerp(fireColor, float3(1.0, 1.0, 0.9), step(0.92 - pSize * 0.05, cellHash) * heat);
+
+        float fireIntensity = glow * spawnProb * lifetimeFade * edgeProximity * flick;
+        result = fireColor * fireIntensity * intensity * 2.5 * pSize;
+    }
+    else
+    {
+        // === ELECTRICITY PARTICLES: Crackle in place near edges ===
+        // elecSpread controls how far from edge electricity can appear
+        float spreadRange = LineThickness * 4.0 * elecSpread;
+        float edgeProximity = 1.0 - smoothstep(0.0, spreadRange, abs(sdfDist));
+        if (edgeProximity < 0.01) return result;
+
+        float cellSize = LineThickness * lerp(4.0, 2.0, entropy) * pSize;
+
+        // Swirling drift for electricity - affected by spread
+        float driftAmount = entropy * LineThickness * 2.0 * elecSpread;
+        float2 drift = float2(
+            sin(time * speed * 3.0 + p.y * 0.02) * driftAmount,
+            cos(time * speed * 2.7 + p.x * 0.02) * driftAmount
+        );
+        float2 driftedP = p + drift;
+
+        float timeShift = time * speed * entropy * 2.0;
+        float2 cellP = driftedP / cellSize;
+        float2 cellId = floor(cellP + float2(sin(timeShift), cos(timeShift * 0.7)) * entropy);
+
+        float cellHash = hash(cellId + floor(time * speed * (0.5 + entropy)));
+
+        // More particles with higher spread
+        float spawnThreshold = lerp(0.75, 0.5, entropy) - (elecSpread - 1.0) * 0.1;
+        spawnThreshold = max(0.3, spawnThreshold);
+        float flickerSpeedVal = lerp(10.0, 25.0, entropy);
+
+        float flickerPhase = time * speed + cellHash * 10.0 + sin(time * speed * 5.0 * entropy) * entropy;
+        float visible = step(spawnThreshold, cellHash) * flicker(flickerPhase, flickerSpeedVal);
+
+        // Random bright bursts for electricity - more frequent with higher spread
+        float burstThreshold = 0.88 - (elecSpread - 1.0) * 0.1;
+        if (entropy > 0.3)
+        {
+            float burstHash = hash(cellId + floor(time * speed * 5.0));
+            float burst = step(burstThreshold, burstHash) * (sin(time * speed * 30.0) * 0.5 + 0.5);
+            visible = max(visible, burst * entropy);
+        }
+
+        float2 cellCenter = (cellId + 0.5) * cellSize;
+        float2 jitter = float2(hash(cellId + time), hash(cellId.yx + time)) - 0.5;
+        cellCenter += jitter * entropy * cellSize * 0.5 * elecSpread;
+
+        float particleDist = length(driftedP - cellCenter);
+        // Particle size affected by pSize parameter
+        float glowSize = LineThickness * pSize * lerp(1.0, 1.5, sin(time * speed * 8.0 + cellHash * 6.28) * 0.5 + 0.5);
+        float glow = exp(-particleDist * particleDist / (glowSize * glowSize * 2.0));
+
+        // Electricity color - blue/white with bright arcs
+        float arcIntensity = hash(cellId + float2(time * 3.0, 0));
+        float3 elecColor = lerp(baseColor, float3(0.7, 0.85, 1.0), 0.5);
+        elecColor = lerp(elecColor, float3(0.95, 0.98, 1.0), step(0.8, arcIntensity));
+
+        float intensityMult = lerp(1.0, 1.5, entropy) * pSize;
+        result = elecColor * glow * visible * edgeProximity * intensity * intensityMult * 2.0;
+    }
+
+    return result;
 }
 
 // ============================================
@@ -1600,6 +1773,17 @@ float4 PSMain(VSOutput input) : SV_TARGET
         glowColor = baseColor * edge;
     }
 
+    // Apply energy particles (fire/electricity) to all styles
+    if (ParticleIntensity > 0.01 && ParticleType > 0)
+    {
+        float3 energyColor = ComputeEnergyParticles(
+            p, sdf, SigilRadius, Time,
+            baseColor, ParticleIntensity, ParticleSpeed, ParticleType, ParticleEntropy,
+            ParticleSize, FireRiseHeight, ElectricitySpread
+        );
+        glowColor += energyColor;
+    }
+
     // Pulsing brightness
     float brightness = 1.0;
     if (AnimationFlags & ANIM_PULSE)
@@ -1613,8 +1797,8 @@ float4 PSMain(VSOutput input) : SV_TARGET
     // Final color
     float3 finalColor = glowColor * brightness * hdrBoost;
 
-    // Alpha based on glow intensity
-    float alpha = saturate(length(glowColor) * 1.5) * FadeAlpha;
+    // Alpha based on glow intensity, FadeAlpha (for click modes), and SigilAlpha (user setting)
+    float alpha = saturate(length(glowColor) * 1.5) * FadeAlpha * SigilAlpha;
 
     // Discard nearly transparent pixels
     if (alpha < 0.01)

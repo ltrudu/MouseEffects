@@ -28,6 +28,20 @@
 
         <StackPanel Margin="0,8,0,0">
 
+            <!-- Alpha -->
+            <TextBlock Text="Sigil Alpha" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="SigilAlphaSlider" Grid.Column="0"
+                        Minimum="0" Maximum="1" Value="0.7"
+                        ValueChanged="SigilAlphaSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=SigilAlphaSlider, StringFormat={}{0:F2}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
             <!-- Style Selection -->
             <TextBlock Text="Style" Style="{StaticResource SectionStyle}" />
 
@@ -197,6 +211,95 @@
                         Minimum="0" Maximum="1" Value="0.3"
                         ValueChanged="RuneScrollSpeedSlider_Changed" />
                 <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=RuneScrollSpeedSlider, StringFormat={}{0:F2}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <!-- Energy Particles (applies to all styles) -->
+            <TextBlock Text="Energy Particles" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Particle Type" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="ParticleTypeCombo" SelectionChanged="ParticleTypeCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="None" IsSelected="True" />
+                <ComboBoxItem Content="Fire" />
+                <ComboBoxItem Content="Electricity" />
+                <ComboBoxItem Content="Mixed" />
+            </ComboBox>
+
+            <TextBlock Text="Particle Intensity" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="ParticleIntensitySlider" Grid.Column="0"
+                        Minimum="0" Maximum="1" Value="0"
+                        ValueChanged="ParticleIntensitySlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ParticleIntensitySlider, StringFormat={}{0:F2}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Particle Speed" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="ParticleSpeedSlider" Grid.Column="0"
+                        Minimum="0.1" Maximum="3" Value="1"
+                        ValueChanged="ParticleSpeedSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ParticleSpeedSlider, StringFormat={}{0:F1}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Particle Entropy" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="ParticleEntropySlider" Grid.Column="0"
+                        Minimum="0" Maximum="1" Value="0.5"
+                        ValueChanged="ParticleEntropySlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ParticleEntropySlider, StringFormat={}{0:F2}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Particle Size" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="ParticleSizeSlider" Grid.Column="0"
+                        Minimum="0.1" Maximum="5" Value="1"
+                        ValueChanged="ParticleSizeSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ParticleSizeSlider, StringFormat={}{0:F1}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Fire Rise Height" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireRiseHeightSlider" Grid.Column="0"
+                        Minimum="0.1" Maximum="2" Value="0.4"
+                        ValueChanged="FireRiseHeightSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireRiseHeightSlider, StringFormat={}{0:F1}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Electricity Spread" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="ElectricitySpreadSlider" Grid.Column="0"
+                        Minimum="0.1" Maximum="5" Value="1"
+                        ValueChanged="ElectricitySpreadSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ElectricitySpreadSlider, StringFormat={}{0:F1}}"
                            Width="60" TextAlignment="Right" Margin="8,0,0,0" />
             </Grid>
 
