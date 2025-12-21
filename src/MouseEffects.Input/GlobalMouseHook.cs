@@ -44,6 +44,18 @@ public sealed class GlobalMouseHook : IMouseInputProvider
     /// </summary>
     private bool _consumedRightButtonDown;
 
+    /// <summary>
+    /// Tracks whether we consumed the middle mouse-down event.
+    /// We only consume mouse-up if we consumed the corresponding mouse-down.
+    /// </summary>
+    private bool _consumedMiddleButtonDown;
+
+    /// <summary>
+    /// When true, middle mouse button clicks are consumed and not passed to desktop.
+    /// Used when middle-click is configured to toggle effects.
+    /// </summary>
+    private bool _consumeMiddleClicks;
+
     public bool IsCapturing => _hookHandle != nint.Zero;
 
     /// <summary>
@@ -55,6 +67,17 @@ public sealed class GlobalMouseHook : IMouseInputProvider
         _clickConsumer = consumer;
         _consumedLeftButtonDown = false; // Reset tracking when consumer changes
         _consumedRightButtonDown = false;
+    }
+
+    /// <summary>
+    /// Enable or disable middle-click consumption.
+    /// When enabled, middle mouse button clicks are consumed and not passed to desktop.
+    /// Used when middle-click is configured to toggle effects.
+    /// </summary>
+    public void SetConsumeMiddleClicks(bool consume)
+    {
+        _consumeMiddleClicks = consume;
+        _consumedMiddleButtonDown = false;
     }
 
     public MouseState CurrentState
@@ -224,6 +247,28 @@ public sealed class GlobalMouseHook : IMouseInputProvider
                     shouldBlockClick = true;
                 }
                 _consumedRightButtonDown = false;
+            }
+            // Check if we should consume middle button down (for toggle effects feature)
+            else if (messageId == MouseHookNativeMethods.WM_MBUTTONDOWN)
+            {
+                if (_consumeMiddleClicks)
+                {
+                    shouldBlockClick = true;
+                    _consumedMiddleButtonDown = true;
+                }
+                else
+                {
+                    _consumedMiddleButtonDown = false;
+                }
+            }
+            // Only consume middle mouse-up if we consumed the corresponding mouse-down
+            else if (messageId == MouseHookNativeMethods.WM_MBUTTONUP)
+            {
+                if (_consumedMiddleButtonDown)
+                {
+                    shouldBlockClick = true;
+                }
+                _consumedMiddleButtonDown = false;
             }
 
             switch (messageId)

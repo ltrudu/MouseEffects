@@ -430,6 +430,9 @@ static partial class Program
             _rightClickToggleEnabled = _settings.EnableRightClickToggle;
             _middleClickToggleEnabled = _settings.EnableMiddleClickToggle;
 
+            // Enable middle-click consumption if toggle is enabled
+            _mouseInput.SetConsumeMiddleClicks(_middleClickToggleEnabled);
+
             // Connect mouse hook to effect manager for click consumption support
             _effectManager.SetMouseHook(_mouseInput);
 
@@ -1076,6 +1079,7 @@ static partial class Program
     public static void UpdateMiddleClickToggle(bool enabled)
     {
         _middleClickToggleEnabled = enabled;
+        _mouseInput?.SetConsumeMiddleClicks(enabled);
         Log($"Middle-click toggle: {(enabled ? "ENABLED" : "DISABLED")}");
     }
 
