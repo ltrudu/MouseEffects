@@ -9,8 +9,8 @@ public sealed class InvadersFactory : IEffectFactory
     private static readonly EffectMetadata _metadata = new()
     {
         Id = "invaders",
-        Name = "Space Invaders",
-        Description = "Defend against waves of neon space invaders with rockets from your cursor",
+        Name = "Retro Invaders",
+        Description = "Defend against waves of neon retro invaders with rockets from your cursor",
         Author = "MouseEffects",
         Version = new Version(1, 0, 0),
         Category = EffectCategory.Interactive
@@ -24,29 +24,32 @@ public sealed class InvadersFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
+        // Render style
+        config.Set("renderStyle", 1); // 0=Modern, 1=Retro
+
         // Rocket settings
-        config.Set("spawnOnLeftClick", true);
+        config.Set("spawnOnLeftClick", false);
         config.Set("spawnOnRightClick", false);
         config.Set("spawnOnMove", true);
         config.Set("moveSpawnDistance", 80f);
-        config.Set("rocketSpeed", 810f);
+        config.Set("rocketSpeed", 1000f);
         config.Set("rocketSize", 8f);
         config.Set("rocketRainbowMode", true);
         config.Set("rocketRainbowSpeed", 0.5f);
         config.Set("rocketColor", new Vector4(0f, 1f, 0.5f, 1f));
 
         // Invader settings
-        config.Set("invaderSpawnRate", 0.53f);
-        config.Set("invaderMinSpeed", 83f);
-        config.Set("invaderMaxSpeed", 406f);
+        config.Set("invaderSpawnRate", 0.5f);
+        config.Set("invaderMinSpeed", 150f);
+        config.Set("invaderMaxSpeed", 320f);
         config.Set("invaderBigSize", 48f);
         config.Set("invaderMediumSizePercent", 0.5f);
         config.Set("invaderSmallSizePercent", 0.25f);
         config.Set("maxActiveInvaders", 20);
         config.Set("invaderDescentSpeed", 30f);
         config.Set("invaderSmallColor", new Vector4(1f, 0.2f, 0.8f, 1f));
-        config.Set("invaderMediumColor", new Vector4(0.58f, 1f, 0.2f, 1f));
-        config.Set("invaderBigColor", new Vector4(0f, 0.25f, 0.5f, 1f));
+        config.Set("invaderMediumColor", new Vector4(0.2f, 0.8f, 1f, 1f));
+        config.Set("invaderBigColor", new Vector4(0.2f, 1f, 0.4f, 1f));
 
         // Explosion settings
         config.Set("explosionParticleCount", 30);
@@ -70,21 +73,18 @@ public sealed class InvadersFactory : IEffectFactory
         // Score overlay
         config.Set("showScoreOverlay", true);
         config.Set("scoreOverlaySize", 32f);
-        config.Set("scoreOverlaySpacing", 1.3f);
+        config.Set("scoreOverlaySpacing", 1.5f);
         config.Set("scoreOverlayMargin", 20f);
         config.Set("scoreOverlayBgOpacity", 0.7f);
         config.Set("scoreOverlayColor", new Vector4(0f, 1f, 0f, 1f));
         config.Set("scoreOverlayX", 70f);
-        config.Set("scoreOverlayY", 49f);
+        config.Set("scoreOverlayY", 50f);
 
         // Timer
-        config.Set("timerDuration", 90f);
-
-        // Reset hotkey
-        config.Set("enableResetHotkey", false);
+        config.Set("timerDuration", 30f);
 
         // Default high scores (stored as JSON, not shown in settings UI)
-        config.Set("highScoresJson", "[{\"PointsPerMinute\":2000,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":1500,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":1000,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":500,\"Date\":\"04/12/2025\"},{\"PointsPerMinute\":200,\"Date\":\"04/12/2025\"}]");
+        config.Set("highScoresJson", "[{\"PointsPerMinute\":2000,\"Date\":\"21/12/2025\"},{\"PointsPerMinute\":1500,\"Date\":\"21/12/2025\"},{\"PointsPerMinute\":1000,\"Date\":\"21/12/2025\"},{\"PointsPerMinute\":500,\"Date\":\"21/12/2025\"},{\"PointsPerMinute\":200,\"Date\":\"21/12/2025\"}]");
 
         return config;
     }
@@ -95,13 +95,24 @@ public sealed class InvadersFactory : IEffectFactory
         {
             Parameters =
             [
+                // ========== RENDER STYLE ==========
+                new IntParameter
+                {
+                    Key = "renderStyle",
+                    DisplayName = "Render Style",
+                    Description = "Visual style: 0=Modern (neon glow), 1=Retro (pixelated arcade)",
+                    MinValue = 0,
+                    MaxValue = 1,
+                    DefaultValue = 1
+                },
+
                 // ========== ROCKET SETTINGS ==========
                 new BoolParameter
                 {
                     Key = "spawnOnLeftClick",
                     DisplayName = "Spawn on Left Click",
                     Description = "Launch rockets when left mouse button is clicked",
-                    DefaultValue = true
+                    DefaultValue = false
                 },
                 new BoolParameter
                 {
@@ -134,7 +145,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Speed of rockets (pixels/sec)",
                     MinValue = 200f,
                     MaxValue = 1500f,
-                    DefaultValue = 810f,
+                    DefaultValue = 1000f,
                     Step = 50f
                 },
                 new FloatParameter
@@ -181,7 +192,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Seconds between invader spawns",
                     MinValue = 0.2f,
                     MaxValue = 5f,
-                    DefaultValue = 0.53f,
+                    DefaultValue = 0.5f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -191,7 +202,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Minimum horizontal speed of invaders (px/sec)",
                     MinValue = 10f,
                     MaxValue = 300f,
-                    DefaultValue = 83f,
+                    DefaultValue = 150f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -201,7 +212,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Maximum horizontal speed of invaders (px/sec)",
                     MinValue = 50f,
                     MaxValue = 500f,
-                    DefaultValue = 406f,
+                    DefaultValue = 320f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -266,7 +277,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Key = "invaderMediumColor",
                     DisplayName = "Medium Invader Color",
                     Description = "Color of medium (crab) invaders",
-                    DefaultValue = new Vector4(0.58f, 1f, 0.2f, 1f),
+                    DefaultValue = new Vector4(0.2f, 0.8f, 1f, 1f),
                     SupportsAlpha = false
                 },
                 new ColorParameter
@@ -274,7 +285,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Key = "invaderBigColor",
                     DisplayName = "Big Invader Color",
                     Description = "Color of big (octopus) invaders",
-                    DefaultValue = new Vector4(0f, 0.25f, 0.5f, 1f),
+                    DefaultValue = new Vector4(0.2f, 1f, 0.4f, 1f),
                     SupportsAlpha = false
                 },
 
@@ -432,7 +443,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Spacing between score digits (multiplier)",
                     MinValue = 1.0f,
                     MaxValue = 2.5f,
-                    DefaultValue = 1.3f,
+                    DefaultValue = 1.5f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -480,7 +491,7 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Vertical position of score (px from top)",
                     MinValue = 0f,
                     MaxValue = 500f,
-                    DefaultValue = 49f,
+                    DefaultValue = 50f,
                     Step = 10f
                 },
 
@@ -492,17 +503,8 @@ public sealed class InvadersFactory : IEffectFactory
                     Description = "Duration of the game in seconds",
                     MinValue = 30f,
                     MaxValue = 300f,
-                    DefaultValue = 90f,
+                    DefaultValue = 30f,
                     Step = 15f
-                },
-
-                // ========== HOTKEYS ==========
-                new BoolParameter
-                {
-                    Key = "enableResetHotkey",
-                    DisplayName = "Reset Hotkey (Alt+Shift+R)",
-                    Description = "Enable Alt+Shift+R to reset and restart the game",
-                    DefaultValue = false
                 }
             ]
         };
