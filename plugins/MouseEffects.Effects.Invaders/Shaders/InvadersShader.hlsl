@@ -1,4 +1,4 @@
-// Space Invaders shader with neon glow effects
+// Retro Invaders shader with Modern (neon glow) and Retro (arcade) rendering modes
 // Entity types: 0=particle, 1=rocket, 2=invader small (squid), 3=invader medium (crab), 4=invader big (octopus)
 // Entity types: 5-14=digits 0-9, 15=colon (:), 16-41=letters A-Z, 42=space, 43=slash (/), 50=background rect
 
@@ -6,6 +6,7 @@ cbuffer FrameData : register(b0)
 {
     float2 ViewportSize;
     float Time;
+    float RenderStyle;      // 0=Modern, 1=Retro
     float GlowIntensity;
     float EnableTrails;
     float TrailLength;
@@ -18,7 +19,6 @@ cbuffer FrameData : register(b0)
     float Padding5;
     float Padding6;
     float Padding7;
-    float Padding8;
 };
 
 struct EntityInstance
@@ -44,7 +44,7 @@ struct VSOutput
     float AnimPhase : TEXCOORD3;
 };
 
-// Classic Space Invaders squid shape (small, 200 pts)
+// Classic Retro Invaders squid shape (small, 200 pts)
 // Returns float4: rgb = color tint, a = alpha
 float4 DrawSquidColored(float2 uv, float anim, float4 baseColor)
 {
@@ -98,7 +98,7 @@ float DrawSquid(float2 uv, float anim)
     return DrawSquidColored(uv, anim, float4(1,1,1,1)).a;
 }
 
-// Classic Space Invaders crab shape (medium, 100 pts)
+// Classic Retro Invaders crab shape (medium, 100 pts)
 // Returns float4: rgb = color tint, a = alpha
 float4 DrawCrabColored(float2 uv, float anim, float4 baseColor)
 {
@@ -155,7 +155,7 @@ float DrawCrab(float2 uv, float anim)
     return DrawCrabColored(uv, anim, float4(1,1,1,1)).a;
 }
 
-// Classic Space Invaders octopus shape (big, 50 pts)
+// Classic Retro Invaders octopus shape (big, 50 pts)
 // Returns float4: rgb = color tint, a = alpha
 float4 DrawOctopusColored(float2 uv, float anim, float4 baseColor)
 {
@@ -214,6 +214,176 @@ float4 DrawOctopusColored(float2 uv, float anim, float4 baseColor)
 float DrawOctopus(float2 uv, float anim)
 {
     return DrawOctopusColored(uv, anim, float4(1,1,1,1)).a;
+}
+
+// ========== RETRO MODE HELPER FUNCTIONS ==========
+
+// Quantize UV to pixel grid for blocky retro look
+float2 QuantizeUV(float2 uv, float pixelScale)
+{
+    return floor(uv * pixelScale) / pixelScale;
+}
+
+// Retro color quantization (limited palette like classic arcade)
+float3 QuantizeColor(float3 color)
+{
+    // Quantize to 4 levels per channel (retro arcade style)
+    return floor(color * 4.0) / 4.0;
+}
+
+// ========== RETRO INVADER SHAPES ==========
+
+// Retro Squid (small invader) - blocky pixelated style
+float4 DrawSquidRetro(float2 uv, float anim, float4 baseColor)
+{
+    uv = QuantizeUV(uv, 8.0);
+    float2 p = uv * 2.0 - 1.0;
+
+    // Blocky body
+    float body = step(abs(p.x), 0.55) * step(abs(p.y), 0.45);
+
+    // Blocky head bump
+    float head = step(length(p - float2(0, -0.25)), 0.35);
+
+    // Blocky eyes
+    float eyeL = step(abs(p.x + 0.25), 0.1) * step(abs(p.y + 0.15), 0.1);
+    float eyeR = step(abs(p.x - 0.25), 0.1) * step(abs(p.y + 0.15), 0.1);
+    float eyes = max(eyeL, eyeR);
+
+    // Blocky tentacles with simple animation
+    float tentacles = 0.0;
+    float tentPhase = step(0.0, sin(anim));
+    for (int i = -2; i <= 2; i++)
+    {
+        float xOff = i * 0.22;
+        float yOff = 0.5 + tentPhase * 0.1;
+        float tent = step(abs(p.x - xOff), 0.08) * step(abs(p.y - yOff), 0.12);
+        tentacles = max(tentacles, tent);
+    }
+
+    float totalAlpha = saturate(body + head + tentacles + eyes);
+
+    // Quantized colors
+    float3 bodyCol = QuantizeColor(baseColor.rgb);
+    float3 tentacleCol = QuantizeColor(baseColor.rgb * float3(0.5, 1.2, 1.5));
+    float3 eyeCol = QuantizeColor(float3(1.0, 1.0, 0.8));
+
+    float3 finalCol = bodyCol * (body + head) * (1.0 - eyes) + tentacleCol * tentacles + eyeCol * eyes;
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Retro Crab (medium invader) - blocky pixelated style
+float4 DrawCrabRetro(float2 uv, float anim, float4 baseColor)
+{
+    uv = QuantizeUV(uv, 8.0);
+    float2 p = uv * 2.0 - 1.0;
+
+    // Blocky hexagonal body
+    float body = step(abs(p.x) + abs(p.y) * 0.5, 0.6);
+
+    // Blocky claws with animation
+    float clawAnim = step(0.0, sin(anim)) * 0.15;
+    float clawL = step(abs(p.x + 0.65), 0.15) * step(abs(p.y + 0.1 - clawAnim), 0.15);
+    float clawR = step(abs(p.x - 0.65), 0.15) * step(abs(p.y + 0.1 + clawAnim), 0.15);
+    float claws = max(clawL, clawR);
+
+    // Blocky eyes
+    float eyeL = step(abs(p.x + 0.2), 0.08) * step(abs(p.y + 0.15), 0.08);
+    float eyeR = step(abs(p.x - 0.2), 0.08) * step(abs(p.y + 0.15), 0.08);
+    float eyes = max(eyeL, eyeR);
+
+    // Blocky legs
+    float legs = 0.0;
+    for (int i = -1; i <= 1; i++)
+    {
+        float xOff = i * 0.3;
+        float legAnim = step(0.0, sin(anim + i * 2.0)) * 0.08;
+        float leg = step(abs(p.x - xOff), 0.08) * step(abs(p.y - 0.45 - legAnim), 0.12);
+        legs = max(legs, leg);
+    }
+
+    float totalAlpha = saturate(body + claws + legs + eyes);
+
+    // Quantized colors
+    float3 bodyCol = QuantizeColor(baseColor.rgb);
+    float3 clawCol = QuantizeColor(baseColor.rgb * float3(1.5, 0.7, 0.3));
+    float3 legCol = QuantizeColor(baseColor.rgb * float3(0.8, 1.3, 0.8));
+    float3 eyeCol = QuantizeColor(float3(1.0, 0.9, 0.5));
+
+    float3 finalCol = bodyCol * body * (1.0 - eyes) + clawCol * claws + legCol * legs + eyeCol * eyes;
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Retro Octopus (big invader) - blocky pixelated style
+float4 DrawOctopusRetro(float2 uv, float anim, float4 baseColor)
+{
+    uv = QuantizeUV(uv, 8.0);
+    float2 p = uv * 2.0 - 1.0;
+
+    // Large blocky body
+    float body = step(abs(p.x), 0.5) * step(abs(p.y), 0.45);
+
+    // Blocky dome top
+    float dome = step(length(p - float2(0, -0.25)) * float2(1.0, 0.8), 0.4);
+
+    // Blocky menacing eyes
+    float eyeL = step(abs(p.x + 0.22), 0.1) * step(abs(p.y + 0.1), 0.1);
+    float eyeR = step(abs(p.x - 0.22), 0.1) * step(abs(p.y + 0.1), 0.1);
+    float eyes = max(eyeL, eyeR);
+
+    // Multiple blocky tentacles
+    float tentacles = 0.0;
+    for (int i = -3; i <= 3; i++)
+    {
+        float xOff = i * 0.18;
+        float phase = anim + i * 0.8;
+        float yAnim = step(0.0, sin(phase)) * 0.12;
+        float tent = step(abs(p.x - xOff), 0.06) * step(abs(p.y - 0.5 - yAnim), 0.15);
+        tentacles = max(tentacles, tent);
+    }
+
+    float totalAlpha = saturate(body + dome + tentacles + eyes);
+
+    // Quantized colors
+    float3 bodyCol = QuantizeColor(baseColor.rgb);
+    float3 domeCol = QuantizeColor(baseColor.rgb * 1.3);
+    float3 tentacleCol = QuantizeColor(baseColor.rgb * float3(1.3, 0.6, 1.4));
+    float3 eyeCol = QuantizeColor(float3(1.0, 0.3, 0.2));
+
+    float3 finalCol = bodyCol * body * (1.0 - eyes) + domeCol * dome + tentacleCol * tentacles + eyeCol * eyes;
+
+    return float4(finalCol, totalAlpha);
+}
+
+// Retro Rocket - big 8-bit square pixel
+float4 DrawRocketRetro(float2 uv, float2 velocity, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Big solid square - classic 8-bit arcade style
+    float pixel = step(abs(p.x), 0.7) * step(abs(p.y), 0.7);
+
+    float totalAlpha = pixel;
+
+    // Solid quantized color for classic 8-bit look
+    float3 pixelCol = QuantizeColor(baseColor.rgb);
+
+    return float4(pixelCol, totalAlpha);
+}
+
+// Retro Particle - big 8-bit square pixel
+float4 DrawParticleRetro(float2 uv, float lifeFactor, float4 baseColor)
+{
+    float2 p = uv * 2.0 - 1.0;
+
+    // Big solid square - classic 8-bit arcade style
+    float alpha = step(abs(p.x), 0.75) * step(abs(p.y), 0.75) * lifeFactor;
+
+    float3 color = QuantizeColor(baseColor.rgb);
+
+    return float4(color, alpha);
 }
 
 // Rocket shape (elongated with pointed tip)
@@ -680,6 +850,7 @@ float4 PSMain(VSOutput input) : SV_TARGET
     float2 uv = input.TexCoord;
     float lifeFactor = input.LifeFactor;
     float4 baseColor = input.Color;
+    bool isRetro = RenderStyle > 0.5;
 
     float shape = 0.0;
     float4 coloredResult = float4(0, 0, 0, 0);
@@ -687,27 +858,51 @@ float4 PSMain(VSOutput input) : SV_TARGET
 
     if (entityType < 0.5) // Particle
     {
-        shape = DrawParticle(uv, lifeFactor);
+        if (isRetro)
+        {
+            coloredResult = DrawParticleRetro(uv, lifeFactor, baseColor);
+            shape = coloredResult.a;
+            useColoredResult = true;
+        }
+        else
+        {
+            shape = DrawParticle(uv, lifeFactor);
+        }
     }
     else if (entityType < 1.5) // Rocket
     {
-        shape = DrawRocket(uv, float2(0, -1));
+        if (isRetro)
+        {
+            coloredResult = DrawRocketRetro(uv, float2(0, -1), baseColor);
+            shape = coloredResult.a;
+            useColoredResult = true;
+        }
+        else
+        {
+            shape = DrawRocket(uv, float2(0, -1));
+        }
     }
     else if (entityType < 2.5) // Small invader (squid) - multicolored
     {
-        coloredResult = DrawSquidColored(uv, input.AnimPhase, baseColor);
+        coloredResult = isRetro ?
+            DrawSquidRetro(uv, input.AnimPhase, baseColor) :
+            DrawSquidColored(uv, input.AnimPhase, baseColor);
         shape = coloredResult.a;
         useColoredResult = true;
     }
     else if (entityType < 3.5) // Medium invader (crab) - multicolored
     {
-        coloredResult = DrawCrabColored(uv, input.AnimPhase, baseColor);
+        coloredResult = isRetro ?
+            DrawCrabRetro(uv, input.AnimPhase, baseColor) :
+            DrawCrabColored(uv, input.AnimPhase, baseColor);
         shape = coloredResult.a;
         useColoredResult = true;
     }
     else if (entityType < 4.5) // Big invader (octopus) - multicolored
     {
-        coloredResult = DrawOctopusColored(uv, input.AnimPhase, baseColor);
+        coloredResult = isRetro ?
+            DrawOctopusRetro(uv, input.AnimPhase, baseColor) :
+            DrawOctopusColored(uv, input.AnimPhase, baseColor);
         shape = coloredResult.a;
         useColoredResult = true;
     }
@@ -744,58 +939,69 @@ float4 PSMain(VSOutput input) : SV_TARGET
     if (shape < 0.01)
         discard;
 
-    // For multicolored invaders, use the colored result
+    // For multicolored entities, use the colored result
     if (useColoredResult)
     {
         baseColor.rgb = coloredResult.rgb;
     }
 
-    // Neon glow effect
-    float2 center = uv - 0.5;
-    float dist = length(center) * 2.0;
-
-    // Core glow
-    float coreGlow = exp(-dist * dist * 2.0) * GlowIntensity;
-
-    // Edge glow (neon outline effect)
-    float edgeGlow = 0.0;
-    if (entityType >= 1.5) // Invaders get edge glow
-    {
-        float edgeDist = abs(shape - 0.5);
-        edgeGlow = exp(-edgeDist * 20.0) * NeonIntensity * 0.5;
-    }
-
-    // Combine
     float4 color = baseColor;
 
-    // Brighten core for hot center
-    float coreBrightness = 1.0 + (1.0 - dist) * 0.3 * shape;
-    color.rgb *= coreBrightness;
-
-    // Add white hot center for particles and rockets
-    if (entityType < 1.5)
+    // Apply Retro or Modern post-processing
+    if (isRetro)
     {
-        float coreWhite = (1.0 - smoothstep(0.0, 0.4, dist)) * 0.4 * lifeFactor;
-        color.rgb += float3(coreWhite, coreWhite, coreWhite);
+        // Retro mode: scanlines and flat colors (no glow)
+        float scanline = step(0.5, frac(uv.y * ViewportSize.y * 0.01));
+        color.rgb = QuantizeColor(color.rgb);
+        color.rgb *= (0.85 + scanline * 0.15);
+        color.a = shape * lifeFactor;
     }
-
-    // Neon scanline effect for invaders
-    if (entityType >= 1.5)
+    else
     {
-        float scanline = sin(uv.y * 40.0 + Time * 5.0) * 0.1 + 0.9;
-        color.rgb *= scanline;
+        // Modern mode: neon glow effects
+        float2 center = uv - 0.5;
+        float dist = length(center) * 2.0;
 
-        // Outer glow
-        color.rgb += baseColor.rgb * edgeGlow;
+        // Core glow
+        float coreGlow = exp(-dist * dist * 2.0) * GlowIntensity;
+
+        // Edge glow (neon outline effect)
+        float edgeGlow = 0.0;
+        if (entityType >= 1.5) // Invaders get edge glow
+        {
+            float edgeDist = abs(shape - 0.5);
+            edgeGlow = exp(-edgeDist * 20.0) * NeonIntensity * 0.5;
+        }
+
+        // Brighten core for hot center
+        float coreBrightness = 1.0 + (1.0 - dist) * 0.3 * shape;
+        color.rgb *= coreBrightness;
+
+        // Add white hot center for particles and rockets
+        if (entityType < 1.5)
+        {
+            float coreWhite = (1.0 - smoothstep(0.0, 0.4, dist)) * 0.4 * lifeFactor;
+            color.rgb += float3(coreWhite, coreWhite, coreWhite);
+        }
+
+        // Neon scanline effect for invaders
+        if (entityType >= 1.5)
+        {
+            float scanline = sin(uv.y * 40.0 + Time * 5.0) * 0.1 + 0.9;
+            color.rgb *= scanline;
+
+            // Outer glow
+            color.rgb += baseColor.rgb * edgeGlow;
+        }
+
+        // HDR boost - amplify bright areas for HDR displays
+        float hdrBoost = 1.0 + coreGlow * HdrMultiplier * 2.0;
+        color.rgb *= hdrBoost;
+
+        // Final alpha
+        float finalAlpha = (shape + coreGlow * 0.5) * lifeFactor;
+        color.a = saturate(finalAlpha);
     }
-
-    // HDR boost - amplify bright areas for HDR displays
-    float hdrBoost = 1.0 + coreGlow * HdrMultiplier * 2.0;
-    color.rgb *= hdrBoost;
-
-    // Final alpha
-    float finalAlpha = (shape + coreGlow * 0.5) * lifeFactor;
-    color.a = saturate(finalAlpha);
 
     if (color.a < 0.01)
         discard;

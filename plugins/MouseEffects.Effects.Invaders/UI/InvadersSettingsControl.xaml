@@ -21,7 +21,7 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <TextBlock Text="Defend against waves of neon space invaders with rockets from your cursor"
+        <TextBlock Text="Defend against waves of neon retro invaders with rockets from your cursor"
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
 
         <!-- Score Display -->
@@ -63,6 +63,16 @@
         <!-- Settings Panel -->
         <StackPanel Margin="0,8,0,0">
 
+            <!-- ========== STYLE ========== -->
+            <TextBlock Text="STYLE" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Render Style" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
+            <ComboBox x:Name="RenderStyleComboBox" Width="120" HorizontalAlignment="Left"
+                      SelectionChanged="RenderStyleComboBox_SelectionChanged">
+                <ComboBoxItem Content="Modern" IsSelected="True"/>
+                <ComboBoxItem Content="Retro"/>
+            </ComboBox>
+
             <!-- ========== ROCKET SETTINGS ========== -->
             <TextBlock Text="ROCKET SETTINGS" Style="{StaticResource SectionStyle}"/>
 
@@ -101,18 +111,18 @@
             <!-- ========== INVADER SETTINGS ========== -->
             <TextBlock Text="INVADER SETTINGS" Style="{StaticResource SectionStyle}"/>
 
-            <TextBlock Text="Spawn Rate (sec)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="SpawnRateSlider" Minimum="0.2" Maximum="5" Value="1.5"
+            <TextBlock Text="Spawn Interval (sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="SpawnRateSlider" Minimum="0.05" Maximum="5" Value="1.5"
                     Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
             <TextBlock x:Name="SpawnRateValue" Text="1.5" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Min Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="InvaderMinSpeedSlider" Minimum="10" Maximum="300" Value="50"
+            <Slider x:Name="InvaderMinSpeedSlider" Minimum="10" Maximum="500" Value="50"
                     Style="{StaticResource SliderStyle}" ValueChanged="InvaderMinSpeedSlider_ValueChanged"/>
             <TextBlock x:Name="InvaderMinSpeedValue" Text="50" Opacity="0.7" FontSize="11"/>
 
             <TextBlock Text="Max Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
-            <Slider x:Name="InvaderMaxSpeedSlider" Minimum="50" Maximum="500" Value="150"
+            <Slider x:Name="InvaderMaxSpeedSlider" Minimum="50" Maximum="1500" Value="150"
                     Style="{StaticResource SliderStyle}" ValueChanged="InvaderMaxSpeedSlider_ValueChanged"/>
             <TextBlock x:Name="InvaderMaxSpeedValue" Text="150" Opacity="0.7" FontSize="11"/>
 

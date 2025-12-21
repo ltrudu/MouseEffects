@@ -73,6 +73,9 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
 
     private void CopyCurrentSettingsToConfig(EffectConfiguration config)
     {
+        // Render style
+        config.Set("renderStyle", RenderStyleComboBox.SelectedIndex);
+
         // Rocket settings
         config.Set("spawnOnLeftClick", LeftClickCheckBox.IsChecked ?? true);
         config.Set("spawnOnRightClick", RightClickCheckBox.IsChecked ?? false);
@@ -178,6 +181,10 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
 
     private void LoadConfiguration()
     {
+        // Render style
+        if (_effect.Configuration.TryGet("renderStyle", out int renderStyle))
+            RenderStyleComboBox.SelectedIndex = renderStyle;
+
         // Rocket settings
         if (_effect.Configuration.TryGet("spawnOnLeftClick", out bool leftClick))
             LeftClickCheckBox.IsChecked = leftClick;
@@ -387,6 +394,12 @@ public partial class InvadersSettingsControl : System.Windows.Controls.UserContr
     }
 
     private void CheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
+
+    private void RenderStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateConfiguration();
+    }
 
     private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {

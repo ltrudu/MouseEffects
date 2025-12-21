@@ -281,6 +281,8 @@ public partial class SettingsWindow : Window
     {
         var settings = Program.Settings;
         ToggleHotkeyCheckBox.IsChecked = settings.EnableToggleHotkey;
+        RightClickToggleCheckBox.IsChecked = settings.EnableRightClickToggle;
+        MiddleClickToggleCheckBox.IsChecked = settings.EnableMiddleClickToggle;
         SettingsHotkeyCheckBox.IsChecked = settings.EnableSettingsHotkey;
         ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
         ForceTopmostHotkeyCheckBox.IsChecked = settings.EnableForceTopmostHotkey;
@@ -301,6 +303,34 @@ public partial class SettingsWindow : Window
 
         // Update hotkey registration
         Program.UpdateToggleHotkey(enabled);
+    }
+
+    private void RightClickToggleCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = RightClickToggleCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableRightClickToggle = enabled;
+        settings.Save();
+
+        // Update right-click toggle state
+        Program.UpdateRightClickToggle(enabled);
+    }
+
+    private void MiddleClickToggleCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isInitializing) return;
+
+        var enabled = MiddleClickToggleCheckBox.IsChecked == true;
+
+        var settings = Program.Settings;
+        settings.EnableMiddleClickToggle = enabled;
+        settings.Save();
+
+        // Update middle-click toggle state
+        Program.UpdateMiddleClickToggle(enabled);
     }
 
     private void SettingsHotkeyCheckBox_Changed(object sender, RoutedEventArgs e)
@@ -874,6 +904,8 @@ public partial class SettingsWindow : Window
             UpdateFpsCounterVisibility(settings.ShowFpsCounter);
 
             ToggleHotkeyCheckBox.IsChecked = settings.EnableToggleHotkey;
+            RightClickToggleCheckBox.IsChecked = settings.EnableRightClickToggle;
+            MiddleClickToggleCheckBox.IsChecked = settings.EnableMiddleClickToggle;
             SettingsHotkeyCheckBox.IsChecked = settings.EnableSettingsHotkey;
             ScreenCaptureHotkeyCheckBox.IsChecked = settings.EnableScreenCaptureHotkey;
 

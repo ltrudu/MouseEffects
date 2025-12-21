@@ -182,18 +182,39 @@
                     </StackPanel>
                 </Border>
 
+                <!-- Emergency Toggle -->
+                <Border Style="{StaticResource EffectCardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Emergency Toggle" Style="{StaticResource HeaderStyle}" Margin="0"/>
+                        <TextBlock Text="Ways to toggle all effects on/off"
+                                   Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
+                        <CheckBox x:Name="ToggleHotkeyCheckBox"
+                                  Content="Keyboard Shortcut (Alt+Shift+M)"
+                                  ToolTip="Toggle all effects on/off using keyboard"
+                                  Margin="0,0,0,5"
+                                  Checked="ToggleHotkeyCheckBox_Changed"
+                                  Unchecked="ToggleHotkeyCheckBox_Changed"/>
+                        <CheckBox x:Name="RightClickToggleCheckBox"
+                                  Content="Right Click Toggle"
+                                  ToolTip="Toggle all effects on/off by right-clicking anywhere. Context menus will still work normally."
+                                  Margin="0,0,0,5"
+                                  Checked="RightClickToggleCheckBox_Changed"
+                                  Unchecked="RightClickToggleCheckBox_Changed"/>
+                        <CheckBox x:Name="MiddleClickToggleCheckBox"
+                                  Content="Middle Click Toggle"
+                                  ToolTip="Toggle all effects on/off by clicking the mouse wheel."
+                                  Margin="0,0,0,0"
+                                  Checked="MiddleClickToggleCheckBox_Changed"
+                                  Unchecked="MiddleClickToggleCheckBox_Changed"/>
+                    </StackPanel>
+                </Border>
+
                 <!-- Hotkeys -->
                 <Border Style="{StaticResource EffectCardStyle}">
                     <StackPanel>
                         <TextBlock Text="Hotkeys" Style="{StaticResource HeaderStyle}" Margin="0"/>
                         <TextBlock Text="Keyboard shortcuts for quick actions"
                                    Opacity="0.7" FontSize="12" Margin="0,0,0,10"/>
-                        <CheckBox x:Name="ToggleHotkeyCheckBox"
-                                  Content="Toggle Effects (Alt+Shift+M)"
-                                  ToolTip="Toggle all effects on/off"
-                                  Margin="0,0,0,5"
-                                  Checked="ToggleHotkeyCheckBox_Changed"
-                                  Unchecked="ToggleHotkeyCheckBox_Changed"/>
                         <CheckBox x:Name="SettingsHotkeyCheckBox"
                                   Content="Toggle Settings Window (Alt+Shift+L)"
                                   ToolTip="Show/hide the settings window"
