@@ -27,6 +27,14 @@ public sealed class ProceduralSigilEffect : EffectBase
     private IShader? _pixelShader;
     private IBuffer? _constantBuffer;
 
+    // Sigil style enum
+    public enum SigilStyle
+    {
+        ArcaneCircle = 0,      // Original circular sigil with runes
+        TriangleMandala = 1,   // Triangle-based mandala with fractal patterns
+        Moon = 2               // Moon phases, zodiac, runes, Tree of Life
+    }
+
     // Position mode enum
     public enum PositionMode
     {
@@ -73,6 +81,7 @@ public sealed class ProceduralSigilEffect : EffectBase
     }
 
     // Effect Parameters
+    private SigilStyle _sigilStyle = SigilStyle.ArcaneCircle;
     private PositionMode _positionMode = PositionMode.FollowCursor;
     private float _sigilRadius = 200f;
     private float _lineThickness = 2.0f;
@@ -87,6 +96,21 @@ public sealed class ProceduralSigilEffect : EffectBase
     private float _runeScrollSpeed = 0.3f;
     private float _fadeDuration = 2.0f;
     private ColorPreset _colorPreset = ColorPreset.ShieldOfFire;
+
+    // Triangle Mandala specific parameters
+    private int _triangleLayers = 3;
+    private float _zoomSpeed = 0.5f;
+    private float _zoomAmount = 0.3f;
+    private int _innerTriangles = 4;
+    private float _fractalDepth = 3.0f;
+
+    // Moon style specific parameters
+    private float _moonPhaseRotationSpeed = 0.1f;
+    private float _zodiacRotationSpeed = -0.15f;
+    private float _moonPhaseOffset = 0f;
+    private float _treeOfLifeScale = 0.35f;
+    private float _starfieldDensity = 0.5f;
+    private float _cosmicGlowIntensity = 1.0f;
 
     // Colors
     private Vector4 _coreColor = new(1.0f, 0.6f, 0.1f, 1.0f);  // Orange/gold
@@ -104,7 +128,7 @@ public sealed class ProceduralSigilEffect : EffectBase
     // Click tracking for ClickAtCursor mode
     private bool _wasLeftButtonDown;
 
-    [StructLayout(LayoutKind.Sequential, Size = 160)]
+    [StructLayout(LayoutKind.Sequential, Size = 192)]
     private struct SigilConstants
     {
         public Vector2 ViewportSize;
@@ -133,9 +157,31 @@ public sealed class ProceduralSigilEffect : EffectBase
         public float RuneScrollSpeed;
         public float InnerRotationMult;
         public float MiddleRotationMult;
+
+        // Style and Triangle Mandala parameters
+        public uint SigilStyle;
+        public int TriangleLayers;
+        public float ZoomSpeed;
+        public float ZoomAmount;
+
+        public int InnerTriangles;
+        public float FractalDepth;
+        public float MoonPhaseRotationSpeed;
+        public float ZodiacRotationSpeed;
+
+        public float MoonPhaseOffset;
+        public float TreeOfLifeScale;
+        public float StarfieldDensity;
+        public float CosmicGlowIntensity;
     }
 
     // Public properties for UI binding
+    public SigilStyle Style
+    {
+        get => _sigilStyle;
+        set => _sigilStyle = value;
+    }
+
     public PositionMode Position
     {
         get => _positionMode;
@@ -242,6 +288,74 @@ public sealed class ProceduralSigilEffect : EffectBase
         set => _edgeColor = value;
     }
 
+    // Triangle Mandala properties
+    public int TriangleLayers
+    {
+        get => _triangleLayers;
+        set => _triangleLayers = Math.Clamp(value, 1, 5);
+    }
+
+    public float ZoomSpeed
+    {
+        get => _zoomSpeed;
+        set => _zoomSpeed = Math.Clamp(value, 0f, 2f);
+    }
+
+    public float ZoomAmount
+    {
+        get => _zoomAmount;
+        set => _zoomAmount = Math.Clamp(value, 0f, 1f);
+    }
+
+    public int InnerTriangles
+    {
+        get => _innerTriangles;
+        set => _innerTriangles = Math.Clamp(value, 2, 8);
+    }
+
+    public float FractalDepth
+    {
+        get => _fractalDepth;
+        set => _fractalDepth = Math.Clamp(value, 1f, 5f);
+    }
+
+    // Moon style properties
+    public float MoonPhaseRotationSpeed
+    {
+        get => _moonPhaseRotationSpeed;
+        set => _moonPhaseRotationSpeed = Math.Clamp(value, -1f, 1f);
+    }
+
+    public float ZodiacRotationSpeed
+    {
+        get => _zodiacRotationSpeed;
+        set => _zodiacRotationSpeed = Math.Clamp(value, -1f, 1f);
+    }
+
+    public float MoonPhaseOffset
+    {
+        get => _moonPhaseOffset;
+        set => _moonPhaseOffset = value;
+    }
+
+    public float TreeOfLifeScale
+    {
+        get => _treeOfLifeScale;
+        set => _treeOfLifeScale = Math.Clamp(value, 0.2f, 0.6f);
+    }
+
+    public float StarfieldDensity
+    {
+        get => _starfieldDensity;
+        set => _starfieldDensity = Math.Clamp(value, 0f, 1f);
+    }
+
+    public float CosmicGlowIntensity
+    {
+        get => _cosmicGlowIntensity;
+        set => _cosmicGlowIntensity = Math.Clamp(value, 0.5f, 2f);
+    }
+
     private void ApplyColorPreset(ColorPreset preset)
     {
         switch (preset)
@@ -287,7 +401,7 @@ public sealed class ProceduralSigilEffect : EffectBase
         // Create constant buffer
         var bufferDesc = new BufferDescription
         {
-            Size = 160,
+            Size = 192,
             Type = BufferType.Constant,
             Dynamic = true
         };
@@ -313,6 +427,8 @@ public sealed class ProceduralSigilEffect : EffectBase
 
     private void LoadConfiguration()
     {
+        if (Configuration.TryGet("sigilStyle", out int sigilStyle))
+            _sigilStyle = (SigilStyle)sigilStyle;
         if (Configuration.TryGet("positionMode", out int positionMode))
             _positionMode = (PositionMode)positionMode;
         if (Configuration.TryGet("sigilRadius", out float sigilRadius))
@@ -350,6 +466,32 @@ public sealed class ProceduralSigilEffect : EffectBase
             _midColor = midColor;
         if (Configuration.TryGet("edgeColor", out Vector4 edgeColor))
             _edgeColor = edgeColor;
+
+        // Triangle Mandala parameters
+        if (Configuration.TryGet("triangleLayers", out int triangleLayers))
+            _triangleLayers = triangleLayers;
+        if (Configuration.TryGet("zoomSpeed", out float zoomSpeed))
+            _zoomSpeed = zoomSpeed;
+        if (Configuration.TryGet("zoomAmount", out float zoomAmount))
+            _zoomAmount = zoomAmount;
+        if (Configuration.TryGet("innerTriangles", out int innerTriangles))
+            _innerTriangles = innerTriangles;
+        if (Configuration.TryGet("fractalDepth", out float fractalDepth))
+            _fractalDepth = fractalDepth;
+
+        // Moon style parameters
+        if (Configuration.TryGet("moonPhaseRotationSpeed", out float moonPhaseRotationSpeed))
+            _moonPhaseRotationSpeed = moonPhaseRotationSpeed;
+        if (Configuration.TryGet("zodiacRotationSpeed", out float zodiacRotationSpeed))
+            _zodiacRotationSpeed = zodiacRotationSpeed;
+        if (Configuration.TryGet("moonPhaseOffset", out float moonPhaseOffset))
+            _moonPhaseOffset = moonPhaseOffset;
+        if (Configuration.TryGet("treeOfLifeScale", out float treeOfLifeScale))
+            _treeOfLifeScale = treeOfLifeScale;
+        if (Configuration.TryGet("starfieldDensity", out float starfieldDensity))
+            _starfieldDensity = starfieldDensity;
+        if (Configuration.TryGet("cosmicGlowIntensity", out float cosmicGlowIntensity))
+            _cosmicGlowIntensity = cosmicGlowIntensity;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -466,7 +608,20 @@ public sealed class ProceduralSigilEffect : EffectBase
             CounterRotateLayers = _counterRotateLayers ? 1.0f : 0.0f,
             RuneScrollSpeed = _runeScrollSpeed,
             InnerRotationMult = 0.7f,
-            MiddleRotationMult = _counterRotateLayers ? -0.5f : 0.5f
+            MiddleRotationMult = _counterRotateLayers ? -0.5f : 0.5f,
+            // Style and Triangle Mandala parameters
+            SigilStyle = (uint)_sigilStyle,
+            TriangleLayers = _triangleLayers,
+            ZoomSpeed = _zoomSpeed,
+            ZoomAmount = _zoomAmount,
+            InnerTriangles = _innerTriangles,
+            FractalDepth = _fractalDepth,
+            MoonPhaseRotationSpeed = _moonPhaseRotationSpeed,
+            ZodiacRotationSpeed = _zodiacRotationSpeed,
+            MoonPhaseOffset = _moonPhaseOffset,
+            TreeOfLifeScale = _treeOfLifeScale,
+            StarfieldDensity = _starfieldDensity,
+            CosmicGlowIntensity = _cosmicGlowIntensity
         };
 
         context.UpdateBuffer(_constantBuffer, constants);

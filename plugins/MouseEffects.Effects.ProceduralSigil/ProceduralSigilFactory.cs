@@ -24,6 +24,9 @@ public sealed class ProceduralSigilFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
+        // Style
+        config.Set("sigilStyle", 0); // ArcaneCircle
+
         // Position
         config.Set("positionMode", 0); // FollowCursor
         config.Set("sigilRadius", 200f);
@@ -51,6 +54,21 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         config.Set("morphAmount", 1.0f);
         config.Set("runeScrollSpeed", 0.3f);
 
+        // Triangle Mandala specific
+        config.Set("triangleLayers", 3);
+        config.Set("zoomSpeed", 0.5f);
+        config.Set("zoomAmount", 0.3f);
+        config.Set("innerTriangles", 4);
+        config.Set("fractalDepth", 3.0f);
+
+        // Moon style specific
+        config.Set("moonPhaseRotationSpeed", 0.1f);
+        config.Set("zodiacRotationSpeed", -0.15f);
+        config.Set("moonPhaseOffset", 0f);
+        config.Set("treeOfLifeScale", 0.35f);
+        config.Set("starfieldDensity", 0.5f);
+        config.Set("cosmicGlowIntensity", 1.0f);
+
         return config;
     }
 
@@ -60,6 +78,16 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         {
             Parameters =
             [
+                // Style
+                new ChoiceParameter
+                {
+                    Key = "sigilStyle",
+                    DisplayName = "Sigil Style",
+                    Description = "The visual style of the sigil",
+                    Choices = ["Arcane Circle", "Triangle Mandala", "Moon"],
+                    DefaultValue = "Arcane Circle"
+                },
+
                 // Position
                 new ChoiceParameter
                 {
@@ -232,6 +260,98 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     MaxValue = 1f,
                     DefaultValue = 0.3f,
                     Step = 0.05f
+                },
+
+                // Triangle Mandala specific
+                new IntParameter
+                {
+                    Key = "triangleLayers",
+                    DisplayName = "Triangle Layers",
+                    Description = "Number of nested triangle layers (Triangle Mandala style)",
+                    MinValue = 1,
+                    MaxValue = 5,
+                    DefaultValue = 3
+                },
+                new FloatParameter
+                {
+                    Key = "zoomSpeed",
+                    DisplayName = "Zoom Speed",
+                    Description = "Speed of zooming animation (Triangle Mandala style)",
+                    MinValue = 0f,
+                    MaxValue = 2f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "zoomAmount",
+                    DisplayName = "Zoom Amount",
+                    Description = "Intensity of zooming effect (Triangle Mandala style)",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.3f,
+                    Step = 0.05f
+                },
+                new IntParameter
+                {
+                    Key = "innerTriangles",
+                    DisplayName = "Inner Triangles",
+                    Description = "Number of triangles in inner ring (Triangle Mandala style)",
+                    MinValue = 2,
+                    MaxValue = 8,
+                    DefaultValue = 4
+                },
+                new FloatParameter
+                {
+                    Key = "fractalDepth",
+                    DisplayName = "Fractal Depth",
+                    Description = "Depth of fractal triangle patterns (Triangle Mandala style)",
+                    MinValue = 1f,
+                    MaxValue = 5f,
+                    DefaultValue = 3.0f,
+                    Step = 0.5f
+                },
+
+                // Moon style specific
+                new FloatParameter
+                {
+                    Key = "moonPhaseRotationSpeed",
+                    DisplayName = "Moon Phase Rotation",
+                    Description = "Rotation speed of moon phases ring (Moon style)",
+                    MinValue = -1f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.1f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "zodiacRotationSpeed",
+                    DisplayName = "Zodiac Rotation",
+                    Description = "Rotation speed of zodiac ring (Moon style)",
+                    MinValue = -1f,
+                    MaxValue = 1f,
+                    DefaultValue = -0.15f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "treeOfLifeScale",
+                    DisplayName = "Tree of Life Size",
+                    Description = "Scale of the Tree of Life at center (Moon style)",
+                    MinValue = 0.2f,
+                    MaxValue = 0.6f,
+                    DefaultValue = 0.35f,
+                    Step = 0.05f
+                },
+                new FloatParameter
+                {
+                    Key = "cosmicGlowIntensity",
+                    DisplayName = "Cosmic Glow",
+                    Description = "Intensity of cosmic glow effect (Moon style)",
+                    MinValue = 0.5f,
+                    MaxValue = 2f,
+                    DefaultValue = 1.0f,
+                    Step = 0.1f
                 }
             ]
         };

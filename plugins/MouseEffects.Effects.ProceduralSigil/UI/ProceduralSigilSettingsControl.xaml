@@ -28,6 +28,16 @@
 
         <StackPanel Margin="0,8,0,0">
 
+            <!-- Style Selection -->
+            <TextBlock Text="Style" Style="{StaticResource SectionStyle}" />
+
+            <TextBlock Text="Sigil Style" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="SigilStyleCombo" SelectionChanged="SigilStyleCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Arcane Circle" IsSelected="True" />
+                <ComboBoxItem Content="Triangle Mandala" />
+                <ComboBoxItem Content="Moon" />
+            </ComboBox>
+
             <!-- Position -->
             <TextBlock Text="Position" Style="{StaticResource SectionStyle}" />
 
@@ -189,6 +199,135 @@
                 <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=RuneScrollSpeedSlider, StringFormat={}{0:F2}}"
                            Width="60" TextAlignment="Right" Margin="8,0,0,0" />
             </Grid>
+
+            <!-- Triangle Mandala Settings (only visible when Triangle Mandala style selected) -->
+            <StackPanel x:Name="TriangleMandalaPanel" Visibility="Collapsed">
+                <TextBlock Text="Triangle Mandala" Style="{StaticResource SectionStyle}" />
+
+                <TextBlock Text="Triangle Layers" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="TriangleLayersSlider" Grid.Column="0"
+                            Minimum="1" Maximum="5" Value="3"
+                            IsSnapToTickEnabled="True" TickFrequency="1"
+                            ValueChanged="TriangleLayersSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=TriangleLayersSlider, StringFormat={}{0:F0}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Zoom Speed" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="ZoomSpeedSlider" Grid.Column="0"
+                            Minimum="0" Maximum="2" Value="0.5"
+                            ValueChanged="ZoomSpeedSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ZoomSpeedSlider, StringFormat={}{0:F1}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Zoom Amount" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="ZoomAmountSlider" Grid.Column="0"
+                            Minimum="0" Maximum="1" Value="0.3"
+                            ValueChanged="ZoomAmountSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ZoomAmountSlider, StringFormat={}{0:F2}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Inner Triangles" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="InnerTrianglesSlider" Grid.Column="0"
+                            Minimum="2" Maximum="8" Value="4"
+                            IsSnapToTickEnabled="True" TickFrequency="1"
+                            ValueChanged="InnerTrianglesSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=InnerTrianglesSlider, StringFormat={}{0:F0}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Fractal Depth" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="FractalDepthSlider" Grid.Column="0"
+                            Minimum="1" Maximum="5" Value="3"
+                            ValueChanged="FractalDepthSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FractalDepthSlider, StringFormat={}{0:F1}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+            </StackPanel>
+
+            <!-- Moon Settings (only visible when Moon style selected) -->
+            <StackPanel x:Name="MoonPanel" Visibility="Collapsed">
+                <TextBlock Text="Moon Style" Style="{StaticResource SectionStyle}" />
+
+                <TextBlock Text="Moon Phase Rotation" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="MoonPhaseRotationSlider" Grid.Column="0"
+                            Minimum="-1" Maximum="1" Value="0.1"
+                            ValueChanged="MoonPhaseRotationSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=MoonPhaseRotationSlider, StringFormat={}{0:F2}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Zodiac Rotation" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="ZodiacRotationSlider" Grid.Column="0"
+                            Minimum="-1" Maximum="1" Value="-0.15"
+                            ValueChanged="ZodiacRotationSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=ZodiacRotationSlider, StringFormat={}{0:F2}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Tree of Life Size" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="TreeOfLifeScaleSlider" Grid.Column="0"
+                            Minimum="0.2" Maximum="0.6" Value="0.35"
+                            ValueChanged="TreeOfLifeScaleSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=TreeOfLifeScaleSlider, StringFormat={}{0:F2}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+
+                <TextBlock Text="Cosmic Glow" Style="{StaticResource LabelStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="CosmicGlowSlider" Grid.Column="0"
+                            Minimum="0.5" Maximum="2" Value="1.0"
+                            ValueChanged="CosmicGlowSlider_Changed" />
+                    <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=CosmicGlowSlider, StringFormat={}{0:F1}}"
+                               Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+                </Grid>
+            </StackPanel>
 
         </StackPanel>
     </StackPanel>

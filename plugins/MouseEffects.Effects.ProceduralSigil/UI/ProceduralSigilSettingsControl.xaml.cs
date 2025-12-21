@@ -19,6 +19,10 @@ public partial class ProceduralSigilSettingsControl : UserControl
     {
         _isLoading = true;
 
+        // Style
+        SigilStyleCombo.SelectedIndex = (int)_effect.Style;
+        UpdateStylePanelsVisibility();
+
         // Position
         PositionModeCombo.SelectedIndex = (int)_effect.Position;
         SigilRadiusSlider.Value = _effect.SigilRadius;
@@ -45,7 +49,38 @@ public partial class ProceduralSigilSettingsControl : UserControl
         MorphCheckBox.IsChecked = (_effect.Animations & ProceduralSigilEffect.SigilAnimations.Morph) != 0;
         RuneScrollSpeedSlider.Value = _effect.RuneScrollSpeed;
 
+        // Triangle Mandala
+        TriangleLayersSlider.Value = _effect.TriangleLayers;
+        ZoomSpeedSlider.Value = _effect.ZoomSpeed;
+        ZoomAmountSlider.Value = _effect.ZoomAmount;
+        InnerTrianglesSlider.Value = _effect.InnerTriangles;
+        FractalDepthSlider.Value = _effect.FractalDepth;
+
+        // Moon
+        MoonPhaseRotationSlider.Value = _effect.MoonPhaseRotationSpeed;
+        ZodiacRotationSlider.Value = _effect.ZodiacRotationSpeed;
+        TreeOfLifeScaleSlider.Value = _effect.TreeOfLifeScale;
+        CosmicGlowSlider.Value = _effect.CosmicGlowIntensity;
+
         _isLoading = false;
+    }
+
+    private void UpdateStylePanelsVisibility()
+    {
+        var style = (ProceduralSigilEffect.SigilStyle)SigilStyleCombo.SelectedIndex;
+        TriangleMandalaPanel.Visibility = style == ProceduralSigilEffect.SigilStyle.TriangleMandala
+            ? Visibility.Visible : Visibility.Collapsed;
+        MoonPanel.Visibility = style == ProceduralSigilEffect.SigilStyle.Moon
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SigilStyleCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading) return;
+        var style = (ProceduralSigilEffect.SigilStyle)SigilStyleCombo.SelectedIndex;
+        _effect.Style = style;
+        _effect.Configuration.Set("sigilStyle", (int)style);
+        UpdateStylePanelsVisibility();
     }
 
     private void UpdateFadeDurationVisibility()
@@ -155,5 +190,70 @@ public partial class ProceduralSigilSettingsControl : UserControl
         if (_isLoading) return;
         _effect.RuneScrollSpeed = (float)e.NewValue;
         _effect.Configuration.Set("runeScrollSpeed", (float)e.NewValue);
+    }
+
+    // Triangle Mandala event handlers
+    private void TriangleLayersSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.TriangleLayers = (int)e.NewValue;
+        _effect.Configuration.Set("triangleLayers", (int)e.NewValue);
+    }
+
+    private void ZoomSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ZoomSpeed = (float)e.NewValue;
+        _effect.Configuration.Set("zoomSpeed", (float)e.NewValue);
+    }
+
+    private void ZoomAmountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ZoomAmount = (float)e.NewValue;
+        _effect.Configuration.Set("zoomAmount", (float)e.NewValue);
+    }
+
+    private void InnerTrianglesSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.InnerTriangles = (int)e.NewValue;
+        _effect.Configuration.Set("innerTriangles", (int)e.NewValue);
+    }
+
+    private void FractalDepthSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FractalDepth = (float)e.NewValue;
+        _effect.Configuration.Set("fractalDepth", (float)e.NewValue);
+    }
+
+    // Moon event handlers
+    private void MoonPhaseRotationSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.MoonPhaseRotationSpeed = (float)e.NewValue;
+        _effect.Configuration.Set("moonPhaseRotationSpeed", (float)e.NewValue);
+    }
+
+    private void ZodiacRotationSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.ZodiacRotationSpeed = (float)e.NewValue;
+        _effect.Configuration.Set("zodiacRotationSpeed", (float)e.NewValue);
+    }
+
+    private void TreeOfLifeScaleSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.TreeOfLifeScale = (float)e.NewValue;
+        _effect.Configuration.Set("treeOfLifeScale", (float)e.NewValue);
+    }
+
+    private void CosmicGlowSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.CosmicGlowIntensity = (float)e.NewValue;
+        _effect.Configuration.Set("cosmicGlowIntensity", (float)e.NewValue);
     }
 }
