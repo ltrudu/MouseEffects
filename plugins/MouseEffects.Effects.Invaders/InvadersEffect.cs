@@ -197,6 +197,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private bool _waitingForFirstHit = true; // Timer starts on first kill
     private bool _isGameOver; // True if ended due to collision (not timer)
     private string _gameOverReason = "";
+    private bool _showWelcomeScreen = true;
 
     // Reset hotkey
     private bool _enableResetHotkey;
@@ -234,8 +235,8 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         {
             Id = "reset",
             DisplayName = "Reset Game",
-            Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Shift,
-            Key = HotkeyKey.I,
+            Modifiers = HotkeyModifiers.Alt | HotkeyModifiers.Shift,
+            Key = HotkeyKey.R,
             IsEnabled = _enableResetHotkey,
             Callback = ResetGame
         };
@@ -243,6 +244,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 
     public void ResetGame()
     {
+        _showWelcomeScreen = true;
         _score = 0;
         _elapsedTime = 0f;
         _isGameActive = true;
@@ -519,6 +521,30 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         {
             _rainbowHue += _rocketRainbowSpeed * dt;
             if (_rainbowHue > 1f) _rainbowHue -= 1f;
+        }
+
+        // Handle welcome screen - click to start
+        if (_showWelcomeScreen)
+        {
+            bool leftPressed = mouseState.IsButtonPressed(MouseButtons.Left);
+            if (leftPressed && !_wasLeftPressed)
+            {
+                _showWelcomeScreen = false;
+            }
+            _wasLeftPressed = leftPressed;
+            return; // Skip all game logic while showing welcome screen
+        }
+
+        // Handle game over/success - click to restart (go back to welcome screen)
+        if (_isGameEnded)
+        {
+            bool leftPressed = mouseState.IsButtonPressed(MouseButtons.Left);
+            if (leftPressed && !_wasLeftPressed)
+            {
+                ResetGame(); // This sets _showWelcomeScreen = true
+            }
+            _wasLeftPressed = leftPressed;
+            return; // Skip game logic when ended
         }
 
         // Update timer if game is active and not waiting for first hit
@@ -990,7 +1016,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         }
 
         // Render game entities (invaders, rockets, explosions)
-        if (entityIndex > 0)
+        if (!_showWelcomeScreen && entityIndex > 0)
         {
             context.UpdateBuffer(_entityBuffer!, (ReadOnlySpan<EntityGPU>)_gpuEntities.AsSpan(0, entityIndex));
             context.SetVertexShader(_vertexShader);
@@ -1007,12 +1033,51 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         RenderTextOverlay(context, totalTime);
     }
 
+    private void RenderWelcomeScreen(float totalTime)
+    {
+        if (_textOverlay == null) return;
+
+        float centerX = _viewportWidth / 2f;
+        float centerY = _viewportHeight / 2f;
+
+        // Title: Large wave animated with high glow
+        var titleStyle = new TextStyle
+        {
+            Color = new Vector4(1f, 1f, 1f, 1f),
+            Size = _scoreOverlaySize * 4f,  // 4x larger than normal
+            Spacing = _scoreOverlaySpacing,
+            GlowIntensity = 2.5f,
+            Animation = TextAnimation.Wave(2f, 8f, 0.3f)
+        };
+
+        // Prompt: Pulsing white
+        var promptStyle = new TextStyle
+        {
+            Color = new Vector4(1f, 1f, 1f, 0.9f),
+            Size = _scoreOverlaySize * 0.8f,
+            Spacing = _scoreOverlaySpacing,
+            GlowIntensity = 1.5f,
+            Animation = TextAnimation.Pulse(2f, 0.3f)
+        };
+
+        _textOverlay.AddTextCentered("INVADERS", new Vector2(centerX, centerY - _scoreOverlaySize * 2f), titleStyle);
+        _textOverlay.AddTextCentered("PRESS LEFT MOUSE BUTTON TO START", new Vector2(centerX, centerY + _scoreOverlaySize * 3f), promptStyle);
+    }
+
     private void RenderTextOverlay(IRenderContext context, float totalTime)
     {
         if (_textOverlay == null) return;
 
         _textOverlay.BeginFrame();
         _textOverlay.Time = totalTime;
+
+        if (_showWelcomeScreen)
+        {
+            RenderWelcomeScreen(totalTime);
+            _textOverlay.EndFrame();
+            _textOverlay.Render(context);
+            return;
+        }
 
         // Score overlay panel
         if (_showScoreOverlay && (_isGameActive || _isGameEnded))
@@ -1100,9 +1165,19 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
                 GlowIntensity = 1.5f
             };
 
+            var restartStyle = new TextStyle
+            {
+                Color = new Vector4(1f, 1f, 1f, 1f),
+                Size = _scoreOverlaySize * 0.8f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.5f,
+                Animation = TextAnimation.Rainbow(0.5f)
+            };
+
             var center = new Vector2(_viewportWidth / 2f, _viewportHeight / 2f);
             _textOverlay.AddTextCentered("GAME OVER", center, gameOverStyle);
             _textOverlay.AddTextCentered(_gameOverReason, center + new Vector2(0, _scoreOverlaySize * 4f), reasonStyle);
+            _textOverlay.AddTextCentered("CLICK LEFT MOUSE TO RESTART", center + new Vector2(0, _scoreOverlaySize * 7f), restartStyle);
         }
 
         // High scores display (when game ends with win)
@@ -1177,6 +1252,17 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 
             entryY += entryLineHeight;
         }
+
+        // Add restart prompt
+        var restartStyle = new TextStyle
+        {
+            Color = new Vector4(1f, 1f, 1f, 1f),
+            Size = _scoreOverlaySize * 0.8f,
+            Spacing = _scoreOverlaySpacing,
+            GlowIntensity = 1.5f,
+            Animation = TextAnimation.Rainbow(0.5f)
+        };
+        _textOverlay.AddTextCentered("CLICK LEFT MOUSE TO RESTART", new Vector2(hsCenterX, hsCenterY + _scoreOverlaySize * 7f), restartStyle);
     }
 
     private static string FormatTimer(float remainingSeconds)
