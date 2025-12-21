@@ -27,7 +27,28 @@ public sealed class GlobalMouseHook : IMouseInputProvider
     private int _scrollDelta;
     private DateTime _lastMoveTime;
 
+    /// <summary>
+    /// Optional click consumer that can block clicks from reaching the desktop.
+    /// </summary>
+    private IClickConsumer? _clickConsumer;
+
+    /// <summary>
+    /// Tracks whether we consumed the left mouse-down event.
+    /// We only consume mouse-up if we consumed the corresponding mouse-down.
+    /// </summary>
+    private bool _consumedLeftButtonDown;
+
     public bool IsCapturing => _hookHandle != nint.Zero;
+
+    /// <summary>
+    /// Register a click consumer that can block clicks from reaching the desktop.
+    /// Only one consumer can be active at a time.
+    /// </summary>
+    public void SetClickConsumer(IClickConsumer? consumer)
+    {
+        _clickConsumer = consumer;
+        _consumedLeftButtonDown = false; // Reset tracking when consumer changes
+    }
 
     public MouseState CurrentState
     {
@@ -145,11 +166,36 @@ public sealed class GlobalMouseHook : IMouseInputProvider
 
     private nint HookCallback(int nCode, nint wParam, nint lParam)
     {
+        bool shouldBlockClick = false;
+
         if (nCode >= 0)
         {
             var hookStruct = Marshal.PtrToStructure<MouseHookNativeMethods.MSLLHOOKSTRUCT>(lParam);
             var messageId = (int)wParam;
             var timestamp = _stopwatch.Elapsed;
+
+            // Check if we should consume left button down
+            if (messageId == MouseHookNativeMethods.WM_LBUTTONDOWN)
+            {
+                if (_clickConsumer?.ShouldConsumeClicks == true)
+                {
+                    shouldBlockClick = true;
+                    _consumedLeftButtonDown = true;
+                }
+                else
+                {
+                    _consumedLeftButtonDown = false;
+                }
+            }
+            // Only consume mouse-up if we consumed the corresponding mouse-down
+            else if (messageId == MouseHookNativeMethods.WM_LBUTTONUP)
+            {
+                if (_consumedLeftButtonDown)
+                {
+                    shouldBlockClick = true;
+                }
+                _consumedLeftButtonDown = false;
+            }
 
             switch (messageId)
             {
@@ -185,6 +231,12 @@ public sealed class GlobalMouseHook : IMouseInputProvider
                     ProcessMouseWheel(hookStruct.pt.x, hookStruct.pt.y, hookStruct.mouseData, timestamp);
                     break;
             }
+        }
+
+        // If click should be blocked, return 1 to prevent it from reaching other applications
+        if (shouldBlockClick)
+        {
+            return (nint)1;
         }
 
         return MouseHookNativeMethods.CallNextHookEx(_hookHandle, nCode, wParam, lParam);

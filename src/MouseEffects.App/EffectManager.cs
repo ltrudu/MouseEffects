@@ -2,6 +2,7 @@ using MouseEffects.Core.Effects;
 using MouseEffects.Core.Input;
 using MouseEffects.Core.Rendering;
 using MouseEffects.Core.Time;
+using MouseEffects.Input;
 
 namespace MouseEffects.App;
 
@@ -13,6 +14,7 @@ public sealed class EffectManager : IDisposable
 {
     private readonly Dictionary<string, IEffectFactory> _factories = new();
     private readonly IRenderContext _sharedContext;
+    private GlobalMouseHook? _mouseHook;
     private IEffect? _activeEffect;
     private bool _disposed;
     private bool _globallyPaused;
@@ -34,16 +36,34 @@ public sealed class EffectManager : IDisposable
 
     /// <summary>
     /// Gets or sets whether effects are globally paused.
+    /// When paused, click consumption is also disabled.
     /// </summary>
     public bool IsGloballyPaused
     {
         get => _globallyPaused;
-        set => _globallyPaused = value;
+        set
+        {
+            if (_globallyPaused != value)
+            {
+                _globallyPaused = value;
+                UpdateClickConsumer();
+            }
+        }
     }
 
-    public EffectManager(IRenderContext sharedContext)
+    public EffectManager(IRenderContext sharedContext, GlobalMouseHook? mouseHook = null)
     {
         _sharedContext = sharedContext;
+        _mouseHook = mouseHook;
+    }
+
+    /// <summary>
+    /// Sets the mouse hook for click consumer support. Call after mouse hook is created.
+    /// </summary>
+    public void SetMouseHook(GlobalMouseHook mouseHook)
+    {
+        _mouseHook = mouseHook;
+        UpdateClickConsumer();
     }
 
     /// <summary>
@@ -85,6 +105,7 @@ public sealed class EffectManager : IDisposable
                 _activeEffect.Dispose();
                 _activeEffect = null;
             }
+            UpdateClickConsumer();
             return null;
         }
 
@@ -104,13 +125,40 @@ public sealed class EffectManager : IDisposable
         // Create new effect
         if (!_factories.TryGetValue(effectId, out var factory))
         {
+            UpdateClickConsumer();
             return null;
         }
 
         var effect = factory.Create();
         effect.Initialize(_sharedContext);
         _activeEffect = effect;
+        UpdateClickConsumer();
         return effect;
+    }
+
+    /// <summary>
+    /// Updates the click consumer on the mouse hook based on the active effect.
+    /// Click consumption is disabled when effects are globally paused.
+    /// </summary>
+    private void UpdateClickConsumer()
+    {
+        if (_mouseHook == null) return;
+
+        // Don't consume clicks when globally paused
+        if (_globallyPaused)
+        {
+            _mouseHook.SetClickConsumer(null);
+            return;
+        }
+
+        if (_activeEffect is IClickConsumer clickConsumer)
+        {
+            _mouseHook.SetClickConsumer(clickConsumer);
+        }
+        else
+        {
+            _mouseHook.SetClickConsumer(null);
+        }
     }
 
     /// <summary>

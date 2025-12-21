@@ -1,0 +1,325 @@
+<UserControl x:Class="MouseEffects.Effects.RetroCommand.UI.RetroCommandSettingsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" d:DesignWidth="350">
+    <UserControl.Resources>
+        <Style TargetType="TextBlock" x:Key="LabelStyle">
+            <Setter Property="Margin" Value="0,8,0,4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style TargetType="Slider" x:Key="SliderStyle">
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style TargetType="TextBlock" x:Key="SectionStyle">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,12,0,8"/>
+            <Setter Property="Foreground" Value="#FF00AAFF"/>
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Margin="0">
+        <TextBlock Text="Defend cities from incoming missiles! Click to launch counter-missiles that explode and destroy enemy missiles."
+                   Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+        <!-- Score Display -->
+        <Border Background="#22FFFFFF" CornerRadius="4" Padding="8" Margin="0,8,0,0">
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="SCORE: " FontWeight="Bold" Foreground="#FF00FF00"/>
+                            <TextBlock x:Name="ScoreDisplay" Text="0" FontWeight="Bold" Foreground="#FFFFFF00" FontSize="16"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="PPM: " FontWeight="Bold" Foreground="#FFFFCC00" FontSize="12"/>
+                            <TextBlock x:Name="PpmDisplay" Text="0" FontWeight="Bold" Foreground="#FFFFCC00" FontSize="12"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="TIME: " FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock x:Name="TimerDisplay" Text="00:00" FontWeight="Bold" Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock Text=" / " Foreground="#FF00CCFF" FontSize="12"/>
+                            <TextBlock x:Name="TimerDurationDisplay" Text="01:30" Foreground="#FF00CCFF" FontSize="12"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="WAVE: " FontWeight="Bold" Foreground="#FFFF66FF" FontSize="12"/>
+                            <TextBlock x:Name="WaveDisplay" Text="1" FontWeight="Bold" Foreground="#FFFF66FF" FontSize="12"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                            <TextBlock Text="CITIES: " FontWeight="Bold" Foreground="#FF66FF66" FontSize="12"/>
+                            <TextBlock x:Name="CitiesDisplay" Text="6" FontWeight="Bold" Foreground="#FF66FF66" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Button x:Name="ResetButton" Grid.Column="1" Content="RESET"
+                            VerticalAlignment="Center" Padding="12,6"
+                            Background="#FF2266" Foreground="White" FontWeight="Bold"
+                            Click="ResetButton_Click" ToolTip="Reset score and start timer"/>
+                </Grid>
+                <CheckBox x:Name="EnableResetHotkeyCheckBox" Content="Reset Hotkey (Alt+Shift+R)"
+                          Margin="0,8,0,0" FontSize="11"
+                          IsChecked="False" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"
+                          ToolTip="Enable Alt+Shift+R to reset and restart the game"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Settings Panel -->
+        <StackPanel Margin="0,8,0,0">
+
+            <!-- ========== STYLE ========== -->
+            <TextBlock Text="STYLE" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Render Style" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
+            <ComboBox x:Name="RenderStyleComboBox" Width="120" HorizontalAlignment="Left"
+                      SelectionChanged="ComboBox_SelectionChanged">
+                <ComboBoxItem Content="Modern" IsSelected="True"/>
+                <ComboBoxItem Content="Retro"/>
+            </ComboBox>
+
+            <!-- ========== EXPLOSION MODE ========== -->
+            <TextBlock Text="EXPLOSION MODE" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Explosion Trigger" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
+            <ComboBox x:Name="ExplosionModeComboBox" Width="180" HorizontalAlignment="Left"
+                      SelectionChanged="ExplosionModeComboBox_SelectionChanged">
+                <ComboBoxItem Content="Instant at Cursor"/>
+                <ComboBoxItem Content="Counter-Missile" IsSelected="True"/>
+            </ComboBox>
+
+            <StackPanel x:Name="CounterMissilePanel">
+                <TextBlock Text="Counter-Missile Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="CounterMissileSpeedSlider" Minimum="100" Maximum="1000" Value="400"
+                        Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+                <TextBlock x:Name="CounterMissileSpeedValue" Text="400" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- ========== FIRE RATE ========== -->
+            <TextBlock Text="FIRE RATE" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Fire Rate Limit" Style="{StaticResource LabelStyle}" Margin="0,0,0,4"/>
+            <ComboBox x:Name="FireRateModeComboBox" Width="180" HorizontalAlignment="Left"
+                      SelectionChanged="FireRateModeComboBox_SelectionChanged">
+                <ComboBoxItem Content="Unlimited"/>
+                <ComboBoxItem Content="Max Active Explosions" IsSelected="True"/>
+                <ComboBoxItem Content="Cooldown Timer"/>
+            </ComboBox>
+
+            <StackPanel x:Name="MaxActivePanel">
+                <TextBlock Text="Max Active Explosions" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="MaxActiveExplosionsSlider" Minimum="1" Maximum="20" Value="5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"
+                        IsSnapToTickEnabled="True" TickFrequency="1"/>
+                <TextBlock x:Name="MaxActiveExplosionsValue" Text="5" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <StackPanel x:Name="CooldownPanel" Visibility="Collapsed">
+                <TextBlock Text="Fire Cooldown (sec)" Style="{StaticResource LabelStyle}"/>
+                <Slider x:Name="FireCooldownSlider" Minimum="0.1" Maximum="2" Value="0.3"
+                        Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+                <TextBlock x:Name="FireCooldownValue" Text="0.30" Opacity="0.7" FontSize="11"/>
+            </StackPanel>
+
+            <!-- ========== CITY SETTINGS ========== -->
+            <TextBlock Text="CITY SETTINGS" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="City Size (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="CitySizeSlider" Minimum="20" Maximum="80" Value="40"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="CitySizeValue" Text="40" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="City Color" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="CityColorPreview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="#00CCFF" Margin="0,0,8,0" Cursor="Hand"
+                        MouseLeftButtonUp="CityColorPreview_Click"/>
+                <TextBlock Text="Click to change" Opacity="0.5" VerticalAlignment="Center" FontSize="10"/>
+            </StackPanel>
+
+            <!-- ========== BASE SETTINGS ========== -->
+            <TextBlock Text="BASE SETTINGS" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Base Size (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="BaseSizeSlider" Minimum="30" Maximum="100" Value="50"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="BaseSizeValue" Text="50" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Base Color" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="BaseColorPreview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="#00FF80" Margin="0,0,8,0" Cursor="Hand"
+                        MouseLeftButtonUp="BaseColorPreview_Click"/>
+                <TextBlock Text="Click to change" Opacity="0.5" VerticalAlignment="Center" FontSize="10"/>
+            </StackPanel>
+
+            <!-- ========== ENEMY MISSILE SETTINGS ========== -->
+            <TextBlock Text="ENEMY MISSILES" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Enemy Missile Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="EnemyMissileSpeedSlider" Minimum="20" Maximum="300" Value="100"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="EnemyMissileSpeedValue" Text="100" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Speed Increase Per Wave" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="EnemyMissileSpeedIncreaseSlider" Minimum="0" Maximum="50" Value="15"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="EnemyMissileSpeedIncreaseValue" Text="15" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Missiles Per Wave" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="EnemyMissilesPerWaveSlider" Minimum="1" Maximum="30" Value="10"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"
+                    IsSnapToTickEnabled="True" TickFrequency="1"/>
+            <TextBlock x:Name="EnemyMissilesPerWaveValue" Text="10" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Enemy Missile Size (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="EnemyMissileSizeSlider" Minimum="4" Maximum="20" Value="8"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="EnemyMissileSizeValue" Text="8" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Enemy Missile Color" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="EnemyMissileColorPreview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="#FF3333" Margin="0,0,8,0" Cursor="Hand"
+                        MouseLeftButtonUp="EnemyMissileColorPreview_Click"/>
+                <TextBlock Text="Click to change" Opacity="0.5" VerticalAlignment="Center" FontSize="10"/>
+            </StackPanel>
+
+            <!-- ========== EXPLOSION SETTINGS ========== -->
+            <TextBlock Text="EXPLOSION SETTINGS" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Explosion Max Radius (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ExplosionMaxRadiusSlider" Minimum="30" Maximum="200" Value="80"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ExplosionMaxRadiusValue" Text="80" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Expand Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ExplosionExpandSpeedSlider" Minimum="50" Maximum="500" Value="200"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ExplosionExpandSpeedValue" Text="200" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Shrink Speed (px/sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ExplosionShrinkSpeedSlider" Minimum="50" Maximum="500" Value="150"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ExplosionShrinkSpeedValue" Text="150" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Explosion Duration (sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ExplosionDurationSlider" Minimum="0.5" Maximum="5" Value="1.5"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ExplosionDurationValue" Text="1.50" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Explosion Color" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="ExplosionColorPreview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="#FFCC33" Margin="0,0,8,0" Cursor="Hand"
+                        MouseLeftButtonUp="ExplosionColorPreview_Click"/>
+                <TextBlock Text="Click to change" Opacity="0.5" VerticalAlignment="Center" FontSize="10"/>
+            </StackPanel>
+
+            <!-- ========== VISUAL SETTINGS ========== -->
+            <TextBlock Text="VISUAL SETTINGS" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="GlowSlider" Minimum="0" Maximum="3" Value="1.2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="GlowValue" Text="1.2" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Neon Intensity" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="NeonSlider" Minimum="0" Maximum="2" Value="1"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="NeonValue" Text="1.0" Opacity="0.7" FontSize="11"/>
+
+            <CheckBox x:Name="EnableTrailsCheckBox" Content="Enable Missile Trails" Margin="0,8,0,4"
+                      IsChecked="True" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
+
+            <!-- ========== WAVE SETTINGS ========== -->
+            <TextBlock Text="WAVE SETTINGS" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Wave Pause Duration (sec)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="WavePauseDurationSlider" Minimum="0.5" Maximum="10" Value="2"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="WavePauseDurationValue" Text="2.0" Opacity="0.7" FontSize="11"/>
+
+            <!-- ========== SCORING ========== -->
+            <TextBlock Text="SCORING" Style="{StaticResource SectionStyle}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                    <TextBlock Text="Missile" FontSize="10" Opacity="0.7"/>
+                    <TextBox x:Name="ScoreMissileTextBox" Text="25" Width="50" TextChanged="ScoreTextBox_Changed"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="2,0,2,0">
+                    <TextBlock Text="Wave Bonus" FontSize="10" Opacity="0.7"/>
+                    <TextBox x:Name="ScoreWaveBonusTextBox" Text="100" Width="50" TextChanged="ScoreTextBox_Changed"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                    <TextBlock Text="City Bonus" FontSize="10" Opacity="0.7"/>
+                    <TextBox x:Name="ScoreCityBonusTextBox" Text="500" Width="50" TextChanged="ScoreTextBox_Changed"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ========== SCORE OVERLAY ========== -->
+            <TextBlock Text="SCORE OVERLAY" Style="{StaticResource SectionStyle}"/>
+
+            <CheckBox x:Name="ShowScoreOverlayCheckBox" Content="Show Score on Screen" Margin="0,4,0,4"
+                      IsChecked="True" Checked="CheckBox_Changed" Unchecked="CheckBox_Changed"/>
+
+            <TextBlock Text="Score Size (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ScoreOverlaySizeSlider" Minimum="16" Maximum="100" Value="32"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ScoreOverlaySizeValue" Text="32" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Digit Spacing" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ScoreOverlaySpacingSlider" Minimum="1.0" Maximum="2.5" Value="1.3"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ScoreOverlaySpacingValue" Text="1.30" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Label Margin (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ScoreOverlayMarginSlider" Minimum="5" Maximum="100" Value="20"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"
+                    IsSnapToTickEnabled="True" TickFrequency="5"/>
+            <TextBlock x:Name="ScoreOverlayMarginValue" Text="20" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Background Opacity" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ScoreOverlayBgOpacitySlider" Minimum="0" Maximum="1" Value="0.7"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ScoreOverlayBgOpacityValue" Text="0.70" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Score Color" Style="{StaticResource LabelStyle}"/>
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Border x:Name="ScoreOverlayColorPreview" Width="24" Height="24" BorderThickness="1"
+                        BorderBrush="Gray" Background="#00FF00" Margin="0,0,8,0" Cursor="Hand"
+                        MouseLeftButtonUp="ScoreOverlayColorPreview_Click"/>
+                <TextBlock Text="Click to change" Opacity="0.5" VerticalAlignment="Center" FontSize="10"/>
+            </StackPanel>
+
+            <TextBlock Text="Score Position X (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ScoreOverlayXSlider" Minimum="0" Maximum="500" Value="70"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ScoreOverlayXValue" Text="70" Opacity="0.7" FontSize="11"/>
+
+            <TextBlock Text="Score Position Y (px)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="ScoreOverlayYSlider" Minimum="0" Maximum="500" Value="49"
+                    Style="{StaticResource SliderStyle}" ValueChanged="Slider_ValueChanged"/>
+            <TextBlock x:Name="ScoreOverlayYValue" Text="49" Opacity="0.7" FontSize="11"/>
+
+            <!-- ========== TIMER SETTINGS ========== -->
+            <TextBlock Text="TIMER SETTINGS" Style="{StaticResource SectionStyle}"/>
+
+            <TextBlock Text="Game Duration (seconds)" Style="{StaticResource LabelStyle}"/>
+            <Slider x:Name="TimerDurationSlider" Minimum="30" Maximum="300" Value="90"
+                    Style="{StaticResource SliderStyle}" ValueChanged="TimerDurationSlider_ValueChanged"
+                    IsSnapToTickEnabled="True" TickFrequency="15"/>
+            <TextBlock x:Name="TimerDurationValue" Text="1:30" Opacity="0.7" FontSize="11"/>
+
+        </StackPanel>
+    </StackPanel>
+</UserControl>

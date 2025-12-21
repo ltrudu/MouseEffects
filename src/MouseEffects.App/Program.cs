@@ -430,6 +430,9 @@ static partial class Program
             _rightClickToggleEnabled = _settings.EnableRightClickToggle;
             _middleClickToggleEnabled = _settings.EnableMiddleClickToggle;
 
+            // Connect mouse hook to effect manager for click consumption support
+            _effectManager.SetMouseHook(_mouseInput);
+
             // Create game loop
             Log("Creating game loop...");
             _gameLoop = new GameLoop(_overlayManager, _effectManager, _mouseInput);

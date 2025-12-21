@@ -107,6 +107,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.Retrop
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Text", "src\MouseEffects.Text\MouseEffects.Text.csproj", "{24685743-7D53-4D70-98CC-64F52E3A242B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.RetroCommand", "plugins\MouseEffects.Effects.RetroCommand\MouseEffects.Effects.RetroCommand.csproj", "{A784C4D6-16F0-42F1-A6EC-8C776D006743}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -717,6 +719,18 @@ Global
 		{24685743-7D53-4D70-98CC-64F52E3A242B}.Release|x64.Build.0 = Release|Any CPU
 		{24685743-7D53-4D70-98CC-64F52E3A242B}.Release|x86.ActiveCfg = Release|Any CPU
 		{24685743-7D53-4D70-98CC-64F52E3A242B}.Release|x86.Build.0 = Release|Any CPU
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Debug|Any CPU.Build.0 = Debug|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Debug|x64.ActiveCfg = Debug|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Debug|x64.Build.0 = Debug|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Debug|x86.ActiveCfg = Debug|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Debug|x86.Build.0 = Debug|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Release|Any CPU.ActiveCfg = Release|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Release|Any CPU.Build.0 = Release|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Release|x64.ActiveCfg = Release|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Release|x64.Build.0 = Release|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Release|x86.ActiveCfg = Release|x64
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743}.Release|x86.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -772,6 +786,7 @@ Global
 		{F90FF68F-9C08-4734-B029-CEB8112561A9} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{F2200147-0597-4A6D-B988-19AB8759008F} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{24685743-7D53-4D70-98CC-64F52E3A242B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{A784C4D6-16F0-42F1-A6EC-8C776D006743} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FCD67D-F721-4679-A84D-FCEEF635AF00}
