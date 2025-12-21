@@ -1040,10 +1040,25 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         float centerX = _viewportWidth / 2f;
         float centerY = _viewportHeight / 2f;
 
-        // Title: Large wave animated with high glow
+        // Compute rainbow color from time (HSV to RGB)
+        float hue = (totalTime * 0.5f) % 1f;
+        float r, g, b;
+        int hi = (int)(hue * 6f) % 6;
+        float f = hue * 6f - hi;
+        switch (hi)
+        {
+            case 0: r = 1f; g = f; b = 0f; break;
+            case 1: r = 1f - f; g = 1f; b = 0f; break;
+            case 2: r = 0f; g = 1f; b = f; break;
+            case 3: r = 0f; g = 1f - f; b = 1f; break;
+            case 4: r = f; g = 0f; b = 1f; break;
+            default: r = 1f; g = 0f; b = 1f - f; break;
+        }
+
+        // Title: Large wave animated with rainbow color
         var titleStyle = new TextStyle
         {
-            Color = new Vector4(1f, 1f, 1f, 1f),
+            Color = new Vector4(r, g, b, 1f),
             Size = _scoreOverlaySize * 4f,  // 4x larger than normal
             Spacing = _scoreOverlaySpacing,
             GlowIntensity = 2.5f,

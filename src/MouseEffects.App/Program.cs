@@ -28,6 +28,8 @@ static partial class Program
     private static FpsOverlayWindow? _fpsOverlay;
     private static AppSettings _settings = new();
     private static bool _effectsEnabled = true;
+    private static bool _rightClickToggleEnabled = false;
+    private static bool _middleClickToggleEnabled = false;
     private static UpdateService? _updateService;
     private static readonly HashSet<string> _pressedHotkeys = new();
 
@@ -424,6 +426,9 @@ static partial class Program
             // Create mouse input provider
             Log("Creating mouse input...");
             _mouseInput = new GlobalMouseHook();
+            _mouseInput.MouseUp += OnGlobalMouseUp;
+            _rightClickToggleEnabled = _settings.EnableRightClickToggle;
+            _middleClickToggleEnabled = _settings.EnableMiddleClickToggle;
 
             // Create game loop
             Log("Creating game loop...");
@@ -1050,6 +1055,39 @@ static partial class Program
         {
             UnregisterHotKey(nint.Zero, HOTKEY_ID);
             Log("Toggle hotkey unregistered");
+        }
+    }
+
+    /// <summary>
+    /// Update the right-click toggle state based on settings.
+    /// </summary>
+    public static void UpdateRightClickToggle(bool enabled)
+    {
+        _rightClickToggleEnabled = enabled;
+        Log($"Right-click toggle: {(enabled ? "ENABLED" : "DISABLED")}");
+    }
+
+    /// <summary>
+    /// Update the middle-click toggle state based on settings.
+    /// </summary>
+    public static void UpdateMiddleClickToggle(bool enabled)
+    {
+        _middleClickToggleEnabled = enabled;
+        Log($"Middle-click toggle: {(enabled ? "ENABLED" : "DISABLED")}");
+    }
+
+    /// <summary>
+    /// Handle global mouse up events for right-click and middle-click toggle.
+    /// </summary>
+    private static void OnGlobalMouseUp(object? sender, MouseEffects.Core.Input.MouseButtonEventArgs e)
+    {
+        if (_rightClickToggleEnabled && e.Button == MouseEffects.Core.Input.MouseButtons.Right)
+        {
+            ToggleEffects();
+        }
+        else if (_middleClickToggleEnabled && e.Button == MouseEffects.Core.Input.MouseButtons.Middle)
+        {
+            ToggleEffects();
         }
     }
 

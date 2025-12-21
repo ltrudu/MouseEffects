@@ -81,6 +81,20 @@ public class AppSettings
     public bool EnableToggleHotkey { get; set; } = true;
 
     /// <summary>
+    /// Whether to enable right-click toggle.
+    /// When enabled, right-clicking toggles all effects on/off.
+    /// The right-click event still bubbles to Windows for context menus.
+    /// </summary>
+    public bool EnableRightClickToggle { get; set; } = false;
+
+    /// <summary>
+    /// Whether to enable middle-click (mouse wheel click) toggle.
+    /// When enabled, clicking the mouse wheel toggles all effects on/off.
+    /// The middle-click event still bubbles to Windows.
+    /// </summary>
+    public bool EnableMiddleClickToggle { get; set; } = false;
+
+    /// <summary>
     /// Whether to enable the settings window hotkey (ALT+SHIFT+L).
     /// Toggles the settings window visibility.
     /// </summary>
