@@ -6,6 +6,8 @@ using MouseEffects.Core.Effects;
 using MouseEffects.Core.Input;
 using MouseEffects.Core.Rendering;
 using MouseEffects.Core.Time;
+using MouseEffects.Text;
+using MouseEffects.Text.Style;
 
 using MouseButtons = MouseEffects.Core.Input.MouseButtons;
 
@@ -100,7 +102,6 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private const int MaxInvaders = 100;
     private const int MaxRockets = 50;
     private const int MaxExplosionParticles = 2000;
-    private const int MaxOverlayChars = 200; // Labels + Score + PPM + Timer + High Scores display
 
     private static readonly EffectMetadata _metadata = new()
     {
@@ -120,7 +121,10 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
     private readonly Invader[] _invaders = new Invader[MaxInvaders];
     private readonly Rocket[] _rockets = new Rocket[MaxRockets];
     private readonly ExplosionParticle[] _explosions = new ExplosionParticle[MaxExplosionParticles];
-    private readonly EntityGPU[] _gpuEntities = new EntityGPU[MaxInvaders + MaxRockets + MaxExplosionParticles + MaxOverlayChars];
+    private readonly EntityGPU[] _gpuEntities = new EntityGPU[MaxInvaders + MaxRockets + MaxExplosionParticles];
+
+    // Text overlay for score, timer, game over, and high scores
+    private TextOverlay? _textOverlay;
 
     private Vector2 _lastMousePos;
     private float _lastSpawnDistance;
@@ -266,7 +270,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
 
     protected override void OnInitialize(IRenderContext context)
     {
-        int totalEntities = MaxInvaders + MaxRockets + MaxExplosionParticles + MaxOverlayChars;
+        int totalEntities = MaxInvaders + MaxRockets + MaxExplosionParticles;
         var entityDesc = new BufferDescription
         {
             Size = totalEntities * Marshal.SizeOf<EntityGPU>(),
@@ -287,6 +291,10 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         string shaderSource = LoadEmbeddedShader("InvadersShader.hlsl");
         _vertexShader = context.CompileShader(shaderSource, "VSMain", ShaderStage.Vertex);
         _pixelShader = context.CompileShader(shaderSource, "PSMain", ShaderStage.Pixel);
+
+        // Initialize text overlay
+        _textOverlay = new TextOverlay();
+        _textOverlay.Initialize(context);
 
         // Initialize arrays
         for (int i = 0; i < MaxInvaders; i++)
@@ -914,7 +922,7 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
         context.UpdateBuffer(_frameDataBuffer!, frameData);
 
         int entityIndex = 0;
-        int totalEntities = MaxInvaders + MaxRockets + MaxExplosionParticles + MaxOverlayChars;
+        int totalEntities = MaxInvaders + MaxRockets + MaxExplosionParticles;
 
         // Add invaders to GPU buffer
         for (int i = 0; i < MaxInvaders && entityIndex < totalEntities; i++)
@@ -981,486 +989,208 @@ public sealed class InvadersEffect : EffectBase, IHotkeyProvider
             entityIndex++;
         }
 
-        // Add score overlay (score, PPM, timer) with labels
-        if (_showScoreOverlay && _isGameActive || _isGameEnded)
+        // Render game entities (invaders, rockets, explosions)
+        if (entityIndex > 0)
         {
-            float digitWidth = _scoreOverlaySize * _scoreOverlaySpacing;
-            float lineHeight = _scoreOverlaySize * 1.6f;
-            float startX = _scoreOverlayX;
-            float currentY = _scoreOverlayY;
-            float labelSize = _scoreOverlaySize * 0.6f;
-            float labelWidth = labelSize * _scoreOverlaySpacing;
+            context.UpdateBuffer(_entityBuffer!, (ReadOnlySpan<EntityGPU>)_gpuEntities.AsSpan(0, entityIndex));
+            context.SetVertexShader(_vertexShader);
+            context.SetPixelShader(_pixelShader);
+            context.SetConstantBuffer(ShaderStage.Vertex, 0, _frameDataBuffer!);
+            context.SetConstantBuffer(ShaderStage.Pixel, 0, _frameDataBuffer!);
+            context.SetShaderResource(ShaderStage.Vertex, 0, _entityBuffer!);
+            context.SetBlendState(BlendMode.Additive);
+            context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
+            context.DrawInstanced(6, entityIndex, 0, 0);
+        }
 
-            // Helper to get entity type for a character
-            static float CharToEntityType(char c)
+        // Render text overlay using centralized TextOverlay system
+        RenderTextOverlay(context, totalTime);
+    }
+
+    private void RenderTextOverlay(IRenderContext context, float totalTime)
+    {
+        if (_textOverlay == null) return;
+
+        _textOverlay.BeginFrame();
+        _textOverlay.Time = totalTime;
+
+        // Score overlay panel
+        if (_showScoreOverlay && (_isGameActive || _isGameEnded))
+        {
+            // Define styles matching the original neon look - bright and readable
+            var labelStyle = new TextStyle
             {
-                if (c >= '0' && c <= '9') return 5f + (c - '0');
-                if (c == ':') return 15f;
-                if (c >= 'A' && c <= 'Z') return 16f + (c - 'A');
-                if (c == '/') return 43f; // Forward slash
-                if (c == ' ') return 42f;
-                return 42f; // space for unknown
-            }
+                Color = new Vector4(_scoreOverlayColor.X * 0.9f, _scoreOverlayColor.Y * 0.9f, _scoreOverlayColor.Z * 0.9f, 1f),
+                Size = _scoreOverlaySize * 0.6f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.5f
+            };
 
-            // Calculate background size based on actual content
-            // Line 1 "SCORE" uses full scale, Line 2/3 use 0.8x scale
-            // Character Position is CENTER, so text starts at (startX - labelSize)
-            float bgPadding = _scoreOverlaySize * 0.5f;
-
-            // Calculate actual widths for each line to find the longest
-            // Line 1: "SCORE" (5 chars at full scale) + margin + value (6 digits at full scale)
-            float line1Width = 5 * labelWidth + _scoreOverlayMargin + 6 * digitWidth;
-            // Line 2: "POINTS/MIN" (10 chars at 0.8x) + margin + value (6 digits at 0.8x)
-            float line2Width = 10 * labelWidth * 0.8f + _scoreOverlayMargin + 6 * digitWidth * 0.8f;
-            // Line 3: "COUNTDOWN" (9 chars at 0.8x) + margin + "READY" or "00:00" (5 chars at 0.7x)
-            float line3Width = 9 * labelWidth * 0.8f + _scoreOverlayMargin + 5 * digitWidth * 0.7f;
-
-            float contentWidth = Math.Max(line1Width, Math.Max(line2Width, line3Width));
-            float bgWidth = contentWidth + labelSize + bgPadding * 2; // +labelSize to account for first char center offset
-            float bgHeight = lineHeight * 3 + bgPadding * 2;
-
-            // Text position is CENTER of first char, so actual left edge is (startX - labelSize)
-            // Background left edge should be at (startX - labelSize - bgPadding)
-            float bgLeftEdge = startX - labelSize - bgPadding;
-            float bgTopEdge = currentY - labelSize - bgPadding;
-            float bgCenterX = bgLeftEdge + bgWidth / 2;
-            float bgCenterY = bgTopEdge + bgHeight / 2;
-
-            // Render background first (entity type 50)
-            if (_scoreOverlayBgOpacity > 0.01f && entityIndex < totalEntities)
+            var scoreStyle = new TextStyle
             {
-                _gpuEntities[entityIndex] = new EntityGPU
+                Color = _scoreOverlayColor,
+                Size = _scoreOverlaySize,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.8f
+            };
+
+            var ppmLabelStyle = new TextStyle
+            {
+                Color = new Vector4(1f, 1f, 0.2f, 1f),
+                Size = _scoreOverlaySize * 0.6f * 0.8f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.5f
+            };
+
+            var ppmValueStyle = new TextStyle
+            {
+                Color = new Vector4(1f, 1f, 0.3f, 1f),
+                Size = _scoreOverlaySize * 0.8f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.8f
+            };
+
+            var timerLabelStyle = new TextStyle
+            {
+                Color = new Vector4(0.2f, 0.9f, 1f, 1f),
+                Size = _scoreOverlaySize * 0.6f * 0.8f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.5f
+            };
+
+            var timerValueStyle = new TextStyle
+            {
+                Color = new Vector4(0.3f, 1f, 1f, 1f),
+                Size = _scoreOverlaySize * 0.7f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.8f
+            };
+
+            // Build the score panel
+            _textOverlay.CreateBuilder()
+                .Panel(new Vector2(_scoreOverlayX, _scoreOverlayY))
+                .WithBackground(new Vector4(0.05f, 0.05f, 0.1f, 1f), _scoreOverlayBgOpacity, _scoreOverlaySize * 0.5f)
+                .Line("SCORE", _score.ToString(), labelStyle, scoreStyle, 300f)
+                .Line("POINTS/MIN", ((int)PointsPerMinute).ToString(), ppmLabelStyle, ppmValueStyle, 300f)
+                .Line("COUNTDOWN", _waitingForFirstHit && _isGameActive ? "READY" : FormatTimer(RemainingTime), timerLabelStyle, timerValueStyle, 300f)
+                .Build();
+        }
+
+        // Game Over text
+        if (_isGameOver)
+        {
+            float pulseTime = _elapsedTime * 3f;
+            float glowPulse = 0.6f + 0.4f * MathF.Sin(pulseTime);
+            float colorShift = MathF.Sin(pulseTime * 0.7f) * 0.15f;
+
+            var gameOverStyle = new TextStyle
+            {
+                Color = new Vector4(1f, 0.15f + colorShift, 0.1f + colorShift * 0.5f, glowPulse),
+                Size = _scoreOverlaySize * 2.5f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 2.0f,
+                Animation = TextAnimation.Pulse(3f, 0.4f)
+            };
+
+            var reasonStyle = new TextStyle
+            {
+                Color = new Vector4(1f, 0.5f, 0.3f, glowPulse * 0.8f),
+                Size = _scoreOverlaySize * 1.2f,
+                Spacing = _scoreOverlaySpacing,
+                GlowIntensity = 1.5f
+            };
+
+            var center = new Vector2(_viewportWidth / 2f, _viewportHeight / 2f);
+            _textOverlay.AddTextCentered("GAME OVER", center, gameOverStyle);
+            _textOverlay.AddTextCentered(_gameOverReason, center + new Vector2(0, _scoreOverlaySize * 4f), reasonStyle);
+        }
+
+        // High scores display (when game ends with win)
+        if (_isGameEnded && !_isGameOver && _highScores.Count > 0)
+        {
+            RenderHighScores(totalTime);
+        }
+
+        _textOverlay.EndFrame();
+        _textOverlay.Render(context);
+    }
+
+    private void RenderHighScores(float totalTime)
+    {
+        if (_textOverlay == null) return;
+
+        float hsTime = totalTime * 2f;
+        float titlePulse = 0.7f + 0.3f * MathF.Sin(hsTime);
+
+        var titleStyle = new TextStyle
+        {
+            Color = new Vector4(0f, 0.9f, 1f, titlePulse),
+            Size = _scoreOverlaySize * 1.8f,
+            Spacing = _scoreOverlaySpacing,
+            GlowIntensity = 1.5f,
+            Animation = TextAnimation.Pulse(1f, 0.3f)
+        };
+
+        float hsCenterX = _viewportWidth / 2f;
+        float hsCenterY = _viewportHeight / 2f;
+        float hsEntrySize = _scoreOverlaySize * 1.0f;
+
+        // Title
+        _textOverlay.AddTextCentered("HIGH SCORES", new Vector2(hsCenterX, hsCenterY - hsEntrySize * 5f), titleStyle);
+
+        // Entries
+        float entryY = hsCenterY - hsEntrySize * 1.5f;
+        float entryLineHeight = hsEntrySize * 2.5f;
+
+        for (int scoreIdx = 0; scoreIdx < _highScores.Count && scoreIdx < 5; scoreIdx++)
+        {
+            var entry = _highScores[scoreIdx];
+            bool isNewScore = scoreIdx == _newHighScoreIndex;
+
+            TextStyle entryStyle;
+            if (isNewScore)
+            {
+                // Rainbow cycling for new high score
+                entryStyle = new TextStyle
                 {
-                    Position = new Vector2(bgCenterX, bgCenterY),
-                    Velocity = new Vector2(bgWidth / 2f, bgHeight / 2f), // width/height encoded in velocity
-                    Color = new Vector4(0.05f, 0.05f, 0.1f, _scoreOverlayBgOpacity), // Dark blue-ish
-                    Size = 1f,
-                    Life = 1f,
-                    MaxLife = 1f,
-                    EntityType = 50f // Background
+                    Color = new Vector4(1f, 1f, 1f, 1f),
+                    Size = hsEntrySize,
+                    Spacing = _scoreOverlaySpacing,
+                    GlowIntensity = 1.5f,
+                    Animation = TextAnimation.Rainbow(0.5f)
                 };
-                entityIndex++;
-            }
-
-            // Calculate alignment positions
-            float leftEdge = bgLeftEdge + bgPadding + labelSize; // Left-aligned label start (position is center of char)
-            float rightEdge = bgLeftEdge + bgWidth - bgPadding; // Right edge for right-aligned values
-
-            // Line 1: "SCORE" label (left-aligned) + value (right-aligned)
-            string label1 = "SCORE";
-            float labelX = leftEdge;
-            for (int i = 0; i < label1.Length && entityIndex < totalEntities; i++)
-            {
-                float entityType = CharToEntityType(label1[i]);
-                if (entityType != 42f) // Skip spaces
-                {
-                    _gpuEntities[entityIndex] = new EntityGPU
-                    {
-                        Position = new Vector2(labelX, currentY),
-                        Velocity = Vector2.Zero,
-                        Color = _scoreOverlayColor * 0.7f,
-                        Size = labelSize,
-                        Life = 1f,
-                        MaxLife = 1f,
-                        EntityType = entityType
-                    };
-                    _gpuEntities[entityIndex].Color.W = 1f;
-                    entityIndex++;
-                }
-                labelX += labelWidth;
-            }
-
-            // Score value (right-aligned)
-            string scoreStr = _score.ToString();
-            float scoreWidth = scoreStr.Length * digitWidth;
-            float valueX = rightEdge - scoreWidth + digitWidth / 2; // Adjust for char center
-            for (int i = 0; i < scoreStr.Length && entityIndex < totalEntities; i++)
-            {
-                int digit = scoreStr[i] - '0';
-                if (digit >= 0 && digit <= 9)
-                {
-                    _gpuEntities[entityIndex] = new EntityGPU
-                    {
-                        Position = new Vector2(valueX + i * digitWidth, currentY),
-                        Velocity = Vector2.Zero,
-                        Color = _scoreOverlayColor,
-                        Size = _scoreOverlaySize,
-                        Life = 1f,
-                        MaxLife = 1f,
-                        EntityType = 5f + digit
-                    };
-                    entityIndex++;
-                }
-            }
-
-            // Line 2: "POINTS/MIN" label (left-aligned) + value (right-aligned)
-            currentY += lineHeight;
-            string label2 = "POINTS/MIN";
-            labelX = leftEdge;
-            for (int i = 0; i < label2.Length && entityIndex < totalEntities; i++)
-            {
-                float entityType = CharToEntityType(label2[i]);
-                if (entityType != 42f) // Skip spaces but advance position
-                {
-                    _gpuEntities[entityIndex] = new EntityGPU
-                    {
-                        Position = new Vector2(labelX, currentY),
-                        Velocity = Vector2.Zero,
-                        Color = new Vector4(1f, 1f, 0f, 0.7f), // Yellow dimmed
-                        Size = labelSize * 0.8f,
-                        Life = 1f,
-                        MaxLife = 1f,
-                        EntityType = entityType
-                    };
-                    entityIndex++;
-                }
-                labelX += labelWidth * 0.8f;
-            }
-
-            // PPM value (right-aligned)
-            float ppm = _elapsedTime > 0 ? (_score / (_elapsedTime / 60f)) : 0f;
-            string ppmStr = ((int)ppm).ToString();
-            float ppmDigitWidth = digitWidth * 0.8f;
-            float ppmWidth = ppmStr.Length * ppmDigitWidth;
-            valueX = rightEdge - ppmWidth + ppmDigitWidth / 2;
-            for (int i = 0; i < ppmStr.Length && entityIndex < totalEntities; i++)
-            {
-                int digit = ppmStr[i] - '0';
-                if (digit >= 0 && digit <= 9)
-                {
-                    _gpuEntities[entityIndex] = new EntityGPU
-                    {
-                        Position = new Vector2(valueX + i * ppmDigitWidth, currentY),
-                        Velocity = Vector2.Zero,
-                        Color = new Vector4(1f, 1f, 0f, 1f), // Yellow for PPM
-                        Size = _scoreOverlaySize * 0.8f,
-                        Life = 1f,
-                        MaxLife = 1f,
-                        EntityType = 5f + digit
-                    };
-                    entityIndex++;
-                }
-            }
-
-            // Line 3: "COUNTDOWN" label (left-aligned) + timer value (right-aligned)
-            currentY += lineHeight;
-            string label3 = "COUNTDOWN";
-            labelX = leftEdge;
-            for (int i = 0; i < label3.Length && entityIndex < totalEntities; i++)
-            {
-                float entityType = CharToEntityType(label3[i]);
-                if (entityType != 42f)
-                {
-                    _gpuEntities[entityIndex] = new EntityGPU
-                    {
-                        Position = new Vector2(labelX, currentY),
-                        Velocity = Vector2.Zero,
-                        Color = new Vector4(0f, 0.8f, 1f, 0.7f), // Cyan dimmed
-                        Size = labelSize * 0.8f,
-                        Life = 1f,
-                        MaxLife = 1f,
-                        EntityType = entityType
-                    };
-                    entityIndex++;
-                }
-                labelX += labelWidth * 0.8f;
-            }
-
-            // Timer value (right-aligned) - show "READY" when waiting for first hit
-            string timerStr;
-            if (_waitingForFirstHit && _isGameActive)
-            {
-                timerStr = "READY";
             }
             else
             {
-                float remainingTime = Math.Max(0f, _timerDuration - _elapsedTime);
-                int totalSeconds = (int)remainingTime;
-                int minutes = totalSeconds / 60;
-                int seconds = totalSeconds % 60;
-                timerStr = $"{minutes:D2}:{seconds:D2}";
-            }
-            float timerDigitWidth = digitWidth * 0.7f;
-            float timerWidth = timerStr.Length * timerDigitWidth;
-            float timerX = rightEdge - timerWidth + timerDigitWidth / 2;
-            for (int i = 0; i < timerStr.Length && entityIndex < totalEntities; i++)
-            {
-                float entityType = CharToEntityType(timerStr[i]);
-
-                _gpuEntities[entityIndex] = new EntityGPU
+                float bluePulse = 0.6f + 0.2f * MathF.Sin(hsTime + scoreIdx);
+                entryStyle = new TextStyle
                 {
-                    Position = new Vector2(timerX + i * timerDigitWidth, currentY),
-                    Velocity = Vector2.Zero,
-                    Color = new Vector4(0f, 0.8f, 1f, 1f), // Cyan for timer
-                    Size = _scoreOverlaySize * 0.7f,
-                    Life = 1f,
-                    MaxLife = 1f,
-                    EntityType = entityType
+                    Color = new Vector4(0.2f, 0.5f, 1f, bluePulse),
+                    Size = hsEntrySize,
+                    Spacing = _scoreOverlaySpacing,
+                    GlowIntensity = 1.0f
                 };
-                entityIndex++;
             }
 
-            // Centered "GAME OVER" text with animated glow when game is over
-            if (_isGameOver)
-            {
-                string gameOverText = "GAME OVER";
-                float gameOverSize = _scoreOverlaySize * 2.5f; // Large text
-                float goCharWidth = gameOverSize * _scoreOverlaySpacing;
-                float goTotalWidth = gameOverText.Length * goCharWidth;
-                float goCenterX = _viewportWidth / 2f;
-                float goCenterY = _viewportHeight / 2f;
-                float goStartX = goCenterX - goTotalWidth / 2f + goCharWidth / 2f;
+            string entryText = $"{scoreIdx + 1}. {entry.PointsPerMinute}  {entry.Date}";
+            _textOverlay.AddTextCentered(entryText, new Vector2(hsCenterX, entryY), entryStyle);
 
-                // Animated glow effect - pulsing intensity
-                float pulseTime = _elapsedTime * 3f; // Speed of pulsing
-                float glowPulse = 0.6f + 0.4f * MathF.Sin(pulseTime); // Oscillate between 0.6 and 1.0
-                float sizePulse = 1f + 0.05f * MathF.Sin(pulseTime * 1.5f); // Subtle size breathing
-
-                // Color cycling with red base
-                float colorShift = MathF.Sin(pulseTime * 0.7f) * 0.15f;
-                Vector4 gameOverColor = new(
-                    1f,
-                    0.15f + colorShift,
-                    0.1f + colorShift * 0.5f,
-                    glowPulse
-                );
-
-                for (int i = 0; i < gameOverText.Length && entityIndex < totalEntities; i++)
-                {
-                    float entityType = CharToEntityType(gameOverText[i]);
-                    if (entityType != 42f) // Not space
-                    {
-                        // Add slight wave animation to each character
-                        float charOffset = MathF.Sin(pulseTime + i * 0.5f) * 3f;
-
-                        _gpuEntities[entityIndex] = new EntityGPU
-                        {
-                            Position = new Vector2(goStartX + i * goCharWidth, goCenterY + charOffset),
-                            Velocity = Vector2.Zero,
-                            Color = gameOverColor,
-                            Size = gameOverSize * sizePulse,
-                            Life = glowPulse, // Use life for glow intensity in shader
-                            MaxLife = 1f,
-                            EntityType = entityType
-                        };
-                        entityIndex++;
-                    }
-                }
-
-                // Add reason text below "GAME OVER"
-                string reasonText = _gameOverReason;
-                float reasonSize = _scoreOverlaySize * 1.2f;
-                float reasonCharWidth = reasonSize * _scoreOverlaySpacing;
-                float reasonTotalWidth = reasonText.Length * reasonCharWidth;
-                float reasonStartX = goCenterX - reasonTotalWidth / 2f + reasonCharWidth / 2f;
-                float reasonY = goCenterY + gameOverSize * 1.5f;
-
-                Vector4 reasonColor = new(1f, 0.5f, 0.3f, glowPulse * 0.8f);
-
-                for (int i = 0; i < reasonText.Length && entityIndex < totalEntities; i++)
-                {
-                    float entityType = CharToEntityType(reasonText[i]);
-                    if (entityType != 42f)
-                    {
-                        _gpuEntities[entityIndex] = new EntityGPU
-                        {
-                            Position = new Vector2(reasonStartX + i * reasonCharWidth, reasonY),
-                            Velocity = Vector2.Zero,
-                            Color = reasonColor,
-                            Size = reasonSize,
-                            Life = glowPulse * 0.8f,
-                            MaxLife = 1f,
-                            EntityType = entityType
-                        };
-                        entityIndex++;
-                    }
-                }
-            }
-
-            // Display high scores when game ends with win (timer finished, not game over)
-            if (_isGameEnded && !_isGameOver && _highScores.Count > 0)
-            {
-                float hsTime = totalTime * 2f; // Animation speed
-                float hsTitleSize = _scoreOverlaySize * 1.8f;
-                float hsEntrySize = _scoreOverlaySize * 1.0f;
-                float hsCharWidth = hsEntrySize * _scoreOverlaySpacing;
-                float hsCenterX = _viewportWidth / 2f;
-                float hsCenterY = _viewportHeight / 2f;
-
-                // "HIGH SCORES" title - neon cyan
-                string hsTitle = "HIGH SCORES";
-                float hsTitleCharWidth = hsTitleSize * _scoreOverlaySpacing;
-                float hsTitleWidth = hsTitle.Length * hsTitleCharWidth;
-                float hsTitleStartX = hsCenterX - hsTitleWidth / 2f + hsTitleCharWidth / 2f;
-                float hsTitleY = hsCenterY - hsEntrySize * 5f;
-
-                // Pulsing glow for title
-                float titlePulse = 0.7f + 0.3f * MathF.Sin(hsTime);
-                Vector4 titleColor = new(0f, 0.9f, 1f, titlePulse); // Neon cyan
-
-                for (int i = 0; i < hsTitle.Length && entityIndex < totalEntities; i++)
-                {
-                    float entityType = CharToEntityType(hsTitle[i]);
-                    if (entityType != 42f)
-                    {
-                        _gpuEntities[entityIndex] = new EntityGPU
-                        {
-                            Position = new Vector2(hsTitleStartX + i * hsTitleCharWidth, hsTitleY),
-                            Velocity = Vector2.Zero,
-                            Color = titleColor,
-                            Size = hsTitleSize,
-                            Life = titlePulse,
-                            MaxLife = 1f,
-                            EntityType = entityType
-                        };
-                        entityIndex++;
-                    }
-                }
-
-                // Display each high score entry (with top margin from title)
-                float entryY = hsCenterY - hsEntrySize * 1.5f;
-                float entryLineHeight = hsEntrySize * 2.5f;
-
-                for (int scoreIdx = 0; scoreIdx < _highScores.Count && scoreIdx < 5; scoreIdx++)
-                {
-                    var entry = _highScores[scoreIdx];
-                    bool isNewScore = scoreIdx == _newHighScoreIndex;
-
-                    // Format: "1. 2000  04/12/2025"
-                    string rankStr = $"{scoreIdx + 1}.";
-                    string entryPpmStr = entry.PointsPerMinute.ToString();
-                    string dateStr = entry.Date;
-
-                    // Calculate colors
-                    Vector4 entryColor;
-                    float entrySizeMult = 1f;
-
-                    if (isNewScore)
-                    {
-                        // Rainbow cycling for new high score
-                        float hue = (hsTime * 0.5f + scoreIdx * 0.1f) % 1f;
-                        entryColor = HueToRgb(hue);
-                        float rainbowPulse = 0.8f + 0.2f * MathF.Sin(hsTime * 4f);
-                        entryColor.W = rainbowPulse;
-                        entrySizeMult = 1f + 0.05f * MathF.Sin(hsTime * 3f); // Subtle breathing
-                    }
-                    else
-                    {
-                        // Neon blue for old scores
-                        float bluePulse = 0.6f + 0.2f * MathF.Sin(hsTime + scoreIdx);
-                        entryColor = new Vector4(0.2f, 0.5f, 1f, bluePulse);
-                    }
-
-                    float actualEntrySize = hsEntrySize * entrySizeMult;
-                    float actualCharWidth = actualEntrySize * _scoreOverlaySpacing;
-
-                    // Calculate total width for centering
-                    // Rank (3 chars) + space + PPM (up to 5 chars) + 2 spaces + date (10 chars)
-                    float totalWidth = (rankStr.Length + 1 + entryPpmStr.Length + 2 + dateStr.Length) * actualCharWidth;
-                    float entryStartX = hsCenterX - totalWidth / 2f + actualCharWidth / 2f;
-                    float charX = entryStartX;
-
-                    // Render rank
-                    for (int i = 0; i < rankStr.Length && entityIndex < totalEntities; i++)
-                    {
-                        float entityType = CharToEntityType(rankStr[i]);
-                        if (entityType != 42f)
-                        {
-                            float charOffset = isNewScore ? MathF.Sin(hsTime * 2f + i * 0.3f) * 2f : 0f;
-                            _gpuEntities[entityIndex] = new EntityGPU
-                            {
-                                Position = new Vector2(charX, entryY + charOffset),
-                                Velocity = Vector2.Zero,
-                                Color = entryColor,
-                                Size = actualEntrySize,
-                                Life = entryColor.W,
-                                MaxLife = 1f,
-                                EntityType = entityType
-                            };
-                            entityIndex++;
-                        }
-                        charX += actualCharWidth;
-                    }
-
-                    // Space after rank
-                    charX += actualCharWidth;
-
-                    // Render PPM
-                    for (int i = 0; i < entryPpmStr.Length && entityIndex < totalEntities; i++)
-                    {
-                        float entityType = CharToEntityType(entryPpmStr[i]);
-                        if (entityType != 42f)
-                        {
-                            float charOffset = isNewScore ? MathF.Sin(hsTime * 2f + (rankStr.Length + 1 + i) * 0.3f) * 2f : 0f;
-                            _gpuEntities[entityIndex] = new EntityGPU
-                            {
-                                Position = new Vector2(charX, entryY + charOffset),
-                                Velocity = Vector2.Zero,
-                                Color = entryColor,
-                                Size = actualEntrySize,
-                                Life = entryColor.W,
-                                MaxLife = 1f,
-                                EntityType = entityType
-                            };
-                            entityIndex++;
-                        }
-                        charX += actualCharWidth;
-                    }
-
-                    // Two spaces before date
-                    charX += actualCharWidth * 2;
-
-                    // Render date
-                    for (int i = 0; i < dateStr.Length && entityIndex < totalEntities; i++)
-                    {
-                        float entityType = CharToEntityType(dateStr[i]);
-                        if (entityType != 42f)
-                        {
-                            float charOffset = isNewScore ? MathF.Sin(hsTime * 2f + (rankStr.Length + 1 + entryPpmStr.Length + 2 + i) * 0.3f) * 2f : 0f;
-                            _gpuEntities[entityIndex] = new EntityGPU
-                            {
-                                Position = new Vector2(charX, entryY + charOffset),
-                                Velocity = Vector2.Zero,
-                                Color = entryColor * 0.7f, // Slightly dimmer date
-                                Size = actualEntrySize * 0.85f,
-                                Life = entryColor.W * 0.7f,
-                                MaxLife = 1f,
-                                EntityType = entityType
-                            };
-                            _gpuEntities[entityIndex].Color.W = entryColor.W * 0.8f;
-                            entityIndex++;
-                        }
-                        charX += actualCharWidth * 0.85f;
-                    }
-
-                    entryY += entryLineHeight;
-                }
-            }
+            entryY += entryLineHeight;
         }
+    }
 
-        if (entityIndex == 0)
-            return;
-
-        // Clear remaining slots
-        for (int j = entityIndex; j < totalEntities; j++)
-        {
-            _gpuEntities[j] = default;
-        }
-
-        context.UpdateBuffer(_entityBuffer!, (ReadOnlySpan<EntityGPU>)_gpuEntities.AsSpan(0, totalEntities));
-        context.SetVertexShader(_vertexShader);
-        context.SetPixelShader(_pixelShader);
-        context.SetConstantBuffer(ShaderStage.Vertex, 0, _frameDataBuffer!);
-        context.SetConstantBuffer(ShaderStage.Pixel, 0, _frameDataBuffer!);
-        context.SetShaderResource(ShaderStage.Vertex, 0, _entityBuffer!);
-        context.SetBlendState(BlendMode.Additive);
-        context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
-        context.DrawInstanced(6, totalEntities, 0, 0);
-        context.SetBlendState(BlendMode.Alpha);
+    private static string FormatTimer(float remainingSeconds)
+    {
+        remainingSeconds = Math.Max(0f, remainingSeconds);
+        int totalSeconds = (int)remainingSeconds;
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return $"{minutes:D2}:{seconds:D2}";
     }
 
     protected override void OnDispose()
     {
+        _textOverlay?.Dispose();
         _entityBuffer?.Dispose();
         _frameDataBuffer?.Dispose();
         _vertexShader?.Dispose();
