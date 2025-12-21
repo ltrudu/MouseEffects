@@ -190,6 +190,7 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
     private bool _isGameOver;
     private bool _waitingForFirstHit = true;
     private bool _showWelcomeScreen = true;
+    private bool _needsInitialSpawn = true;
     private string _gameOverReason = "";
     private float _playerZoneHeight = 200f; // Bottom area where cannon can move
 
@@ -338,9 +339,8 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
         _cannon.Position = new Vector2(_viewportWidth / 2f, _viewportHeight - 50f);
         _cannon.Size = _cannonSize;
 
-        // Spawn initial wave
-        SpawnRetropedeWave();
-        SpawnInitialMushrooms();
+        // Mark that we need to spawn when game starts (after config is loaded)
+        _needsInitialSpawn = true;
     }
 
     protected override void OnInitialize(IRenderContext context)
@@ -620,6 +620,13 @@ public sealed class RetropedeEffect : EffectBase, IHotkeyProvider
                 if (IsPointInCenteredText(mouseState.Position, ClickToStartText, textPos, textSize))
                 {
                     _showWelcomeScreen = false;
+                    // Spawn initial entities now that config is loaded
+                    if (_needsInitialSpawn)
+                    {
+                        SpawnRetropedeWave();
+                        SpawnInitialMushrooms();
+                        _needsInitialSpawn = false;
+                    }
                 }
             }
             _wasLeftPressed = leftPressed;
