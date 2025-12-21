@@ -24,7 +24,7 @@ MouseEffects is a modular, plugin-based application that renders beautiful visua
 
 ## Built-in Effects
 
-MouseEffects includes **44 stunning visual effects** organized into categories:
+MouseEffects includes **45 stunning visual effects** organized into categories:
 
 ### 🌟 Particle Effects
 
@@ -103,6 +103,7 @@ MouseEffects includes **44 stunning visual effects** organized into categories:
 | Effect | Description |
 |--------|-------------|
 | **Firework** | Stunning firework explosions with rockets, trails, and secondary bursts |
+| **Retro Command** | Missile Command-style defense game - protect cities from incoming missiles with counter-missiles |
 | **Retropede** | Classic arcade Retropede - shoot the segmented retropede, avoid the spider, with DDT bombs |
 | **Space Invaders** | Defend against neon invaders with rockets - includes scoring and leaderboard | 
 
@@ -188,7 +189,7 @@ MouseEffects/
 │   ├── MouseEffects.Overlay/     # Overlay window management
 │   ├── MouseEffects.Plugins/     # Plugin loading system
 │   └── MouseEffects.App/         # Main application
-├── plugins/                      # 44 built-in effect plugins
+├── plugins/                      # 45 built-in effect plugins
 │   ├── MouseEffects.Effects.ASCIIZer/
 │   ├── MouseEffects.Effects.Aurora/
 │   ├── MouseEffects.Effects.BlackHole/
@@ -222,6 +223,7 @@ MouseEffects/
 │   ├── MouseEffects.Effects.Portal/
 │   ├── MouseEffects.Effects.RadialDithering/
 │   ├── MouseEffects.Effects.Retro/
+│   ├── MouseEffects.Effects.RetroCommand/
 │   ├── MouseEffects.Effects.SacredGeometries/
 │   ├── MouseEffects.Effects.Shockwave/
 │   ├── MouseEffects.Effects.Smoke/

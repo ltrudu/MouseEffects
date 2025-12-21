@@ -38,6 +38,12 @@ public sealed class GlobalMouseHook : IMouseInputProvider
     /// </summary>
     private bool _consumedLeftButtonDown;
 
+    /// <summary>
+    /// Tracks whether we consumed the right mouse-down event.
+    /// We only consume mouse-up if we consumed the corresponding mouse-down.
+    /// </summary>
+    private bool _consumedRightButtonDown;
+
     public bool IsCapturing => _hookHandle != nint.Zero;
 
     /// <summary>
@@ -48,6 +54,7 @@ public sealed class GlobalMouseHook : IMouseInputProvider
     {
         _clickConsumer = consumer;
         _consumedLeftButtonDown = false; // Reset tracking when consumer changes
+        _consumedRightButtonDown = false;
     }
 
     public MouseState CurrentState
@@ -187,7 +194,7 @@ public sealed class GlobalMouseHook : IMouseInputProvider
                     _consumedLeftButtonDown = false;
                 }
             }
-            // Only consume mouse-up if we consumed the corresponding mouse-down
+            // Only consume left mouse-up if we consumed the corresponding mouse-down
             else if (messageId == MouseHookNativeMethods.WM_LBUTTONUP)
             {
                 if (_consumedLeftButtonDown)
@@ -195,6 +202,28 @@ public sealed class GlobalMouseHook : IMouseInputProvider
                     shouldBlockClick = true;
                 }
                 _consumedLeftButtonDown = false;
+            }
+            // Check if we should consume right button down
+            else if (messageId == MouseHookNativeMethods.WM_RBUTTONDOWN)
+            {
+                if (_clickConsumer?.ShouldConsumeRightClicks == true)
+                {
+                    shouldBlockClick = true;
+                    _consumedRightButtonDown = true;
+                }
+                else
+                {
+                    _consumedRightButtonDown = false;
+                }
+            }
+            // Only consume right mouse-up if we consumed the corresponding mouse-down
+            else if (messageId == MouseHookNativeMethods.WM_RBUTTONUP)
+            {
+                if (_consumedRightButtonDown)
+                {
+                    shouldBlockClick = true;
+                }
+                _consumedRightButtonDown = false;
             }
 
             switch (messageId)

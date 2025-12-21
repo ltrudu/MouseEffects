@@ -257,6 +257,12 @@ public sealed class RetroCommandEffect : EffectBase, IHotkeyProvider, IClickCons
     /// </summary>
     public bool ShouldConsumeClicks => _isGameActive && !_isGameOver && !_isGameEnded;
 
+    /// <summary>
+    /// Consumes right clicks during gameplay to prevent them from reaching the desktop.
+    /// Clicks are only consumed when the game is active (playing), not on welcome/game over screens.
+    /// </summary>
+    public bool ShouldConsumeRightClicks => _isGameActive && !_isGameOver && !_isGameEnded;
+
     public event Action<string>? HighScoresChanged;
 
     public IEnumerable<HotkeyDefinition> GetHotkeys()
