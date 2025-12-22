@@ -12,7 +12,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
-    private bool _isExpanded;
     private Vector4 _primaryColor = new(1f, 0.3f, 0.1f, 1f);
     private Vector4 _secondaryColor = new(1f, 0.8f, 0.2f, 1f);
     private Vector4 _rocketPrimaryColor = new(1f, 0.8f, 0.2f, 1f);
@@ -282,13 +281,6 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
-    }
-
-    private void FoldButton_Click(object sender, RoutedEventArgs e)
-    {
-        _isExpanded = !_isExpanded;
-        ContentPanel.Visibility = _isExpanded ? Visibility.Visible : Visibility.Collapsed;
-        FoldButton.Content = _isExpanded ? "▲" : "▼";
     }
 
     private void MaxParticlesSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

@@ -23,22 +23,10 @@
     </UserControl.Resources>
 
     <StackPanel Margin="0">
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Text="Firework" Grid.Column="0" FontWeight="Bold" FontSize="14"
-                       VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,8,0" />
-            <Button Name="FoldButton" Grid.Column="1" Content="▼" Width="24" Height="24"
-                    Background="Transparent" BorderThickness="0"
-                    ToolTip="Expand/Collapse settings" Click="FoldButton_Click" />
-        </Grid>
-
         <TextBlock Text="Creates stunning firework explosions with colorful particles and trails"
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
 
-        <StackPanel Name="ContentPanel" Visibility="Collapsed" Margin="0,8,0,0">
+        <StackPanel Margin="0,8,0,0">
             <!-- General Section -->
             <TextBlock Text="General" Style="{StaticResource SectionStyle}" />
             <TextBlock Text="Max Particles" Style="{StaticResource LabelStyle}" />
