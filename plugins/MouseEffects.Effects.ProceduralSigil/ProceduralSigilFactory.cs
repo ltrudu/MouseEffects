@@ -25,25 +25,25 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         var config = new EffectConfiguration();
 
         // Style
-        config.Set("sigilStyle", 0); // ArcaneCircle
+        config.Set("sigilStyle", 2); // Moon
 
         // General
-        config.Set("sigilAlpha", 0.7f);
+        config.Set("sigilAlpha", 0.65f);
 
         // Position
         config.Set("positionMode", 0); // FollowCursor
-        config.Set("sigilRadius", 200f);
-        config.Set("fadeDuration", 2.0f);
+        config.Set("sigilRadius", 383f);
+        config.Set("fadeDuration", 5.0f);
 
         // Appearance
-        config.Set("lineThickness", 2.0f);
-        config.Set("glowIntensity", 1.5f);
-        config.Set("colorPreset", 0); // ShieldOfFire
+        config.Set("lineThickness", 2.26f);
+        config.Set("glowIntensity", 1.42f);
+        config.Set("colorPreset", 6); // Custom
 
-        // Colors (defaults for ShieldOfFire)
-        config.Set("coreColor", new Vector4(1.0f, 0.7f, 0.2f, 1.0f));
-        config.Set("midColor", new Vector4(1.0f, 0.4f, 0.0f, 1.0f));
-        config.Set("edgeColor", new Vector4(0.8f, 0.2f, 0.0f, 1.0f));
+        // Colors (user's custom colors)
+        config.Set("coreColor", new Vector4(0f, 0.502f, 0.251f, 1.0f));
+        config.Set("midColor", new Vector4(0.463f, 0.502f, 0f, 1.0f));
+        config.Set("edgeColor", new Vector4(1f, 0.302f, 0f, 1.0f));
 
         // Layers (all enabled by default)
         config.Set("layerFlags", 31u); // All layers
@@ -55,48 +55,52 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         config.Set("pulseSpeed", 1.0f);
         config.Set("pulseAmplitude", 0.3f);
         config.Set("morphAmount", 1.0f);
-        config.Set("runeScrollSpeed", 0.3f);
+        config.Set("runeScrollSpeed", 0.16f);
 
         // Triangle Mandala specific
-        config.Set("triangleLayers", 3);
-        config.Set("zoomSpeed", 0.5f);
+        config.Set("triangleLayers", 1);
+        config.Set("zoomSpeed", 0.45f);
         config.Set("zoomAmount", 0.3f);
         config.Set("innerTriangles", 4);
-        config.Set("fractalDepth", 3.0f);
+        config.Set("fractalDepth", 3.06f);
 
         // Moon style specific
-        config.Set("moonPhaseRotationSpeed", 0.1f);
-        config.Set("zodiacRotationSpeed", -0.15f);
+        config.Set("moonPhaseRotationSpeed", 0.21f);
+        config.Set("zodiacRotationSpeed", -0.21f);
         config.Set("moonPhaseOffset", 0f);
-        config.Set("treeOfLifeScale", 0.35f);
+        config.Set("treeOfLifeScale", 0.6f);
         config.Set("starfieldDensity", 0.5f);
         config.Set("cosmicGlowIntensity", 1.0f);
 
         // Energy particles
-        config.Set("particleIntensity", 0f);
-        config.Set("particleSpeed", 1f);
-        config.Set("particleType", 0);
-        config.Set("particleEntropy", 0.5f);
-        config.Set("particleSize", 1f);
-        config.Set("fireRiseHeight", 0.4f);
-        config.Set("electricitySpread", 1f);
+        config.Set("particleIntensity", 0.71f);
+        config.Set("particleSpeed", 2.54f);
+        config.Set("particleType", 3); // Mixed
+        config.Set("particleEntropy", 0.92f);
+        config.Set("particleSize", 0.41f);
+        config.Set("fireRiseHeight", 1.79f);
+        config.Set("electricitySpread", 1.34f);
 
         // Wind simulation
         config.Set("windEnabled", true);
-        config.Set("windStrength", 0.5f);
-        config.Set("windTurbulence", 0.5f);
+        config.Set("windStrength", 0.53f);
+        config.Set("windTurbulence", 0.52f);
 
         // Fire particle pool
-        config.Set("fireParticleEnabled", false);
-        config.Set("fireSpawnLocation", 0); // InnerRing
+        config.Set("fireParticleEnabled", true);
+        config.Set("fireSpawnLocation", 1); // RuneBand
         config.Set("fireRenderOrder", 0); // BehindSigil
-        config.Set("fireParticleAlpha", 1.0f);
+        config.Set("fireColorPalette", 1); // Vibrant Fire
+        config.Set("fireCustomCoreColor", new Vector4(1.0f, 0.502f, 0.251f, 1.0f));
+        config.Set("fireCustomMidColor", new Vector4(1.0f, 0.4f, 0.0f, 1.0f));
+        config.Set("fireCustomEdgeColor", new Vector4(1.0f, 0f, 0f, 1.0f));
+        config.Set("fireParticleAlpha", 0.68f);
         config.Set("fireParticleCount", 300);
         config.Set("fireSpawnRate", 30f);
-        config.Set("fireParticleSize", 8f);
-        config.Set("fireLifetime", 2.0f);
-        config.Set("fireRiseSpeed", 60f);
-        config.Set("fireTurbulence", 0.3f);
+        config.Set("fireParticleSize", 11.2f);
+        config.Set("fireLifetime", 4.0f);
+        config.Set("fireRiseSpeed", 124f);
+        config.Set("fireTurbulence", 0.71f);
         config.Set("fireWindEnabled", true);
 
         return config;
@@ -115,7 +119,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     DisplayName = "Sigil Style",
                     Description = "The visual style of the sigil",
                     Choices = ["Arcane Circle", "Triangle Mandala", "Moon"],
-                    DefaultValue = "Arcane Circle"
+                    DefaultValue = "Moon"
                 },
 
                 // General
@@ -126,7 +130,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Overall opacity of the sigil",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 0.7f,
+                    DefaultValue = 0.65f,
                     Step = 0.05f
                 },
 
@@ -146,7 +150,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Radius of the sigil in pixels",
                     MinValue = 100f,
                     MaxValue = 800f,
-                    DefaultValue = 200f,
+                    DefaultValue = 383f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -156,7 +160,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Duration before sigil fades out (for click modes)",
                     MinValue = 0.5f,
                     MaxValue = 5f,
-                    DefaultValue = 2.0f,
+                    DefaultValue = 5.0f,
                     Step = 0.1f
                 },
 
@@ -168,7 +172,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Thickness of sigil lines",
                     MinValue = 1f,
                     MaxValue = 5f,
-                    DefaultValue = 2.0f,
+                    DefaultValue = 2.26f,
                     Step = 0.5f
                 },
                 new FloatParameter
@@ -178,7 +182,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Brightness of the glow effect",
                     MinValue = 0.5f,
                     MaxValue = 3f,
-                    DefaultValue = 1.5f,
+                    DefaultValue = 1.42f,
                     Step = 0.1f
                 },
                 new ChoiceParameter
@@ -187,14 +191,14 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     DisplayName = "Color Preset",
                     Description = "Preset color schemes for the sigil",
                     Choices = ["Shield of Fire", "Arcane Blue", "Dark Magic", "Holy Light", "Void", "Nature", "Custom"],
-                    DefaultValue = "Shield of Fire"
+                    DefaultValue = "Custom"
                 },
                 new ColorParameter
                 {
                     Key = "coreColor",
                     DisplayName = "Core Color",
                     Description = "Color at the center of the sigil",
-                    DefaultValue = new Vector4(1.0f, 0.7f, 0.2f, 1.0f),
+                    DefaultValue = new Vector4(0f, 0.502f, 0.251f, 1.0f),
                     SupportsAlpha = false
                 },
                 new ColorParameter
@@ -202,7 +206,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Key = "midColor",
                     DisplayName = "Mid Color",
                     Description = "Color in the middle rings",
-                    DefaultValue = new Vector4(1.0f, 0.4f, 0.0f, 1.0f),
+                    DefaultValue = new Vector4(0.463f, 0.502f, 0f, 1.0f),
                     SupportsAlpha = false
                 },
                 new ColorParameter
@@ -210,7 +214,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Key = "edgeColor",
                     DisplayName = "Edge Color",
                     Description = "Color at the outer edge",
-                    DefaultValue = new Vector4(0.8f, 0.2f, 0.0f, 1.0f),
+                    DefaultValue = new Vector4(1f, 0.302f, 0f, 1.0f),
                     SupportsAlpha = false
                 },
 
@@ -300,7 +304,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Speed of rune scrolling",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 0.3f,
+                    DefaultValue = 0.16f,
                     Step = 0.05f
                 },
 
@@ -312,7 +316,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Number of nested triangle layers (Triangle Mandala style)",
                     MinValue = 1,
                     MaxValue = 5,
-                    DefaultValue = 3
+                    DefaultValue = 1
                 },
                 new FloatParameter
                 {
@@ -321,7 +325,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Speed of zooming animation (Triangle Mandala style)",
                     MinValue = 0f,
                     MaxValue = 2f,
-                    DefaultValue = 0.5f,
+                    DefaultValue = 0.45f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -350,7 +354,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Depth of fractal triangle patterns (Triangle Mandala style)",
                     MinValue = 1f,
                     MaxValue = 5f,
-                    DefaultValue = 3.0f,
+                    DefaultValue = 3.06f,
                     Step = 0.5f
                 },
 
@@ -362,7 +366,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Rotation speed of moon phases ring (Moon style)",
                     MinValue = -1f,
                     MaxValue = 1f,
-                    DefaultValue = 0.1f,
+                    DefaultValue = 0.21f,
                     Step = 0.05f
                 },
                 new FloatParameter
@@ -372,7 +376,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Rotation speed of zodiac ring (Moon style)",
                     MinValue = -1f,
                     MaxValue = 1f,
-                    DefaultValue = -0.15f,
+                    DefaultValue = -0.21f,
                     Step = 0.05f
                 },
                 new FloatParameter
@@ -382,7 +386,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Scale of the Tree of Life at center (Moon style)",
                     MinValue = 0.2f,
                     MaxValue = 0.6f,
-                    DefaultValue = 0.35f,
+                    DefaultValue = 0.6f,
                     Step = 0.05f
                 },
                 new FloatParameter
@@ -403,7 +407,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     DisplayName = "Particle Type",
                     Description = "Type of energy particles along sigil edges",
                     Choices = ["None", "Fire", "Electricity", "Mixed"],
-                    DefaultValue = "None"
+                    DefaultValue = "Mixed"
                 },
                 new FloatParameter
                 {
@@ -412,7 +416,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Intensity of energy particles (0 = off)",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 0f,
+                    DefaultValue = 0.71f,
                     Step = 0.05f
                 },
                 new FloatParameter
@@ -422,7 +426,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Animation speed of particles",
                     MinValue = 0.1f,
                     MaxValue = 3f,
-                    DefaultValue = 1f,
+                    DefaultValue = 2.54f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -432,7 +436,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Chaos and movement of particles (0 = static, 1 = chaotic)",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 0.5f,
+                    DefaultValue = 0.92f,
                     Step = 0.05f
                 },
                 new FloatParameter
@@ -442,7 +446,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Size of energy particles",
                     MinValue = 0.1f,
                     MaxValue = 5f,
-                    DefaultValue = 1f,
+                    DefaultValue = 0.41f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -452,7 +456,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "How high fire particles rise before fading",
                     MinValue = 0.1f,
                     MaxValue = 2f,
-                    DefaultValue = 0.4f,
+                    DefaultValue = 1.79f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -462,7 +466,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "How far electricity spreads from sigil edges",
                     MinValue = 0.1f,
                     MaxValue = 5f,
-                    DefaultValue = 1f,
+                    DefaultValue = 1.34f,
                     Step = 0.1f
                 },
 
@@ -481,7 +485,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "How strongly wind pushes particles horizontally",
                     MinValue = 0f,
                     MaxValue = 3f,
-                    DefaultValue = 0.5f,
+                    DefaultValue = 0.53f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -491,7 +495,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Randomness and gusts in the wind",
                     MinValue = 0f,
                     MaxValue = 2f,
-                    DefaultValue = 0.5f,
+                    DefaultValue = 0.52f,
                     Step = 0.1f
                 },
 
@@ -501,7 +505,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Key = "fireParticleEnabled",
                     DisplayName = "Enable Fire Particles",
                     Description = "Enable fire particles rising from the sigil",
-                    DefaultValue = false
+                    DefaultValue = true
                 },
                 new ChoiceParameter
                 {
@@ -509,7 +513,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     DisplayName = "Spawn Location",
                     Description = "Where fire particles spawn from",
                     Choices = ["Inner Ring", "Rune Band"],
-                    DefaultValue = "Inner Ring"
+                    DefaultValue = "Rune Band"
                 },
                 new ChoiceParameter
                 {
@@ -519,6 +523,38 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Choices = ["Behind Sigil", "On Top of Sigil"],
                     DefaultValue = "Behind Sigil"
                 },
+                new ChoiceParameter
+                {
+                    Key = "fireColorPalette",
+                    DisplayName = "Color Palette",
+                    Description = "Color scheme for fire particles",
+                    Choices = ["Sigil Colors", "Vibrant Fire", "Ethereal", "Mystical Blue", "Magical Pink", "Poison Green", "Deep Crimson", "Custom"],
+                    DefaultValue = "Vibrant Fire"
+                },
+                new ColorParameter
+                {
+                    Key = "fireCustomCoreColor",
+                    DisplayName = "Custom Core Color",
+                    Description = "Hot center color for custom palette",
+                    DefaultValue = new Vector4(1.0f, 0.502f, 0.251f, 1.0f),
+                    SupportsAlpha = false
+                },
+                new ColorParameter
+                {
+                    Key = "fireCustomMidColor",
+                    DisplayName = "Custom Mid Color",
+                    Description = "Middle color for custom palette",
+                    DefaultValue = new Vector4(1.0f, 0.4f, 0.0f, 1.0f),
+                    SupportsAlpha = false
+                },
+                new ColorParameter
+                {
+                    Key = "fireCustomEdgeColor",
+                    DisplayName = "Custom Edge Color",
+                    Description = "Cold edge color for custom palette",
+                    DefaultValue = new Vector4(1.0f, 0f, 0f, 1.0f),
+                    SupportsAlpha = false
+                },
                 new FloatParameter
                 {
                     Key = "fireParticleAlpha",
@@ -526,7 +562,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Opacity of fire particles",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 1.0f,
+                    DefaultValue = 0.68f,
                     Step = 0.05f
                 },
                 new IntParameter
@@ -555,7 +591,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Base size of fire particles in pixels",
                     MinValue = 2f,
                     MaxValue = 20f,
-                    DefaultValue = 8f,
+                    DefaultValue = 11.2f,
                     Step = 1f
                 },
                 new FloatParameter
@@ -565,7 +601,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "How long fire particles live in seconds",
                     MinValue = 0.5f,
                     MaxValue = 4f,
-                    DefaultValue = 2.0f,
+                    DefaultValue = 4.0f,
                     Step = 0.1f
                 },
                 new FloatParameter
@@ -575,7 +611,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "How fast fire particles rise in pixels per second",
                     MinValue = 30f,
                     MaxValue = 150f,
-                    DefaultValue = 60f,
+                    DefaultValue = 124f,
                     Step = 10f
                 },
                 new FloatParameter
@@ -585,7 +621,7 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     Description = "Horizontal randomness of fire particles",
                     MinValue = 0f,
                     MaxValue = 1f,
-                    DefaultValue = 0.3f,
+                    DefaultValue = 0.71f,
                     Step = 0.05f
                 },
                 new BoolParameter

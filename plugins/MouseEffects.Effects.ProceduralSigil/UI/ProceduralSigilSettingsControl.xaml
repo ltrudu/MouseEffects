@@ -103,6 +103,30 @@
                 <ComboBoxItem Content="Custom" />
             </ComboBox>
 
+            <!-- Custom sigil color pickers (visible only when Custom selected) -->
+            <StackPanel x:Name="SigilCustomColorsPanel" Visibility="Collapsed">
+                <TextBlock Text="Core Color" Style="{StaticResource LabelStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <Border x:Name="SigilCoreColorPreview" Width="24" Height="24" BorderThickness="1"
+                            BorderBrush="Gray" Background="#FFB233" Margin="0,0,8,0"/>
+                    <Button x:Name="SigilCoreColorButton" Content="Pick Color..." Click="SigilCoreColorButton_Click"/>
+                </StackPanel>
+
+                <TextBlock Text="Mid Color" Style="{StaticResource LabelStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <Border x:Name="SigilMidColorPreview" Width="24" Height="24" BorderThickness="1"
+                            BorderBrush="Gray" Background="#FF6600" Margin="0,0,8,0"/>
+                    <Button x:Name="SigilMidColorButton" Content="Pick Color..." Click="SigilMidColorButton_Click"/>
+                </StackPanel>
+
+                <TextBlock Text="Edge Color" Style="{StaticResource LabelStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <Border x:Name="SigilEdgeColorPreview" Width="24" Height="24" BorderThickness="1"
+                            BorderBrush="Gray" Background="#CC3300" Margin="0,0,8,0"/>
+                    <Button x:Name="SigilEdgeColorButton" Content="Pick Color..." Click="SigilEdgeColorButton_Click"/>
+                </StackPanel>
+            </StackPanel>
+
             <TextBlock Text="Glow Intensity" Style="{StaticResource LabelStyle}" />
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -356,6 +380,42 @@
                 <ComboBoxItem Content="Behind Sigil" IsSelected="True" />
                 <ComboBoxItem Content="On Top of Sigil" />
             </ComboBox>
+
+            <TextBlock Text="Color Palette" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="FireColorPaletteCombo" SelectionChanged="FireColorPaletteCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Sigil Colors" IsSelected="True" />
+                <ComboBoxItem Content="Vibrant Fire" />
+                <ComboBoxItem Content="Ethereal" />
+                <ComboBoxItem Content="Mystical Blue" />
+                <ComboBoxItem Content="Magical Pink" />
+                <ComboBoxItem Content="Poison Green" />
+                <ComboBoxItem Content="Deep Crimson" />
+                <ComboBoxItem Content="Custom" />
+            </ComboBox>
+
+            <!-- Custom color pickers (visible only when Custom selected) -->
+            <StackPanel x:Name="FireCustomColorsPanel" Visibility="Collapsed">
+                <TextBlock Text="Core Color (Hot)" Style="{StaticResource LabelStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <Border x:Name="FireCoreColorPreview" Width="24" Height="24" BorderThickness="1"
+                            BorderBrush="Gray" Background="#FFB233" Margin="0,0,8,0"/>
+                    <Button x:Name="FireCoreColorButton" Content="Pick Color..." Click="FireCoreColorButton_Click"/>
+                </StackPanel>
+
+                <TextBlock Text="Mid Color" Style="{StaticResource LabelStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <Border x:Name="FireMidColorPreview" Width="24" Height="24" BorderThickness="1"
+                            BorderBrush="Gray" Background="#FF6600" Margin="0,0,8,0"/>
+                    <Button x:Name="FireMidColorButton" Content="Pick Color..." Click="FireMidColorButton_Click"/>
+                </StackPanel>
+
+                <TextBlock Text="Edge Color (Cold)" Style="{StaticResource LabelStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <Border x:Name="FireEdgeColorPreview" Width="24" Height="24" BorderThickness="1"
+                            BorderBrush="Gray" Background="#CC3300" Margin="0,0,8,0"/>
+                    <Button x:Name="FireEdgeColorButton" Content="Pick Color..." Click="FireEdgeColorButton_Click"/>
+                </StackPanel>
+            </StackPanel>
 
             <TextBlock Text="Particle Alpha" Style="{StaticResource LabelStyle}" />
             <Grid>

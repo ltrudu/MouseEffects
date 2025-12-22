@@ -1,10 +1,12 @@
+using System.Numerics;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using MouseEffects.Core.Effects;
 
 namespace MouseEffects.Effects.ProceduralSigil.UI;
 
-public partial class ProceduralSigilSettingsControl : UserControl
+public partial class ProceduralSigilSettingsControl : System.Windows.Controls.UserControl
 {
     private readonly ProceduralSigilEffect _effect;
     private bool _isLoading = true; // Start true to prevent events during init
@@ -34,6 +36,8 @@ public partial class ProceduralSigilSettingsControl : UserControl
 
         // Appearance
         ColorPresetCombo.SelectedIndex = (int)_effect.Preset;
+        UpdateSigilCustomColorsVisibility();
+        UpdateSigilColorPreviews();
         GlowIntensitySlider.Value = _effect.GlowIntensity;
         LineThicknessSlider.Value = _effect.LineThickness;
 
@@ -83,6 +87,12 @@ public partial class ProceduralSigilSettingsControl : UserControl
         FireParticleEnabledCheckBox.IsChecked = _effect.FireParticleEnabled;
         FireSpawnLocationCombo.SelectedIndex = (int)_effect.FireSpawnLoc;
         FireRenderOrderCombo.SelectedIndex = (int)_effect.FireRenderOrd;
+        FireColorPaletteCombo.SelectedIndex = (int)_effect.FirePalette;
+        UpdateFireCustomColorsVisibility();
+
+        // Custom colors
+        UpdateFireColorPreviews();
+
         FireParticleAlphaSlider.Value = _effect.FireParticleAlpha;
         FireParticleCountSlider.Value = _effect.FireParticleCount;
         FireSpawnRateSlider.Value = _effect.FireSpawnRate;
@@ -158,6 +168,94 @@ public partial class ProceduralSigilSettingsControl : UserControl
         var preset = (ProceduralSigilEffect.ColorPreset)ColorPresetCombo.SelectedIndex;
         _effect.Preset = preset;
         _effect.Configuration.Set("colorPreset", (int)preset);
+        UpdateSigilCustomColorsVisibility();
+    }
+
+    private void UpdateSigilCustomColorsVisibility()
+    {
+        var preset = (ProceduralSigilEffect.ColorPreset)ColorPresetCombo.SelectedIndex;
+        SigilCustomColorsPanel.Visibility = preset == ProceduralSigilEffect.ColorPreset.Custom
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateSigilColorPreviews()
+    {
+        var core = _effect.CoreColor;
+        var mid = _effect.MidColor;
+        var edge = _effect.EdgeColor;
+
+        SigilCoreColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, core.X, core.Y, core.Z));
+        SigilMidColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, mid.X, mid.Y, mid.Z));
+        SigilEdgeColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, edge.X, edge.Y, edge.Z));
+    }
+
+    private void SigilCoreColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentColor = _effect.CoreColor;
+        using var dialog = new System.Windows.Forms.ColorDialog();
+        dialog.Color = System.Drawing.Color.FromArgb(255,
+            (int)(currentColor.X * 255),
+            (int)(currentColor.Y * 255),
+            (int)(currentColor.Z * 255));
+        dialog.FullOpen = true;
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var newColor = new Vector4(
+                dialog.Color.R / 255f,
+                dialog.Color.G / 255f,
+                dialog.Color.B / 255f,
+                1.0f);
+            _effect.CoreColor = newColor;
+            _effect.Configuration.Set("coreColor", newColor);
+            UpdateSigilColorPreviews();
+        }
+    }
+
+    private void SigilMidColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentColor = _effect.MidColor;
+        using var dialog = new System.Windows.Forms.ColorDialog();
+        dialog.Color = System.Drawing.Color.FromArgb(255,
+            (int)(currentColor.X * 255),
+            (int)(currentColor.Y * 255),
+            (int)(currentColor.Z * 255));
+        dialog.FullOpen = true;
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var newColor = new Vector4(
+                dialog.Color.R / 255f,
+                dialog.Color.G / 255f,
+                dialog.Color.B / 255f,
+                1.0f);
+            _effect.MidColor = newColor;
+            _effect.Configuration.Set("midColor", newColor);
+            UpdateSigilColorPreviews();
+        }
+    }
+
+    private void SigilEdgeColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentColor = _effect.EdgeColor;
+        using var dialog = new System.Windows.Forms.ColorDialog();
+        dialog.Color = System.Drawing.Color.FromArgb(255,
+            (int)(currentColor.X * 255),
+            (int)(currentColor.Y * 255),
+            (int)(currentColor.Z * 255));
+        dialog.FullOpen = true;
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var newColor = new Vector4(
+                dialog.Color.R / 255f,
+                dialog.Color.G / 255f,
+                dialog.Color.B / 255f,
+                1.0f);
+            _effect.EdgeColor = newColor;
+            _effect.Configuration.Set("edgeColor", newColor);
+            UpdateSigilColorPreviews();
+        }
     }
 
     private void GlowIntensitySlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -388,6 +486,102 @@ public partial class ProceduralSigilSettingsControl : UserControl
         var order = (ProceduralSigilEffect.FireRenderOrder)FireRenderOrderCombo.SelectedIndex;
         _effect.FireRenderOrd = order;
         _effect.Configuration.Set("fireRenderOrder", (int)order);
+    }
+
+    private void FireColorPaletteCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading) return;
+        var palette = (ProceduralSigilEffect.FireColorPalette)FireColorPaletteCombo.SelectedIndex;
+        _effect.FirePalette = palette;
+        _effect.Configuration.Set("fireColorPalette", (int)palette);
+        UpdateFireCustomColorsVisibility();
+    }
+
+    private void UpdateFireCustomColorsVisibility()
+    {
+        var palette = (ProceduralSigilEffect.FireColorPalette)FireColorPaletteCombo.SelectedIndex;
+        FireCustomColorsPanel.Visibility = palette == ProceduralSigilEffect.FireColorPalette.Custom
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateFireColorPreviews()
+    {
+        var core = _effect.FireCustomCoreColor;
+        var mid = _effect.FireCustomMidColor;
+        var edge = _effect.FireCustomEdgeColor;
+
+        FireCoreColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, core.X, core.Y, core.Z));
+        FireMidColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, mid.X, mid.Y, mid.Z));
+        FireEdgeColorPreview.Background = new SolidColorBrush(System.Windows.Media.Color.FromScRgb(1f, edge.X, edge.Y, edge.Z));
+    }
+
+    private void FireCoreColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentColor = _effect.FireCustomCoreColor;
+        using var dialog = new System.Windows.Forms.ColorDialog();
+        dialog.Color = System.Drawing.Color.FromArgb(255,
+            (int)(currentColor.X * 255),
+            (int)(currentColor.Y * 255),
+            (int)(currentColor.Z * 255));
+        dialog.FullOpen = true;
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var newColor = new Vector4(
+                dialog.Color.R / 255f,
+                dialog.Color.G / 255f,
+                dialog.Color.B / 255f,
+                1.0f);
+            _effect.FireCustomCoreColor = newColor;
+            _effect.Configuration.Set("fireCustomCoreColor", newColor);
+            UpdateFireColorPreviews();
+        }
+    }
+
+    private void FireMidColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentColor = _effect.FireCustomMidColor;
+        using var dialog = new System.Windows.Forms.ColorDialog();
+        dialog.Color = System.Drawing.Color.FromArgb(255,
+            (int)(currentColor.X * 255),
+            (int)(currentColor.Y * 255),
+            (int)(currentColor.Z * 255));
+        dialog.FullOpen = true;
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var newColor = new Vector4(
+                dialog.Color.R / 255f,
+                dialog.Color.G / 255f,
+                dialog.Color.B / 255f,
+                1.0f);
+            _effect.FireCustomMidColor = newColor;
+            _effect.Configuration.Set("fireCustomMidColor", newColor);
+            UpdateFireColorPreviews();
+        }
+    }
+
+    private void FireEdgeColorButton_Click(object sender, RoutedEventArgs e)
+    {
+        var currentColor = _effect.FireCustomEdgeColor;
+        using var dialog = new System.Windows.Forms.ColorDialog();
+        dialog.Color = System.Drawing.Color.FromArgb(255,
+            (int)(currentColor.X * 255),
+            (int)(currentColor.Y * 255),
+            (int)(currentColor.Z * 255));
+        dialog.FullOpen = true;
+
+        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+        {
+            var newColor = new Vector4(
+                dialog.Color.R / 255f,
+                dialog.Color.G / 255f,
+                dialog.Color.B / 255f,
+                1.0f);
+            _effect.FireCustomEdgeColor = newColor;
+            _effect.Configuration.Set("fireCustomEdgeColor", newColor);
+            UpdateFireColorPreviews();
+        }
     }
 
     private void FireParticleAlphaSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)

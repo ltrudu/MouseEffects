@@ -153,10 +153,27 @@ public sealed class ProceduralSigilEffect : EffectBase
         OnTopOfSigil = 1
     }
 
+    // Fire particle color palette
+    public enum FireColorPalette
+    {
+        SigilColors = 0,
+        VibrantFire = 1,
+        Ethereal = 2,
+        MysticalBlue = 3,
+        MagicalPink = 4,
+        PoisonGreen = 5,
+        DeepCrimson = 6,
+        Custom = 7
+    }
+
     // Fire particle pool parameters
     private bool _fireParticleEnabled = false;
     private FireSpawnLocation _fireSpawnLocation = FireSpawnLocation.InnerRing;
     private FireRenderOrder _fireRenderOrder = FireRenderOrder.BehindSigil;
+    private FireColorPalette _fireColorPalette = FireColorPalette.SigilColors;
+    private Vector4 _fireCustomCoreColor = new(1.0f, 0.7f, 0.2f, 1.0f);
+    private Vector4 _fireCustomMidColor = new(1.0f, 0.4f, 0.0f, 1.0f);
+    private Vector4 _fireCustomEdgeColor = new(0.8f, 0.2f, 0.0f, 1.0f);
     private float _fireParticleAlpha = 1.0f;
     private int _fireParticleCount = 300;
     private float _fireSpawnRate = 30f;
@@ -691,6 +708,14 @@ public sealed class ProceduralSigilEffect : EffectBase
             _fireSpawnLocation = (FireSpawnLocation)fireSpawnLocation;
         if (Configuration.TryGet("fireRenderOrder", out int fireRenderOrder))
             _fireRenderOrder = (FireRenderOrder)fireRenderOrder;
+        if (Configuration.TryGet("fireColorPalette", out int fireColorPalette))
+            _fireColorPalette = (FireColorPalette)fireColorPalette;
+        if (Configuration.TryGet("fireCustomCoreColor", out Vector4 fireCustomCoreColor))
+            _fireCustomCoreColor = fireCustomCoreColor;
+        if (Configuration.TryGet("fireCustomMidColor", out Vector4 fireCustomMidColor))
+            _fireCustomMidColor = fireCustomMidColor;
+        if (Configuration.TryGet("fireCustomEdgeColor", out Vector4 fireCustomEdgeColor))
+            _fireCustomEdgeColor = fireCustomEdgeColor;
         if (Configuration.TryGet("fireParticleAlpha", out float fireParticleAlpha))
             _fireParticleAlpha = fireParticleAlpha;
         if (Configuration.TryGet("fireParticleCount", out int fireParticleCount))
@@ -731,7 +756,7 @@ public sealed class ProceduralSigilEffect : EffectBase
 
             case PositionMode.ClickToSummon:
                 // Spawn at screen center on click
-                bool leftButtonDown = (mouseState.ButtonsDown & MouseButtons.Left) != 0;
+                bool leftButtonDown = (mouseState.ButtonsDown & MouseEffects.Core.Input.MouseButtons.Left) != 0;
                 if (leftButtonDown && !_wasLeftButtonDown)
                 {
                     _sigilActive = true;
@@ -757,7 +782,7 @@ public sealed class ProceduralSigilEffect : EffectBase
 
             case PositionMode.ClickAtCursor:
                 // Spawn at cursor position on click
-                leftButtonDown = (mouseState.ButtonsDown & MouseButtons.Left) != 0;
+                leftButtonDown = (mouseState.ButtonsDown & MouseEffects.Core.Input.MouseButtons.Left) != 0;
                 if (leftButtonDown && !_wasLeftButtonDown)
                 {
                     _sigilActive = true;
@@ -939,6 +964,30 @@ public sealed class ProceduralSigilEffect : EffectBase
         set => _fireRenderOrder = value;
     }
 
+    public FireColorPalette FirePalette
+    {
+        get => _fireColorPalette;
+        set => _fireColorPalette = value;
+    }
+
+    public Vector4 FireCustomCoreColor
+    {
+        get => _fireCustomCoreColor;
+        set => _fireCustomCoreColor = value;
+    }
+
+    public Vector4 FireCustomMidColor
+    {
+        get => _fireCustomMidColor;
+        set => _fireCustomMidColor = value;
+    }
+
+    public Vector4 FireCustomEdgeColor
+    {
+        get => _fireCustomEdgeColor;
+        set => _fireCustomEdgeColor = value;
+    }
+
     public float FireParticleAlpha
     {
         get => _fireParticleAlpha;
@@ -1059,20 +1108,68 @@ public sealed class ProceduralSigilEffect : EffectBase
         }
     }
 
+    private (Vector4 core, Vector4 mid, Vector4 edge) GetFirePaletteColors()
+    {
+        return _fireColorPalette switch
+        {
+            // Vibrant Fire - exact current orange palette
+            FireColorPalette.VibrantFire => (
+                new Vector4(1.0f, 0.7f, 0.2f, 1.0f),   // Bright yellow-orange core
+                new Vector4(1.0f, 0.4f, 0.0f, 1.0f),   // Orange mid
+                new Vector4(0.8f, 0.2f, 0.0f, 1.0f)    // Red-orange edge
+            ),
+            // Ethereal - white/gray ghostly
+            FireColorPalette.Ethereal => (
+                new Vector4(1.0f, 1.0f, 1.0f, 1.0f),   // Pure white core
+                new Vector4(0.75f, 0.82f, 0.9f, 1.0f), // Pale blue-gray mid
+                new Vector4(0.4f, 0.45f, 0.55f, 1.0f)  // Cool gray edge
+            ),
+            // Mystical Blue - arcane energy
+            FireColorPalette.MysticalBlue => (
+                new Vector4(0.6f, 0.95f, 1.0f, 1.0f),  // Bright cyan-white core
+                new Vector4(0.2f, 0.5f, 1.0f, 1.0f),   // Vibrant blue mid
+                new Vector4(0.1f, 0.2f, 0.7f, 1.0f)    // Deep blue edge
+            ),
+            // Magical Pink - enchanted magenta
+            FireColorPalette.MagicalPink => (
+                new Vector4(1.0f, 0.75f, 0.95f, 1.0f), // Bright pink-white core
+                new Vector4(1.0f, 0.3f, 0.7f, 1.0f),   // Vibrant magenta mid
+                new Vector4(0.7f, 0.1f, 0.5f, 1.0f)    // Deep rose edge
+            ),
+            // Poison Green - toxic/nature
+            FireColorPalette.PoisonGreen => (
+                new Vector4(0.7f, 1.0f, 0.4f, 1.0f),   // Bright yellow-green core
+                new Vector4(0.2f, 0.9f, 0.2f, 1.0f),   // Vibrant green mid
+                new Vector4(0.0f, 0.5f, 0.1f, 1.0f)    // Deep forest edge
+            ),
+            // Deep Crimson - blood/dark fire
+            FireColorPalette.DeepCrimson => (
+                new Vector4(1.0f, 0.7f, 0.3f, 1.0f),   // Hot orange-yellow core
+                new Vector4(1.0f, 0.15f, 0.1f, 1.0f),  // Vibrant red mid
+                new Vector4(0.5f, 0.0f, 0.05f, 1.0f)   // Deep crimson edge
+            ),
+            // Custom - user-defined colors
+            FireColorPalette.Custom => (_fireCustomCoreColor, _fireCustomMidColor, _fireCustomEdgeColor),
+            // Sigil Colors - use current sigil preset
+            _ => (_coreColor, _midColor, _edgeColor)
+        };
+    }
+
     private Vector4 GetFireColor(float heat)
     {
-        // Use sigil colors: core (hot) -> mid -> edge (cold)
+        var (coreColor, midColor, edgeColor) = GetFirePaletteColors();
+
         Vector4 color;
         if (heat > 0.5f)
         {
             float t = (heat - 0.5f) * 2f;
-            color = Vector4.Lerp(_midColor, _coreColor, t);
+            color = Vector4.Lerp(midColor, coreColor, t);
         }
         else
         {
             float t = heat * 2f;
-            var coldColor = new Vector4(_edgeColor.X, _edgeColor.Y, _edgeColor.Z, 0f); // Fade out alpha
-            color = Vector4.Lerp(coldColor, _midColor, t);
+            var coldColor = new Vector4(edgeColor.X, edgeColor.Y, edgeColor.Z, 0f); // Fade out alpha
+            color = Vector4.Lerp(coldColor, midColor, t);
         }
         // Apply particle alpha
         color.W *= _fireParticleAlpha;
