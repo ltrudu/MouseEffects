@@ -74,6 +74,11 @@ public partial class ProceduralSigilSettingsControl : UserControl
         FireRiseHeightSlider.Value = _effect.FireRiseHeight;
         ElectricitySpreadSlider.Value = _effect.ElectricitySpread;
 
+        // Wind
+        WindEnabledCheckBox.IsChecked = _effect.WindEnabled;
+        WindStrengthSlider.Value = _effect.WindStrength;
+        WindTurbulenceSlider.Value = _effect.WindTurbulence;
+
         _isLoading = false;
     }
 
@@ -324,5 +329,27 @@ public partial class ProceduralSigilSettingsControl : UserControl
         if (_isLoading) return;
         _effect.ElectricitySpread = (float)e.NewValue;
         _effect.Configuration.Set("electricitySpread", (float)e.NewValue);
+    }
+
+    // Wind event handlers
+    private void WindEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.WindEnabled = WindEnabledCheckBox.IsChecked == true;
+        _effect.Configuration.Set("windEnabled", _effect.WindEnabled);
+    }
+
+    private void WindStrengthSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.WindStrength = (float)e.NewValue;
+        _effect.Configuration.Set("windStrength", (float)e.NewValue);
+    }
+
+    private void WindTurbulenceSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.WindTurbulence = (float)e.NewValue;
+        _effect.Configuration.Set("windTurbulence", (float)e.NewValue);
     }
 }

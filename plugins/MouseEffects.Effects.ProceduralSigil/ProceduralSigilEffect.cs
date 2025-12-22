@@ -121,6 +121,9 @@ public sealed class ProceduralSigilEffect : EffectBase
     private float _particleSize = 1f;
     private float _fireRiseHeight = 0.4f;
     private float _electricitySpread = 1f;
+    private bool _windEnabled = true;
+    private float _windStrength = 0.5f;
+    private float _windTurbulence = 0.5f;
 
     // Colors
     private Vector4 _coreColor = new(1.0f, 0.6f, 0.1f, 1.0f);  // Orange/gold
@@ -138,7 +141,7 @@ public sealed class ProceduralSigilEffect : EffectBase
     // Click tracking for ClickAtCursor mode
     private bool _wasLeftButtonDown;
 
-    [StructLayout(LayoutKind.Sequential, Size = 208)]
+    [StructLayout(LayoutKind.Sequential, Size = 224)]
     private struct SigilConstants
     {
         public Vector2 ViewportSize;
@@ -194,6 +197,11 @@ public sealed class ProceduralSigilEffect : EffectBase
         public float FireRiseHeight;
         public float ElectricitySpread;
         public float SigilAlpha;
+
+        public float WindStrength;
+        public float WindTurbulence;
+        public uint WindEnabled;
+        public float _Padding1;
     }
 
     // Public properties for UI binding
@@ -426,6 +434,24 @@ public sealed class ProceduralSigilEffect : EffectBase
         set => _electricitySpread = Math.Clamp(value, 0.1f, 5f);
     }
 
+    public bool WindEnabled
+    {
+        get => _windEnabled;
+        set => _windEnabled = value;
+    }
+
+    public float WindStrength
+    {
+        get => _windStrength;
+        set => _windStrength = Math.Clamp(value, 0f, 3f);
+    }
+
+    public float WindTurbulence
+    {
+        get => _windTurbulence;
+        set => _windTurbulence = Math.Clamp(value, 0f, 2f);
+    }
+
     private void ApplyColorPreset(ColorPreset preset)
     {
         switch (preset)
@@ -580,6 +606,12 @@ public sealed class ProceduralSigilEffect : EffectBase
             _fireRiseHeight = fireRiseHeight;
         if (Configuration.TryGet("electricitySpread", out float electricitySpread))
             _electricitySpread = electricitySpread;
+        if (Configuration.TryGet("windEnabled", out bool windEnabled))
+            _windEnabled = windEnabled;
+        if (Configuration.TryGet("windStrength", out float windStrength))
+            _windStrength = windStrength;
+        if (Configuration.TryGet("windTurbulence", out float windTurbulence))
+            _windTurbulence = windTurbulence;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -718,7 +750,10 @@ public sealed class ProceduralSigilEffect : EffectBase
             ParticleSize = _particleSize,
             FireRiseHeight = _fireRiseHeight,
             ElectricitySpread = _electricitySpread,
-            SigilAlpha = _sigilAlpha
+            SigilAlpha = _sigilAlpha,
+            WindStrength = _windStrength,
+            WindTurbulence = _windTurbulence,
+            WindEnabled = _windEnabled ? 1u : 0u
         };
 
         context.UpdateBuffer(_constantBuffer, constants);

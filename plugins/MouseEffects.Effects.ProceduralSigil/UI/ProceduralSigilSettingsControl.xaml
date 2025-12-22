@@ -303,6 +303,40 @@
                            Width="60" TextAlignment="Right" Margin="8,0,0,0" />
             </Grid>
 
+            <!-- Wind Simulation -->
+            <TextBlock Text="Wind" Style="{StaticResource SectionStyle}" />
+
+            <CheckBox x:Name="WindEnabledCheckBox" Content="Wind Simulation"
+                      IsChecked="True"
+                      Checked="WindEnabledCheckBox_Changed" Unchecked="WindEnabledCheckBox_Changed"
+                      Margin="0,4,0,4" />
+
+            <TextBlock Text="Wind Strength" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="WindStrengthSlider" Grid.Column="0"
+                        Minimum="0" Maximum="3" Value="0.5"
+                        ValueChanged="WindStrengthSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=WindStrengthSlider, StringFormat={}{0:F1}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Wind Turbulence" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="WindTurbulenceSlider" Grid.Column="0"
+                        Minimum="0" Maximum="2" Value="0.5"
+                        ValueChanged="WindTurbulenceSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=WindTurbulenceSlider, StringFormat={}{0:F1}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
             <!-- Triangle Mandala Settings (only visible when Triangle Mandala style selected) -->
             <StackPanel x:Name="TriangleMandalaPanel" Visibility="Collapsed">
                 <TextBlock Text="Triangle Mandala" Style="{StaticResource SectionStyle}" />

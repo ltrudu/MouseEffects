@@ -81,6 +81,11 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         config.Set("fireRiseHeight", 0.4f);
         config.Set("electricitySpread", 1f);
 
+        // Wind simulation
+        config.Set("windEnabled", true);
+        config.Set("windStrength", 0.5f);
+        config.Set("windTurbulence", 0.5f);
+
         return config;
     }
 
@@ -445,6 +450,35 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     MinValue = 0.1f,
                     MaxValue = 5f,
                     DefaultValue = 1f,
+                    Step = 0.1f
+                },
+
+                // Wind simulation
+                new BoolParameter
+                {
+                    Key = "windEnabled",
+                    DisplayName = "Wind Simulation",
+                    Description = "Enable wind affecting fire particles",
+                    DefaultValue = true
+                },
+                new FloatParameter
+                {
+                    Key = "windStrength",
+                    DisplayName = "Wind Strength",
+                    Description = "How strongly wind pushes particles horizontally",
+                    MinValue = 0f,
+                    MaxValue = 3f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "windTurbulence",
+                    DisplayName = "Wind Turbulence",
+                    Description = "Randomness and gusts in the wind",
+                    MinValue = 0f,
+                    MaxValue = 2f,
+                    DefaultValue = 0.5f,
                     Step = 0.1f
                 }
             ]

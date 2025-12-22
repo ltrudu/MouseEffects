@@ -77,6 +77,11 @@ cbuffer Constants : register(b0)
     float FireRiseHeight;
     float ElectricitySpread;
     float SigilAlpha;
+
+    float WindStrength;
+    float WindTurbulence;
+    uint WindEnabled;
+    float _Padding1;
 };
 
 struct VSOutput
@@ -245,6 +250,70 @@ float flicker(float t, float speed)
     return (f1 * 0.5 + f2 * 0.3 + f3 * 0.2) * 0.6 + 0.4;
 }
 
+// Wind simulation - changes direction every 7-15 seconds with 1-3 second transitions
+float getWind(float time, float strength, float turbulence)
+{
+    if (strength < 0.01 || WindEnabled == 0) return 0.0;
+
+    // Create pseudo-random cycle durations using hash
+    float cycleBase = 11.0; // Average cycle ~11 seconds (between 7-15)
+
+    // Determine which wind cycle we're in
+    float cycle = floor(time / cycleBase);
+    float cycleTime = frac(time / cycleBase) * cycleBase;
+
+    // Hash to get random values for this cycle
+    float cycleHash = hash(float2(cycle, 0.0));
+    float nextCycleHash = hash(float2(cycle + 1.0, 0.0));
+
+    // Random cycle duration between 7-15 seconds
+    float cycleDuration = 7.0 + cycleHash * 8.0;
+    float transitionDuration = 1.0 + hash(float2(cycle, 1.0)) * 2.0; // 1-3 seconds
+
+    // Wind direction: left (-1) or right (+1) with smooth transition
+    float currentDir = (cycleHash > 0.5) ? 1.0 : -1.0;
+    float nextDir = (nextCycleHash > 0.5) ? 1.0 : -1.0;
+
+    // Wind strength variation
+    float currentMag = 0.5 + cycleHash * 0.5;
+    float nextMag = 0.5 + nextCycleHash * 0.5;
+
+    // Calculate transition blend
+    float transitionStart = cycleDuration - transitionDuration;
+    float blend = smoothstep(transitionStart, cycleDuration, cycleTime);
+
+    // Interpolate direction and magnitude
+    float dir = lerp(currentDir, nextDir, blend);
+    float mag = lerp(currentMag, nextMag, blend);
+
+    // Add turbulence - high-frequency gusts
+    float gust = sin(time * 2.3) * 0.3 + sin(time * 3.7) * 0.2 + sin(time * 5.1) * 0.1;
+    mag *= (1.0 + gust * turbulence);
+
+    // Return horizontal wind only (X direction)
+    return dir * mag * strength;
+}
+
+// Calculate cumulative wind drift for a particle based on its age (X-only)
+float getWindDrift(float time, float particleAge, float strength, float turbulence)
+{
+    if (WindEnabled == 0) return 0.0;
+
+    // Integrate wind over the particle's lifetime (simplified)
+    // Sample wind at a few points during the particle's life
+    float totalDrift = 0.0;
+    float birthTime = time - particleAge;
+
+    // Sample at 4 points during lifetime for smoother integration
+    for (int i = 0; i < 4; i++)
+    {
+        float sampleTime = birthTime + particleAge * (float(i) + 0.5) / 4.0;
+        totalDrift += getWind(sampleTime, strength, turbulence);
+    }
+
+    return totalDrift * particleAge * 0.25; // Average and scale by age
+}
+
 // Compute crackling energy particles along sigil geometry
 // Fire particles rise upward like embers, electricity crackles in place
 float3 ComputeEnergyParticles(float2 p, float sdfDist, float radius, float time,
@@ -269,64 +338,61 @@ float3 ComputeEnergyParticles(float2 p, float sdfDist, float radius, float time,
     if (behavesAsFire)
     {
         // === FIRE PARTICLES: Rise upward like embers ===
-        float riseSpeed = speed * 50.0 * (1.0 + entropy * 0.5) * fireHeight;
+        // Two types: regular fire near sigil + escape embers that rise to top of screen
+
         float cellSize = LineThickness * 3.0 * pSize;
 
-        // Create rising particle streams
-        float2 fireP = p;
-        // Offset Y by time to create rising effect (negative Y = upward in screen space)
-        fireP.y += time * riseSpeed;
-
-        // Add horizontal wobble as particles rise - more dramatic with higher size
-        float wobbleAmount = LineThickness * 2.0 * pSize * (1.0 + entropy);
-        float wobble = sin(time * speed * 4.0 + p.x * 0.05 + hash(floor(p.x / cellSize)) * 6.28) * wobbleAmount;
-        fireP.x += wobble * entropy;
-
-        float2 cellId = floor(fireP / cellSize);
-        float cellHash = hash(cellId);
-
-        // Particle spawn based on proximity to sigil edge - spread affects spawn area
+        // --- REGULAR FIRE (near sigil edges) ---
         float spawnRange = LineThickness * 3.0 * pSize;
         float edgeProximity = 1.0 - smoothstep(0.0, spawnRange, abs(sdfDist));
 
-        // Calculate particle lifetime based on how far it has risen
-        // fireHeight controls how long particles live/how high they go
-        float risePhase = frac(time * speed * (0.5 / fireHeight) + cellHash);
-        float maxRiseHeight = radius * fireHeight; // How high particle can rise
+        if (edgeProximity > 0.01)
+        {
+            float riseSpeed = speed * 50.0 * (1.0 + entropy * 0.5) * fireHeight;
 
-        // Particles spawn at edge and fade as they rise
-        float spawnProb = step(0.6 - entropy * 0.2, cellHash);
-        float lifetimeFade = 1.0 - smoothstep(0.0, 1.0, risePhase);
-        lifetimeFade *= lifetimeFade; // Quadratic falloff
+            float2 fireP = p;
+            fireP.y += time * riseSpeed;
 
-        // Check if this pixel is near a rising ember
-        float2 cellCenter = (cellId + 0.5) * cellSize;
-        // Add some random offset per particle
-        cellCenter.x += (hash(cellId + 0.5) - 0.5) * cellSize * 0.8;
+            float wobbleAmount = LineThickness * 2.0 * pSize * (1.0 + entropy);
+            float wobble = sin(time * speed * 4.0 + p.x * 0.05 + hash(floor(p.x / cellSize)) * 6.28) * wobbleAmount;
+            fireP.x += wobble * entropy;
 
-        float particleDist = length(fireP - cellCenter);
+            float2 cellId = floor(fireP / cellSize);
+            float cellHash = hash(cellId);
 
-        // Particle size - affected by pSize parameter, shrinks as it rises
-        float baseParticleSize = LineThickness * pSize * 1.5;
-        float currentSize = baseParticleSize * lerp(1.0, 0.3, risePhase) * (1.0 + entropy * 0.3);
-        float glow = exp(-particleDist * particleDist / (currentSize * currentSize * 2.0));
+            float risePhase = frac(time * speed * (0.5 / max(fireHeight, 0.1)) + cellHash);
+            float spawnProb = step(0.6 - entropy * 0.2, cellHash);
+            float lifetimeFade = 1.0 - smoothstep(0.0, 1.0, risePhase);
+            lifetimeFade *= lifetimeFade;
 
-        // Flicker
-        float flick = flicker(time * speed + cellHash * 20.0, 15.0 + entropy * 10.0);
+            float2 cellCenter = (cellId + 0.5) * cellSize;
+            cellCenter.x += (hash(cellId + 0.5) - 0.5) * cellSize * 0.8;
 
-        // Fire color - hotter (brighter/yellower) at spawn, cooler (darker/redder) as it rises
-        float heat = 1.0 - risePhase * 0.7;
-        heat += hash(cellId + time * 0.1) * 0.3;
-        float3 fireColor = lerp(float3(0.8, 0.1, 0.0), float3(1.0, 0.9, 0.4), saturate(heat));
-        // Add white-hot sparks occasionally - more with larger size
-        fireColor = lerp(fireColor, float3(1.0, 1.0, 0.9), step(0.92 - pSize * 0.05, cellHash) * heat);
+            float particleDist = length(fireP - cellCenter);
+            float baseParticleSize = LineThickness * pSize * 1.5;
+            float currentSize = baseParticleSize * lerp(1.0, 0.3, risePhase) * (1.0 + entropy * 0.3);
+            float glow = exp(-particleDist * particleDist / (currentSize * currentSize * 2.0));
 
-        float fireIntensity = glow * spawnProb * lifetimeFade * edgeProximity * flick;
-        result = fireColor * fireIntensity * intensity * 2.5 * pSize;
+            float flick = flicker(time * speed + cellHash * 20.0, 15.0 + entropy * 10.0);
+
+            float heat = 1.0 - risePhase * 0.7;
+            heat += hash(cellId + time * 0.1) * 0.3;
+            float3 fireColor = lerp(float3(0.8, 0.1, 0.0), float3(1.0, 0.9, 0.4), saturate(heat));
+            fireColor = lerp(fireColor, float3(1.0, 1.0, 0.9), step(0.92 - pSize * 0.05, cellHash) * heat);
+
+            float fireIntensity = glow * spawnProb * lifetimeFade * edgeProximity * flick;
+            result = fireColor * fireIntensity * intensity * 2.5 * pSize;
+        }
+
     }
-    else
+
+    // === ELECTRICITY PARTICLES: Crackle in place near edges ===
+    // Only for electricity or mixed mode (when not behaving as fire)
+    bool isElectricityType = (particleType == 2);
+    bool electricityBehavior = isElectricityType || (particleType == 3 && hash(floor(p / (LineThickness * 5.0))) <= 0.5);
+
+    if (electricityBehavior)
     {
-        // === ELECTRICITY PARTICLES: Crackle in place near edges ===
         // elecSpread controls how far from edge electricity can appear
         float spreadRange = LineThickness * 4.0 * elecSpread;
         float edgeProximity = 1.0 - smoothstep(0.0, spreadRange, abs(sdfDist));
