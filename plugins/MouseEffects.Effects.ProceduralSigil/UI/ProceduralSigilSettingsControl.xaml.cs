@@ -79,6 +79,19 @@ public partial class ProceduralSigilSettingsControl : UserControl
         WindStrengthSlider.Value = _effect.WindStrength;
         WindTurbulenceSlider.Value = _effect.WindTurbulence;
 
+        // Fire Particles
+        FireParticleEnabledCheckBox.IsChecked = _effect.FireParticleEnabled;
+        FireSpawnLocationCombo.SelectedIndex = (int)_effect.FireSpawnLoc;
+        FireRenderOrderCombo.SelectedIndex = (int)_effect.FireRenderOrd;
+        FireParticleAlphaSlider.Value = _effect.FireParticleAlpha;
+        FireParticleCountSlider.Value = _effect.FireParticleCount;
+        FireSpawnRateSlider.Value = _effect.FireSpawnRate;
+        FireParticleSizeSlider.Value = _effect.FireParticleSize;
+        FireLifetimeSlider.Value = _effect.FireLifetime;
+        FireRiseSpeedSlider.Value = _effect.FireRiseSpeed;
+        FireTurbulenceSlider.Value = _effect.FireTurbulence;
+        FireWindEnabledCheckBox.IsChecked = _effect.FireWindEnabled;
+
         _isLoading = false;
     }
 
@@ -351,5 +364,85 @@ public partial class ProceduralSigilSettingsControl : UserControl
         if (_isLoading) return;
         _effect.WindTurbulence = (float)e.NewValue;
         _effect.Configuration.Set("windTurbulence", (float)e.NewValue);
+    }
+
+    // Fire particle event handlers
+    private void FireParticleEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.FireParticleEnabled = FireParticleEnabledCheckBox.IsChecked == true;
+        _effect.Configuration.Set("fireParticleEnabled", _effect.FireParticleEnabled);
+    }
+
+    private void FireSpawnLocationCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading) return;
+        var location = (ProceduralSigilEffect.FireSpawnLocation)FireSpawnLocationCombo.SelectedIndex;
+        _effect.FireSpawnLoc = location;
+        _effect.Configuration.Set("fireSpawnLocation", (int)location);
+    }
+
+    private void FireRenderOrderCombo_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoading) return;
+        var order = (ProceduralSigilEffect.FireRenderOrder)FireRenderOrderCombo.SelectedIndex;
+        _effect.FireRenderOrd = order;
+        _effect.Configuration.Set("fireRenderOrder", (int)order);
+    }
+
+    private void FireParticleAlphaSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireParticleAlpha = (float)e.NewValue;
+        _effect.Configuration.Set("fireParticleAlpha", (float)e.NewValue);
+    }
+
+    private void FireParticleCountSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireParticleCount = (int)e.NewValue;
+        _effect.Configuration.Set("fireParticleCount", (int)e.NewValue);
+    }
+
+    private void FireSpawnRateSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireSpawnRate = (float)e.NewValue;
+        _effect.Configuration.Set("fireSpawnRate", (float)e.NewValue);
+    }
+
+    private void FireParticleSizeSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireParticleSize = (float)e.NewValue;
+        _effect.Configuration.Set("fireParticleSize", (float)e.NewValue);
+    }
+
+    private void FireLifetimeSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireLifetime = (float)e.NewValue;
+        _effect.Configuration.Set("fireLifetime", (float)e.NewValue);
+    }
+
+    private void FireRiseSpeedSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireRiseSpeed = (float)e.NewValue;
+        _effect.Configuration.Set("fireRiseSpeed", (float)e.NewValue);
+    }
+
+    private void FireTurbulenceSlider_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isLoading) return;
+        _effect.FireTurbulence = (float)e.NewValue;
+        _effect.Configuration.Set("fireTurbulence", (float)e.NewValue);
+    }
+
+    private void FireWindEnabledCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+        _effect.FireWindEnabled = FireWindEnabledCheckBox.IsChecked == true;
+        _effect.Configuration.Set("fireWindEnabled", _effect.FireWindEnabled);
     }
 }

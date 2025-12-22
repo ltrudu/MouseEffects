@@ -86,6 +86,19 @@ public sealed class ProceduralSigilFactory : IEffectFactory
         config.Set("windStrength", 0.5f);
         config.Set("windTurbulence", 0.5f);
 
+        // Fire particle pool
+        config.Set("fireParticleEnabled", false);
+        config.Set("fireSpawnLocation", 0); // InnerRing
+        config.Set("fireRenderOrder", 0); // BehindSigil
+        config.Set("fireParticleAlpha", 1.0f);
+        config.Set("fireParticleCount", 300);
+        config.Set("fireSpawnRate", 30f);
+        config.Set("fireParticleSize", 8f);
+        config.Set("fireLifetime", 2.0f);
+        config.Set("fireRiseSpeed", 60f);
+        config.Set("fireTurbulence", 0.3f);
+        config.Set("fireWindEnabled", true);
+
         return config;
     }
 
@@ -480,6 +493,107 @@ public sealed class ProceduralSigilFactory : IEffectFactory
                     MaxValue = 2f,
                     DefaultValue = 0.5f,
                     Step = 0.1f
+                },
+
+                // Fire particle pool
+                new BoolParameter
+                {
+                    Key = "fireParticleEnabled",
+                    DisplayName = "Enable Fire Particles",
+                    Description = "Enable fire particles rising from the sigil",
+                    DefaultValue = false
+                },
+                new ChoiceParameter
+                {
+                    Key = "fireSpawnLocation",
+                    DisplayName = "Spawn Location",
+                    Description = "Where fire particles spawn from",
+                    Choices = ["Inner Ring", "Rune Band"],
+                    DefaultValue = "Inner Ring"
+                },
+                new ChoiceParameter
+                {
+                    Key = "fireRenderOrder",
+                    DisplayName = "Render Order",
+                    Description = "Whether particles render behind or on top of sigil",
+                    Choices = ["Behind Sigil", "On Top of Sigil"],
+                    DefaultValue = "Behind Sigil"
+                },
+                new FloatParameter
+                {
+                    Key = "fireParticleAlpha",
+                    DisplayName = "Particle Alpha",
+                    Description = "Opacity of fire particles",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 1.0f,
+                    Step = 0.05f
+                },
+                new IntParameter
+                {
+                    Key = "fireParticleCount",
+                    DisplayName = "Fire Particle Count",
+                    Description = "Maximum number of fire particles",
+                    MinValue = 100,
+                    MaxValue = 1000,
+                    DefaultValue = 300
+                },
+                new FloatParameter
+                {
+                    Key = "fireSpawnRate",
+                    DisplayName = "Fire Spawn Rate",
+                    Description = "Particles spawned per second",
+                    MinValue = 10f,
+                    MaxValue = 100f,
+                    DefaultValue = 30f,
+                    Step = 5f
+                },
+                new FloatParameter
+                {
+                    Key = "fireParticleSize",
+                    DisplayName = "Fire Particle Size",
+                    Description = "Base size of fire particles in pixels",
+                    MinValue = 2f,
+                    MaxValue = 20f,
+                    DefaultValue = 8f,
+                    Step = 1f
+                },
+                new FloatParameter
+                {
+                    Key = "fireLifetime",
+                    DisplayName = "Fire Lifetime",
+                    Description = "How long fire particles live in seconds",
+                    MinValue = 0.5f,
+                    MaxValue = 4f,
+                    DefaultValue = 2.0f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "fireRiseSpeed",
+                    DisplayName = "Fire Rise Speed",
+                    Description = "How fast fire particles rise in pixels per second",
+                    MinValue = 30f,
+                    MaxValue = 150f,
+                    DefaultValue = 60f,
+                    Step = 10f
+                },
+                new FloatParameter
+                {
+                    Key = "fireTurbulence",
+                    DisplayName = "Fire Turbulence",
+                    Description = "Horizontal randomness of fire particles",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.3f,
+                    Step = 0.05f
+                },
+                new BoolParameter
+                {
+                    Key = "fireWindEnabled",
+                    DisplayName = "Fire Uses Wind",
+                    Description = "Whether fire particles are affected by wind settings",
+                    DefaultValue = true
                 }
             ]
         };

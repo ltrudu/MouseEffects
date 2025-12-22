@@ -337,6 +337,123 @@
                            Width="60" TextAlignment="Right" Margin="8,0,0,0" />
             </Grid>
 
+            <!-- Fire Particle Pool -->
+            <TextBlock Text="Fire Particles" Style="{StaticResource SectionStyle}" />
+
+            <CheckBox x:Name="FireParticleEnabledCheckBox" Content="Enable Fire Particles"
+                      IsChecked="False"
+                      Checked="FireParticleEnabledCheckBox_Changed" Unchecked="FireParticleEnabledCheckBox_Changed"
+                      Margin="0,4,0,4" />
+
+            <TextBlock Text="Spawn Location" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="FireSpawnLocationCombo" SelectionChanged="FireSpawnLocationCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Inner Ring" IsSelected="True" />
+                <ComboBoxItem Content="Rune Band" />
+            </ComboBox>
+
+            <TextBlock Text="Render Order" Style="{StaticResource LabelStyle}" />
+            <ComboBox x:Name="FireRenderOrderCombo" SelectionChanged="FireRenderOrderCombo_Changed" Margin="0,0,0,8">
+                <ComboBoxItem Content="Behind Sigil" IsSelected="True" />
+                <ComboBoxItem Content="On Top of Sigil" />
+            </ComboBox>
+
+            <TextBlock Text="Particle Alpha" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireParticleAlphaSlider" Grid.Column="0"
+                        Minimum="0" Maximum="1" Value="1"
+                        ValueChanged="FireParticleAlphaSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireParticleAlphaSlider, StringFormat={}{0:F2}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Particle Count" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireParticleCountSlider" Grid.Column="0"
+                        Minimum="100" Maximum="1000" Value="300"
+                        IsSnapToTickEnabled="True" TickFrequency="50"
+                        ValueChanged="FireParticleCountSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireParticleCountSlider, StringFormat={}{0:F0}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Spawn Rate" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireSpawnRateSlider" Grid.Column="0"
+                        Minimum="10" Maximum="100" Value="30"
+                        ValueChanged="FireSpawnRateSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireSpawnRateSlider, StringFormat={}{0:F0}/s}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Fire Particle Size" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireParticleSizeSlider" Grid.Column="0"
+                        Minimum="2" Maximum="20" Value="8"
+                        ValueChanged="FireParticleSizeSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireParticleSizeSlider, StringFormat={}{0:F0} px}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Fire Lifetime" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireLifetimeSlider" Grid.Column="0"
+                        Minimum="0.5" Maximum="4" Value="2"
+                        ValueChanged="FireLifetimeSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireLifetimeSlider, StringFormat={}{0:F1}s}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Rise Speed" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireRiseSpeedSlider" Grid.Column="0"
+                        Minimum="30" Maximum="150" Value="60"
+                        ValueChanged="FireRiseSpeedSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireRiseSpeedSlider, StringFormat={}{0:F0} px/s}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <TextBlock Text="Fire Turbulence" Style="{StaticResource LabelStyle}" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Slider x:Name="FireTurbulenceSlider" Grid.Column="0"
+                        Minimum="0" Maximum="1" Value="0.3"
+                        ValueChanged="FireTurbulenceSlider_Changed" />
+                <TextBlock Grid.Column="1" Text="{Binding Value, ElementName=FireTurbulenceSlider, StringFormat={}{0:F2}}"
+                           Width="60" TextAlignment="Right" Margin="8,0,0,0" />
+            </Grid>
+
+            <CheckBox x:Name="FireWindEnabledCheckBox" Content="Use Wind Settings"
+                      IsChecked="True"
+                      Checked="FireWindEnabledCheckBox_Changed" Unchecked="FireWindEnabledCheckBox_Changed"
+                      Margin="0,8,0,4" />
+
             <!-- Triangle Mandala Settings (only visible when Triangle Mandala style selected) -->
             <StackPanel x:Name="TriangleMandalaPanel" Visibility="Collapsed">
                 <TextBlock Text="Triangle Mandala" Style="{StaticResource SectionStyle}" />

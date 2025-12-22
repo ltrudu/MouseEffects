@@ -22,10 +22,24 @@ public sealed class ProceduralSigilEffect : EffectBase
 
     public override EffectMetadata Metadata => _metadata;
 
-    // GPU Resources
+    // GPU Resources - Sigil
     private IShader? _vertexShader;
     private IShader? _pixelShader;
     private IBuffer? _constantBuffer;
+
+    // GPU Resources - Fire Particles
+    private const int MaxFireParticles = 1000;
+    private IBuffer? _fireParticleBuffer;
+    private IBuffer? _fireConstantBuffer;
+    private IShader? _fireVertexShader;
+    private IShader? _firePixelShader;
+
+    // Fire Particle CPU State
+    private readonly FireParticle[] _fireParticles = new FireParticle[MaxFireParticles];
+    private readonly FireParticle[] _gpuFireParticles = new FireParticle[MaxFireParticles];
+    private int _nextFireParticle;
+    private int _activeFireParticleCount;
+    private float _fireSpawnAccumulator;
 
     // Sigil style enum
     public enum SigilStyle
@@ -124,6 +138,33 @@ public sealed class ProceduralSigilEffect : EffectBase
     private bool _windEnabled = true;
     private float _windStrength = 0.5f;
     private float _windTurbulence = 0.5f;
+
+    // Fire particle spawn location
+    public enum FireSpawnLocation
+    {
+        InnerRing = 0,   // 30-50% of radius
+        RuneBand = 1     // 75-85% of radius (outer rune band)
+    }
+
+    // Fire particle render order
+    public enum FireRenderOrder
+    {
+        BehindSigil = 0,
+        OnTopOfSigil = 1
+    }
+
+    // Fire particle pool parameters
+    private bool _fireParticleEnabled = false;
+    private FireSpawnLocation _fireSpawnLocation = FireSpawnLocation.InnerRing;
+    private FireRenderOrder _fireRenderOrder = FireRenderOrder.BehindSigil;
+    private float _fireParticleAlpha = 1.0f;
+    private int _fireParticleCount = 300;
+    private float _fireSpawnRate = 30f;
+    private float _fireParticleSize = 8f;
+    private float _fireLifetime = 2.0f;
+    private float _fireRiseSpeed = 60f;
+    private float _fireTurbulence = 0.3f;
+    private bool _fireWindEnabled = true;
 
     // Colors
     private Vector4 _coreColor = new(1.0f, 0.6f, 0.1f, 1.0f);  // Orange/gold
@@ -494,19 +535,49 @@ public sealed class ProceduralSigilEffect : EffectBase
 
     protected override void OnInitialize(IRenderContext context)
     {
-        // Create constant buffer
+        // Create constant buffer for sigil
         var bufferDesc = new BufferDescription
         {
-            Size = 208,
+            Size = Marshal.SizeOf<SigilConstants>(),
             Type = BufferType.Constant,
             Dynamic = true
         };
         _constantBuffer = context.CreateBuffer(bufferDesc);
 
-        // Load and compile shaders
+        // Load and compile sigil shaders
         var shaderSource = LoadEmbeddedShader("ProceduralSigilShader.hlsl");
         _vertexShader = context.CompileShader(shaderSource, "VSMain", ShaderStage.Vertex);
         _pixelShader = context.CompileShader(shaderSource, "PSMain", ShaderStage.Pixel);
+
+        // Create fire particle buffer (structured buffer)
+        var fireParticleDesc = new BufferDescription
+        {
+            Size = MaxFireParticles * Marshal.SizeOf<FireParticle>(),
+            Type = BufferType.Structured,
+            Dynamic = true,
+            StructureStride = Marshal.SizeOf<FireParticle>()
+        };
+        _fireParticleBuffer = context.CreateBuffer(fireParticleDesc);
+
+        // Create fire constant buffer
+        var fireConstantDesc = new BufferDescription
+        {
+            Size = Marshal.SizeOf<FireConstants>(),
+            Type = BufferType.Constant,
+            Dynamic = true
+        };
+        _fireConstantBuffer = context.CreateBuffer(fireConstantDesc);
+
+        // Load and compile fire particle shaders
+        var fireShaderSource = LoadEmbeddedShader("FireParticleShader.hlsl");
+        _fireVertexShader = context.CompileShader(fireShaderSource, "VSMain", ShaderStage.Vertex);
+        _firePixelShader = context.CompileShader(fireShaderSource, "PSMain", ShaderStage.Pixel);
+
+        // Initialize fire particles to dead state
+        for (int i = 0; i < MaxFireParticles; i++)
+        {
+            _fireParticles[i] = new FireParticle { Lifetime = 0 };
+        }
 
         // Load configuration
         LoadConfiguration();
@@ -612,6 +683,30 @@ public sealed class ProceduralSigilEffect : EffectBase
             _windStrength = windStrength;
         if (Configuration.TryGet("windTurbulence", out float windTurbulence))
             _windTurbulence = windTurbulence;
+
+        // Fire particle pool parameters
+        if (Configuration.TryGet("fireParticleEnabled", out bool fireParticleEnabled))
+            _fireParticleEnabled = fireParticleEnabled;
+        if (Configuration.TryGet("fireSpawnLocation", out int fireSpawnLocation))
+            _fireSpawnLocation = (FireSpawnLocation)fireSpawnLocation;
+        if (Configuration.TryGet("fireRenderOrder", out int fireRenderOrder))
+            _fireRenderOrder = (FireRenderOrder)fireRenderOrder;
+        if (Configuration.TryGet("fireParticleAlpha", out float fireParticleAlpha))
+            _fireParticleAlpha = fireParticleAlpha;
+        if (Configuration.TryGet("fireParticleCount", out int fireParticleCount))
+            _fireParticleCount = Math.Clamp(fireParticleCount, 100, MaxFireParticles);
+        if (Configuration.TryGet("fireSpawnRate", out float fireSpawnRate))
+            _fireSpawnRate = fireSpawnRate;
+        if (Configuration.TryGet("fireParticleSize", out float fireParticleSize))
+            _fireParticleSize = fireParticleSize;
+        if (Configuration.TryGet("fireLifetime", out float fireLifetime))
+            _fireLifetime = fireLifetime;
+        if (Configuration.TryGet("fireRiseSpeed", out float fireRiseSpeed))
+            _fireRiseSpeed = fireRiseSpeed;
+        if (Configuration.TryGet("fireTurbulence", out float fireTurbulence))
+            _fireTurbulence = fireTurbulence;
+        if (Configuration.TryGet("fireWindEnabled", out bool fireWindEnabled))
+            _fireWindEnabled = fireWindEnabled;
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -687,6 +782,23 @@ public sealed class ProceduralSigilEffect : EffectBase
                 }
                 break;
         }
+
+        // Update fire particles
+        if (_fireParticleEnabled && _sigilActive)
+        {
+            float dt = gameTime.DeltaSeconds;
+
+            // Spawn new particles based on spawn rate
+            _fireSpawnAccumulator += _fireSpawnRate * dt;
+            while (_fireSpawnAccumulator >= 1.0f)
+            {
+                SpawnFireParticle(_elapsedTime);
+                _fireSpawnAccumulator -= 1.0f;
+            }
+
+            // Update existing particles
+            UpdateFireParticles(dt, _elapsedTime);
+        }
     }
 
     protected override void OnRender(IRenderContext context)
@@ -758,6 +870,12 @@ public sealed class ProceduralSigilEffect : EffectBase
 
         context.UpdateBuffer(_constantBuffer, constants);
 
+        // Render fire particles BEFORE sigil if configured (so sigil draws on top)
+        if (_fireParticleEnabled && _fireRenderOrder == FireRenderOrder.BehindSigil)
+        {
+            RenderFireParticles(context);
+        }
+
         // Set pipeline state - Additive for glowing effect
         context.SetBlendState(BlendMode.Additive);
         context.SetVertexShader(_vertexShader);
@@ -765,8 +883,14 @@ public sealed class ProceduralSigilEffect : EffectBase
         context.SetConstantBuffer(ShaderStage.Pixel, 0, _constantBuffer);
         context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
 
-        // Draw fullscreen triangle
+        // Draw fullscreen triangle (sigil)
         context.Draw(3, 0);
+
+        // Render fire particles AFTER sigil if configured (so particles draw on top)
+        if (_fireParticleEnabled && _fireRenderOrder == FireRenderOrder.OnTopOfSigil)
+        {
+            RenderFireParticles(context);
+        }
     }
 
     protected override void OnDispose()
@@ -774,6 +898,12 @@ public sealed class ProceduralSigilEffect : EffectBase
         _vertexShader?.Dispose();
         _pixelShader?.Dispose();
         _constantBuffer?.Dispose();
+
+        // Dispose fire particle resources
+        _fireVertexShader?.Dispose();
+        _firePixelShader?.Dispose();
+        _fireParticleBuffer?.Dispose();
+        _fireConstantBuffer?.Dispose();
     }
 
     private static string LoadEmbeddedShader(string name)
@@ -787,4 +917,259 @@ public sealed class ProceduralSigilEffect : EffectBase
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
+
+    #region Fire Particle System
+
+    // Fire particle public properties
+    public bool FireParticleEnabled
+    {
+        get => _fireParticleEnabled;
+        set => _fireParticleEnabled = value;
+    }
+
+    public FireSpawnLocation FireSpawnLoc
+    {
+        get => _fireSpawnLocation;
+        set => _fireSpawnLocation = value;
+    }
+
+    public FireRenderOrder FireRenderOrd
+    {
+        get => _fireRenderOrder;
+        set => _fireRenderOrder = value;
+    }
+
+    public float FireParticleAlpha
+    {
+        get => _fireParticleAlpha;
+        set => _fireParticleAlpha = Math.Clamp(value, 0f, 1f);
+    }
+
+    public int FireParticleCount
+    {
+        get => _fireParticleCount;
+        set => _fireParticleCount = Math.Clamp(value, 100, MaxFireParticles);
+    }
+
+    public float FireSpawnRate
+    {
+        get => _fireSpawnRate;
+        set => _fireSpawnRate = Math.Clamp(value, 10f, 100f);
+    }
+
+    public float FireParticleSize
+    {
+        get => _fireParticleSize;
+        set => _fireParticleSize = Math.Clamp(value, 2f, 20f);
+    }
+
+    public float FireLifetime
+    {
+        get => _fireLifetime;
+        set => _fireLifetime = Math.Clamp(value, 0.5f, 4f);
+    }
+
+    public float FireRiseSpeed
+    {
+        get => _fireRiseSpeed;
+        set => _fireRiseSpeed = Math.Clamp(value, 30f, 150f);
+    }
+
+    public float FireTurbulence
+    {
+        get => _fireTurbulence;
+        set => _fireTurbulence = Math.Clamp(value, 0f, 1f);
+    }
+
+    public bool FireWindEnabled
+    {
+        get => _fireWindEnabled;
+        set => _fireWindEnabled = value;
+    }
+
+    private void SpawnFireParticle(float time)
+    {
+        ref var p = ref _fireParticles[_nextFireParticle];
+        _nextFireParticle = (_nextFireParticle + 1) % _fireParticleCount;
+
+        // Spawn at configured location
+        float angle = Random.Shared.NextSingle() * MathF.PI * 2f;
+        float spawnRadius = _fireSpawnLocation switch
+        {
+            FireSpawnLocation.RuneBand => _sigilRadius * (0.75f + Random.Shared.NextSingle() * 0.1f),  // 75-85% of radius
+            _ => _sigilRadius * (0.3f + Random.Shared.NextSingle() * 0.2f)  // Inner ring: 30-50% of radius
+        };
+
+        p.Position = _sigilPosition + new Vector2(
+            MathF.Cos(angle) * spawnRadius,
+            MathF.Sin(angle) * spawnRadius
+        );
+
+        // Initial upward velocity with slight horizontal variance
+        float riseSpeed = _fireRiseSpeed * (0.8f + Random.Shared.NextSingle() * 0.4f);
+        p.Velocity = new Vector2(
+            (Random.Shared.NextSingle() - 0.5f) * 20f,
+            -riseSpeed // Negative Y = up
+        );
+
+        // Lifetime and properties
+        p.Lifetime = _fireLifetime * (0.7f + Random.Shared.NextSingle() * 0.6f);
+        p.MaxLifetime = p.Lifetime;
+        p.Size = _fireParticleSize * (0.6f + Random.Shared.NextSingle() * 0.8f);
+        p.Heat = 1.0f;
+        p.FlickerPhase = Random.Shared.NextSingle() * MathF.PI * 2f;
+        p.SpawnAngle = angle;
+
+        // Initial color (hot = core color)
+        p.Color = GetFireColor(p.Heat);
+    }
+
+    private void UpdateFireParticles(float dt, float time)
+    {
+        for (int i = 0; i < _fireParticleCount; i++)
+        {
+            ref var p = ref _fireParticles[i];
+            if (p.Lifetime <= 0) continue;
+
+            // Age the particle
+            p.Lifetime -= dt;
+
+            // Cool down (heat decreases quadratically)
+            float lifeRatio = p.Lifetime / p.MaxLifetime;
+            p.Heat = lifeRatio * lifeRatio;
+
+            // Update color based on heat
+            p.Color = GetFireColor(p.Heat);
+
+            // Apply wind if enabled
+            if (_fireWindEnabled && _windEnabled)
+            {
+                float wind = GetWind(time);
+                p.Velocity.X += wind * _windStrength * dt * 30f;
+            }
+
+            // Add turbulence
+            p.Velocity.X += MathF.Sin(time * 5f + p.FlickerPhase) * _fireTurbulence * dt * 50f;
+
+            // Slight vertical drag
+            p.Velocity.Y *= 0.998f;
+
+            // Update position
+            p.Position += p.Velocity * dt;
+        }
+    }
+
+    private Vector4 GetFireColor(float heat)
+    {
+        // Use sigil colors: core (hot) -> mid -> edge (cold)
+        Vector4 color;
+        if (heat > 0.5f)
+        {
+            float t = (heat - 0.5f) * 2f;
+            color = Vector4.Lerp(_midColor, _coreColor, t);
+        }
+        else
+        {
+            float t = heat * 2f;
+            var coldColor = new Vector4(_edgeColor.X, _edgeColor.Y, _edgeColor.Z, 0f); // Fade out alpha
+            color = Vector4.Lerp(coldColor, _midColor, t);
+        }
+        // Apply particle alpha
+        color.W *= _fireParticleAlpha;
+        return color;
+    }
+
+    private float GetWind(float time)
+    {
+        // Simple wind simulation - oscillates direction
+        float wind = MathF.Sin(time * 0.5f) * 0.5f + 0.5f;
+        wind += MathF.Sin(time * 1.7f) * 0.3f;
+        wind += MathF.Sin(time * 2.3f) * _windTurbulence * 0.2f;
+        return (wind - 0.5f) * 2f; // -1 to 1
+    }
+
+    private void RenderFireParticles(IRenderContext context)
+    {
+        if (_fireVertexShader == null || _firePixelShader == null || _fireParticleBuffer == null)
+            return;
+
+        // Copy alive particles to GPU array
+        int gpuIndex = 0;
+        for (int i = 0; i < _fireParticleCount && gpuIndex < MaxFireParticles; i++)
+        {
+            if (_fireParticles[i].Lifetime > 0)
+            {
+                _gpuFireParticles[gpuIndex++] = _fireParticles[i];
+            }
+        }
+        _activeFireParticleCount = gpuIndex;
+
+        if (_activeFireParticleCount == 0)
+            return;
+
+        // Fill remaining with zeroed particles
+        for (int i = gpuIndex; i < MaxFireParticles; i++)
+        {
+            _gpuFireParticles[i] = default;
+        }
+
+        // Update GPU buffer
+        context.UpdateBuffer(_fireParticleBuffer, (ReadOnlySpan<FireParticle>)_gpuFireParticles);
+
+        // Update fire constant buffer
+        var fireConstants = new FireConstants
+        {
+            ViewportSize = context.ViewportSize,
+            Time = _elapsedTime,
+            HdrMultiplier = context.HdrPeakBrightness,
+            FadeAlpha = _fadeAlpha
+        };
+        context.UpdateBuffer(_fireConstantBuffer!, fireConstants);
+
+        // Set shaders
+        context.SetVertexShader(_fireVertexShader);
+        context.SetPixelShader(_firePixelShader);
+
+        // Set resources
+        context.SetConstantBuffer(ShaderStage.Vertex, 0, _fireConstantBuffer!);
+        context.SetConstantBuffer(ShaderStage.Pixel, 0, _fireConstantBuffer!);
+        context.SetShaderResource(ShaderStage.Vertex, 0, _fireParticleBuffer);
+
+        // Additive blending for fire glow
+        context.SetBlendState(BlendMode.Additive);
+        context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
+
+        // Draw instanced (6 vertices per quad)
+        context.DrawInstanced(6, MaxFireParticles, 0, 0);
+    }
+
+    [StructLayout(LayoutKind.Sequential, Size = 64)]
+    private struct FireParticle
+    {
+        public Vector2 Position;      // 8 bytes
+        public Vector2 Velocity;      // 8 bytes
+        public Vector4 Color;         // 16 bytes = 32
+        public float Size;            // 4 bytes
+        public float Lifetime;        // 4 bytes
+        public float MaxLifetime;     // 4 bytes
+        public float Heat;            // 4 bytes = 48
+        public float FlickerPhase;    // 4 bytes
+        public float SpawnAngle;      // 4 bytes
+        public float Padding1;        // 4 bytes
+        public float Padding2;        // 4 bytes = 64
+    }
+
+    [StructLayout(LayoutKind.Sequential, Size = 32)]
+    private struct FireConstants
+    {
+        public Vector2 ViewportSize;  // 8 bytes
+        public float Time;            // 4 bytes
+        public float HdrMultiplier;   // 4 bytes = 16
+        public float FadeAlpha;       // 4 bytes
+        public float Padding1;        // 4 bytes
+        public float Padding2;        // 4 bytes
+        public float Padding3;        // 4 bytes = 32
+    }
+
+    #endregion
 }
