@@ -163,6 +163,20 @@ public sealed class FireworkEffect : EffectBase
     private Vector4 _rocketSecondaryColor = new(1f, 0.4f, 0.1f, 1f);
     private bool _rocketUseRandomColors = true;
 
+    // Automatic mode settings
+    private bool _automaticMode;
+    private int _numberOfLaunchpads = 5;
+    private bool _randomLaunchAngle;
+    private float _minLaunchAngle = -45f;  // degrees from vertical (-90 = left, 0 = up, 90 = right)
+    private float _maxLaunchAngle = 45f;
+    private string _launchStyle = "All Together";  // "All Together", "Left to Right", "Right to Left", "Random Sequence"
+    private float _autoSpawnRate = 2f;  // fireworks per second
+    private float _autoSpawnDelay = 0.5f;  // seconds between shots
+    private float _autoSpawnTimer;
+    private int _currentLaunchpadIndex;
+    private float _viewportWidth = 1920f;
+    private List<int> _launchpadSequence = new();
+
     public override EffectMetadata Metadata => _metadata;
 
     protected override void OnInitialize(IRenderContext context)
@@ -350,6 +364,24 @@ public sealed class FireworkEffect : EffectBase
         if (Configuration.TryGet("rocketUseRandomColors", out bool rocketRandomColors))
             _rocketUseRandomColors = rocketRandomColors;
 
+        // Automatic mode settings
+        if (Configuration.TryGet("automaticMode", out bool autoMode))
+            _automaticMode = autoMode;
+        if (Configuration.TryGet("numberOfLaunchpads", out int numPads))
+            _numberOfLaunchpads = Math.Clamp(numPads, 1, 50);
+        if (Configuration.TryGet("randomLaunchAngle", out bool randAngle))
+            _randomLaunchAngle = randAngle;
+        if (Configuration.TryGet("minLaunchAngle", out float minAngle))
+            _minLaunchAngle = minAngle;
+        if (Configuration.TryGet("maxLaunchAngle", out float maxAngle))
+            _maxLaunchAngle = maxAngle;
+        if (Configuration.TryGet("launchStyle", out string launchStyle))
+            _launchStyle = launchStyle;
+        if (Configuration.TryGet("autoSpawnRate", out float spawnRate))
+            _autoSpawnRate = spawnRate;
+        if (Configuration.TryGet("autoSpawnDelay", out float spawnDelay))
+            _autoSpawnDelay = spawnDelay;
+
         // Firework Style
         if (Configuration.TryGet("fireworkStyle", out string styleName))
         {
@@ -459,6 +491,10 @@ public sealed class FireworkEffect : EffectBase
         // Random Wave mode update
         if (_randomWaveMode)
             UpdateWave(dt);
+
+        // Automatic mode update
+        if (_automaticMode)
+            UpdateAutomaticMode(dt, totalTime);
 
         UpdateRockets(dt, totalTime);
         UpdateParticles(dt, totalTime);
@@ -728,8 +764,9 @@ public sealed class FireworkEffect : EffectBase
         if (_vertexShader == null || _pixelShader == null)
             return;
 
-        // Store viewport height for rocket altitude calculations
+        // Store viewport dimensions for rocket altitude and launchpad calculations
         _viewportHeight = context.ViewportSize.Y;
+        _viewportWidth = context.ViewportSize.X;
 
         // Count active rockets
         int activeRocketCount = 0;
@@ -993,6 +1030,171 @@ public sealed class FireworkEffect : EffectBase
 
             // Apply style defaults for distinctive behavior
             ApplyStyleDefaults();
+        }
+    }
+
+    #endregion
+
+    #region Automatic Mode
+
+    private void UpdateAutomaticMode(float dt, float totalTime)
+    {
+        if (_waveTransitioning) return;  // Don't spawn during wave transitions
+
+        _autoSpawnTimer += dt;
+
+        // Check if it's time to spawn
+        if (_autoSpawnTimer >= _autoSpawnDelay)
+        {
+            _autoSpawnTimer = 0f;
+            SpawnAutomaticFireworks(totalTime);
+        }
+    }
+
+    private void SpawnAutomaticFireworks(float totalTime)
+    {
+        // Calculate launchpad positions (evenly distributed along bottom of screen)
+        float margin = _viewportWidth * 0.1f;  // 10% margin on each side
+        float usableWidth = _viewportWidth - 2 * margin;
+        float spacing = _numberOfLaunchpads > 1 ? usableWidth / (_numberOfLaunchpads - 1) : 0;
+        float launchY = _viewportHeight - 50f;  // 50px from bottom
+
+        switch (_launchStyle)
+        {
+            case "All Together":
+                // Launch from all launchpads at once
+                for (int i = 0; i < _numberOfLaunchpads; i++)
+                {
+                    float x = margin + i * spacing;
+                    if (_numberOfLaunchpads == 1) x = _viewportWidth / 2f;
+                    SpawnFromLaunchpad(new Vector2(x, launchY), totalTime);
+                }
+                break;
+
+            case "Left to Right":
+                // Launch from one launchpad at a time, left to right
+                {
+                    float x = margin + _currentLaunchpadIndex * spacing;
+                    if (_numberOfLaunchpads == 1) x = _viewportWidth / 2f;
+                    SpawnFromLaunchpad(new Vector2(x, launchY), totalTime);
+                    _currentLaunchpadIndex = (_currentLaunchpadIndex + 1) % _numberOfLaunchpads;
+                }
+                break;
+
+            case "Right to Left":
+                // Launch from one launchpad at a time, right to left
+                {
+                    int reverseIndex = _numberOfLaunchpads - 1 - _currentLaunchpadIndex;
+                    float x = margin + reverseIndex * spacing;
+                    if (_numberOfLaunchpads == 1) x = _viewportWidth / 2f;
+                    SpawnFromLaunchpad(new Vector2(x, launchY), totalTime);
+                    _currentLaunchpadIndex = (_currentLaunchpadIndex + 1) % _numberOfLaunchpads;
+                }
+                break;
+
+            case "Random Sequence":
+                // Launch from random launchpads
+                {
+                    if (_launchpadSequence.Count == 0)
+                        InitializeLaunchpadSequence();
+
+                    int padIndex = _launchpadSequence[_currentLaunchpadIndex];
+                    float x = margin + padIndex * spacing;
+                    if (_numberOfLaunchpads == 1) x = _viewportWidth / 2f;
+                    SpawnFromLaunchpad(new Vector2(x, launchY), totalTime);
+
+                    _currentLaunchpadIndex++;
+                    if (_currentLaunchpadIndex >= _launchpadSequence.Count)
+                    {
+                        _currentLaunchpadIndex = 0;
+                        ShuffleLaunchpadSequence();
+                    }
+                }
+                break;
+        }
+    }
+
+    private void SpawnFromLaunchpad(Vector2 position, float totalTime)
+    {
+        // Determine launch angle
+        float angleRad;
+        if (_randomLaunchAngle)
+        {
+            float angleDeg = _minLaunchAngle + Random.Shared.NextSingle() * (_maxLaunchAngle - _minLaunchAngle);
+            angleRad = angleDeg * MathF.PI / 180f;
+        }
+        else
+        {
+            angleRad = 0f;  // Straight up
+        }
+
+        // Calculate velocity from angle (0 = up, negative = left, positive = right)
+        float vx = MathF.Sin(angleRad) * _rocketSpeed;
+        float vy = -MathF.Cos(angleRad) * _rocketSpeed;  // Negative because Y is down
+
+        if (_enableRocketMode)
+        {
+            // Spawn a rocket with the calculated angle
+            SpawnRocketWithVelocity(position, new Vector2(vx, vy), totalTime);
+        }
+        else
+        {
+            // Direct explosion at launchpad position (for non-rocket mode)
+            int particleCount = Random.Shared.Next(_minParticlesPerFirework, _maxParticlesPerFirework + 1);
+            float effectiveForce = _clickExplosionForce;
+            if (_enableRandomExplosionSize)
+            {
+                float multiplier = _minExplosionSize + Random.Shared.NextSingle() * (_maxExplosionSize - _minExplosionSize);
+                effectiveForce *= multiplier;
+            }
+            Vector4 color = GetFireworkColor();
+            SpawnExplosion(position, particleCount, effectiveForce, color, totalTime, isSecondary: false);
+        }
+    }
+
+    private void SpawnRocketWithVelocity(Vector2 position, Vector2 velocity, float totalTime)
+    {
+        for (int i = 0; i < _maxFireworks; i++)
+        {
+            if (!_rockets[i].IsActive)
+            {
+                ref FireworkRocket rocket = ref _rockets[i];
+                rocket.Position = position;
+                rocket.Velocity = velocity;
+                rocket.Color = GetRocketColor();
+                rocket.Size = _rocketSize;
+                rocket.Age = 0f;
+
+                // Calculate target Y based on altitude settings
+                float altitudeRange = _rocketMaxAltitude - _rocketMinAltitude;
+                float randomAltitude = _rocketMinAltitude + Random.Shared.NextSingle() * altitudeRange;
+                rocket.TargetY = _viewportHeight * randomAltitude;
+
+                if (position.Y <= rocket.TargetY)
+                {
+                    rocket.TargetY = position.Y - 10f;
+                }
+
+                rocket.IsActive = true;
+                break;
+            }
+        }
+    }
+
+    private void InitializeLaunchpadSequence()
+    {
+        _launchpadSequence.Clear();
+        for (int i = 0; i < _numberOfLaunchpads; i++)
+            _launchpadSequence.Add(i);
+        ShuffleLaunchpadSequence();
+    }
+
+    private void ShuffleLaunchpadSequence()
+    {
+        for (int i = _launchpadSequence.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (_launchpadSequence[i], _launchpadSequence[j]) = (_launchpadSequence[j], _launchpadSequence[i]);
         }
     }
 

@@ -24,7 +24,7 @@ public sealed class FireworkFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
-        // Display particle count
+        // Display settings
         config.Set("displayParticleCount", false);
         config.Set("displayStyle", true);
 
@@ -32,7 +32,7 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("maxParticles", 10000);
         config.Set("maxFireworks", 10);
         config.Set("particleLifespan", 2.95f);
-        config.Set("spawnOnLeftClick", true);
+        config.Set("spawnOnLeftClick", false);
         config.Set("spawnOnRightClick", false);
         config.Set("minParticlesPerFirework", 60);
         config.Set("maxParticlesPerFirework", 130);
@@ -40,7 +40,7 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("enableRandomExplosionSize", true);
         config.Set("minExplosionSize", 0.4f);
         config.Set("maxExplosionSize", 1.5f);
-        config.Set("spawnOnMove", true);
+        config.Set("spawnOnMove", false);
         config.Set("moveSpawnDistance", 100f);
         config.Set("moveExplosionForce", 150f);
         config.Set("minParticleSize", 3f);
@@ -71,7 +71,7 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("rocketMinAltitude", 0.1f);
         config.Set("rocketMaxAltitude", 0.3f);
         config.Set("rocketMaxFuseTime", 3.0f);
-        config.Set("rocketSize", 1.8f);
+        config.Set("rocketSize", 1.82f);
         config.Set("rocketRainbowMode", true);
         config.Set("rocketRainbowSpeed", 0.5f);
         config.Set("rocketPrimaryColor", new Vector4(1f, 0.8f, 0.2f, 1f));
@@ -82,8 +82,8 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("fireworkStyle", "Random");
 
         // Spinner style parameters
-        config.Set("spinSpeed", 15.5f);
-        config.Set("spinRadius", 61f);
+        config.Set("spinSpeed", 15.49f);
+        config.Set("spinRadius", 61.29f);
         config.Set("enableSparkTrails", false);
 
         // Willow style parameters
@@ -102,10 +102,20 @@ public sealed class FireworkFactory : IEffectFactory
 
         // Random Wave mode defaults
         config.Set("randomWaveMode", true);
-        config.Set("waveDuration", 5.96f);
+        config.Set("waveDuration", 9.99f);
         config.Set("randomWaveDuration", false);
         config.Set("waveDurationMin", 3.53f);
         config.Set("waveDurationMax", 10f);
+
+        // Automatic mode defaults
+        config.Set("automaticMode", true);
+        config.Set("numberOfLaunchpads", 5);
+        config.Set("launchStyle", "All Together");
+        config.Set("autoSpawnRate", 7.97f);
+        config.Set("autoSpawnDelay", 0.5f);
+        config.Set("randomLaunchAngle", true);
+        config.Set("minLaunchAngle", -10f);
+        config.Set("maxLaunchAngle", 10f);
 
         return config;
     }
@@ -678,6 +688,79 @@ public sealed class FireworkFactory : IEffectFactory
                     MinValue = 2f,
                     MaxValue = 30f,
                     DefaultValue = 10f
+                },
+
+                // Automatic Mode Parameters
+                new BoolParameter
+                {
+                    Key = "automaticMode",
+                    DisplayName = "Automatic Mode",
+                    Description = "Automatically launch fireworks from launchpads at the bottom of the screen",
+                    DefaultValue = false
+                },
+                new IntParameter
+                {
+                    Key = "numberOfLaunchpads",
+                    DisplayName = "Number of Launchpads",
+                    Description = "Number of launch positions across the bottom of the screen",
+                    MinValue = 1,
+                    MaxValue = 50,
+                    DefaultValue = 5
+                },
+                new ChoiceParameter
+                {
+                    Key = "launchStyle",
+                    DisplayName = "Launch Style",
+                    Description = "How fireworks are launched from launchpads",
+                    DefaultValue = "All Together",
+                    Choices = new[] { "All Together", "Left to Right", "Right to Left", "Random Sequence" }
+                },
+                new FloatParameter
+                {
+                    Key = "autoSpawnRate",
+                    DisplayName = "Spawn Rate",
+                    Description = "Fireworks launched per second",
+                    MinValue = 0.1f,
+                    MaxValue = 10f,
+                    DefaultValue = 2f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "autoSpawnDelay",
+                    DisplayName = "Delay Between Shots",
+                    Description = "Time between consecutive launches (seconds)",
+                    MinValue = 0.1f,
+                    MaxValue = 5f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new BoolParameter
+                {
+                    Key = "randomLaunchAngle",
+                    DisplayName = "Random Launch Angle",
+                    Description = "Launch fireworks at random angles instead of straight up",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "minLaunchAngle",
+                    DisplayName = "Min Launch Angle",
+                    Description = "Minimum launch angle in degrees (0 = up, -90 = left, 90 = right)",
+                    MinValue = -90f,
+                    MaxValue = 90f,
+                    DefaultValue = -45f,
+                    Step = 5f
+                },
+                new FloatParameter
+                {
+                    Key = "maxLaunchAngle",
+                    DisplayName = "Max Launch Angle",
+                    Description = "Maximum launch angle in degrees (0 = up, -90 = left, 90 = right)",
+                    MinValue = -90f,
+                    MaxValue = 90f,
+                    DefaultValue = 45f,
+                    Step = 5f
                 }
             ]
         };

@@ -173,6 +173,58 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- Automatic Mode Section -->
+            <TextBlock Text="Automatic Mode" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="AutomaticModeCheckBox" Content="Enable Automatic Mode" Margin="0,4,0,4"
+                      Checked="AutomaticModeCheckBox_Changed" Unchecked="AutomaticModeCheckBox_Changed" />
+            <TextBlock Text="Automatically launches fireworks from launchpads at the bottom of the screen."
+                       Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+            <StackPanel Name="AutomaticSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Number of Launchpads" Style="{StaticResource LabelStyle}" />
+                <Slider Name="NumberOfLaunchpadsSlider" Minimum="1" Maximum="50" Value="5"
+                        Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True" TickFrequency="1"
+                        ValueChanged="NumberOfLaunchpadsSlider_ValueChanged" />
+                <TextBlock Name="NumberOfLaunchpadsValue" Text="5" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Launch Style" Style="{StaticResource LabelStyle}" />
+                <ComboBox Name="LaunchStyleComboBox" Margin="0,4,0,4"
+                          SelectionChanged="LaunchStyleComboBox_SelectionChanged">
+                    <ComboBoxItem Content="All Together" IsSelected="True" />
+                    <ComboBoxItem Content="Left to Right" />
+                    <ComboBoxItem Content="Right to Left" />
+                    <ComboBoxItem Content="Random Sequence" />
+                </ComboBox>
+
+                <TextBlock Text="Spawn Rate (fireworks/sec)" Style="{StaticResource LabelStyle}" />
+                <Slider Name="AutoSpawnRateSlider" Minimum="0.1" Maximum="10" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="AutoSpawnRateSlider_ValueChanged" />
+                <TextBlock Name="AutoSpawnRateValue" Text="2.0" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Delay Between Shots (sec)" Style="{StaticResource LabelStyle}" />
+                <Slider Name="AutoSpawnDelaySlider" Minimum="0.1" Maximum="5" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="AutoSpawnDelaySlider_ValueChanged" />
+                <TextBlock Name="AutoSpawnDelayValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+                <CheckBox Name="RandomLaunchAngleCheckBox" Content="Random Launch Angle" Margin="0,8,0,4"
+                          Checked="RandomLaunchAngleCheckBox_Changed" Unchecked="RandomLaunchAngleCheckBox_Changed" />
+
+                <StackPanel Name="LaunchAnglePanel" Visibility="Collapsed">
+                    <TextBlock Text="Min Launch Angle (°)" Style="{StaticResource LabelStyle}" />
+                    <Slider Name="MinLaunchAngleSlider" Minimum="-90" Maximum="90" Value="-45"
+                            Style="{StaticResource SliderStyle}" ValueChanged="MinLaunchAngleSlider_ValueChanged" />
+                    <TextBlock Name="MinLaunchAngleValue" Text="-45°" Opacity="0.7" FontSize="11" />
+
+                    <TextBlock Text="Max Launch Angle (°)" Style="{StaticResource LabelStyle}" />
+                    <Slider Name="MaxLaunchAngleSlider" Minimum="-90" Maximum="90" Value="45"
+                            Style="{StaticResource SliderStyle}" ValueChanged="MaxLaunchAngleSlider_ValueChanged" />
+                    <TextBlock Name="MaxLaunchAngleValue" Text="45°" Opacity="0.7" FontSize="11" />
+
+                    <TextBlock Text="0° = straight up, -90° = left, 90° = right"
+                               Opacity="0.6" FontSize="10" Margin="0,4,0,0" />
+                </StackPanel>
+            </StackPanel>
+
             <!-- General Section -->
             <TextBlock Text="General" Style="{StaticResource SectionStyle}" />
             <CheckBox Name="DisplayParticleCountCheckBox" Content="Display Particle Count" Margin="0,4,0,4"

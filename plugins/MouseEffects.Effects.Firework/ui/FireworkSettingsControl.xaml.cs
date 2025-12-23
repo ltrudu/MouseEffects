@@ -14,6 +14,7 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     private readonly IEffect _effect;
     private bool _isInitializing = true;
     private string _currentStyle = "Classic Burst";
+    private string _currentLaunchStyle = "All Together";
     private Vector4 _primaryColor = new(1f, 0.3f, 0.1f, 1f);
     private Vector4 _secondaryColor = new(1f, 0.8f, 0.2f, 1f);
     private Vector4 _rocketPrimaryColor = new(1f, 0.8f, 0.2f, 1f);
@@ -368,8 +369,59 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             WaveDurationMaxValue.Text = waveDurMax.ToString("F1");
         }
 
+        // Automatic mode settings
+        if (_effect.Configuration.TryGet<bool>("automaticMode", out var autoMode))
+            AutomaticModeCheckBox.IsChecked = autoMode;
+
+        if (_effect.Configuration.TryGet<int>("numberOfLaunchpads", out var numPads))
+        {
+            NumberOfLaunchpadsSlider.Value = numPads;
+            NumberOfLaunchpadsValue.Text = numPads.ToString();
+        }
+
+        if (_effect.Configuration.TryGet<string>("launchStyle", out var launchStyle))
+        {
+            _currentLaunchStyle = launchStyle;
+            for (int i = 0; i < LaunchStyleComboBox.Items.Count; i++)
+            {
+                if ((LaunchStyleComboBox.Items[i] as ComboBoxItem)?.Content?.ToString() == launchStyle)
+                {
+                    LaunchStyleComboBox.SelectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (_effect.Configuration.TryGet<float>("autoSpawnRate", out var spawnRate))
+        {
+            AutoSpawnRateSlider.Value = spawnRate;
+            AutoSpawnRateValue.Text = spawnRate.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<float>("autoSpawnDelay", out var spawnDelay))
+        {
+            AutoSpawnDelaySlider.Value = spawnDelay;
+            AutoSpawnDelayValue.Text = spawnDelay.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<bool>("randomLaunchAngle", out var randAngle))
+            RandomLaunchAngleCheckBox.IsChecked = randAngle;
+
+        if (_effect.Configuration.TryGet<float>("minLaunchAngle", out var minAngle))
+        {
+            MinLaunchAngleSlider.Value = minAngle;
+            MinLaunchAngleValue.Text = $"{minAngle:F0}°";
+        }
+
+        if (_effect.Configuration.TryGet<float>("maxLaunchAngle", out var maxAngle))
+        {
+            MaxLaunchAngleSlider.Value = maxAngle;
+            MaxLaunchAngleValue.Text = $"{maxAngle:F0}°";
+        }
+
         UpdateStylePanelVisibility();
         UpdateWavePanelVisibility();
+        UpdateAutomaticPanelVisibility();
     }
 
     private void UpdateConfiguration()
@@ -444,6 +496,16 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("randomWaveDuration", RandomWaveDurationCheckBox.IsChecked == true);
         config.Set("waveDurationMin", (float)WaveDurationMinSlider.Value);
         config.Set("waveDurationMax", (float)WaveDurationMaxSlider.Value);
+
+        // Automatic mode settings
+        config.Set("automaticMode", AutomaticModeCheckBox.IsChecked == true);
+        config.Set("numberOfLaunchpads", (int)NumberOfLaunchpadsSlider.Value);
+        config.Set("launchStyle", _currentLaunchStyle);
+        config.Set("autoSpawnRate", (float)AutoSpawnRateSlider.Value);
+        config.Set("autoSpawnDelay", (float)AutoSpawnDelaySlider.Value);
+        config.Set("randomLaunchAngle", RandomLaunchAngleCheckBox.IsChecked == true);
+        config.Set("minLaunchAngle", (float)MinLaunchAngleSlider.Value);
+        config.Set("maxLaunchAngle", (float)MaxLaunchAngleSlider.Value);
 
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
@@ -999,5 +1061,93 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             FixedDurationPanel.Visibility = randomDuration ? Visibility.Collapsed : Visibility.Visible;
         if (RandomDurationPanel != null)
             RandomDurationPanel.Visibility = randomDuration ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    // Automatic Mode handlers
+    private void AutomaticModeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateAutomaticPanelVisibility();
+        UpdateConfiguration();
+    }
+
+    private void UpdateAutomaticPanelVisibility()
+    {
+        bool autoEnabled = AutomaticModeCheckBox?.IsChecked == true;
+        if (AutomaticSettingsPanel != null)
+            AutomaticSettingsPanel.Visibility = autoEnabled ? Visibility.Visible : Visibility.Collapsed;
+
+        if (autoEnabled)
+            UpdateLaunchAnglePanelVisibility();
+    }
+
+    private void UpdateLaunchAnglePanelVisibility()
+    {
+        bool randomAngle = RandomLaunchAngleCheckBox?.IsChecked == true;
+        if (LaunchAnglePanel != null)
+            LaunchAnglePanel.Visibility = randomAngle ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void NumberOfLaunchpadsSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (NumberOfLaunchpadsValue != null)
+            NumberOfLaunchpadsValue.Text = ((int)e.NewValue).ToString();
+        UpdateConfiguration();
+    }
+
+    private void LaunchStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing || LaunchStyleComboBox.SelectedItem == null) return;
+
+        var selectedItem = LaunchStyleComboBox.SelectedItem as ComboBoxItem;
+        _currentLaunchStyle = selectedItem?.Content?.ToString() ?? "All Together";
+        UpdateConfiguration();
+    }
+
+    private void AutoSpawnRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (AutoSpawnRateValue != null)
+            AutoSpawnRateValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void AutoSpawnDelaySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (AutoSpawnDelayValue != null)
+            AutoSpawnDelayValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void RandomLaunchAngleCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateLaunchAnglePanelVisibility();
+        UpdateConfiguration();
+    }
+
+    private void MinLaunchAngleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing) return;
+
+        if (MinLaunchAngleValue != null)
+            MinLaunchAngleValue.Text = $"{e.NewValue:F0}°";
+
+        // Ensure min < max
+        if (MaxLaunchAngleSlider != null && e.NewValue >= MaxLaunchAngleSlider.Value)
+            MaxLaunchAngleSlider.Value = e.NewValue + 5;
+
+        UpdateConfiguration();
+    }
+
+    private void MaxLaunchAngleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (_isInitializing) return;
+
+        if (MaxLaunchAngleValue != null)
+            MaxLaunchAngleValue.Text = $"{e.NewValue:F0}°";
+
+        // Ensure max > min
+        if (MinLaunchAngleSlider != null && e.NewValue <= MinLaunchAngleSlider.Value)
+            MinLaunchAngleSlider.Value = e.NewValue - 5;
+
+        UpdateConfiguration();
     }
 }
