@@ -30,8 +30,8 @@ public sealed class FireworkFactory : IEffectFactory
 
         // General
         config.Set("maxParticles", 10000);
-        config.Set("maxFireworks", 10);
-        config.Set("particleLifespan", 2.95f);
+        config.Set("maxFireworks", 40);
+        config.Set("particleLifespan", 2.92f);
         config.Set("spawnOnLeftClick", false);
         config.Set("spawnOnRightClick", false);
         config.Set("minParticlesPerFirework", 60);
@@ -109,13 +109,13 @@ public sealed class FireworkFactory : IEffectFactory
 
         // Automatic mode defaults
         config.Set("automaticMode", true);
-        config.Set("numberOfLaunchpads", 5);
-        config.Set("launchStyle", "All Together");
-        config.Set("autoSpawnRate", 7.97f);
-        config.Set("autoSpawnDelay", 0.5f);
+        config.Set("numberOfLaunchpads", 10);
+        config.Set("launchStyle", "Random");
+        config.Set("autoSpawnRate", 61.76f);
+        config.Set("autoSpawnDelay", 0.21f);
         config.Set("randomLaunchAngle", true);
-        config.Set("minLaunchAngle", -10f);
-        config.Set("maxLaunchAngle", 10f);
+        config.Set("minLaunchAngle", -20f);
+        config.Set("maxLaunchAngle", 20f);
 
         return config;
     }
