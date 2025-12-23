@@ -16,5 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MouseEffects.Core\MouseEffects.Core.csproj" />
+    <ProjectReference Include="..\..\src\MouseEffects.Text\MouseEffects.Text.csproj" />
   </ItemGroup>
 </Project>

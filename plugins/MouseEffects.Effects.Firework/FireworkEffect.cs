@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -5,6 +6,10 @@ using MouseEffects.Core.Effects;
 using MouseEffects.Core.Input;
 using MouseEffects.Core.Rendering;
 using MouseEffects.Core.Time;
+using MouseEffects.Effects.Firework.Core;
+using MouseEffects.Effects.Firework.Styles;
+using MouseEffects.Text;
+using MouseEffects.Text.Style;
 
 using MouseButtons = MouseEffects.Core.Input.MouseButtons;
 
@@ -12,18 +17,6 @@ namespace MouseEffects.Effects.Firework;
 
 public sealed class FireworkEffect : EffectBase
 {
-    private struct FireworkParticle
-    {
-        public Vector2 Position;
-        public Vector2 Velocity;
-        public Vector4 Color;
-        public float Size;
-        public float Life;
-        public float MaxLife;
-        public bool CanExplode;
-        public bool HasExploded;
-    }
-
     private struct FireworkRocket
     {
         public Vector2 Position;
@@ -33,18 +26,6 @@ public sealed class FireworkEffect : EffectBase
         public float Age;
         public float TargetY;
         public bool IsActive;
-    }
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct ParticleGPU
-    {
-        public Vector2 Position;
-        public Vector2 Velocity;
-        public Vector4 Color;
-        public float Size;
-        public float Life;
-        public float MaxLife;
-        public float Padding;
     }
 
     [StructLayout(LayoutKind.Sequential, Size = 48)]
@@ -63,8 +44,8 @@ public sealed class FireworkEffect : EffectBase
         public float Padding5;
     }
 
-    private const int MaxParticlesLimit = 15000;
-    private const int MaxRockets = 200;
+    private const int MaxParticlesLimit = 30000;
+    private const int MaxRockets = 25;
 
     private static readonly EffectMetadata _metadata = new()
     {
@@ -81,9 +62,11 @@ public sealed class FireworkEffect : EffectBase
     private IShader? _vertexShader;
     private IShader? _pixelShader;
 
-    private readonly FireworkParticle[] _particles = new FireworkParticle[MaxParticlesLimit];
+    // Text overlay for particle count display
+    private TextOverlay? _textOverlay;
+    private bool _displayParticleCount;
+
     private readonly ParticleGPU[] _gpuParticles = new ParticleGPU[MaxParticlesLimit];
-    private int _nextParticle;
     private int _activeParticleCount;
 
     private readonly FireworkRocket[] _rockets = new FireworkRocket[MaxRockets];
@@ -94,6 +77,44 @@ public sealed class FireworkEffect : EffectBase
     private float _rainbowHue;
     private float _rocketRainbowHue;
     private float _viewportHeight = 1080f;
+
+    // Style system
+    private IFireworkStyle _currentStyle = new ClassicBurstStyle();
+    private FireworkContext? _context;
+    private ParticlePool? _particlePool;
+    private string _fireworkStyleName = "Classic Burst";
+
+    // Style-specific parameters (loaded from config)
+    private float _spinSpeed = 8f;
+    private float _spinRadius = 30f;
+    private bool _enableSparkTrails = true;
+    private float _droopIntensity = 2f;
+    private float _branchDensity = 2f;
+    private float _flashRate = 20f;
+    private float _popIntensity = 0.5f;
+    private float _particleMultiplier = 5f;
+    private int _sparkDensity = 15;
+    private float _trailPersistence = 1f;
+    private int _maxSparksPerParticle = 8;
+
+    // Random Wave mode
+    private bool _randomWaveMode;
+    private float _waveDuration = 5f;
+    private bool _randomWaveDuration;
+    private float _waveDurationMin = 3f;
+    private float _waveDurationMax = 10f;
+    private float _currentWaveTime;
+    private float _currentWaveDuration;
+    private int _waveStyleIndex;
+    private readonly List<int> _waveStyleSequence = new();
+    // Wave transition - wait for particles to die before switching
+    private bool _waveTransitioning;
+    private int _pendingWaveStyleIndex;
+    private static readonly string[] StyleNames = {
+        "Classic Burst", "Spinner", "Willow", "Crackling", "Chrysanthemum",
+        "Brocade", "Comet", "Crossette", "Palm", "Peony", "Pearls", "Fish",
+        "Green Bees", "Pistil", "Stars", "Tail", "Strobe", "Glitter"
+    };
 
     // Configuration values
     private int _maxParticles = 5000;
@@ -163,18 +184,41 @@ public sealed class FireworkEffect : EffectBase
         _vertexShader = context.CompileShader(shaderSource, "VSMain", ShaderStage.Vertex);
         _pixelShader = context.CompileShader(shaderSource, "PSMain", ShaderStage.Pixel);
 
-        for (int i = 0; i < MaxParticlesLimit; i++)
-            _particles[i] = new FireworkParticle { Life = 0f };
-
         for (int j = 0; j < MaxRockets; j++)
             _rockets[j] = new FireworkRocket { IsActive = false };
+
+        // Initialize particle pool and context
+        _particlePool = new ParticlePool(_maxParticles);
+
+        _context = new FireworkContext
+        {
+            Pool = _particlePool,
+            CurrentStyle = _currentStyle,
+            GetRainbowColor = () => HueToRgb(_rainbowHue + Random.Shared.NextSingle() * 0.1f),
+            GetRandomColor = () => HueToRgb(Random.Shared.NextSingle()),
+            GetPrimaryColor = () => _primaryColor,
+            GetSecondaryColor = () => _secondaryColor,
+            GetRandomInt = (min, max) => Random.Shared.Next(min, max),
+            GetRandomFloat = () => Random.Shared.NextSingle()
+        };
+
+        // Initialize text overlay for particle count display
+        _textOverlay = new TextOverlay();
+        _textOverlay.Initialize(context);
     }
 
     protected override void OnConfigurationChanged()
     {
+        // Display particle count
+        if (Configuration.TryGet("displayParticleCount", out bool displayPart))
+            _displayParticleCount = displayPart;
+
         // General settings
         if (Configuration.TryGet("maxParticles", out int maxPart))
+        {
             _maxParticles = Math.Clamp(maxPart, 1000, MaxParticlesLimit);
+            _particlePool?.Resize(_maxParticles);
+        }
 
         if (Configuration.TryGet("maxFireworks", out int maxFw))
             _maxFireworks = Math.Clamp(maxFw, 1, MaxRockets);
@@ -292,6 +336,94 @@ public sealed class FireworkEffect : EffectBase
 
         if (Configuration.TryGet("rocketUseRandomColors", out bool rocketRandomColors))
             _rocketUseRandomColors = rocketRandomColors;
+
+        // Firework Style
+        if (Configuration.TryGet("fireworkStyle", out string styleName))
+        {
+            if (_fireworkStyleName != styleName)
+            {
+                _fireworkStyleName = styleName;
+                _currentStyle = FireworkStyleFactory.Create(styleName);
+                if (_context != null)
+                    _context.CurrentStyle = _currentStyle;
+
+                // Apply style defaults to give each style its characteristic feel
+                ApplyStyleDefaults();
+            }
+        }
+
+        // Style-specific parameters
+        if (Configuration.TryGet("spinSpeed", out float spinSpd))
+        {
+            _spinSpeed = spinSpd;
+            _currentStyle.SetParameter("spinSpeed", spinSpd);
+        }
+        if (Configuration.TryGet("spinRadius", out float spinRad))
+        {
+            _spinRadius = spinRad;
+            _currentStyle.SetParameter("spinRadius", spinRad);
+        }
+        if (Configuration.TryGet("enableSparkTrails", out bool sparkTrails))
+        {
+            _enableSparkTrails = sparkTrails;
+            _currentStyle.SetParameter("enableSparkTrails", sparkTrails);
+        }
+        if (Configuration.TryGet("droopIntensity", out float droop))
+        {
+            _droopIntensity = droop;
+            _currentStyle.SetParameter("droopIntensity", droop);
+        }
+        if (Configuration.TryGet("branchDensity", out float branch))
+        {
+            _branchDensity = branch;
+            _currentStyle.SetParameter("branchDensity", branch);
+        }
+        if (Configuration.TryGet("flashRate", out float flash))
+        {
+            _flashRate = flash;
+            _currentStyle.SetParameter("flashRate", flash);
+        }
+        if (Configuration.TryGet("popIntensity", out float pop))
+        {
+            _popIntensity = pop;
+            _currentStyle.SetParameter("popIntensity", pop);
+        }
+        if (Configuration.TryGet("particleMultiplier", out float partMult))
+        {
+            _particleMultiplier = partMult;
+            _currentStyle.SetParameter("particleMultiplier", partMult);
+        }
+        if (Configuration.TryGet("sparkDensity", out int sparkDens))
+        {
+            _sparkDensity = sparkDens;
+            _currentStyle.SetParameter("sparkDensity", sparkDens);
+        }
+        if (Configuration.TryGet("trailPersistence", out float trailPers))
+        {
+            _trailPersistence = trailPers;
+            _currentStyle.SetParameter("trailPersistence", trailPers);
+        }
+        if (Configuration.TryGet("maxSparksPerParticle", out int maxSparks))
+        {
+            _maxSparksPerParticle = maxSparks;
+            _currentStyle.SetParameter("maxSparksPerParticle", maxSparks);
+        }
+
+        // Random Wave mode settings
+        if (Configuration.TryGet("randomWaveMode", out bool waveMode))
+            _randomWaveMode = waveMode;
+        if (Configuration.TryGet("waveDuration", out float waveDur))
+            _waveDuration = waveDur;
+        if (Configuration.TryGet("randomWaveDuration", out bool randWaveDur))
+            _randomWaveDuration = randWaveDur;
+        if (Configuration.TryGet("waveDurationMin", out float waveDurMin))
+            _waveDurationMin = waveDurMin;
+        if (Configuration.TryGet("waveDurationMax", out float waveDurMax))
+            _waveDurationMax = Math.Max(waveDurMax, _waveDurationMin + 0.1f);
+
+        // Initialize wave if mode just enabled and sequence empty
+        if (_randomWaveMode && _waveStyleSequence.Count == 0)
+            InitializeWaveSequence();
     }
 
     protected override void OnUpdate(GameTime gameTime, MouseState mouseState)
@@ -310,6 +442,10 @@ public sealed class FireworkEffect : EffectBase
             _rocketRainbowHue += _rocketRainbowSpeed * dt;
             if (_rocketRainbowHue > 1f) _rocketRainbowHue -= 1f;
         }
+
+        // Random Wave mode update
+        if (_randomWaveMode)
+            UpdateWave(dt);
 
         UpdateRockets(dt, totalTime);
         UpdateParticles(dt, totalTime);
@@ -369,8 +505,12 @@ public sealed class FireworkEffect : EffectBase
 
             if (reachedTarget || timedOut)
             {
-                int particleCount = Random.Shared.Next(_minParticlesPerFirework, _maxParticlesPerFirework + 1);
-                SpawnExplosion(rocket.Position, particleCount, _clickExplosionForce, rocket.Color, totalTime, isSecondary: false);
+                // During wave transition, just deactivate rocket without explosion
+                if (!_waveTransitioning)
+                {
+                    int particleCount = Random.Shared.Next(_minParticlesPerFirework, _maxParticlesPerFirework + 1);
+                    SpawnExplosion(rocket.Position, particleCount, _clickExplosionForce, rocket.Color, totalTime, isSecondary: false);
+                }
                 rocket.IsActive = false;
             }
         }
@@ -378,24 +518,78 @@ public sealed class FireworkEffect : EffectBase
 
     private void UpdateParticles(float dt, float totalTime)
     {
+        if (_context == null || _particlePool == null) return;
+
+        _context.Time = totalTime;
+        _context.DeltaTime = dt;
+        _context.UseRandomColors = _useRandomColors;
+        _context.RainbowMode = _rainbowMode;
+        _context.MinParticleSize = _minParticleSize;
+        _context.MaxParticleSize = _maxParticleSize;
+        _context.ParticleLifespan = _particleLifespan;
+        _context.SpreadAngle = _spreadAngle;
+        _context.EnableSecondaryExplosion = _enableSecondaryExplosion;
+        _context.SecondaryExplosionDelay = _secondaryExplosionDelay;
+        _context.SecondaryParticleCount = _secondaryParticleCount;
+        _context.SecondaryExplosionForce = _secondaryExplosionForce;
+
         _activeParticleCount = 0;
-        for (int i = 0; i < _maxParticles; i++)
+
+        // Update particles through pool
+        int poolCapacity = _particlePool.Capacity;
+        for (int i = 0; i < poolCapacity; i++)
         {
-            ref FireworkParticle p = ref _particles[i];
+            ref var p = ref _particlePool.GetParticle(i);
             if (p.Life <= 0f) continue;
 
             p.Life -= dt;
             if (p.Life <= 0f) continue;
 
+            // Common physics
             p.Position += p.Velocity * dt;
             p.Velocity.Y += _gravity * dt;
             p.Velocity *= _drag;
 
+            // Style-specific update
+            _currentStyle.UpdateParticle(ref p, dt, totalTime);
+
+            // Secondary explosion
             if (_enableSecondaryExplosion && !p.HasExploded && p.CanExplode &&
                 p.Life / p.MaxLife < 1f - _secondaryExplosionDelay / p.MaxLife)
             {
                 p.HasExploded = true;
-                SpawnExplosion(p.Position, _secondaryParticleCount, _secondaryExplosionForce, p.Color, totalTime, isSecondary: true);
+                // No secondary explosions during wave transition
+                if (!_waveTransitioning)
+                {
+                    Vector4 color = p.Color;
+                    _currentStyle.SpawnExplosion(_context, p.Position, _secondaryExplosionForce,
+                        color, _secondaryParticleCount, isSecondary: true);
+                }
+            }
+
+            // No new particles during wave transition
+            if (!_waveTransitioning)
+            {
+                // Trail particle spawning - unified interface for all styles with trails
+                if (_currentStyle.HasTrailParticles && _currentStyle.ShouldSpawnTrail(ref p, dt))
+                {
+                    var trailParticle = _currentStyle.CreateTrailParticle(in p, _context);
+                    _particlePool.Spawn(trailParticle);
+                }
+
+                // Crossette splitting - stars split into cross pattern
+                if (_currentStyle is CrossetteStyle crossStyle)
+                {
+                    if (crossStyle.ShouldSplit(ref p))
+                    {
+                        int splitCount = 4;
+                        for (int s = 0; s < splitCount; s++)
+                        {
+                            var splitStar = crossStyle.CreateSplitStar(in p, _context, s);
+                            _particlePool.Spawn(splitStar);
+                        }
+                    }
+                }
             }
 
             _activeParticleCount++;
@@ -404,6 +598,9 @@ public sealed class FireworkEffect : EffectBase
 
     private void SpawnFirework(Vector2 position, int particleCount, float force, float totalTime)
     {
+        // Block new fireworks during wave transition
+        if (_waveTransitioning) return;
+
         if (_enableRocketMode)
         {
             SpawnRocket(position, totalTime);
@@ -448,78 +645,34 @@ public sealed class FireworkEffect : EffectBase
 
     private void SpawnRocketTrail(Vector2 position, Vector4 color)
     {
+        if (_particlePool == null) return;
+        if (_waveTransitioning) return; // No new trails during transition
+
         for (int i = 0; i < 2; i++)
         {
-            SpawnParticle(
-                position,
-                new Vector2((Random.Shared.NextSingle() - 0.5f) * 20f, Random.Shared.NextSingle() * 30f + 10f),
-                color * 0.5f,
-                0.2f,
-                _minParticleSize * 0.4f,
-                canExplode: false);
+            var particle = new FireworkParticle
+            {
+                Position = position,
+                Velocity = new Vector2((Random.Shared.NextSingle() - 0.5f) * 20f, Random.Shared.NextSingle() * 30f + 10f),
+                Color = color * 0.5f,
+                Life = 0.2f,
+                MaxLife = 0.2f,
+                Size = _minParticleSize * 0.4f,
+                CanExplode = false,
+                HasExploded = false
+            };
+            _particlePool.Spawn(particle);
         }
     }
 
     private void SpawnExplosion(Vector2 position, int count, float force, Vector4 baseColor, float totalTime, bool isSecondary)
     {
-        float spreadRad = _spreadAngle * MathF.PI / 180f;
-        float startAngle = Random.Shared.NextSingle() * MathF.PI * 2f;
+        if (_context == null) return;
 
-        for (int i = 0; i < count; i++)
-        {
-            float angle = _spreadAngle >= 360f
-                ? startAngle + (float)i / count * MathF.PI * 2f
-                : startAngle - spreadRad / 2f + Random.Shared.NextSingle() * spreadRad;
-
-            float particleForce = force * (0.5f + Random.Shared.NextSingle() * 0.5f);
-            Vector2 velocity = new(MathF.Cos(angle) * particleForce, MathF.Sin(angle) * particleForce);
-
-            Vector4 color = baseColor;
-            if (_useRandomColors && !isSecondary)
-            {
-                float mixFactor = Random.Shared.NextSingle() * 0.5f;
-                color = Vector4.Lerp(baseColor, _secondaryColor, mixFactor);
-            }
-
-            color.X = MathF.Max(0f, MathF.Min(1f, color.X + (Random.Shared.NextSingle() - 0.5f) * 0.2f));
-            color.Y = MathF.Max(0f, MathF.Min(1f, color.Y + (Random.Shared.NextSingle() - 0.5f) * 0.2f));
-            color.Z = MathF.Max(0f, MathF.Min(1f, color.Z + (Random.Shared.NextSingle() - 0.5f) * 0.2f));
-
-            float size = _minParticleSize + Random.Shared.NextSingle() * (_maxParticleSize - _minParticleSize);
-            float lifespan = _particleLifespan * (0.7f + Random.Shared.NextSingle() * 0.3f);
-
-            if (isSecondary)
-            {
-                size *= 0.6f;
-                lifespan *= 0.5f;
-            }
-
-            SpawnParticle(position, velocity, color, lifespan, size, !isSecondary && _enableSecondaryExplosion);
-        }
+        _context.Time = totalTime;
+        _currentStyle.SpawnExplosion(_context, position, force, baseColor, count, isSecondary);
     }
 
-    private void SpawnParticle(Vector2 position, Vector2 velocity, Vector4 color, float lifespan, float size, bool canExplode)
-    {
-        int startIndex = _nextParticle;
-        do
-        {
-            ref FireworkParticle p = ref _particles[_nextParticle];
-            _nextParticle = (_nextParticle + 1) % _maxParticles;
-
-            if (p.Life <= 0f)
-            {
-                p.Position = position;
-                p.Velocity = velocity;
-                p.Color = color;
-                p.Life = lifespan;
-                p.MaxLife = lifespan;
-                p.Size = size;
-                p.CanExplode = canExplode;
-                p.HasExploded = false;
-                break;
-            }
-        } while (_nextParticle != startIndex);
-    }
 
     private Vector4 GetFireworkColor()
     {
@@ -577,22 +730,10 @@ public sealed class FireworkEffect : EffectBase
 
         int activeIndex = 0;
 
-        // Add regular particles to GPU buffer
-        for (int i = 0; i < _maxParticles && activeIndex < _maxParticles; i++)
+        // Copy particles from pool to GPU buffer
+        if (_particlePool != null)
         {
-            ref FireworkParticle p = ref _particles[i];
-            if (p.Life <= 0f) continue;
-
-            _gpuParticles[activeIndex] = new ParticleGPU
-            {
-                Position = p.Position,
-                Velocity = p.Velocity,
-                Color = p.Color,
-                Size = p.Size,
-                Life = p.Life,
-                MaxLife = p.MaxLife
-            };
-            activeIndex++;
+            activeIndex = _particlePool.CopyToGpu(_gpuParticles, _currentStyle, _maxParticles);
         }
 
         // Add rockets to GPU buffer
@@ -618,13 +759,16 @@ public sealed class FireworkEffect : EffectBase
             activeIndex++;
         }
 
-        // Clear remaining slots
-        for (int j = activeIndex; j < _maxParticles; j++)
+        // Only upload and draw active particles (major performance optimization)
+        int particlesToDraw = activeIndex;
+        if (particlesToDraw == 0)
         {
-            _gpuParticles[j] = default;
+            // Nothing to draw
+            return;
         }
 
-        context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<ParticleGPU>)_gpuParticles.AsSpan(0, _maxParticles));
+        // Only upload the active portion of the buffer
+        context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<ParticleGPU>)_gpuParticles.AsSpan(0, particlesToDraw));
         context.SetVertexShader(_vertexShader);
         context.SetPixelShader(_pixelShader);
         context.SetConstantBuffer(ShaderStage.Vertex, 0, _frameDataBuffer!);
@@ -632,8 +776,48 @@ public sealed class FireworkEffect : EffectBase
         context.SetShaderResource(ShaderStage.Vertex, 0, _particleBuffer!);
         context.SetBlendState(BlendMode.Additive);
         context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
-        context.DrawInstanced(6, _maxParticles, 0, 0);
+        // Only draw active instances instead of all _maxParticles
+        context.DrawInstanced(6, particlesToDraw, 0, 0);
         context.SetBlendState(BlendMode.Alpha);
+
+        // Render particle count overlay if enabled
+        if (_displayParticleCount && _textOverlay != null)
+        {
+            _textOverlay.BeginFrame();
+            _textOverlay.Time = totalTime;
+
+            // Display particle count at top-left with slight padding
+            var textStyle = new TextStyle
+            {
+                Size = 24f,
+                Color = new Vector4(1f, 1f, 1f, 0.9f),
+                GlowIntensity = 0.5f
+            };
+
+            var styleNameStyle = new TextStyle
+            {
+                Size = 18f,
+                Color = new Vector4(1f, 0.9f, 0.5f, 0.9f),
+                GlowIntensity = 0.3f
+            };
+
+            // Format with leading zeros for fixed width (5 digits for up to 99999)
+            string particleText = $"PARTICLES: {particlesToDraw:D5}";
+            string styleText = $"STYLE: {_fireworkStyleName}";
+            Vector2 particlePos = new(20f, 15f);
+            Vector2 stylePos = new(20f, 63f);
+
+            // Background sized to cover both lines
+            Vector2 bgCenter = new(254f, 55f);
+            Vector2 bgSize = new(508f, 110f);
+            _textOverlay.AddBackground(bgCenter, bgSize, new Vector4(0f, 0f, 0f, 0.75f), 0.1f);
+
+            _textOverlay.AddText(particleText, particlePos, textStyle);
+            _textOverlay.AddText(styleText, stylePos, styleNameStyle);
+
+            _textOverlay.EndFrame();
+            _textOverlay.Render(context);
+        }
     }
 
     protected override void OnDispose()
@@ -642,6 +826,7 @@ public sealed class FireworkEffect : EffectBase
         _frameDataBuffer?.Dispose();
         _vertexShader?.Dispose();
         _pixelShader?.Dispose();
+        _textOverlay?.Dispose();
     }
 
     private static Vector4 HueToRgb(float hue)
@@ -661,6 +846,141 @@ public sealed class FireworkEffect : EffectBase
         };
 
         return new Vector4(rgb.X, rgb.Y, rgb.Z, 1f);
+    }
+
+    #region Random Wave Mode
+
+    private void InitializeWaveSequence()
+    {
+        _waveStyleSequence.Clear();
+        for (int i = 0; i < StyleNames.Length; i++)
+            _waveStyleSequence.Add(i);
+        ShuffleSequence();
+        _waveStyleIndex = 0;
+        _currentWaveTime = 0f;
+        _currentWaveDuration = GetNextWaveDuration();
+        ApplyWaveStyle();
+    }
+
+    private void ShuffleSequence()
+    {
+        // Fisher-Yates shuffle
+        for (int i = _waveStyleSequence.Count - 1; i > 0; i--)
+        {
+            int j = Random.Shared.Next(i + 1);
+            (_waveStyleSequence[i], _waveStyleSequence[j]) = (_waveStyleSequence[j], _waveStyleSequence[i]);
+        }
+    }
+
+    private float GetNextWaveDuration()
+    {
+        if (_randomWaveDuration)
+            return _waveDurationMin + Random.Shared.NextSingle() * (_waveDurationMax - _waveDurationMin);
+        return _waveDuration;
+    }
+
+    private void UpdateWave(float dt)
+    {
+        if (_waveStyleSequence.Count == 0)
+            InitializeWaveSequence();
+
+        // If transitioning, wait for all particles AND rockets to finish before switching
+        if (_waveTransitioning)
+        {
+            int aliveParticles = _particlePool?.CountAlive() ?? 0;
+            int activeRockets = CountActiveRockets();
+
+            if (aliveParticles == 0 && activeRockets == 0)
+            {
+                // All particles and rockets finished, now switch to new style
+                _waveStyleIndex = _pendingWaveStyleIndex;
+                ApplyWaveStyle();
+                _waveTransitioning = false;
+                _currentWaveTime = 0f;
+                _currentWaveDuration = GetNextWaveDuration();
+            }
+            return; // Don't update wave timer during transition
+        }
+
+        _currentWaveTime += dt;
+
+        if (_currentWaveTime >= _currentWaveDuration)
+        {
+            // Time to switch - calculate next style index
+            int nextIndex = _waveStyleIndex + 1;
+
+            // If we've gone through all styles, reshuffle
+            if (nextIndex >= _waveStyleSequence.Count)
+            {
+                ShuffleSequence();
+                nextIndex = 0;
+            }
+
+            // Enter transition mode - wait for particles to die
+            _pendingWaveStyleIndex = nextIndex;
+            _waveTransitioning = true;
+        }
+    }
+
+    private int CountActiveRockets()
+    {
+        if (_rockets == null) return 0;
+        int count = 0;
+        for (int i = 0; i < _rockets.Length; i++)
+            if (_rockets[i].IsActive)
+                count++;
+        return count;
+    }
+
+    private void ApplyWaveStyle()
+    {
+        if (_waveStyleIndex < 0 || _waveStyleIndex >= _waveStyleSequence.Count)
+            return;
+
+        int styleIndex = _waveStyleSequence[_waveStyleIndex];
+        if (styleIndex >= 0 && styleIndex < StyleNames.Length)
+        {
+            string styleName = StyleNames[styleIndex];
+            _fireworkStyleName = styleName;
+            _currentStyle = FireworkStyleFactory.Create(styleName);
+            if (_context != null)
+                _context.CurrentStyle = _currentStyle;
+
+            // Apply style defaults for distinctive behavior
+            ApplyStyleDefaults();
+        }
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Applies the current style's default parameters for distinctive visual behavior.
+    /// This gives each style its characteristic feel (gravity, particle count, etc.)
+    /// </summary>
+    private void ApplyStyleDefaults()
+    {
+        var defaults = _currentStyle.GetDefaults();
+
+        // Apply physics defaults - these make each style feel different
+        _gravity = defaults.Gravity;
+        _drag = defaults.Drag;
+        _particleLifespan = defaults.ParticleLifespan;
+        _minParticlesPerFirework = defaults.MinParticlesPerFirework;
+        _maxParticlesPerFirework = defaults.MaxParticlesPerFirework;
+        _clickExplosionForce = defaults.ExplosionForce;
+        _minParticleSize = defaults.MinParticleSize;
+        _maxParticleSize = defaults.MaxParticleSize;
+        _spreadAngle = defaults.SpreadAngle;
+        _enableSecondaryExplosion = defaults.EnableSecondaryExplosion;
+
+        // Apply style-specific parameters from defaults
+        if (defaults.StyleSpecific != null)
+        {
+            foreach (var kvp in defaults.StyleSpecific)
+            {
+                _currentStyle.SetParameter(kvp.Key, kvp.Value);
+            }
+        }
     }
 
     private static string LoadEmbeddedShader(string name)

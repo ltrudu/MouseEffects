@@ -24,6 +24,9 @@ public sealed class FireworkFactory : IEffectFactory
     {
         var config = new EffectConfiguration();
 
+        // Display particle count
+        config.Set("displayParticleCount", false);
+
         // General
         config.Set("maxParticles", 5500);
         config.Set("maxFireworks", 15);
@@ -71,6 +74,35 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("rocketSecondaryColor", new Vector4(1f, 0.4f, 0.1f, 1f));
         config.Set("rocketUseRandomColors", true);
 
+        // Firework Style
+        config.Set("fireworkStyle", "Classic Burst");
+
+        // Spinner style parameters
+        config.Set("spinSpeed", 8f);
+        config.Set("spinRadius", 30f);
+        config.Set("enableSparkTrails", true);
+
+        // Willow style parameters
+        config.Set("droopIntensity", 2f);
+        config.Set("branchDensity", 2f);
+
+        // Crackling style parameters
+        config.Set("flashRate", 20f);
+        config.Set("popIntensity", 0.5f);
+        config.Set("particleMultiplier", 2f);
+
+        // Chrysanthemum style parameters
+        config.Set("sparkDensity", 5);
+        config.Set("trailPersistence", 0.5f);
+        config.Set("maxSparksPerParticle", 3);
+
+        // Random Wave mode defaults
+        config.Set("randomWaveMode", false);
+        config.Set("waveDuration", 5f);
+        config.Set("randomWaveDuration", false);
+        config.Set("waveDurationMin", 3f);
+        config.Set("waveDurationMax", 10f);
+
         return config;
     }
 
@@ -80,6 +112,15 @@ public sealed class FireworkFactory : IEffectFactory
         {
             Parameters =
             [
+                // Display particle count
+                new BoolParameter
+                {
+                    Key = "displayParticleCount",
+                    DisplayName = "Display Particle Count",
+                    Description = "Show the current number of active particles on screen",
+                    DefaultValue = false
+                },
+
                 // General Section
                 new IntParameter
                 {
@@ -87,7 +128,7 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Max Particles",
                     Description = "Maximum number of particles in the system",
                     MinValue = 1000,
-                    MaxValue = 15000,
+                    MaxValue = 30000,
                     DefaultValue = 5000
                 },
                 new IntParameter
@@ -96,8 +137,8 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Max Fireworks",
                     Description = "Maximum number of simultaneous firework explosions",
                     MinValue = 1,
-                    MaxValue = 200,
-                    DefaultValue = 50
+                    MaxValue = 25,
+                    DefaultValue = 25
                 },
                 new FloatParameter
                 {
@@ -388,8 +429,8 @@ public sealed class FireworkFactory : IEffectFactory
                 {
                     Key = "rocketSize",
                     DisplayName = "Rocket Size",
-                    Description = "Size of the rocket particle",
-                    MinValue = 5f,
+                    Description = "Size of the rocket particle (0 = invisible, trail only)",
+                    MinValue = 0f,
                     MaxValue = 50f,
                     DefaultValue = 12f,
                     Step = 1f
@@ -433,6 +474,172 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Rocket Random Colors",
                     Description = "Randomize colors for each rocket",
                     DefaultValue = true
+                },
+
+                // Firework Style Section
+                new ChoiceParameter
+                {
+                    Key = "fireworkStyle",
+                    DisplayName = "Firework Style",
+                    Description = "The visual style of firework explosions",
+                    DefaultValue = "Classic Burst",
+                    Choices = new[] { "Classic Burst", "Spinner", "Willow", "Crackling", "Chrysanthemum", "Random" }
+                },
+
+                // Spinner Style Parameters
+                new FloatParameter
+                {
+                    Key = "spinSpeed",
+                    DisplayName = "Spin Speed",
+                    Description = "Rotation speed of spinning particles (rad/s)",
+                    MinValue = 1f,
+                    MaxValue = 20f,
+                    DefaultValue = 8f,
+                    Step = 0.5f
+                },
+                new FloatParameter
+                {
+                    Key = "spinRadius",
+                    DisplayName = "Spin Radius",
+                    Description = "Radius of the spinning motion (pixels)",
+                    MinValue = 10f,
+                    MaxValue = 100f,
+                    DefaultValue = 30f,
+                    Step = 5f
+                },
+                new BoolParameter
+                {
+                    Key = "enableSparkTrails",
+                    DisplayName = "Spark Trails",
+                    Description = "Emit sparks while spinning",
+                    DefaultValue = true
+                },
+
+                // Willow Style Parameters
+                new FloatParameter
+                {
+                    Key = "droopIntensity",
+                    DisplayName = "Droop Intensity",
+                    Description = "How much particles droop down (gravity multiplier)",
+                    MinValue = 0.5f,
+                    MaxValue = 3f,
+                    DefaultValue = 2f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "branchDensity",
+                    DisplayName = "Branch Density",
+                    Description = "Particle count multiplier for denser branches",
+                    MinValue = 1f,
+                    MaxValue = 5f,
+                    DefaultValue = 2f,
+                    Step = 0.5f
+                },
+
+                // Crackling Style Parameters
+                new FloatParameter
+                {
+                    Key = "flashRate",
+                    DisplayName = "Flash Rate",
+                    Description = "Frequency of flashing (Hz)",
+                    MinValue = 5f,
+                    MaxValue = 50f,
+                    DefaultValue = 20f,
+                    Step = 1f
+                },
+                new FloatParameter
+                {
+                    Key = "popIntensity",
+                    DisplayName = "Pop Intensity",
+                    Description = "Amount of position jitter for pop effect",
+                    MinValue = 0f,
+                    MaxValue = 1f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "particleMultiplier",
+                    DisplayName = "Particle Density",
+                    Description = "Multiply particle count for denser crackling (higher = more particles, may impact performance)",
+                    MinValue = 0.1f,
+                    MaxValue = 10f,
+                    DefaultValue = 2f,
+                    Step = 0.1f
+                },
+
+                // Chrysanthemum Style Parameters
+                new IntParameter
+                {
+                    Key = "sparkDensity",
+                    DisplayName = "Spark Density",
+                    Description = "Sparks spawned per particle per second (higher = more GPU load)",
+                    MinValue = 1,
+                    MaxValue = 20,
+                    DefaultValue = 5
+                },
+                new FloatParameter
+                {
+                    Key = "trailPersistence",
+                    DisplayName = "Trail Persistence",
+                    Description = "How long trail sparks last (higher = more particles alive)",
+                    MinValue = 0.2f,
+                    MaxValue = 1.5f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new IntParameter
+                {
+                    Key = "maxSparksPerParticle",
+                    DisplayName = "Max Sparks/Particle",
+                    Description = "Maximum sparks each particle can spawn (higher = exponential growth)",
+                    MinValue = 1,
+                    MaxValue = 10,
+                    DefaultValue = 3
+                },
+
+                // Random Wave mode parameters
+                new BoolParameter
+                {
+                    Key = "randomWaveMode",
+                    DisplayName = "Random Wave Mode",
+                    Description = "Automatically cycles through all firework styles",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "waveDuration",
+                    DisplayName = "Wave Duration",
+                    Description = "Duration of each style wave in seconds",
+                    MinValue = 1f,
+                    MaxValue = 30f,
+                    DefaultValue = 5f
+                },
+                new BoolParameter
+                {
+                    Key = "randomWaveDuration",
+                    DisplayName = "Random Duration",
+                    Description = "Use random duration for each wave",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "waveDurationMin",
+                    DisplayName = "Wave Duration Min",
+                    Description = "Minimum wave duration in seconds",
+                    MinValue = 1f,
+                    MaxValue = 29f,
+                    DefaultValue = 3f
+                },
+                new FloatParameter
+                {
+                    Key = "waveDurationMax",
+                    DisplayName = "Wave Duration Max",
+                    Description = "Maximum wave duration in seconds",
+                    MinValue = 2f,
+                    MaxValue = 30f,
+                    DefaultValue = 10f
                 }
             ]
         };

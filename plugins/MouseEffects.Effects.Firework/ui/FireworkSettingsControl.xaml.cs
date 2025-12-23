@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
 using System.Windows;
@@ -12,10 +13,21 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 {
     private readonly IEffect _effect;
     private bool _isInitializing = true;
+    private string _currentStyle = "Classic Burst";
     private Vector4 _primaryColor = new(1f, 0.3f, 0.1f, 1f);
     private Vector4 _secondaryColor = new(1f, 0.8f, 0.2f, 1f);
     private Vector4 _rocketPrimaryColor = new(1f, 0.8f, 0.2f, 1f);
     private Vector4 _rocketSecondaryColor = new(1f, 0.4f, 0.1f, 1f);
+
+    private static readonly Dictionary<string, string> StyleDescriptions = new()
+    {
+        ["Classic Burst"] = "Traditional radial explosion with colorful particles and optional secondary bursts",
+        ["Spinner"] = "Rotating mini-fireworks that spin and sparkle as they fall",
+        ["Willow"] = "Graceful drooping trails like a weeping willow tree",
+        ["Crackling"] = "Popping sparks that flash and crackle randomly",
+        ["Chrysanthemum"] = "Dense star pattern where particles leave glowing trails like flower petals",
+        ["Random"] = "Each explosion randomly selects from all available styles"
+    };
 
     public event Action<string>? SettingsChanged;
 
@@ -232,6 +244,116 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             _rocketSecondaryColor = rocketSecondary;
             UpdateRocketSecondaryColorPreview();
         }
+
+        // Load firework style
+        if (_effect.Configuration.TryGet<string>("fireworkStyle", out var style))
+        {
+            _currentStyle = style;
+            for (int i = 0; i < FireworkStyleComboBox.Items.Count; i++)
+            {
+                if ((FireworkStyleComboBox.Items[i] as ComboBoxItem)?.Content?.ToString() == style)
+                {
+                    FireworkStyleComboBox.SelectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Load style-specific parameters
+        if (_effect.Configuration.TryGet<float>("spinSpeed", out var spinSpd))
+        {
+            SpinSpeedSlider.Value = spinSpd;
+            SpinSpeedValue.Text = spinSpd.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<float>("spinRadius", out var spinRad))
+        {
+            SpinRadiusSlider.Value = spinRad;
+            SpinRadiusValue.Text = spinRad.ToString("F0");
+        }
+
+        if (_effect.Configuration.TryGet<bool>("enableSparkTrails", out var sparkTrails))
+            SparkTrailsCheckBox.IsChecked = sparkTrails;
+
+        if (_effect.Configuration.TryGet<float>("droopIntensity", out var droopInt))
+        {
+            DroopIntensitySlider.Value = droopInt;
+            DroopIntensityValue.Text = droopInt.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<float>("branchDensity", out var branchDens))
+        {
+            BranchDensitySlider.Value = branchDens;
+            BranchDensityValue.Text = branchDens.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<float>("flashRate", out var flashRt))
+        {
+            FlashRateSlider.Value = flashRt;
+            FlashRateValue.Text = flashRt.ToString("F0");
+        }
+
+        if (_effect.Configuration.TryGet<float>("popIntensity", out var popInt))
+        {
+            PopIntensitySlider.Value = popInt;
+            PopIntensityValue.Text = popInt.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<float>("particleMultiplier", out var partMult))
+        {
+            ParticleMultiplierSlider.Value = partMult;
+            ParticleMultiplierValue.Text = partMult.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<int>("sparkDensity", out var sparkDens))
+        {
+            SparkDensitySlider.Value = sparkDens;
+            SparkDensityValue.Text = sparkDens.ToString();
+        }
+
+        if (_effect.Configuration.TryGet<float>("trailPersistence", out var trailPers))
+        {
+            TrailPersistenceSlider.Value = trailPers;
+            TrailPersistenceValue.Text = trailPers.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<int>("maxSparksPerParticle", out var maxSparks))
+        {
+            MaxSparksSlider.Value = maxSparks;
+            MaxSparksValue.Text = maxSparks.ToString();
+        }
+
+        // Display particle count
+        if (_effect.Configuration.TryGet<bool>("displayParticleCount", out var displayPart))
+            DisplayParticleCountCheckBox.IsChecked = displayPart;
+
+        // Random Wave mode settings
+        if (_effect.Configuration.TryGet<bool>("randomWaveMode", out var waveMode))
+            RandomWaveModeCheckBox.IsChecked = waveMode;
+
+        if (_effect.Configuration.TryGet<float>("waveDuration", out var waveDur))
+        {
+            WaveDurationSlider.Value = waveDur;
+            WaveDurationValue.Text = waveDur.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<bool>("randomWaveDuration", out var randWaveDur))
+            RandomWaveDurationCheckBox.IsChecked = randWaveDur;
+
+        if (_effect.Configuration.TryGet<float>("waveDurationMin", out var waveDurMin))
+        {
+            WaveDurationMinSlider.Value = waveDurMin;
+            WaveDurationMinValue.Text = waveDurMin.ToString("F1");
+        }
+
+        if (_effect.Configuration.TryGet<float>("waveDurationMax", out var waveDurMax))
+        {
+            WaveDurationMaxSlider.Value = waveDurMax;
+            WaveDurationMaxValue.Text = waveDurMax.ToString("F1");
+        }
+
+        UpdateStylePanelVisibility();
+        UpdateWavePanelVisibility();
     }
 
     private void UpdateConfiguration()
@@ -239,6 +361,7 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         if (_isInitializing) return;
 
         var config = new EffectConfiguration();
+        config.Set("displayParticleCount", DisplayParticleCountCheckBox.IsChecked == true);
         config.Set("maxParticles", (int)MaxParticlesSlider.Value);
         config.Set("maxFireworks", (int)MaxFireworksSlider.Value);
         config.Set("particleLifespan", (float)LifespanSlider.Value);
@@ -279,6 +402,29 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("rocketPrimaryColor", _rocketPrimaryColor);
         config.Set("rocketSecondaryColor", _rocketSecondaryColor);
 
+        // Style configuration
+        config.Set("fireworkStyle", _currentStyle);
+
+        // Style-specific parameters
+        config.Set("spinSpeed", (float)SpinSpeedSlider.Value);
+        config.Set("spinRadius", (float)SpinRadiusSlider.Value);
+        config.Set("enableSparkTrails", SparkTrailsCheckBox.IsChecked == true);
+        config.Set("droopIntensity", (float)DroopIntensitySlider.Value);
+        config.Set("branchDensity", (float)BranchDensitySlider.Value);
+        config.Set("flashRate", (float)FlashRateSlider.Value);
+        config.Set("popIntensity", (float)PopIntensitySlider.Value);
+        config.Set("particleMultiplier", (float)ParticleMultiplierSlider.Value);
+        config.Set("sparkDensity", (int)SparkDensitySlider.Value);
+        config.Set("trailPersistence", (float)TrailPersistenceSlider.Value);
+        config.Set("maxSparksPerParticle", (int)MaxSparksSlider.Value);
+
+        // Random Wave mode settings
+        config.Set("randomWaveMode", RandomWaveModeCheckBox.IsChecked == true);
+        config.Set("waveDuration", (float)WaveDurationSlider.Value);
+        config.Set("randomWaveDuration", RandomWaveDurationCheckBox.IsChecked == true);
+        config.Set("waveDurationMin", (float)WaveDurationMinSlider.Value);
+        config.Set("waveDurationMax", (float)WaveDurationMaxSlider.Value);
+
         _effect.Configure(config);
         SettingsChanged?.Invoke(_effect.Metadata.Id);
     }
@@ -306,6 +452,7 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
     private void LeftClickCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
     private void RightClickCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
+    private void DisplayParticleCountCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
 
     private void MinParticlesPerFireworkSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
@@ -647,5 +794,158 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     {
         RocketSecondaryColorPreview.Background = new SolidColorBrush(
             System.Windows.Media.Color.FromArgb(255, (byte)(_rocketSecondaryColor.X * 255f), (byte)(_rocketSecondaryColor.Y * 255f), (byte)(_rocketSecondaryColor.Z * 255f)));
+    }
+
+    private void FireworkStyleComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing || FireworkStyleComboBox.SelectedItem == null) return;
+
+        var selectedItem = FireworkStyleComboBox.SelectedItem as ComboBoxItem;
+        _currentStyle = selectedItem?.Content?.ToString() ?? "Classic Burst";
+
+        UpdateStylePanelVisibility();
+        UpdateStyleDescription();
+        UpdateConfiguration();
+    }
+
+    private void UpdateStylePanelVisibility()
+    {
+        SpinnerSettingsPanel.Visibility = _currentStyle == "Spinner" ? Visibility.Visible : Visibility.Collapsed;
+        WillowSettingsPanel.Visibility = _currentStyle == "Willow" ? Visibility.Visible : Visibility.Collapsed;
+        CracklingSettingsPanel.Visibility = _currentStyle == "Crackling" ? Visibility.Visible : Visibility.Collapsed;
+        ChrysanthemumSettingsPanel.Visibility = _currentStyle == "Chrysanthemum" ? Visibility.Visible : Visibility.Collapsed;
+        RandomSettingsPanel.Visibility = _currentStyle == "Random" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void UpdateStyleDescription()
+    {
+        if (StyleDescriptionText != null && StyleDescriptions.TryGetValue(_currentStyle, out var desc))
+            StyleDescriptionText.Text = desc;
+    }
+
+    // Spinner handlers
+    private void SpinSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (SpinSpeedValue != null) SpinSpeedValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void SpinRadiusSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (SpinRadiusValue != null) SpinRadiusValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void SparkTrailsCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
+
+    // Willow handlers
+    private void DroopIntensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (DroopIntensityValue != null) DroopIntensityValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void BranchDensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (BranchDensityValue != null) BranchDensityValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    // Crackling handlers
+    private void FlashRateSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (FlashRateValue != null) FlashRateValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void PopIntensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (PopIntensityValue != null) PopIntensityValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void ParticleMultiplierSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (ParticleMultiplierValue != null) ParticleMultiplierValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    // Chrysanthemum handlers
+    private void SparkDensitySlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (SparkDensityValue != null) SparkDensityValue.Text = ((int)e.NewValue).ToString();
+        UpdateConfiguration();
+    }
+
+    private void TrailPersistenceSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (TrailPersistenceValue != null) TrailPersistenceValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void MaxSparksSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MaxSparksValue != null) MaxSparksValue.Text = ((int)e.NewValue).ToString();
+        UpdateConfiguration();
+    }
+
+    // Random Wave Mode handlers
+    private void RandomWaveModeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateWavePanelVisibility();
+        UpdateConfiguration();
+    }
+
+    private void RandomWaveDurationCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateWaveDurationPanelVisibility();
+        UpdateConfiguration();
+    }
+
+    private void WaveDurationSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (WaveDurationValue != null) WaveDurationValue.Text = e.NewValue.ToString("F1");
+        UpdateConfiguration();
+    }
+
+    private void WaveDurationMinSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (WaveDurationMinValue != null) WaveDurationMinValue.Text = e.NewValue.ToString("F1");
+
+        // Ensure min < max
+        if (WaveDurationMaxSlider != null && e.NewValue >= WaveDurationMaxSlider.Value)
+            WaveDurationMaxSlider.Value = e.NewValue + 1;
+
+        UpdateConfiguration();
+    }
+
+    private void WaveDurationMaxSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (WaveDurationMaxValue != null) WaveDurationMaxValue.Text = e.NewValue.ToString("F1");
+
+        // Ensure max > min
+        if (WaveDurationMinSlider != null && e.NewValue <= WaveDurationMinSlider.Value)
+            WaveDurationMinSlider.Value = e.NewValue - 1;
+
+        UpdateConfiguration();
+    }
+
+    private void UpdateWavePanelVisibility()
+    {
+        bool waveEnabled = RandomWaveModeCheckBox?.IsChecked == true;
+        if (WaveSettingsPanel != null)
+            WaveSettingsPanel.Visibility = waveEnabled ? Visibility.Visible : Visibility.Collapsed;
+
+        if (waveEnabled)
+            UpdateWaveDurationPanelVisibility();
+    }
+
+    private void UpdateWaveDurationPanelVisibility()
+    {
+        bool randomDuration = RandomWaveDurationCheckBox?.IsChecked == true;
+        if (FixedDurationPanel != null)
+            FixedDurationPanel.Visibility = randomDuration ? Visibility.Collapsed : Visibility.Visible;
+        if (RandomDurationPanel != null)
+            RandomDurationPanel.Visibility = randomDuration ? Visibility.Visible : Visibility.Collapsed;
     }
 }

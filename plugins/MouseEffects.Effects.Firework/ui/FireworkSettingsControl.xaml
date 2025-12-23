@@ -27,16 +27,165 @@
                    Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0" />
 
         <StackPanel Margin="0,8,0,0">
+            <!-- Firework Style Section -->
+            <TextBlock Text="Firework Style" Style="{StaticResource SectionStyle}" />
+            <ComboBox Name="FireworkStyleComboBox" Margin="0,4,0,4"
+                      SelectionChanged="FireworkStyleComboBox_SelectionChanged">
+                <ComboBoxItem Content="Classic Burst" IsSelected="True" />
+                <ComboBoxItem Content="Spinner" />
+                <ComboBoxItem Content="Willow" />
+                <ComboBoxItem Content="Crackling" />
+                <ComboBoxItem Content="Chrysanthemum" />
+                <ComboBoxItem Content="Brocade" />
+                <ComboBoxItem Content="Comet" />
+                <ComboBoxItem Content="Crossette" />
+                <ComboBoxItem Content="Palm" />
+                <ComboBoxItem Content="Peony" />
+                <ComboBoxItem Content="Pearls" />
+                <ComboBoxItem Content="Fish" />
+                <ComboBoxItem Content="Green Bees" />
+                <ComboBoxItem Content="Pistil" />
+                <ComboBoxItem Content="Stars" />
+                <ComboBoxItem Content="Tail" />
+                <ComboBoxItem Content="Strobe" />
+                <ComboBoxItem Content="Glitter" />
+                <ComboBoxItem Content="Random" />
+            </ComboBox>
+            <TextBlock Name="StyleDescriptionText"
+                       Text="Traditional radial explosion with colorful particles and optional secondary bursts"
+                       Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+            <!-- Style-Specific Settings Panels -->
+            <!-- Spinner Settings -->
+            <StackPanel Name="SpinnerSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Spinner Settings" Style="{StaticResource SectionStyle}" />
+
+                <TextBlock Text="Spin Speed" Style="{StaticResource LabelStyle}" />
+                <Slider Name="SpinSpeedSlider" Minimum="1" Maximum="20" Value="8"
+                        Style="{StaticResource SliderStyle}" ValueChanged="SpinSpeedSlider_ValueChanged" />
+                <TextBlock Name="SpinSpeedValue" Text="8.0" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Spin Radius" Style="{StaticResource LabelStyle}" />
+                <Slider Name="SpinRadiusSlider" Minimum="10" Maximum="100" Value="30"
+                        Style="{StaticResource SliderStyle}" ValueChanged="SpinRadiusSlider_ValueChanged" />
+                <TextBlock Name="SpinRadiusValue" Text="30" Opacity="0.7" FontSize="11" />
+
+                <CheckBox Name="SparkTrailsCheckBox" Content="Enable Spark Trails" Margin="0,8,0,4"
+                          IsChecked="True" Checked="SparkTrailsCheckBox_Changed" Unchecked="SparkTrailsCheckBox_Changed" />
+            </StackPanel>
+
+            <!-- Willow Settings -->
+            <StackPanel Name="WillowSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Willow Settings" Style="{StaticResource SectionStyle}" />
+
+                <TextBlock Text="Droop Intensity" Style="{StaticResource LabelStyle}" />
+                <Slider Name="DroopIntensitySlider" Minimum="0.5" Maximum="3" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="DroopIntensitySlider_ValueChanged" />
+                <TextBlock Name="DroopIntensityValue" Text="2.0" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Branch Density" Style="{StaticResource LabelStyle}" />
+                <Slider Name="BranchDensitySlider" Minimum="1" Maximum="5" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="BranchDensitySlider_ValueChanged" />
+                <TextBlock Name="BranchDensityValue" Text="2.0" Opacity="0.7" FontSize="11" />
+            </StackPanel>
+
+            <!-- Crackling Settings -->
+            <StackPanel Name="CracklingSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Crackling Settings" Style="{StaticResource SectionStyle}" />
+
+                <TextBlock Text="Flash Rate (Hz)" Style="{StaticResource LabelStyle}" />
+                <Slider Name="FlashRateSlider" Minimum="5" Maximum="50" Value="20"
+                        Style="{StaticResource SliderStyle}" ValueChanged="FlashRateSlider_ValueChanged" />
+                <TextBlock Name="FlashRateValue" Text="20" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Pop Intensity" Style="{StaticResource LabelStyle}" />
+                <Slider Name="PopIntensitySlider" Minimum="0" Maximum="1" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="PopIntensitySlider_ValueChanged" />
+                <TextBlock Name="PopIntensityValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Particle Density" Style="{StaticResource LabelStyle}" />
+                <Slider Name="ParticleMultiplierSlider" Minimum="0.1" Maximum="10" Value="2"
+                        Style="{StaticResource SliderStyle}" ValueChanged="ParticleMultiplierSlider_ValueChanged" />
+                <TextBlock Name="ParticleMultiplierValue" Text="5.0" Opacity="0.7" FontSize="11" />
+            </StackPanel>
+
+            <!-- Chrysanthemum Settings -->
+            <StackPanel Name="ChrysanthemumSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Chrysanthemum Settings" Style="{StaticResource SectionStyle}" />
+                <TextBlock Text="Higher values = more particles = higher GPU load"
+                           Opacity="0.6" FontSize="10" Margin="0,0,0,4" />
+
+                <TextBlock Text="Spark Density (sparks/sec)" Style="{StaticResource LabelStyle}" />
+                <Slider Name="SparkDensitySlider" Minimum="1" Maximum="20" Value="5"
+                        Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True" TickFrequency="1"
+                        ValueChanged="SparkDensitySlider_ValueChanged" />
+                <TextBlock Name="SparkDensityValue" Text="5" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Trail Persistence" Style="{StaticResource LabelStyle}" />
+                <Slider Name="TrailPersistenceSlider" Minimum="0.2" Maximum="1.5" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="TrailPersistenceSlider_ValueChanged" />
+                <TextBlock Name="TrailPersistenceValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Max Sparks/Particle" Style="{StaticResource LabelStyle}" />
+                <Slider Name="MaxSparksSlider" Minimum="1" Maximum="10" Value="3"
+                        Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True" TickFrequency="1"
+                        ValueChanged="MaxSparksSlider_ValueChanged" />
+                <TextBlock Name="MaxSparksValue" Text="3" Opacity="0.7" FontSize="11" />
+            </StackPanel>
+
+            <!-- Random Style Info -->
+            <StackPanel Name="RandomSettingsPanel" Visibility="Collapsed">
+                <TextBlock Text="Random Mode" Style="{StaticResource SectionStyle}" />
+                <TextBlock Text="Each explosion will randomly select from all available styles. Configure individual styles by selecting them from the dropdown above."
+                           Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,8" />
+            </StackPanel>
+
+            <!-- Random Wave Mode Section -->
+            <TextBlock Text="Random Wave Mode" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="RandomWaveModeCheckBox" Content="Enable Random Wave Mode" Margin="0,4,0,4"
+                      Checked="RandomWaveModeCheckBox_Changed" Unchecked="RandomWaveModeCheckBox_Changed" />
+            <TextBlock Text="Cycles through all firework styles automatically, showing each style for a duration before switching."
+                       Opacity="0.7" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8" />
+
+            <StackPanel Name="WaveSettingsPanel" Visibility="Collapsed">
+                <CheckBox Name="RandomWaveDurationCheckBox" Content="Random Duration" Margin="0,4,0,4"
+                          Checked="RandomWaveDurationCheckBox_Changed" Unchecked="RandomWaveDurationCheckBox_Changed" />
+
+                <!-- Fixed Duration -->
+                <StackPanel Name="FixedDurationPanel">
+                    <TextBlock Text="Wave Duration (seconds)" Style="{StaticResource LabelStyle}" />
+                    <Slider Name="WaveDurationSlider" Minimum="1" Maximum="30" Value="5"
+                            Style="{StaticResource SliderStyle}" ValueChanged="WaveDurationSlider_ValueChanged" />
+                    <TextBlock Name="WaveDurationValue" Text="5.0" Opacity="0.7" FontSize="11" />
+                </StackPanel>
+
+                <!-- Random Duration -->
+                <StackPanel Name="RandomDurationPanel" Visibility="Collapsed">
+                    <TextBlock Text="Wave Duration Min (seconds)" Style="{StaticResource LabelStyle}" />
+                    <Slider Name="WaveDurationMinSlider" Minimum="1" Maximum="29" Value="3"
+                            Style="{StaticResource SliderStyle}" ValueChanged="WaveDurationMinSlider_ValueChanged" />
+                    <TextBlock Name="WaveDurationMinValue" Text="3.0" Opacity="0.7" FontSize="11" />
+
+                    <TextBlock Text="Wave Duration Max (seconds)" Style="{StaticResource LabelStyle}" />
+                    <Slider Name="WaveDurationMaxSlider" Minimum="2" Maximum="30" Value="10"
+                            Style="{StaticResource SliderStyle}" ValueChanged="WaveDurationMaxSlider_ValueChanged" />
+                    <TextBlock Name="WaveDurationMaxValue" Text="10.0" Opacity="0.7" FontSize="11" />
+                </StackPanel>
+            </StackPanel>
+
             <!-- General Section -->
             <TextBlock Text="General" Style="{StaticResource SectionStyle}" />
+            <CheckBox Name="DisplayParticleCountCheckBox" Content="Display Particle Count" Margin="0,4,0,8"
+                      Checked="DisplayParticleCountCheckBox_Changed" Unchecked="DisplayParticleCountCheckBox_Changed" />
             <TextBlock Text="Max Particles" Style="{StaticResource LabelStyle}" />
-            <Slider Name="MaxParticlesSlider" Minimum="1000" Maximum="15000" Value="5000"
+            <Slider Name="MaxParticlesSlider" Minimum="1000" Maximum="30000" Value="5000"
                     Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
-                    TickFrequency="500" ValueChanged="MaxParticlesSlider_ValueChanged" />
+                    TickFrequency="100" SmallChange="100" LargeChange="1000"
+                    ValueChanged="MaxParticlesSlider_ValueChanged" />
             <TextBlock Name="MaxParticlesValue" Text="5000" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Max Fireworks" Style="{StaticResource LabelStyle}" />
-            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="200" Value="50"
+            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="25" Value="25"
                     Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
                     TickFrequency="1" ValueChanged="MaxFireworksSlider_ValueChanged" />
             <TextBlock Name="MaxFireworksValue" Text="50" Opacity="0.7" FontSize="11" />
@@ -215,7 +364,7 @@
             <TextBlock Name="RocketMaxFuseTimeValue" Text="3.0" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Rocket Size" Style="{StaticResource LabelStyle}" />
-            <Slider Name="RocketSizeSlider" Minimum="5" Maximum="50" Value="12"
+            <Slider Name="RocketSizeSlider" Minimum="0" Maximum="50" Value="12"
                     Style="{StaticResource SliderStyle}" ValueChanged="RocketSizeSlider_ValueChanged" />
             <TextBlock Name="RocketSizeValue" Text="12" Opacity="0.7" FontSize="11" />
 
