@@ -65,6 +65,7 @@ public sealed class FireworkEffect : EffectBase
     // Text overlay for particle count display
     private TextOverlay? _textOverlay;
     private bool _displayParticleCount;
+    private bool _displayStyle;
 
     private readonly ParticleGPU[] _gpuParticles = new ParticleGPU[MaxParticlesLimit];
     private int _activeParticleCount;
@@ -125,6 +126,9 @@ public sealed class FireworkEffect : EffectBase
     private int _minParticlesPerFirework = 50;
     private int _maxParticlesPerFirework = 150;
     private float _clickExplosionForce = 300f;
+    private bool _enableRandomExplosionSize;
+    private float _minExplosionSize = 0.5f;
+    private float _maxExplosionSize = 1.5f;
     private bool _spawnOnMove;
     private float _moveSpawnDistance = 100f;
     private float _moveExplosionForce = 150f;
@@ -212,6 +216,8 @@ public sealed class FireworkEffect : EffectBase
         // Display particle count
         if (Configuration.TryGet("displayParticleCount", out bool displayPart))
             _displayParticleCount = displayPart;
+        if (Configuration.TryGet("displayStyle", out bool displayStyle))
+            _displayStyle = displayStyle;
 
         // General settings
         if (Configuration.TryGet("maxParticles", out int maxPart))
@@ -240,6 +246,13 @@ public sealed class FireworkEffect : EffectBase
 
         if (Configuration.TryGet("clickExplosionForce", out float clickForce))
             _clickExplosionForce = clickForce;
+
+        if (Configuration.TryGet("enableRandomExplosionSize", out bool randomExpSize))
+            _enableRandomExplosionSize = randomExpSize;
+        if (Configuration.TryGet("minExplosionSize", out float minExpSize))
+            _minExplosionSize = minExpSize;
+        if (Configuration.TryGet("maxExplosionSize", out float maxExpSize))
+            _maxExplosionSize = maxExpSize;
 
         if (Configuration.TryGet("spawnOnMove", out bool spawnMove))
             _spawnOnMove = spawnMove;
@@ -509,7 +522,13 @@ public sealed class FireworkEffect : EffectBase
                 if (!_waveTransitioning)
                 {
                     int particleCount = Random.Shared.Next(_minParticlesPerFirework, _maxParticlesPerFirework + 1);
-                    SpawnExplosion(rocket.Position, particleCount, _clickExplosionForce, rocket.Color, totalTime, isSecondary: false);
+                    float explosionForce = _clickExplosionForce;
+                    if (_enableRandomExplosionSize)
+                    {
+                        float multiplier = _minExplosionSize + Random.Shared.NextSingle() * (_maxExplosionSize - _minExplosionSize);
+                        explosionForce *= multiplier;
+                    }
+                    SpawnExplosion(rocket.Position, particleCount, explosionForce, rocket.Color, totalTime, isSecondary: false);
                 }
                 rocket.IsActive = false;
             }
@@ -607,8 +626,16 @@ public sealed class FireworkEffect : EffectBase
             return;
         }
 
+        // Apply random explosion size multiplier
+        float effectiveForce = force;
+        if (_enableRandomExplosionSize)
+        {
+            float multiplier = _minExplosionSize + Random.Shared.NextSingle() * (_maxExplosionSize - _minExplosionSize);
+            effectiveForce = force * multiplier;
+        }
+
         Vector4 color = GetFireworkColor();
-        SpawnExplosion(position, particleCount, force, color, totalTime, isSecondary: false);
+        SpawnExplosion(position, particleCount, effectiveForce, color, totalTime, isSecondary: false);
     }
 
     private void SpawnRocket(Vector2 position, float totalTime)
@@ -712,7 +739,10 @@ public sealed class FireworkEffect : EffectBase
                 activeRocketCount++;
         }
 
-        if (_activeParticleCount == 0 && activeRocketCount == 0)
+        // Skip particle rendering if nothing to draw, but still render text overlays
+        bool hasParticles = _activeParticleCount > 0 || activeRocketCount > 0;
+        bool hasTextOverlay = (_displayParticleCount || _displayStyle) && _textOverlay != null;
+        if (!hasParticles && !hasTextOverlay)
             return;
 
         float totalTime = (float)DateTime.Now.TimeOfDay.TotalSeconds;
@@ -761,59 +791,74 @@ public sealed class FireworkEffect : EffectBase
 
         // Only upload and draw active particles (major performance optimization)
         int particlesToDraw = activeIndex;
-        if (particlesToDraw == 0)
+        if (particlesToDraw > 0)
         {
-            // Nothing to draw
-            return;
+            // Only upload the active portion of the buffer
+            context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<ParticleGPU>)_gpuParticles.AsSpan(0, particlesToDraw));
+            context.SetVertexShader(_vertexShader);
+            context.SetPixelShader(_pixelShader);
+            context.SetConstantBuffer(ShaderStage.Vertex, 0, _frameDataBuffer!);
+            context.SetConstantBuffer(ShaderStage.Pixel, 0, _frameDataBuffer!);
+            context.SetShaderResource(ShaderStage.Vertex, 0, _particleBuffer!);
+            context.SetBlendState(BlendMode.Additive);
+            context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
+            // Only draw active instances instead of all _maxParticles
+            context.DrawInstanced(6, particlesToDraw, 0, 0);
+            context.SetBlendState(BlendMode.Alpha);
         }
 
-        // Only upload the active portion of the buffer
-        context.UpdateBuffer(_particleBuffer!, (ReadOnlySpan<ParticleGPU>)_gpuParticles.AsSpan(0, particlesToDraw));
-        context.SetVertexShader(_vertexShader);
-        context.SetPixelShader(_pixelShader);
-        context.SetConstantBuffer(ShaderStage.Vertex, 0, _frameDataBuffer!);
-        context.SetConstantBuffer(ShaderStage.Pixel, 0, _frameDataBuffer!);
-        context.SetShaderResource(ShaderStage.Vertex, 0, _particleBuffer!);
-        context.SetBlendState(BlendMode.Additive);
-        context.SetPrimitiveTopology(PrimitiveTopology.TriangleList);
-        // Only draw active instances instead of all _maxParticles
-        context.DrawInstanced(6, particlesToDraw, 0, 0);
-        context.SetBlendState(BlendMode.Alpha);
-
-        // Render particle count overlay if enabled
-        if (_displayParticleCount && _textOverlay != null)
+        // Render text overlays if enabled (always render even with no particles)
+        if ((_displayParticleCount || _displayStyle) && _textOverlay != null)
         {
             _textOverlay.BeginFrame();
             _textOverlay.Time = totalTime;
 
-            // Display particle count at top-left with slight padding
-            var textStyle = new TextStyle
+            // Display particle count at top-left
+            if (_displayParticleCount)
             {
-                Size = 24f,
-                Color = new Vector4(1f, 1f, 1f, 0.9f),
-                GlowIntensity = 0.5f
-            };
+                var textStyle = new TextStyle
+                {
+                    Size = 24f,
+                    Color = new Vector4(1f, 1f, 1f, 0.9f),
+                    GlowIntensity = 0.5f
+                };
 
-            var styleNameStyle = new TextStyle
+                string particleText = $"PARTICLES: {particlesToDraw:D5}";
+                Vector2 particlePos = new(20f, 20f);
+
+                Vector2 bgCenter = new(248.5f, 33.5f);
+                Vector2 bgSize = new(515f, 58f);
+                _textOverlay.AddBackground(bgCenter, bgSize, new Vector4(0f, 0f, 0f, 0.75f), 0.1f);
+                _textOverlay.AddText(particleText, particlePos, textStyle);
+            }
+
+            // Display style name at top center with wave animation and rainbow color
+            if (_displayStyle)
             {
-                Size = 18f,
-                Color = new Vector4(1f, 0.9f, 0.5f, 0.9f),
-                GlowIntensity = 0.3f
-            };
+                float screenCenterX = context.ViewportSize.X / 2f;
+                string styleName = _fireworkStyleName.ToUpper();
 
-            // Format with leading zeros for fixed width (5 digits for up to 99999)
-            string particleText = $"PARTICLES: {particlesToDraw:D5}";
-            string styleText = $"STYLE: {_fireworkStyleName}";
-            Vector2 particlePos = new(20f, 15f);
-            Vector2 stylePos = new(20f, 63f);
+                // Rainbow color cycling
+                float hue = (totalTime * 0.5f) % 1f;
+                Vector4 rainbowColor = HueToRgb(hue);
+                rainbowColor.W = 1f;
 
-            // Background sized to cover both lines
-            Vector2 bgCenter = new(254f, 55f);
-            Vector2 bgSize = new(508f, 110f);
-            _textOverlay.AddBackground(bgCenter, bgSize, new Vector4(0f, 0f, 0f, 0.75f), 0.1f);
+                // Background for style name (dynamic width based on text length)
+                float styleTextWidth = styleName.Length * 50f + 40f;
+                Vector2 styleBgCenter = new(screenCenterX, 60f);
+                Vector2 styleBgSize = new(styleTextWidth, 100f);
+                _textOverlay.AddBackground(styleBgCenter, styleBgSize, new Vector4(0f, 0f, 0f, 0.75f), 0.1f);
 
-            _textOverlay.AddText(particleText, particlePos, textStyle);
-            _textOverlay.AddText(styleText, stylePos, styleNameStyle);
+                var styleTextStyle = new TextStyle
+                {
+                    Size = 36f,
+                    Color = rainbowColor,
+                    GlowIntensity = 2.0f,
+                    Animation = TextAnimation.Wave(2f, 8f, 0.3f)
+                };
+
+                _textOverlay.AddTextCentered(styleName, new Vector2(screenCenterX, 60f), styleTextStyle);
+            }
 
             _textOverlay.EndFrame();
             _textOverlay.Render(context);

@@ -175,8 +175,10 @@
 
             <!-- General Section -->
             <TextBlock Text="General" Style="{StaticResource SectionStyle}" />
-            <CheckBox Name="DisplayParticleCountCheckBox" Content="Display Particle Count" Margin="0,4,0,8"
+            <CheckBox Name="DisplayParticleCountCheckBox" Content="Display Particle Count" Margin="0,4,0,4"
                       Checked="DisplayParticleCountCheckBox_Changed" Unchecked="DisplayParticleCountCheckBox_Changed" />
+            <CheckBox Name="DisplayStyleCheckBox" Content="Display Style" Margin="0,0,0,8"
+                      Checked="DisplayStyleCheckBox_Changed" Unchecked="DisplayStyleCheckBox_Changed" />
             <TextBlock Text="Max Particles" Style="{StaticResource LabelStyle}" />
             <Slider Name="MaxParticlesSlider" Minimum="1000" Maximum="30000" Value="5000"
                     Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
@@ -218,6 +220,21 @@
             <Slider Name="ClickForceSlider" Minimum="50" Maximum="1000" Value="300"
                     Style="{StaticResource SliderStyle}" ValueChanged="ClickForceSlider_ValueChanged" />
             <TextBlock Name="ClickForceValue" Text="300" Opacity="0.7" FontSize="11" />
+
+            <CheckBox Name="EnableRandomExplosionSizeCheckBox" Content="Random Explosion Size" Margin="0,8,0,4"
+                      IsChecked="False" Checked="EnableRandomExplosionSizeCheckBox_Changed" Unchecked="EnableRandomExplosionSizeCheckBox_Changed" />
+
+            <StackPanel Name="RandomExplosionSizePanel" Visibility="Collapsed">
+                <TextBlock Text="Min Explosion Size" Style="{StaticResource LabelStyle}" />
+                <Slider Name="MinExplosionSizeSlider" Minimum="0.1" Maximum="2" Value="0.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MinExplosionSizeSlider_ValueChanged" />
+                <TextBlock Name="MinExplosionSizeValue" Text="0.5" Opacity="0.7" FontSize="11" />
+
+                <TextBlock Text="Max Explosion Size" Style="{StaticResource LabelStyle}" />
+                <Slider Name="MaxExplosionSizeSlider" Minimum="0.5" Maximum="3" Value="1.5"
+                        Style="{StaticResource SliderStyle}" ValueChanged="MaxExplosionSizeSlider_ValueChanged" />
+                <TextBlock Name="MaxExplosionSizeValue" Text="1.5" Opacity="0.7" FontSize="11" />
+            </StackPanel>
 
             <!-- Movement Trigger Section -->
             <TextBlock Text="Movement Trigger" Style="{StaticResource SectionStyle}" />

@@ -26,26 +26,30 @@ public sealed class FireworkFactory : IEffectFactory
 
         // Display particle count
         config.Set("displayParticleCount", false);
+        config.Set("displayStyle", true);
 
         // General
-        config.Set("maxParticles", 5500);
-        config.Set("maxFireworks", 15);
-        config.Set("particleLifespan", 3.3f);
+        config.Set("maxParticles", 10000);
+        config.Set("maxFireworks", 10);
+        config.Set("particleLifespan", 2.95f);
         config.Set("spawnOnLeftClick", true);
-        config.Set("spawnOnRightClick", true);
-        config.Set("minParticlesPerFirework", 20);
-        config.Set("maxParticlesPerFirework", 40);
-        config.Set("clickExplosionForce", 359f);
+        config.Set("spawnOnRightClick", false);
+        config.Set("minParticlesPerFirework", 60);
+        config.Set("maxParticlesPerFirework", 130);
+        config.Set("clickExplosionForce", 300f);
+        config.Set("enableRandomExplosionSize", true);
+        config.Set("minExplosionSize", 0.4f);
+        config.Set("maxExplosionSize", 1.5f);
         config.Set("spawnOnMove", true);
-        config.Set("moveSpawnDistance", 101f);
-        config.Set("moveExplosionForce", 289f);
-        config.Set("minParticleSize", 3.6f);
-        config.Set("maxParticleSize", 12f);
-        config.Set("glowIntensity", 0.13f);
+        config.Set("moveSpawnDistance", 100f);
+        config.Set("moveExplosionForce", 150f);
+        config.Set("minParticleSize", 3f);
+        config.Set("maxParticleSize", 8f);
+        config.Set("glowIntensity", 0.37f);
         config.Set("enableTrails", true);
-        config.Set("trailLength", 1.36f);
-        config.Set("gravity", 33f);
-        config.Set("drag", 0.983f);
+        config.Set("trailLength", 0.94f);
+        config.Set("gravity", 150f);
+        config.Set("drag", 0.98f);
         config.Set("spreadAngle", 360f);
 
         // Firework colors
@@ -57,17 +61,17 @@ public sealed class FireworkFactory : IEffectFactory
 
         // Secondary explosion
         config.Set("enableSecondaryExplosion", true);
-        config.Set("secondaryExplosionDelay", 0.82f);
-        config.Set("secondaryParticleCount", 40);
-        config.Set("secondaryExplosionForce", 100f);
+        config.Set("secondaryExplosionDelay", 0.8f);
+        config.Set("secondaryParticleCount", 20);
+        config.Set("secondaryExplosionForce", 155f);
 
         // Rocket
         config.Set("enableRocketMode", true);
-        config.Set("rocketSpeed", 354f);
+        config.Set("rocketSpeed", 500f);
         config.Set("rocketMinAltitude", 0.1f);
         config.Set("rocketMaxAltitude", 0.3f);
         config.Set("rocketMaxFuseTime", 3.0f);
-        config.Set("rocketSize", 8f);
+        config.Set("rocketSize", 1.8f);
         config.Set("rocketRainbowMode", true);
         config.Set("rocketRainbowSpeed", 0.5f);
         config.Set("rocketPrimaryColor", new Vector4(1f, 0.8f, 0.2f, 1f));
@@ -75,32 +79,32 @@ public sealed class FireworkFactory : IEffectFactory
         config.Set("rocketUseRandomColors", true);
 
         // Firework Style
-        config.Set("fireworkStyle", "Classic Burst");
+        config.Set("fireworkStyle", "Random");
 
         // Spinner style parameters
-        config.Set("spinSpeed", 8f);
-        config.Set("spinRadius", 30f);
-        config.Set("enableSparkTrails", true);
+        config.Set("spinSpeed", 15.5f);
+        config.Set("spinRadius", 61f);
+        config.Set("enableSparkTrails", false);
 
         // Willow style parameters
         config.Set("droopIntensity", 2f);
         config.Set("branchDensity", 2f);
 
         // Crackling style parameters
-        config.Set("flashRate", 20f);
-        config.Set("popIntensity", 0.5f);
-        config.Set("particleMultiplier", 2f);
+        config.Set("flashRate", 5f);
+        config.Set("popIntensity", 0f);
+        config.Set("particleMultiplier", 1.28f);
 
         // Chrysanthemum style parameters
-        config.Set("sparkDensity", 5);
-        config.Set("trailPersistence", 0.5f);
+        config.Set("sparkDensity", 6);
+        config.Set("trailPersistence", 0.73f);
         config.Set("maxSparksPerParticle", 3);
 
         // Random Wave mode defaults
-        config.Set("randomWaveMode", false);
-        config.Set("waveDuration", 5f);
+        config.Set("randomWaveMode", true);
+        config.Set("waveDuration", 5.96f);
         config.Set("randomWaveDuration", false);
-        config.Set("waveDurationMin", 3f);
+        config.Set("waveDurationMin", 3.53f);
         config.Set("waveDurationMax", 10f);
 
         return config;
@@ -118,6 +122,13 @@ public sealed class FireworkFactory : IEffectFactory
                     Key = "displayParticleCount",
                     DisplayName = "Display Particle Count",
                     Description = "Show the current number of active particles on screen",
+                    DefaultValue = false
+                },
+                new BoolParameter
+                {
+                    Key = "displayStyle",
+                    DisplayName = "Display Style",
+                    Description = "Show the current firework style name at top center with rainbow animation",
                     DefaultValue = false
                 },
 
@@ -191,6 +202,33 @@ public sealed class FireworkFactory : IEffectFactory
                     MaxValue = 1000f,
                     DefaultValue = 300f,
                     Step = 10f
+                },
+                new BoolParameter
+                {
+                    Key = "enableRandomExplosionSize",
+                    DisplayName = "Random Explosion Size",
+                    Description = "Randomize the size/radius of each explosion",
+                    DefaultValue = false
+                },
+                new FloatParameter
+                {
+                    Key = "minExplosionSize",
+                    DisplayName = "Min Explosion Size",
+                    Description = "Minimum explosion size multiplier",
+                    MinValue = 0.1f,
+                    MaxValue = 2f,
+                    DefaultValue = 0.5f,
+                    Step = 0.1f
+                },
+                new FloatParameter
+                {
+                    Key = "maxExplosionSize",
+                    DisplayName = "Max Explosion Size",
+                    Description = "Maximum explosion size multiplier",
+                    MinValue = 0.5f,
+                    MaxValue = 3f,
+                    DefaultValue = 1.5f,
+                    Step = 0.1f
                 },
                 new BoolParameter
                 {

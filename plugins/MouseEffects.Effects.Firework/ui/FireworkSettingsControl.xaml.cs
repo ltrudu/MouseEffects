@@ -83,6 +83,20 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
             ClickForceValue.Text = clickForce.ToString("F0");
         }
 
+        if (_effect.Configuration.TryGet<bool>("enableRandomExplosionSize", out var randomExpSize))
+            EnableRandomExplosionSizeCheckBox.IsChecked = randomExpSize;
+        if (_effect.Configuration.TryGet<float>("minExplosionSize", out var minExpSize))
+        {
+            MinExplosionSizeSlider.Value = minExpSize;
+            MinExplosionSizeValue.Text = minExpSize.ToString("F1");
+        }
+        if (_effect.Configuration.TryGet<float>("maxExplosionSize", out var maxExpSize))
+        {
+            MaxExplosionSizeSlider.Value = maxExpSize;
+            MaxExplosionSizeValue.Text = maxExpSize.ToString("F1");
+        }
+        UpdateRandomExplosionSizePanelVisibility();
+
         if (_effect.Configuration.TryGet<bool>("spawnOnMove", out var spawnMove))
             SpawnOnMoveCheckBox.IsChecked = spawnMove;
 
@@ -326,6 +340,8 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         // Display particle count
         if (_effect.Configuration.TryGet<bool>("displayParticleCount", out var displayPart))
             DisplayParticleCountCheckBox.IsChecked = displayPart;
+        if (_effect.Configuration.TryGet<bool>("displayStyle", out var displayStyle))
+            DisplayStyleCheckBox.IsChecked = displayStyle;
 
         // Random Wave mode settings
         if (_effect.Configuration.TryGet<bool>("randomWaveMode", out var waveMode))
@@ -362,6 +378,7 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
 
         var config = new EffectConfiguration();
         config.Set("displayParticleCount", DisplayParticleCountCheckBox.IsChecked == true);
+        config.Set("displayStyle", DisplayStyleCheckBox.IsChecked == true);
         config.Set("maxParticles", (int)MaxParticlesSlider.Value);
         config.Set("maxFireworks", (int)MaxFireworksSlider.Value);
         config.Set("particleLifespan", (float)LifespanSlider.Value);
@@ -370,6 +387,9 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
         config.Set("minParticlesPerFirework", (int)MinParticlesPerFireworkSlider.Value);
         config.Set("maxParticlesPerFirework", (int)MaxParticlesPerFireworkSlider.Value);
         config.Set("clickExplosionForce", (float)ClickForceSlider.Value);
+        config.Set("enableRandomExplosionSize", EnableRandomExplosionSizeCheckBox.IsChecked == true);
+        config.Set("minExplosionSize", (float)MinExplosionSizeSlider.Value);
+        config.Set("maxExplosionSize", (float)MaxExplosionSizeSlider.Value);
         config.Set("spawnOnMove", SpawnOnMoveCheckBox.IsChecked == true);
         config.Set("moveSpawnDistance", (float)MoveSpawnDistanceSlider.Value);
         config.Set("moveExplosionForce", (float)MoveForceSlider.Value);
@@ -453,6 +473,7 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     private void LeftClickCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
     private void RightClickCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
     private void DisplayParticleCountCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
+    private void DisplayStyleCheckBox_Changed(object sender, RoutedEventArgs e) => UpdateConfiguration();
 
     private void MinParticlesPerFireworkSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
@@ -500,6 +521,37 @@ public partial class FireworkSettingsControl : System.Windows.Controls.UserContr
     {
         if (ClickForceValue != null)
             ClickForceValue.Text = e.NewValue.ToString("F0");
+        UpdateConfiguration();
+    }
+
+    private void EnableRandomExplosionSizeCheckBox_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateRandomExplosionSizePanelVisibility();
+        UpdateConfiguration();
+    }
+
+    private void UpdateRandomExplosionSizePanelVisibility()
+    {
+        if (RandomExplosionSizePanel != null)
+            RandomExplosionSizePanel.Visibility = EnableRandomExplosionSizeCheckBox?.IsChecked == true
+                ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void MinExplosionSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MinExplosionSizeValue != null)
+            MinExplosionSizeValue.Text = e.NewValue.ToString("F1");
+        if (MaxExplosionSizeSlider != null && e.NewValue >= MaxExplosionSizeSlider.Value)
+            MaxExplosionSizeSlider.Value = e.NewValue + 0.1;
+        UpdateConfiguration();
+    }
+
+    private void MaxExplosionSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (MaxExplosionSizeValue != null)
+            MaxExplosionSizeValue.Text = e.NewValue.ToString("F1");
+        if (MinExplosionSizeSlider != null && e.NewValue <= MinExplosionSizeSlider.Value)
+            MinExplosionSizeSlider.Value = e.NewValue - 0.1;
         UpdateConfiguration();
     }
 
