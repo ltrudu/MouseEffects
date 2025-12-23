@@ -182,7 +182,7 @@
 
             <StackPanel Name="AutomaticSettingsPanel" Visibility="Collapsed">
                 <TextBlock Text="Number of Launchpads" Style="{StaticResource LabelStyle}" />
-                <Slider Name="NumberOfLaunchpadsSlider" Minimum="1" Maximum="50" Value="5"
+                <Slider Name="NumberOfLaunchpadsSlider" Minimum="1" Maximum="20" Value="5"
                         Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True" TickFrequency="1"
                         ValueChanged="NumberOfLaunchpadsSlider_ValueChanged" />
                 <TextBlock Name="NumberOfLaunchpadsValue" Text="5" Opacity="0.7" FontSize="11" />
@@ -193,16 +193,18 @@
                     <ComboBoxItem Content="All Together" IsSelected="True" />
                     <ComboBoxItem Content="Left to Right" />
                     <ComboBoxItem Content="Right to Left" />
+                    <ComboBoxItem Content="Double Left/Right" />
                     <ComboBoxItem Content="Random Sequence" />
+                    <ComboBoxItem Content="Random" />
                 </ComboBox>
 
                 <TextBlock Text="Spawn Rate (fireworks/sec)" Style="{StaticResource LabelStyle}" />
-                <Slider Name="AutoSpawnRateSlider" Minimum="0.1" Maximum="10" Value="2"
+                <Slider Name="AutoSpawnRateSlider" Minimum="0.1" Maximum="120" Value="2"
                         Style="{StaticResource SliderStyle}" ValueChanged="AutoSpawnRateSlider_ValueChanged" />
                 <TextBlock Name="AutoSpawnRateValue" Text="2.0" Opacity="0.7" FontSize="11" />
 
                 <TextBlock Text="Delay Between Shots (sec)" Style="{StaticResource LabelStyle}" />
-                <Slider Name="AutoSpawnDelaySlider" Minimum="0.1" Maximum="5" Value="0.5"
+                <Slider Name="AutoSpawnDelaySlider" Minimum="0.1" Maximum="2" Value="0.5"
                         Style="{StaticResource SliderStyle}" ValueChanged="AutoSpawnDelaySlider_ValueChanged" />
                 <TextBlock Name="AutoSpawnDelayValue" Text="0.5" Opacity="0.7" FontSize="11" />
 
@@ -239,7 +241,7 @@
             <TextBlock Name="MaxParticlesValue" Text="5000" Opacity="0.7" FontSize="11" />
 
             <TextBlock Text="Max Fireworks" Style="{StaticResource LabelStyle}" />
-            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="25" Value="25"
+            <Slider Name="MaxFireworksSlider" Minimum="1" Maximum="50" Value="25"
                     Style="{StaticResource SliderStyle}" IsSnapToTickEnabled="True"
                     TickFrequency="1" ValueChanged="MaxFireworksSlider_ValueChanged" />
             <TextBlock Name="MaxFireworksValue" Text="50" Opacity="0.7" FontSize="11" />

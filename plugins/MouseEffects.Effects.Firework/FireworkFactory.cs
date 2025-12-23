@@ -158,7 +158,7 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Max Fireworks",
                     Description = "Maximum number of simultaneous firework explosions",
                     MinValue = 1,
-                    MaxValue = 25,
+                    MaxValue = 50,
                     DefaultValue = 25
                 },
                 new FloatParameter
@@ -704,7 +704,7 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Number of Launchpads",
                     Description = "Number of launch positions across the bottom of the screen",
                     MinValue = 1,
-                    MaxValue = 50,
+                    MaxValue = 20,
                     DefaultValue = 5
                 },
                 new ChoiceParameter
@@ -713,15 +713,15 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Launch Style",
                     Description = "How fireworks are launched from launchpads",
                     DefaultValue = "All Together",
-                    Choices = new[] { "All Together", "Left to Right", "Right to Left", "Random Sequence" }
+                    Choices = new[] { "All Together", "Left to Right", "Right to Left", "Double Left/Right", "Random Sequence", "Random" }
                 },
                 new FloatParameter
                 {
                     Key = "autoSpawnRate",
                     DisplayName = "Spawn Rate",
-                    Description = "Fireworks launched per second",
+                    Description = "Fireworks launched per second (up to 120 for high refresh rate screens)",
                     MinValue = 0.1f,
-                    MaxValue = 10f,
+                    MaxValue = 120f,
                     DefaultValue = 2f,
                     Step = 0.1f
                 },
@@ -731,7 +731,7 @@ public sealed class FireworkFactory : IEffectFactory
                     DisplayName = "Delay Between Shots",
                     Description = "Time between consecutive launches (seconds)",
                     MinValue = 0.1f,
-                    MaxValue = 5f,
+                    MaxValue = 2f,
                     DefaultValue = 0.5f,
                     Step = 0.1f
                 },
