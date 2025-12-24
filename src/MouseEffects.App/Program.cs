@@ -4,9 +4,12 @@ using System.Runtime.InteropServices;
 using MouseEffects.App.Services;
 using MouseEffects.App.Settings;
 using MouseEffects.App.UI;
+using MouseEffects.Audio;
+using MouseEffects.Core.Audio;
 using MouseEffects.Core.Diagnostics;
 using MouseEffects.Core.Effects;
 using MouseEffects.Core.UI;
+using MouseEffects.DirectX.Graphics;
 using MouseEffects.Input;
 using MouseEffects.Plugins;
 using Velopack;
@@ -31,6 +34,7 @@ static partial class Program
     private static bool _rightClickToggleEnabled = false;
     private static bool _middleClickToggleEnabled = false;
     private static UpdateService? _updateService;
+    private static AudioProvider? _audioProvider;
     private static readonly HashSet<string> _pressedHotkeys = new();
 
     [STAThread]
@@ -390,6 +394,33 @@ static partial class Program
             }
             Log($"Created {_overlayManager.Overlays.Count} overlay(s)");
 
+            // Initialize audio provider and set on all render contexts
+            Log("Creating audio provider...");
+            try
+            {
+                _audioProvider = new AudioProvider(maxConcurrentSounds: 32);
+                if (_audioProvider.IsInitialized)
+                {
+                    foreach (var overlay in _overlayManager.Overlays)
+                    {
+                        if (overlay.RenderContext is D3D11RenderContext d3dContext)
+                        {
+                            d3dContext.SetAudioProvider(_audioProvider);
+                        }
+                    }
+                    Log("Audio provider initialized successfully");
+                }
+                else
+                {
+                    Log("Audio provider created but not initialized (no audio device?)");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"Failed to create audio provider: {ex.Message}");
+                // Continue without audio - it's not critical
+            }
+
             // Initialize global dialog helper for plugins
             DialogHelper.Initialize(SuspendTopmostEnforcement, ResumeTopmostEnforcement);
             Log("DialogHelper initialized");
@@ -592,6 +623,7 @@ static partial class Program
         _gameLoop?.Dispose();
         _effectManager?.Dispose();
         _mouseInput?.Dispose();
+        _audioProvider?.Dispose();
         _overlayManager?.Dispose();
     }
 

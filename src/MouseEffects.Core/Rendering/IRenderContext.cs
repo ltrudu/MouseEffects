@@ -1,4 +1,5 @@
 using System.Numerics;
+using MouseEffects.Core.Audio;
 
 namespace MouseEffects.Core.Rendering;
 
@@ -30,6 +31,11 @@ public interface IRenderContext : IDisposable
     /// Enable this when effects need continuously updated screen content.
     /// </summary>
     bool ContinuousCaptureMode { get; set; }
+
+    /// <summary>
+    /// Audio provider for sound effects. May be null if audio is not available.
+    /// </summary>
+    IAudioProvider? Audio { get; }
 
     /// <summary>Set blend state.</summary>
     void SetBlendState(BlendMode mode);

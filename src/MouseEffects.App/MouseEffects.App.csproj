@@ -40,6 +40,7 @@
     <ProjectReference Include="..\MouseEffects.DirectX\MouseEffects.DirectX.csproj" />
     <ProjectReference Include="..\MouseEffects.Overlay\MouseEffects.Overlay.csproj" />
     <ProjectReference Include="..\MouseEffects.Input\MouseEffects.Input.csproj" />
+    <ProjectReference Include="..\MouseEffects.Audio\MouseEffects.Audio.csproj" />
     <ProjectReference Include="..\MouseEffects.Plugins\MouseEffects.Plugins.csproj" />
   </ItemGroup>
 

@@ -111,6 +111,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.RetroC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Effects.ProceduralSigil", "plugins\MouseEffects.Effects.ProceduralSigil\MouseEffects.Effects.ProceduralSigil.csproj", "{390B365A-5D6E-4C1F-A903-EAC2C75661FB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MouseEffects.Audio", "src\MouseEffects.Audio\MouseEffects.Audio.csproj", "{4F607EE5-858F-40DA-9C1E-6695CB102085}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -745,6 +747,18 @@ Global
 		{390B365A-5D6E-4C1F-A903-EAC2C75661FB}.Release|x64.Build.0 = Release|x64
 		{390B365A-5D6E-4C1F-A903-EAC2C75661FB}.Release|x86.ActiveCfg = Release|x64
 		{390B365A-5D6E-4C1F-A903-EAC2C75661FB}.Release|x86.Build.0 = Release|x64
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Debug|x64.Build.0 = Debug|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Debug|x86.Build.0 = Debug|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Release|x64.ActiveCfg = Release|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Release|x64.Build.0 = Release|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Release|x86.ActiveCfg = Release|Any CPU
+		{4F607EE5-858F-40DA-9C1E-6695CB102085}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -802,6 +816,7 @@ Global
 		{24685743-7D53-4D70-98CC-64F52E3A242B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{A784C4D6-16F0-42F1-A6EC-8C776D006743} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 		{390B365A-5D6E-4C1F-A903-EAC2C75661FB} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
+		{4F607EE5-858F-40DA-9C1E-6695CB102085} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18FCD67D-F721-4679-A84D-FCEEF635AF00}

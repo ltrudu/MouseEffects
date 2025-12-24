@@ -5,6 +5,7 @@ using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 using Vortice.Mathematics;
+using MouseEffects.Core.Audio;
 using MouseEffects.Core.Rendering;
 using MouseEffects.DirectX.Resources;
 using MouseEffects.DirectX.Capture;
@@ -30,6 +31,7 @@ public sealed class D3D11RenderContext : IRenderContext
     private readonly Dictionary<(bool, bool), ID3D11DepthStencilState> _depthStencilStates = new();
     private readonly ScreenCapture _screenCapture;
     private ScreenCaptureTexture? _screenTexture;
+    private IAudioProvider? _audioProvider;
     private bool _disposed;
 
     public nint DeviceHandle => _graphicsDevice.Device.NativePointer;
@@ -40,6 +42,19 @@ public sealed class D3D11RenderContext : IRenderContext
 
     public ID3D11Device Device => _graphicsDevice.Device;
     public ID3D11DeviceContext Context => _graphicsDevice.Context;
+
+    /// <summary>
+    /// Audio provider for sound effects. May be null if audio is not available.
+    /// </summary>
+    public IAudioProvider? Audio => _audioProvider;
+
+    /// <summary>
+    /// Set the audio provider for sound effects.
+    /// </summary>
+    public void SetAudioProvider(IAudioProvider? audioProvider)
+    {
+        _audioProvider = audioProvider;
+    }
 
     public D3D11RenderContext(D3D11GraphicsDevice graphicsDevice, int viewportWidth, int viewportHeight, bool hdrEnabled = false, float hdrPeakBrightness = 1.0f)
     {
